@@ -69,6 +69,10 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    artworks: Artwork;
+    people: Person;
+    series: Series;
+    exhibitions: Exhibition;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,18 +82,22 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    artworks: ArtworksSelect<false> | ArtworksSelect<true>;
+    people: PeopleSelect<false> | PeopleSelect<true>;
+    series: SeriesSelect<false> | SeriesSelect<true>;
+    exhibitions: ExhibitionsSelect<false> | ExhibitionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
-    defaultIDType: string;
+    defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'de') | ('en' | 'de')[];
   globals: {};
   globalsSelect: {};
-  locale: null;
+  locale: 'en' | 'de';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -122,7 +130,7 @@ export interface UserAuthOperations {
  * via the `definition` "users".
  */
 export interface User {
-  id: string;
+  id: number;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -147,7 +155,7 @@ export interface User {
  * via the `definition` "media".
  */
 export interface Media {
-  id: string;
+  id: number;
   alt: string;
   updatedAt: string;
   createdAt: string;
@@ -160,13 +168,612 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * The complete archive of all artworks.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "artworks".
+ */
+export interface Artwork {
+  id: number;
+  primaryImage?: (number | null) | Media;
+  /**
+   * Temporary WordPress image URL until migrated to R2.
+   */
+  wpImageUrl?: string | null;
+  name: string;
+  slug: string;
+  creator: number | Person;
+  series?: (number | null) | Series;
+  /**
+   * Auto-set from series.
+   */
+  seriesSlug?: string | null;
+  status: 'draft' | 'published' | 'archived';
+  dateCreated: string;
+  datePublished?: string | null;
+  /**
+   * Legacy WordPress ID.
+   */
+  wp_id?: number | null;
+  /**
+   * Legacy WordPress artwork URL.
+   */
+  oldWpUrl?: string | null;
+  artform: 'Painting' | 'Print' | 'Photography' | 'Drawing' | 'Sculpture' | 'Digital' | 'Installation' | 'MixedMedia';
+  /**
+   * e.g. acrylic transfer and acrylic on canvas
+   */
+  artMedium?: string | null;
+  artworkSurface?: string | null;
+  dimensions?: {
+    width?: number | null;
+    height?: number | null;
+    /**
+     * Only for 3D works.
+     */
+    depth?: number | null;
+    unitCode?: ('CMT' | 'MMT' | 'MTR' | 'INH') | null;
+  };
+  orientation?: ('portrait' | 'landscape' | 'square') | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * AI-generated visual description for search and accessibility.
+   */
+  aiDescription?: string | null;
+  /**
+   * Semantic/mood description for embeddings.
+   */
+  aiVibe?: string | null;
+  /**
+   * Vector embedding — auto-generated, do not edit.
+   */
+  embedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  keywords?:
+    | {
+        keyword?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  genre?: string | null;
+  additionalImages?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        imageRole?: ('detail' | 'installation' | 'process' | 'reverse' | 'other') | null;
+        id?: string | null;
+      }[]
+    | null;
+  videos?:
+    | {
+        videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
+        videoFile?: (number | null) | Media;
+        videoUrl?: string | null;
+        posterImage?: (number | null) | Media;
+        title?: string | null;
+        description?: string | null;
+        videoRole?: ('makingOf' | 'documentation' | 'ar' | 'interview' | 'other') | null;
+        id?: string | null;
+      }[]
+    | null;
+  locationCreated?: {
+    /**
+     * e.g. studio in CANK, Neukölln
+     */
+    label?: string | null;
+    city?: string | null;
+    country?: string | null;
+    countryCode?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+  };
+  artworkHolder?: {
+    holderType?: ('Person' | 'Organization') | null;
+    holderPerson?: (number | null) | Person;
+    /**
+     * If not in People collection.
+     */
+    holderName?: string | null;
+    holderUrl?: string | null;
+  };
+  provenanceNotes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Select exhibitions this work appeared in.
+   */
+  exhibitions?: (number | Exhibition)[] | null;
+  isForSale?: boolean | null;
+  offers?: {
+    price?: number | null;
+    priceCurrency?: ('EUR' | 'USD' | 'GBP') | null;
+    availability?: ('https://schema.org/InStock' | 'https://schema.org/SoldOut' | 'https://schema.org/PreOrder') | null;
+    inquiryUrl?: string | null;
+  };
+  printEditions?:
+    | {
+        editionSize?: number | null;
+        /**
+         * e.g. A3, 50x70cm
+         */
+        format?: string | null;
+        /**
+         * e.g. matte paper, dibond
+         */
+        substrate?: string | null;
+        price?: number | null;
+        priceCurrency?: ('EUR' | 'USD' | 'GBP') | null;
+        availability?: ('https://schema.org/InStock' | 'https://schema.org/SoldOut') | null;
+        id?: string | null;
+      }[]
+    | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  sameAs?:
+    | {
+        url: string;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Historical context for AR/app.
+   */
+  ach_historyText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  ach_freestyleText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  ach_wikiLinkEn?: string | null;
+  ach_wikiLinkDe?: string | null;
+  ach_arEnabled?: boolean | null;
+  ach_arVideos?:
+    | {
+        videoRole: 'makingOf' | 'history' | 'freestyle' | 'other';
+        videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
+        videoFile?: (number | null) | Media;
+        videoUrl?: string | null;
+        posterImage?: (number | null) | Media;
+        title?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  dcs_photoTitle?: string | null;
+  dcs_cityData?: {
+    population?: number | null;
+    /**
+     * km²
+     */
+    area?: number | null;
+    /**
+     * per km²
+     */
+    density?: number | null;
+    /**
+     * metres
+     */
+    elevation?: number | null;
+  };
+  dcs_videos?:
+    | {
+        videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
+        videoFile?: (number | null) | Media;
+        videoUrl?: string | null;
+        posterImage?: (number | null) | Media;
+        title?: string | null;
+        videoRole?: ('makingOf' | 'documentation' | 'other') | null;
+        id?: string | null;
+      }[]
+    | null;
+  mc_cityData?: {
+    population?: number | null;
+    /**
+     * km²
+     */
+    area?: number | null;
+    /**
+     * per km²
+     */
+    density?: number | null;
+    /**
+     * metres
+     */
+    elevation?: number | null;
+  };
+  mc_videos?:
+    | {
+        videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
+        videoFile?: (number | null) | Media;
+        videoUrl?: string | null;
+        posterImage?: (number | null) | Media;
+        title?: string | null;
+        videoRole?: ('makingOf' | 'documentation' | 'other') | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Artists, collectors, collaborators, curators and other people connected to the work.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people".
+ */
+export interface Person {
+  id: number;
+  name: string;
+  /**
+   * URL-safe identifier e.g. bernard-bolter
+   */
+  slug: string;
+  role: ('artist' | 'collaborator' | 'collector' | 'curator' | 'galleryOwner' | 'fabricator' | 'press' | 'other')[];
+  jobTitle?: string | null;
+  pronouns?: string | null;
+  nationality?: string | null;
+  knowsLanguage?:
+    | {
+        language?: ('en' | 'de' | 'nl' | 'fr' | 'es' | 'it' | 'zh' | 'ja') | null;
+        id?: string | null;
+      }[]
+    | null;
+  portrait?: (number | null) | Media;
+  bio?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Only shown when role includes Artist.
+   */
+  artistStatement?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Max 160 chars. Used for meta descriptions and social previews.
+   */
+  shortBio?: string | null;
+  birthDate?: string | null;
+  birthPlace?: {
+    city?: string | null;
+    region?: string | null;
+    country?: string | null;
+    countryCode?: string | null;
+  };
+  workLocations?:
+    | {
+        city?: string | null;
+        country?: string | null;
+        countryCode?: string | null;
+        lat?: number | null;
+        lng?: number | null;
+        current?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  primaryUrl?: string | null;
+  /**
+   * Verified profiles that are definitively this person.
+   */
+  authorityLinks?:
+    | {
+        type?:
+          | (
+              | 'wikipedia'
+              | 'wikidata'
+              | 'ulan'
+              | 'isni'
+              | 'viaf'
+              | 'instagram'
+              | 'linkedin'
+              | 'artsy'
+              | 'artnet'
+              | 'ownSite'
+              | 'other'
+            )
+          | null;
+        url: string;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Own websites and projects.
+   */
+  ownSites?:
+    | {
+        name?: string | null;
+        url?: string | null;
+        series?: (number | null) | Series;
+        role?: ('seriesArchive' | 'project' | 'shop' | 'other') | null;
+        id?: string | null;
+      }[]
+    | null;
+  alumniOf?:
+    | {
+        institution?: string | null;
+        city?: string | null;
+        country?: string | null;
+        yearStart?: number | null;
+        yearEnd?: number | null;
+        degree?: string | null;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  affiliation?:
+    | {
+        organization?: string | null;
+        role?: string | null;
+        yearStart?: number | null;
+        yearEnd?: number | null;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  award?:
+    | {
+        name?: string | null;
+        year?: number | null;
+        issuer?: string | null;
+        url?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Artwork series. Each sub-site (acolorfulhistory.com etc.) maps to one series.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series".
+ */
+export interface Series {
+  id: number;
+  name: string;
+  /**
+   * e.g. a-colorful-history, digital-city-series, megacities
+   */
+  slug: string;
+  status: 'active' | 'completed' | 'ongoing' | 'archived';
+  startYear?: number | null;
+  /**
+   * Leave empty if ongoing.
+   */
+  endYear?: number | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Max 160 chars. Used for series cards and meta descriptions.
+   */
+  shortDescription?: string | null;
+  coverImage?: (number | null) | Media;
+  hasSite?: boolean | null;
+  /**
+   * e.g. https://acolorfulhistory.com
+   */
+  siteUrl?: string | null;
+  /**
+   * Display name for the sub-site.
+   */
+  siteName?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  /**
+   * External references to this series e.g. Artsy, Wikipedia.
+   */
+  sameAs?:
+    | {
+        url: string;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Exhibitions where artworks are displayed.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "exhibitions".
+ */
+export interface Exhibition {
+  id: number;
+  name: string;
+  slug: string;
+  status: 'draft' | 'published' | 'archived';
+  startDate: string;
+  endDate?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  eventStatus?:
+    | (
+        | 'https://schema.org/EventScheduled'
+        | 'https://schema.org/EventPostponed'
+        | 'https://schema.org/EventCancelled'
+        | 'https://schema.org/EventRescheduled'
+      )
+    | null;
+  /**
+   * Person or organization organizing the exhibition.
+   */
+  organizer?: (number | null) | Person;
+  location?: {
+    /**
+     * Venue name
+     */
+    name?: string | null;
+    /**
+     * Full address
+     */
+    address?: string | null;
+    city?: string | null;
+    region?: string | null;
+    country?: string | null;
+    countryCode?: string | null;
+    postalCode?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+  };
+  /**
+   * Official exhibition website.
+   */
+  url?: string | null;
+  /**
+   * Artworks featured in this exhibition.
+   */
+  artworks?: (number | Artwork)[] | null;
+  /**
+   * Main exhibition image.
+   */
+  primaryImage?: (number | null) | Media;
+  additionalImages?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  sameAs?:
+    | {
+        url: string;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: string;
+  id: number;
   key: string;
   data:
     | {
@@ -183,20 +790,36 @@ export interface PayloadKv {
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: string;
+  id: number;
   document?:
     | ({
         relationTo: 'users';
-        value: string | User;
+        value: number | User;
       } | null)
     | ({
         relationTo: 'media';
-        value: string | Media;
+        value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'artworks';
+        value: number | Artwork;
+      } | null)
+    | ({
+        relationTo: 'people';
+        value: number | Person;
+      } | null)
+    | ({
+        relationTo: 'series';
+        value: number | Series;
+      } | null)
+    | ({
+        relationTo: 'exhibitions';
+        value: number | Exhibition;
       } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   updatedAt: string;
   createdAt: string;
@@ -206,10 +829,10 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: string;
+  id: number;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   key?: string | null;
   value?:
@@ -229,7 +852,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: string;
+  id: number;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -274,6 +897,358 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "artworks_select".
+ */
+export interface ArtworksSelect<T extends boolean = true> {
+  primaryImage?: T;
+  wpImageUrl?: T;
+  name?: T;
+  slug?: T;
+  creator?: T;
+  series?: T;
+  seriesSlug?: T;
+  status?: T;
+  dateCreated?: T;
+  datePublished?: T;
+  wp_id?: T;
+  oldWpUrl?: T;
+  artform?: T;
+  artMedium?: T;
+  artworkSurface?: T;
+  dimensions?:
+    | T
+    | {
+        width?: T;
+        height?: T;
+        depth?: T;
+        unitCode?: T;
+      };
+  orientation?: T;
+  description?: T;
+  aiDescription?: T;
+  aiVibe?: T;
+  embedding?: T;
+  keywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  genre?: T;
+  additionalImages?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        imageRole?: T;
+        id?: T;
+      };
+  videos?:
+    | T
+    | {
+        videoType?: T;
+        videoFile?: T;
+        videoUrl?: T;
+        posterImage?: T;
+        title?: T;
+        description?: T;
+        videoRole?: T;
+        id?: T;
+      };
+  locationCreated?:
+    | T
+    | {
+        label?: T;
+        city?: T;
+        country?: T;
+        countryCode?: T;
+        lat?: T;
+        lng?: T;
+      };
+  artworkHolder?:
+    | T
+    | {
+        holderType?: T;
+        holderPerson?: T;
+        holderName?: T;
+        holderUrl?: T;
+      };
+  provenanceNotes?: T;
+  exhibitions?: T;
+  isForSale?: T;
+  offers?:
+    | T
+    | {
+        price?: T;
+        priceCurrency?: T;
+        availability?: T;
+        inquiryUrl?: T;
+      };
+  printEditions?:
+    | T
+    | {
+        editionSize?: T;
+        format?: T;
+        substrate?: T;
+        price?: T;
+        priceCurrency?: T;
+        availability?: T;
+        id?: T;
+      };
+  metaTitle?: T;
+  metaDescription?: T;
+  sameAs?:
+    | T
+    | {
+        url?: T;
+        label?: T;
+        id?: T;
+      };
+  ach_historyText?: T;
+  ach_freestyleText?: T;
+  ach_wikiLinkEn?: T;
+  ach_wikiLinkDe?: T;
+  ach_arEnabled?: T;
+  ach_arVideos?:
+    | T
+    | {
+        videoRole?: T;
+        videoType?: T;
+        videoFile?: T;
+        videoUrl?: T;
+        posterImage?: T;
+        title?: T;
+        id?: T;
+      };
+  dcs_photoTitle?: T;
+  dcs_cityData?:
+    | T
+    | {
+        population?: T;
+        area?: T;
+        density?: T;
+        elevation?: T;
+      };
+  dcs_videos?:
+    | T
+    | {
+        videoType?: T;
+        videoFile?: T;
+        videoUrl?: T;
+        posterImage?: T;
+        title?: T;
+        videoRole?: T;
+        id?: T;
+      };
+  mc_cityData?:
+    | T
+    | {
+        population?: T;
+        area?: T;
+        density?: T;
+        elevation?: T;
+      };
+  mc_videos?:
+    | T
+    | {
+        videoType?: T;
+        videoFile?: T;
+        videoUrl?: T;
+        posterImage?: T;
+        title?: T;
+        videoRole?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people_select".
+ */
+export interface PeopleSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  role?: T;
+  jobTitle?: T;
+  pronouns?: T;
+  nationality?: T;
+  knowsLanguage?:
+    | T
+    | {
+        language?: T;
+        id?: T;
+      };
+  portrait?: T;
+  bio?: T;
+  artistStatement?: T;
+  shortBio?: T;
+  birthDate?: T;
+  birthPlace?:
+    | T
+    | {
+        city?: T;
+        region?: T;
+        country?: T;
+        countryCode?: T;
+      };
+  workLocations?:
+    | T
+    | {
+        city?: T;
+        country?: T;
+        countryCode?: T;
+        lat?: T;
+        lng?: T;
+        current?: T;
+        id?: T;
+      };
+  primaryUrl?: T;
+  authorityLinks?:
+    | T
+    | {
+        type?: T;
+        url?: T;
+        label?: T;
+        id?: T;
+      };
+  ownSites?:
+    | T
+    | {
+        name?: T;
+        url?: T;
+        series?: T;
+        role?: T;
+        id?: T;
+      };
+  alumniOf?:
+    | T
+    | {
+        institution?: T;
+        city?: T;
+        country?: T;
+        yearStart?: T;
+        yearEnd?: T;
+        degree?: T;
+        url?: T;
+        id?: T;
+      };
+  affiliation?:
+    | T
+    | {
+        organization?: T;
+        role?: T;
+        yearStart?: T;
+        yearEnd?: T;
+        url?: T;
+        id?: T;
+      };
+  award?:
+    | T
+    | {
+        name?: T;
+        year?: T;
+        issuer?: T;
+        url?: T;
+        id?: T;
+      };
+  metaTitle?: T;
+  metaDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series_select".
+ */
+export interface SeriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  status?: T;
+  startYear?: T;
+  endYear?: T;
+  description?: T;
+  shortDescription?: T;
+  coverImage?: T;
+  hasSite?: T;
+  siteUrl?: T;
+  siteName?: T;
+  metaTitle?: T;
+  metaDescription?: T;
+  sameAs?:
+    | T
+    | {
+        url?: T;
+        label?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "exhibitions_select".
+ */
+export interface ExhibitionsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  status?: T;
+  startDate?: T;
+  endDate?: T;
+  description?: T;
+  eventStatus?: T;
+  organizer?: T;
+  location?:
+    | T
+    | {
+        name?: T;
+        address?: T;
+        city?: T;
+        region?: T;
+        country?: T;
+        countryCode?: T;
+        postalCode?: T;
+        lat?: T;
+        lng?: T;
+      };
+  url?: T;
+  artworks?: T;
+  primaryImage?: T;
+  additionalImages?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
+  metaTitle?: T;
+  metaDescription?: T;
+  sameAs?:
+    | T
+    | {
+        url?: T;
+        label?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+:root {
+  --background: #FDFEFF;
+  --dark: #393B3E;
+  --medium: #464646;
+  --light: #696969;
+}
+
+body {
+  /* Use the variables directly here to avoid the @apply bug */
+  background-color: var(--background);
+  color: var(--dark);
+  font-family: var(--font-barlow), sans-serif;
+  @apply antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-staatliches), sans-serif;
+  @apply uppercase tracking-wider;
+}
