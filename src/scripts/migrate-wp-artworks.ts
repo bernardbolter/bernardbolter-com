@@ -4,6 +4,12 @@ dotenv.config({ path: '.env.local' })
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 
+type SchemaMode = 'legacy' | 'step0a'
+
+const args = new Set(process.argv.slice(2))
+const dryRun = args.has('--dry-run')
+const schemaMode: SchemaMode = args.has('--schema=step0a') ? 'step0a' : 'legacy'
+
 // Your WP GraphQL endpoint
 const WP_ENDPOINT = 'https://artism.org/bolter/graphql'
 
@@ -182,6 +188,7 @@ const WP_QUERY = `
 async function migrate() {
   try {
     const payload = await getPayload({ config })
+    console.log(`Schema mode: ${schemaMode}${dryRun ? ' (dry-run)' : ''}`)
 
     // 1. Fetch all WP artworks
     console.log('Fetching from WordPress...')
@@ -224,9 +231,9 @@ async function migrate() {
       limit: 50,
     })
 
-    const seriesMap: Record<string, string> = {}
+    const seriesMap: Record<string, number> = {}
     seriesResult.docs.forEach((s) => {
-      seriesMap[s.slug] = s.id
+      seriesMap[s.slug] = Number(s.id)
     })
 
     console.log('Series map:', seriesMap)
@@ -263,20 +270,25 @@ async function migrate() {
           })
         }
 
-        // If artwork exists, UPDATE it with wpImageUrl
+        // If artwork exists, UPDATE it with WP image url only
         if (existing.docs.length > 0) {
           const existingId = existing.docs[0].id
           const wpImageUrl = f.artworkImage?.node?.sourceUrl ?? null
 
-          await payload.update({
-            collection: 'artworks',
-            id: existingId,
-            data: {
-              wpImageUrl,
-              // Also ensure wp_id is set for future migrations
-              wp_id: wpId,
-            },
-          })
+          const updateData: Record<string, unknown> = {
+            wpImageUrl,
+            wp_id: wpId,
+          }
+
+          if (dryRun) {
+            console.log(`[dry-run] update artworks/${existingId}`, updateData)
+          } else {
+            await payload.update({
+              collection: 'artworks',
+              id: existingId,
+              data: updateData as any,
+            })
+          }
 
           console.log(`↻ Updated: ${wp.slug} with wpImageUrl`)
           created++
@@ -287,69 +299,77 @@ async function migrate() {
         const seriesSlug = f.series?.[0] ?? null
         const seriesId = seriesSlug ? seriesMap[seriesSlug] : null
 
-        // Build dateCreated from year field
-        const dateCreated = f.year
-          ? new Date(`${f.year}-01-01`).toISOString().split('T')[0]
-          : wp.date
-            ? new Date(wp.date).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0]
+        const fallbackDate = wp.date ? new Date(wp.date) : new Date()
+        const parsedYear = Number.parseInt(String(f.year ?? ''), 10)
+        const yearCreated = Number.isNaN(parsedYear) ? fallbackDate.getUTCFullYear() : parsedYear
+        const dateCreated = new Date(`${yearCreated}-01-01`).toISOString().split('T')[0]
 
-        // Map units
         const unitCode = f.units === 'metric' ? 'CMT' : 'INH'
+        const width = f.width ? parseFloat(f.width) : null
+        const height = f.height ? parseFloat(f.height) : null
 
         // Map artform (set a sensible default or extract from WP if available)
         const artform = 'Painting' // TODO: map from WP data if available
 
-        await payload.create({
-          collection: 'artworks',
-          data: {
-            // Core
-            name: wp.title,
-            slug: wp.slug,
-            creator: artistId,
-            series: seriesId ?? null,
-            seriesSlug: seriesSlug ?? null,
-            status: 'published',
-            dateCreated,
-            wp_id: wpId,
-
-            // Artwork details
-            artform,
-            artMedium: f.medium ?? null,
-            orientation: f.orientation?.[0] ?? null,
-            dimensions: {
-              width: f.width ? parseFloat(f.width) : null,
-              height: f.height ? parseFloat(f.height) : null,
-              depth: null,
-              unitCode,
-            },
-
-            // Description
-            description: f.colorfulFields?.storyEn ?? null,
-
-            // Location created
-            locationCreated: {
-              label: f.location ?? null,
-              city: f.city ?? null,
-              country: f.country ?? null,
-              countryCode: null,
-              lat: f.lat ? parseFloat(f.lat) : null,
-              lng: f.lng ? parseFloat(f.lng) : null,
-            },
-
-            // Commerce
-            isForSale: f.forsale ?? false,
-
-            // Provenance
-            provenanceNotes: f.provenance ?? null,
-
-            // Legacy WP link only
-            oldWpUrl: f.artworklink?.url ?? null,
-
-            // Temporary WP image URL until migrated to R2
-            wpImageUrl: f.artworkImage?.node?.sourceUrl ?? null,
+        const commonData: Record<string, unknown> = {
+          slug: wp.slug,
+          creator: artistId,
+          series: seriesId ?? null,
+          seriesSlug: seriesSlug ?? null,
+          status: 'published',
+          wp_id: wpId,
+          artform,
+          artMedium: f.medium ?? null,
+          orientation: f.orientation?.[0] ?? null,
+          description: f.colorfulFields?.storyEn ?? null,
+          locationCreated: {
+            label: f.location ?? null,
+            city: f.city ?? null,
+            country: f.country ?? null,
+            countryCode: null,
+            lat: f.lat ? parseFloat(f.lat) : null,
+            lng: f.lng ? parseFloat(f.lng) : null,
           },
-        })
+          isForSale: f.forsale ?? false,
+          provenanceNotes: f.provenance ?? null,
+          oldWpUrl: f.artworklink?.url ?? null,
+          wpImageUrl: f.artworkImage?.node?.sourceUrl ?? null,
+        }
+
+        const data: Record<string, unknown> =
+          schemaMode === 'step0a'
+            ? {
+                ...commonData,
+                title: wp.title,
+                yearCreated,
+                widthWhole: width == null ? null : Math.floor(width),
+                widthFraction: null,
+                heightWhole: height == null ? null : Math.floor(height),
+                heightFraction: null,
+                depthWhole: null,
+                depthFraction: null,
+                dimensionUnit: unitCode === 'INH' ? 'in' : 'cm',
+              }
+            : {
+                ...commonData,
+                name: wp.title,
+                dateCreated,
+                dimensions: {
+                  width,
+                  height,
+                  depth: null,
+                  unitCode,
+                },
+              }
+
+        if (dryRun) {
+          console.log(`[dry-run] create artworks/${wp.slug}`, data)
+        } else {
+          await payload.create({
+            collection: 'artworks',
+            data: data as any,
+          })
+        }
 
         console.log(`✓ Created: ${wp.slug}`)
         created++
