@@ -19,7 +19,7 @@ export const getArtworks = unstable_cache(
     const result = await payload.find({
       collection: 'artworks',
       where,
-      sort: '-dateCreated',
+      sort: '-yearCreated',
       depth: 2,
       limit: 500,
     })

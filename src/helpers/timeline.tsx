@@ -17,11 +17,14 @@ const PIXELS_PER_MONTH = 10
 
 // Safe date getter - returns date or fallback to 2000-01-01
 export function getArtworkDate(artwork: {
+  yearCreated?: number | null
   dateCreated?: string | Date | null
   date?: string | Date | null
   createdAt?: string | Date
 }): Date {
-  // Try dateCreated first (Payload field), fall back to date, then createdAt
+  if (typeof artwork.yearCreated === 'number' && !Number.isNaN(artwork.yearCreated)) {
+    return new Date(artwork.yearCreated, 0, 1)
+  }
   const dateValue = artwork.dateCreated || artwork.date || artwork.createdAt
   if (!dateValue) return new Date('2000-01-01')
 

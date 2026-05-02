@@ -17,6 +17,9 @@ import { Artworks } from './collections/Artworks'
 import { People } from './collections/People'
 import { Series } from './collections/Series'
 import { Exhibitions } from './collections/Exhibitions'
+import { Events } from './collections/Events'
+import { Tags } from './collections/Tags'
+import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Artist } from './globals/Artist'
 
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -46,7 +49,17 @@ export default buildConfig({
     fallback: true,
   },
   globals: [Artist],
-  collections: [Users, Media, Artworks, People, Series, Exhibitions],
+  collections: [
+    Users,
+    Media,
+    Artworks,
+    People,
+    Series,
+    Exhibitions,
+    Events,
+    Tags,
+    ArtHistoricalReferences,
+  ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET,
   typescript: {

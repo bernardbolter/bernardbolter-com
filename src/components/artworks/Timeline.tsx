@@ -215,7 +215,7 @@ export default function Timeline() {
                   {imgUrl ? (
                     <img
                       src={imgUrl}
-                      alt={artwork.name ?? ''}
+                      alt={artwork.title ?? ''}
                       className="w-full h-full object-contain bg-gray-50"
                       loading={index < 5 ? 'eager' : 'lazy'}
                     />
@@ -227,9 +227,9 @@ export default function Timeline() {
 
                   {/* Info overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
-                    <h3 className="text-white font-medium truncate">{artwork.name}</h3>
+                    <h3 className="text-white font-medium truncate">{artwork.title}</h3>
                     <p className="text-white/70 text-sm">
-                      {artwork.dateCreated ? new Date(artwork.dateCreated).getFullYear() : '—'}
+                      {artwork.yearCreated ?? '—'}
                     </p>
                   </div>
                 </div>

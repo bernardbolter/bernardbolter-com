@@ -4,11 +4,32 @@ dotenv.config({ path: '.env.local' })
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 
-type SchemaMode = 'legacy' | 'step0a'
-
 const args = new Set(process.argv.slice(2))
 const dryRun = args.has('--dry-run')
-const schemaMode: SchemaMode = args.has('--schema=step0a') ? 'step0a' : 'legacy'
+/** @deprecated Legacy `--schema=legacy` removed — Artworks Step 6+ shape only. */
+if (args.has('--schema=legacy')) {
+  console.warn('Ignoring --schema=legacy: WP import targets Step 6 Artworks fields only.')
+}
+
+function inferMediumFromWp(mediumText: string | null | undefined): string {
+  const m = (mediumText ?? '').toLowerCase()
+  if (m.includes('collage')) return 'photo-collage'
+  if (m.includes('video') || m.includes('mp4')) return 'video'
+  if (m.includes('digital')) return 'digital'
+  if (m.includes('transfer')) return 'acrylic-photo-transfer-on-canvas'
+  if (m.includes('mixed')) return 'mixed-media-on-canvas'
+  return 'acrylic-on-canvas'
+}
+
+function inferMeasurementTypes(f: {
+  video?: { node?: { sourceUrl?: string | null } | null } | null
+  performance?: string | null
+}): string[] {
+  const types = new Set<string>(['physical'])
+  if (f.video?.node?.sourceUrl) types.add('time-based')
+  if (f.performance) types.add('time-based')
+  return [...types]
+}
 
 // Your WP GraphQL endpoint
 const WP_ENDPOINT = 'https://artism.org/bolter/graphql'
@@ -302,14 +323,12 @@ async function migrate() {
         const fallbackDate = wp.date ? new Date(wp.date) : new Date()
         const parsedYear = Number.parseInt(String(f.year ?? ''), 10)
         const yearCreated = Number.isNaN(parsedYear) ? fallbackDate.getUTCFullYear() : parsedYear
-        const dateCreated = new Date(`${yearCreated}-01-01`).toISOString().split('T')[0]
 
         const unitCode = f.units === 'metric' ? 'CMT' : 'INH'
         const width = f.width ? parseFloat(f.width) : null
         const height = f.height ? parseFloat(f.height) : null
 
-        // Map artform (set a sensible default or extract from WP if available)
-        const artform = 'Painting' // TODO: map from WP data if available
+        const medium = inferMediumFromWp(f.medium ?? null)
 
         const commonData: Record<string, unknown> = {
           slug: wp.slug,
@@ -318,8 +337,6 @@ async function migrate() {
           seriesSlug: seriesSlug ?? null,
           status: 'published',
           wp_id: wpId,
-          artform,
-          artMedium: f.medium ?? null,
           orientation: f.orientation?.[0] ?? null,
           description: f.colorfulFields?.storyEn ?? null,
           locationCreated: {
@@ -336,31 +353,21 @@ async function migrate() {
           wpImageUrl: f.artworkImage?.node?.sourceUrl ?? null,
         }
 
-        const data: Record<string, unknown> =
-          schemaMode === 'step0a'
-            ? {
-                ...commonData,
-                title: wp.title,
-                yearCreated,
-                widthWhole: width == null ? null : Math.floor(width),
-                widthFraction: null,
-                heightWhole: height == null ? null : Math.floor(height),
-                heightFraction: null,
-                depthWhole: null,
-                depthFraction: null,
-                dimensionUnit: unitCode === 'INH' ? 'in' : 'cm',
-              }
-            : {
-                ...commonData,
-                name: wp.title,
-                dateCreated,
-                dimensions: {
-                  width,
-                  height,
-                  depth: null,
-                  unitCode,
-                },
-              }
+        const data: Record<string, unknown> = {
+          ...commonData,
+          title: wp.title,
+          yearCreated,
+          medium,
+          measurementType: inferMeasurementTypes(f),
+          support: 'canvas',
+          widthWhole: width == null ? null : Math.floor(width),
+          widthFraction: null,
+          heightWhole: height == null ? null : Math.floor(height),
+          heightFraction: null,
+          depthWhole: null,
+          depthFraction: null,
+          dimensionUnit: unitCode === 'INH' ? 'in' : 'cm',
+        }
 
         if (dryRun) {
           console.log(`[dry-run] create artworks/${wp.slug}`, data)

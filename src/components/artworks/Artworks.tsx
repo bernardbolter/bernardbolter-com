@@ -87,7 +87,7 @@ export default function Artworks() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={url}
-                      alt={artwork.name ?? ''}
+                      alt={artwork.title ?? ''}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
@@ -111,14 +111,14 @@ export default function Artworks() {
 
               {/* Info */}
               <div className="p-2">
-                <p className="text-sm font-medium text-gray-800 truncate">{artwork.name}</p>
+                <p className="text-sm font-medium text-gray-800 truncate">{artwork.title}</p>
                 <p className="text-xs text-gray-500 truncate">
                   {typeof artwork.series === 'object' && artwork.series
                     ? artwork.series.name
                     : (artwork.seriesSlug ?? '—')}
                 </p>
                 <p className="text-xs text-gray-400">
-                  {artwork.dateCreated ? new Date(artwork.dateCreated).getFullYear() : '—'}
+                  {artwork.yearCreated ?? '—'}
                 </p>
               </div>
             </div>

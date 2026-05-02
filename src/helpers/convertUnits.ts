@@ -18,7 +18,7 @@ function gcd(a: number, b: number): number {
 }
 
 // Helper to convert fractions (like "5/8") or mixed numbers (like "11 5/8") to decimal inches.
-function parseInputImperialToInches(input: string): number {
+export function parseInputImperialToInches(input: string): number {
     const sanitized = input.trim().replace(/'/g, '').replace(/"/g, ''); // Remove common unit indicators
     
     // 1. Check for mixed number format: "11 5/8"
