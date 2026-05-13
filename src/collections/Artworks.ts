@@ -1,12 +1,37 @@
 import { CollectionConfig } from 'payload'
 
-import { privateFieldAccess, publicReadStaffWriteAccess } from '@/access/isArtistOrAdmin'
+import { adminOnlyFieldAccess, privateFieldAccess, publicReadStaffWriteAccess, isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { artworkAfterChange } from '@/hooks/artworkAfterChange'
+import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
 
 export const Artworks: CollectionConfig = {
   slug: 'artworks',
+  access: {
+    read: ({ req: { user } }) => {
+      if (isArtistOrAdmin(user)) return true
+      if (!user) {
+        return {
+          and: [
+            { status: { equals: 'published' } },
+            { recordOrigin: { equals: 'artist-catalogued' } },
+          ],
+        }
+      }
+      return {
+        and: [
+          { status: { equals: 'published' } },
+          { recordOrigin: { equals: 'artist-catalogued' } },
+        ],
+      }
+    },
+    create: ({ req: { user } }) => isArtistOrAdmin(user),
+    update: ({ req: { user } }) => isArtistOrAdmin(user),
+    delete: ({ req: { user } }) => isArtistOrAdmin(user),
+  },
   hooks: {
     beforeChange: [artworkBeforeChange],
+    afterChange: [artworkAfterChange, artworkAfterChangeAr],
   },
   admin: {
     useAsTitle: 'title',
@@ -141,6 +166,26 @@ export const Artworks: CollectionConfig = {
                 { label: 'Archived', value: 'archived' },
               ],
               admin: { position: 'sidebar' },
+            },
+            {
+              name: 'recordOrigin',
+              type: 'select',
+              required: true,
+              defaultValue: 'artist-catalogued',
+              access: {
+                read: () => true,
+                update: () => false,
+              },
+              options: [
+                { label: 'Artist catalogued', value: 'artist-catalogued' },
+                { label: 'Collector catalogued', value: 'collector-catalogued' },
+                { label: 'Migrated', value: 'migrated' },
+                { label: 'Enrichment agent', value: 'enrichment-agent' },
+              ],
+              admin: {
+                position: 'sidebar',
+                description: 'Set once at creation; immutable. Provenance of the catalogue record.',
+              },
             },
             {
               name: 'yearCreated',
@@ -540,6 +585,20 @@ export const Artworks: CollectionConfig = {
                 description:
                   'Timestamped change records: [{ date, description, type: restoration|rework|damage|relining|other }]',
               },
+            },
+            {
+              name: 'sizeTier',
+              type: 'select',
+              admin: {
+                description:
+                  'Layout tier on the public site. Rule-of-thumb: longest side <300mm → sm; 300–800 → md; 800–2000 → lg; >2000 → xl.',
+              },
+              options: [
+                { label: 'SM', value: 'sm' },
+                { label: 'MD', value: 'md' },
+                { label: 'LG', value: 'lg' },
+                { label: 'XL', value: 'xl' },
+              ],
             },
             {
               name: 'orientation',
@@ -1024,6 +1083,161 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
+        // ── TAB: Collector corpus (collector-catalogued only) ──
+        {
+          label: 'Collector',
+          admin: {
+            condition: (_, data) => data?.recordOrigin === 'collector-catalogued',
+            description: 'Acquisition and recognition context (collector sessions).',
+          },
+          fields: [
+            {
+              name: 'acquisitionYear',
+              type: 'number',
+              admin: { position: 'sidebar' },
+            },
+            {
+              name: 'acquisitionChannel',
+              type: 'select',
+              options: [
+                { label: 'Direct from artist', value: 'direct-from-artist' },
+                { label: 'Dealer', value: 'dealer' },
+                { label: 'Auction', value: 'auction' },
+                { label: 'Art fair', value: 'art-fair' },
+                { label: 'Gift', value: 'gift' },
+                { label: 'Estate', value: 'estate' },
+                { label: 'Other', value: 'other' },
+              ],
+            },
+            { name: 'dealerSource', type: 'text' },
+            { name: 'dealerLocation', type: 'text' },
+            { name: 'priorOwner', type: 'text' },
+            {
+              name: 'acquisitionPrice',
+              type: 'number',
+              access: adminOnlyFieldAccess,
+              admin: { description: 'Admin-only; never exposed in public APIs.' },
+            },
+            {
+              name: 'acquisitionCurrency',
+              type: 'select',
+              options: [
+                { label: 'EUR', value: 'EUR' },
+                { label: 'GBP', value: 'GBP' },
+                { label: 'USD', value: 'USD' },
+                { label: 'Other', value: 'other' },
+              ],
+            },
+            { name: 'certificationDocs', type: 'textarea' },
+            {
+              name: 'saleHandoffReceived',
+              type: 'checkbox',
+              defaultValue: false,
+            },
+            {
+              name: 'artistRecognitionAtAcquisition',
+              type: 'select',
+              options: [
+                { label: 'Unknown', value: 'unknown' },
+                { label: 'Local known', value: 'local-known' },
+                { label: 'Nationally known', value: 'nationally-known' },
+                { label: 'Internationally known', value: 'internationally-known' },
+                { label: 'Institutionally validated', value: 'institutionally-validated' },
+              ],
+            },
+            { name: 'priorExhibitionAtAcquisition', type: 'textarea' },
+            {
+              name: 'encounterContext',
+              type: 'select',
+              options: [
+                { label: 'Studio visit', value: 'studio-visit' },
+                { label: 'Dealer recommendation', value: 'dealer-recommendation' },
+                { label: 'Art fair', value: 'art-fair' },
+                { label: 'Online', value: 'online' },
+                { label: 'Gift', value: 'gift' },
+                { label: 'Other', value: 'other' },
+              ],
+            },
+            {
+              name: 'whyThisWork',
+              type: 'textarea',
+              localized: true,
+              admin: { description: 'Drawn out through dialogue — not form-filled.' },
+            },
+            {
+              name: 'collectorArtistRelationship',
+              type: 'select',
+              options: [
+                { label: 'None', value: 'none' },
+                { label: 'Aware of practice', value: 'aware-of-practice' },
+                { label: 'Personal relationship', value: 'personal-relationship' },
+              ],
+            },
+            { name: 'documentationPhotoContext', type: 'text' },
+            {
+              name: 'linkedArtistRecord',
+              type: 'relationship',
+              relationTo: 'artworks',
+              filterOptions: { recordOrigin: { equals: 'artist-catalogued' } },
+            },
+            {
+              name: 'linkedCollectorId',
+              type: 'relationship',
+              relationTo: 'collectors',
+            },
+          ],
+        },
+
+        // ── TAB: AR (Quick Look / model-viewer) ─────────────────
+        {
+          label: 'AR',
+          admin: { description: 'Wall AR from primary image + dimensions (metres).' },
+          fields: [
+            {
+              name: 'arEnabled',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: { position: 'sidebar' },
+            },
+            {
+              name: 'arWidthM',
+              type: 'number',
+              admin: { description: 'Metres; defaults from width mm ÷ 1000 on save.' },
+            },
+            {
+              name: 'arHeightM',
+              type: 'number',
+              admin: { description: 'Metres; defaults from height mm ÷ 1000 on save.' },
+            },
+            {
+              name: 'arDepthM',
+              type: 'number',
+              admin: { description: 'Depth in metres (framed works).' },
+            },
+            {
+              name: 'arModelUrl',
+              type: 'text',
+              admin: { readOnly: true, description: 'Generated .usdz URL (R2).' },
+            },
+            {
+              name: 'arModelGlbUrl',
+              type: 'text',
+              admin: { readOnly: true, description: 'Generated .glb URL for Android.' },
+            },
+            {
+              name: 'arAllowScaling',
+              type: 'checkbox',
+              defaultValue: true,
+              admin: { position: 'sidebar' },
+            },
+            {
+              name: 'arLastGenerated',
+              type: 'date',
+              admin: { readOnly: true, position: 'sidebar' },
+            },
+          ],
+        },
+
         // ── TAB 6: Location ───────────────────────────────────
         {
           label: 'Location',
@@ -1130,6 +1344,16 @@ export const Artworks: CollectionConfig = {
               },
             },
             {
+              name: 'provenanceOriginKnown',
+              type: 'checkbox',
+              defaultValue: true,
+              access: privateFieldAccess,
+              admin: {
+                description:
+                  'Uncheck when the studio-to-collector chain is not traceable (collector records).',
+              },
+            },
+            {
               name: 'loanHistory',
               type: 'json',
               access: privateFieldAccess,
@@ -1164,7 +1388,29 @@ export const Artworks: CollectionConfig = {
               relationTo: 'exhibitions',
               hasMany: true,
               admin: {
-                description: 'Legacy only. Prefer Event → Artworks + Artwork → Classification → Events.',
+                description: 'DEPRECATED — use exhibition history → Events. Prefer Event → Artworks.',
+              },
+            },
+            {
+              name: 'exhibitionHistory',
+              type: 'array',
+              labels: { singular: 'Showing', plural: 'Exhibition history (Events)' },
+              fields: [
+                {
+                  name: 'event',
+                  type: 'relationship',
+                  relationTo: 'events',
+                  required: true,
+                },
+                {
+                  name: 'workIncluded',
+                  type: 'checkbox',
+                  defaultValue: true,
+                },
+                { name: 'notes', type: 'text' },
+              ],
+              admin: {
+                description: 'Structured link to Event records (replaces legacy exhibitions relation).',
               },
             },
           ],
@@ -1244,6 +1490,65 @@ export const Artworks: CollectionConfig = {
               type: 'text',
               access: privateFieldAccess,
               admin: { description: "Gallery inventory / stock id (private)." },
+            },
+            {
+              name: 'consignedTo',
+              type: 'relationship',
+              relationTo: 'galleries',
+              access: privateFieldAccess,
+              admin: { description: 'Current consignment gallery.' },
+            },
+            {
+              name: 'consignmentHistory',
+              type: 'array',
+              access: privateFieldAccess,
+              labels: { singular: 'Entry', plural: 'Consignment history' },
+              fields: [
+                {
+                  name: 'galleryId',
+                  type: 'relationship',
+                  relationTo: 'galleries',
+                  required: true,
+                },
+                {
+                  name: 'status',
+                  type: 'select',
+                  required: true,
+                  options: [
+                    { label: 'Active', value: 'active' },
+                    { label: 'Completed', value: 'completed' },
+                  ],
+                },
+                { name: 'dateIn', type: 'date' },
+                { name: 'dateOut', type: 'date' },
+                {
+                  name: 'outcome',
+                  type: 'select',
+                  options: [
+                    { label: 'Sold', value: 'sold' },
+                    { label: 'Returned', value: 'returned' },
+                    { label: 'Transferred', value: 'transferred' },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'galleryText',
+              type: 'textarea',
+              localized: true,
+              admin: {
+                description: 'Wall text / press release from the gallery for this work.',
+              },
+            },
+            {
+              name: 'placedBy',
+              type: 'relationship',
+              relationTo: 'galleries',
+              access: privateFieldAccess,
+              admin: {
+                description: 'Broker gallery (collector records).',
+                condition: (_, data) => data?.recordOrigin === 'collector-catalogued',
+              },
             },
             {
               name: 'salesRecord',
@@ -1424,6 +1729,9 @@ export const Artworks: CollectionConfig = {
             {
               name: 'sameAs',
               type: 'array',
+              admin: {
+                description: 'Labeled external links for SEO. For schema.org URI list see Schema.org tab.',
+              },
               fields: [
                 { name: 'url', type: 'text', required: true },
                 { name: 'label', type: 'text' },
@@ -1432,13 +1740,175 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
-        // ── TAB 11: A Colorful History ────────────────────────
+        // ── TAB 11: Schema.org (§1.10 — Step 12 stubs for Step 13 JSON-LD) ──
+        {
+          label: 'Schema.org',
+          admin: {
+            description:
+              'Rights + external IDs for structured data. jsonldPreview is filled by the generator hook in Step 13.',
+          },
+          fields: [
+            {
+              name: 'license',
+              type: 'select',
+              admin: {
+                description: 'Maps to rightsstatement.org / CC URIs in JSON-LD output.',
+              },
+              options: [
+                { label: 'All rights reserved', value: 'all-rights-reserved' },
+                { label: 'CC BY', value: 'cc-by' },
+                { label: 'CC BY-NC', value: 'cc-by-nc' },
+                { label: 'CC BY-NC-ND', value: 'cc-by-nc-nd' },
+                { label: 'CC BY-SA', value: 'cc-by-sa' },
+              ],
+            },
+            {
+              name: 'creditText',
+              type: 'textarea',
+              localized: true,
+              admin: {
+                description: 'Attribution line, e.g. Bernard Bolter, Title, 2021. Courtesy the artist.',
+              },
+            },
+            {
+              name: 'sameAsUrls',
+              type: 'array',
+              labels: { singular: 'URI', plural: 'sameAs (plain URIs)' },
+              fields: [{ name: 'url', type: 'text', required: true }],
+              admin: {
+                description: 'Wikidata, institution, catalogue URLs for schema.org sameAs array.',
+              },
+            },
+            {
+              name: 'jsonldPreview',
+              type: 'json',
+              admin: {
+                readOnly: true,
+                description: 'Last generated VisualArtwork JSON-LD (Step 13).',
+              },
+            },
+            {
+              name: 'jsonldWidthPreview',
+              type: 'json',
+              admin: {
+                readOnly: true,
+                description: 'Stub: QuantitativeValue width — optional sub-preview for debugging.',
+              },
+            },
+            {
+              name: 'jsonldHeightPreview',
+              type: 'json',
+              admin: {
+                readOnly: true,
+                description: 'Stub: QuantitativeValue height.',
+              },
+            },
+            {
+              name: 'jsonldCreatorPreview',
+              type: 'json',
+              admin: {
+                readOnly: true,
+                description: 'Stub: schema.org Person + identifier[] (ULAN, Wikidata).',
+              },
+            },
+          ],
+        },
+
+        // ── TAB 12: Mediums of Perception (§1.11) ─────────────
+        {
+          label: 'Mediums of Perception',
+          admin: {
+            condition: (data) => data?.seriesSlug === 'mediums-of-perception',
+          },
+          fields: [
+            {
+              name: 'mop_sourcePhotographDetails',
+              type: 'textarea',
+              localized: true,
+              admin: { description: 'Source photograph: technology, origin, historical context.' },
+            },
+            {
+              name: 'mop_imageCaptureType',
+              type: 'select',
+              options: [
+                { label: 'Daguerreotype', value: 'daguerreotype' },
+                { label: 'Ambrotype', value: 'ambrotype' },
+                { label: 'Lithograph', value: 'lithograph' },
+                { label: 'Aerial', value: 'aerial' },
+                { label: 'Satellite', value: 'satellite' },
+                { label: 'Digital', value: 'digital' },
+              ],
+            },
+            {
+              name: 'mop_historicalContext',
+              type: 'richText',
+              localized: true,
+              admin: { description: 'Historical context (EN/DE via locale).' },
+            },
+            {
+              name: 'mop_triptychPosition',
+              type: 'select',
+              options: [
+                { label: 'Panel 1', value: 'panel-1' },
+                { label: 'Panel 2', value: 'panel-2' },
+                { label: 'Panel 3', value: 'panel-3' },
+                { label: 'Standalone', value: 'standalone' },
+              ],
+            },
+            {
+              name: 'mop_triptychGroupNote',
+              type: 'text',
+              admin: {
+                description:
+                  'Triptych grouping label or id (replace with relation → TriptychGroups when that collection exists).',
+              },
+            },
+            { name: 'mop_arVideoUrl', type: 'text', admin: { description: 'AR video layer (mind.js).' } },
+            {
+              name: 'mop_arRapScript',
+              type: 'textarea',
+              admin: { description: 'Rap script for AR audio layer.' },
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'mop_lat',
+                  type: 'number',
+                  admin: { width: '50%', description: 'Map pin (series-specific).' },
+                },
+                {
+                  name: 'mop_lng',
+                  type: 'number',
+                  admin: { width: '50%' },
+                },
+              ],
+            },
+          ],
+        },
+
+        // ── TAB 13: A Colorful History ────────────────────────
         {
           label: 'A Colorful History',
           admin: {
             condition: (data) => data?.seriesSlug === 'a-colorful-history',
           },
           fields: [
+            {
+              name: 'ach_overlayColors',
+              type: 'array',
+              labels: { singular: 'Hex', plural: 'Overlay colors (hover)' },
+              fields: [{ name: 'hex', type: 'text', required: true }],
+              admin: { description: 'Agent-suggested rectangle colours; artist confirms.' },
+            },
+            {
+              name: 'ach_overlayRects',
+              type: 'json',
+              admin: {
+                description:
+                  'Array of { color, x, y, w, h } in % of image dimensions — resolution-independent.',
+              },
+            },
             {
               name: 'ach_historyText',
               type: 'richText',
@@ -1505,7 +1975,7 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
-        // ── TAB 12: Digital City Series ───────────────────────
+        // ── TAB 14: Digital City Series ───────────────────────
         {
           label: 'Digital City Series',
           admin: {
@@ -1565,7 +2035,7 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
-        // ── TAB 13: Megacities ────────────────────────────────
+        // ── TAB 15: Megacities ────────────────────────────────
         {
           label: 'Megacities',
           admin: {

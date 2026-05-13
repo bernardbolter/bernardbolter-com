@@ -20,7 +20,13 @@ import { Exhibitions } from './collections/Exhibitions'
 import { Events } from './collections/Events'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
-import { Artist } from './globals/Artist'
+import { Artists } from './collections/Artists'
+import { CollectionKnowledge } from './collections/CollectionKnowledge'
+import { Collectors } from './collections/Collectors'
+import { Galleries } from './collections/Galleries'
+import { GalleryKnowledge } from './collections/GalleryKnowledge'
+import { PracticeKnowledge } from './collections/PracticeKnowledge'
+import { Sessions } from './collections/Sessions'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
@@ -39,6 +45,15 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    components: {
+      views: {
+        artOfficial: {
+          Component: '/components/admin/ArtOfficialView#ArtOfficialView',
+          path: '/art-official',
+          exact: true,
+        },
+      },
+    },
   },
   localization: {
     locales: [
@@ -48,10 +63,15 @@ export default buildConfig({
     defaultLocale: 'en',
     fallback: true,
   },
-  globals: [Artist],
   collections: [
     Users,
     Media,
+    Artists,
+    PracticeKnowledge,
+    CollectionKnowledge,
+    GalleryKnowledge,
+    Collectors,
+    Galleries,
     Artworks,
     People,
     Series,
@@ -59,6 +79,7 @@ export default buildConfig({
     Events,
     Tags,
     ArtHistoricalReferences,
+    Sessions,
   ],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET,
@@ -69,6 +90,8 @@ export default buildConfig({
     pool: {
       connectionString: databaseUrl,
     },
+    /** Set `PAYLOAD_DATABASE_PUSH=true` locally to sync Drizzle schema without interactive migrate:create. */
+    push: process.env.PAYLOAD_DATABASE_PUSH === 'true',
   }),
   sharp,
   plugins: [

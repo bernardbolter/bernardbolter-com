@@ -119,8 +119,52 @@ export function parseDurationToSeconds(duration: string | null | undefined): num
   return null
 }
 
-export const artworkBeforeChange: CollectionBeforeChangeHook = ({ data }) => {
+export const artworkBeforeChange: CollectionBeforeChangeHook = ({
+  data,
+  operation,
+  originalDoc,
+  context,
+}) => {
+  if (context?.skipArUpdate) {
+    return data
+  }
+
   const d = data as Record<string, unknown>
+  const prev = (originalDoc ?? {}) as Record<string, unknown>
+
+  if (operation === 'create') {
+    if (d.recordOrigin == null) {
+      d.recordOrigin = 'artist-catalogued'
+    }
+    if (d.provenanceOriginKnown == null) {
+      d.provenanceOriginKnown = true
+    }
+  }
+  if (operation === 'update' && prev.recordOrigin != null) {
+    d.recordOrigin = prev.recordOrigin
+  }
+
+  const widthMm =
+    d.widthMm !== undefined && d.widthMm !== null ? (d.widthMm as number | null) : (prev.widthMm as number | null)
+  const heightMm =
+    d.heightMm !== undefined && d.heightMm !== null ?
+      (d.heightMm as number | null)
+    : (prev.heightMm as number | null)
+  const depthMm =
+    d.depthMm !== undefined && d.depthMm !== null ? (d.depthMm as number | null) : (prev.depthMm as number | null)
+  const arEnabled = Boolean(d.arEnabled ?? prev.arEnabled)
+
+  if (arEnabled) {
+    if (d.arWidthM === undefined && typeof widthMm === 'number') {
+      d.arWidthM = Math.round((widthMm / 1000) * 1e9) / 1e9
+    }
+    if (d.arHeightM === undefined && typeof heightMm === 'number') {
+      d.arHeightM = Math.round((heightMm / 1000) * 1e9) / 1e9
+    }
+    if (d.arDepthM === undefined && typeof depthMm === 'number' && depthMm > 0) {
+      d.arDepthM = Math.round((depthMm / 1000) * 1e9) / 1e9
+    }
+  }
 
   const yearCreated = d.yearCreated
   if (typeof yearCreated === 'number' && !Number.isNaN(yearCreated)) {

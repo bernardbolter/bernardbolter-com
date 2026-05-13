@@ -5,7 +5,8 @@ export const Exhibitions: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'startDate', 'endDate', 'location'],
-    description: 'Exhibitions where artworks are displayed.',
+    description:
+      'DEPRECATED: legacy WordPress-era exhibitions. Prefer Events + Artwork.exhibitionHistory. Removal scheduled after migration.',
   },
   fields: [
     {

@@ -1,5 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
+import { privateFieldAccess, isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { eventBeforeChange } from '@/hooks/eventBeforeChange'
+
 const eventTypeOptions = [
   { label: 'Solo Exhibition', value: 'solo-exhibition' },
   { label: 'Group Exhibition', value: 'group-exhibition' },
@@ -30,6 +33,19 @@ const cvSectionOptions = [
 
 export const Events: CollectionConfig = {
   slug: 'events',
+  hooks: {
+    beforeChange: [eventBeforeChange],
+  },
+  access: {
+    read: ({ req: { user } }) => {
+      if (isArtistOrAdmin(user)) return true
+      if (!user) return { status: { equals: 'published' } }
+      return { status: { equals: 'published' } }
+    },
+    create: ({ req: { user } }) => isArtistOrAdmin(user),
+    update: ({ req: { user } }) => isArtistOrAdmin(user),
+    delete: ({ req: { user } }) => isArtistOrAdmin(user),
+  },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'eventType', 'startDate', 'status'],
@@ -44,6 +60,13 @@ export const Events: CollectionConfig = {
           fields: [
             { name: 'title', type: 'text', required: true, localized: true },
             { name: 'slug', type: 'text', required: true, unique: true, index: true },
+            {
+              name: 'eventId',
+              type: 'text',
+              unique: true,
+              index: true,
+              admin: { readOnly: true, position: 'sidebar', description: 'Stable UUID for merge / enrichment.' },
+            },
             { name: 'eventType', type: 'select', required: true, options: [...eventTypeOptions] },
             {
               name: 'eventTypeCustom',
@@ -158,6 +181,13 @@ export const Events: CollectionConfig = {
               name: 'coExhibitors',
               type: 'array',
               fields: [{ name: 'name', type: 'text' }],
+            },
+            {
+              name: 'collectors',
+              type: 'relationship',
+              relationTo: 'collectors',
+              hasMany: true,
+              admin: { description: 'Optional — e.g. acquisition-related events.' },
             },
             { name: 'catalogue', type: 'checkbox', defaultValue: false },
             { name: 'catalogueUrl', type: 'text' },
@@ -285,6 +315,90 @@ export const Events: CollectionConfig = {
             { name: 'cvDisplayTitle', type: 'text', localized: true },
             { name: 'cvPriority', type: 'number', defaultValue: 5 },
             { name: 'excludeFromCv', type: 'checkbox', defaultValue: false },
+          ],
+        },
+        {
+          label: 'Source & merge',
+          admin: { description: 'Entity resolution, provenance of fields, merge audit (staff-only).' },
+          fields: [
+            {
+              name: 'completenessScore',
+              type: 'number',
+              admin: { readOnly: true, position: 'sidebar', description: 'Computed on save (0–100).' },
+            },
+            {
+              name: 'mergeStaff',
+              type: 'group',
+              access: privateFieldAccess,
+              fields: [
+                {
+                  name: 'sourceHistory',
+                  type: 'array',
+                  labels: { singular: 'Source', plural: 'Source history' },
+                  fields: [
+                    {
+                      name: 'source',
+                      type: 'select',
+                      required: true,
+                      options: [
+                        { label: 'Artist archive', value: 'artist-archive' },
+                        { label: 'Gallery import', value: 'gallery-import' },
+                        { label: 'Collector session', value: 'collector-session' },
+                        { label: 'Enrichment agent', value: 'enrichment-agent' },
+                        { label: 'JSON-LD scrape', value: 'json-ld-scrape' },
+                        { label: 'Manual', value: 'manual' },
+                      ],
+                    },
+                    { name: 'actorId', type: 'text' },
+                    { name: 'addedAt', type: 'date' },
+                    {
+                      name: 'fieldsContributed',
+                      type: 'array',
+                      fields: [{ name: 'field', type: 'text', required: true }],
+                    },
+                  ],
+                },
+                {
+                  name: 'mergeStatus',
+                  type: 'select',
+                  defaultValue: 'partial',
+                  options: [
+                    { label: 'Stub', value: 'stub' },
+                    { label: 'Partial', value: 'partial' },
+                    { label: 'Confirmed', value: 'confirmed' },
+                    { label: 'Disputed', value: 'disputed' },
+                  ],
+                  admin: { position: 'sidebar' },
+                },
+                {
+                  name: 'mergeLog',
+                  type: 'array',
+                  labels: { singular: 'Entry', plural: 'Merge log' },
+                  fields: [
+                    {
+                      name: 'mergeAction',
+                      type: 'select',
+                      required: true,
+                      options: [
+                        { label: 'Entity linked', value: 'entity-linked' },
+                        { label: 'Field updated', value: 'field-updated' },
+                        { label: 'Merge proposed', value: 'merge-proposed' },
+                        { label: 'Merge confirmed', value: 'merge-confirmed' },
+                        { label: 'Merge declined', value: 'merge-declined' },
+                      ],
+                    },
+                    { name: 'actorId', type: 'text' },
+                    { name: 'timestamp', type: 'date' },
+                    { name: 'note', type: 'textarea' },
+                  ],
+                },
+                {
+                  name: 'canonicalSource',
+                  type: 'text',
+                  admin: { description: 'Actor id of the authoritative source for this event.' },
+                },
+              ],
+            },
           ],
         },
         {

@@ -17,6 +17,20 @@ export const privateFieldAccess: {
   update: ({ req: { user } }) => isArtistOrAdmin(user),
 }
 
+/** Admin-only (e.g. collector acquisition price — never staff/artist read via API). */
+export const adminOnlyFieldAccess: {
+  read: FieldAccess
+  update: FieldAccess
+} = {
+  read: ({ req: { user } }) =>
+    Boolean(
+      user &&
+        Array.isArray((user as { roles?: string[] }).roles) &&
+        (user as { roles: string[] }).roles.includes('admin'),
+    ),
+  update: ({ req: { user } }) => isArtistOrAdmin(user),
+}
+
 /** Public read (e.g. editions on the website); CMS edits still staff-only. */
 export const publicReadStaffWriteAccess: {
   read: FieldAccess

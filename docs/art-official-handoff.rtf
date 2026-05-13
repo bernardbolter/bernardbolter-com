@@ -1,0 +1,136 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 .AppleSystemUIFontMonospaced-Regular;}
+{\colortbl;\red255\green255\blue255;\red15\green15\blue15;\red255\green255\blue255;}
+{\*\expandedcolortbl;;\cssrgb\c7059\c7059\c7059;\cssrgb\c100000\c100000\c100000;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\fs24 \cf2 \cb3 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 # Art/Official \'97 Build Handoff\
+## Conversational Cataloguing Agent for bernardbolter.com\
+*Drop this into any new chat to continue building Art/Official*\
+\
+---\
+\
+## What Art/Official is\
+\
+Art/Official is a conversational AI cataloguing agent that lives inside the Payload CMS admin at bernardbolter.com. It replaces blank form-filling with structured dialogue \'97 drawing out meaning, intent, and context from the artist through conversation, while simultaneously running its own visual analysis of the uploaded artwork in the background. The result is a complete, semantically rich Artwork record in Payload, assembled from both sources and confirmed by the artist before it is committed.\
+\
+The name carries a double meaning intentionally. It is artificial intelligence applied to the creation of the official catalogue record. The slash is part of the name: **Art/Official**.\
+\
+This is first built for Bernard Bolter's personal archive. The architecture is designed from the start to be a transferable template for other artists. Every structural decision should be made with that in mind.\
+\
+---\
+\
+## Why it exists \'97 the north star\
+\
+Art/Official is the practical engine of a larger vision: building infrastructure for an honest, machine-readable record of contemporary art production that exists outside the market validation system. The semantic richness it produces \'97 intent in the artist's own words, art historical resonances confirmed by the artist, structured classification fields \'97 is what makes an artwork legible to AI systems without the mediation of commercial interests or institutional politics.\
+\
+The micro work (cataloguing a single artwork) and the macro vision (a corpus that lets AI reason honestly about art history) are the same project at different scales. Every field Art/Official captures is a brick in that larger structure.\
+\
+---\
+\
+## Where it lives in the stack\
+\
+Art/Official is a custom view inside the Payload CMS admin, built as a React component registered with Payload and rendered at `/admin/art-official`. It uses the existing Payload authentication \'97 no separate login, no separate application. Visually it lives inside the admin UI with the same navigation and chrome, but with a completely custom interface.\
+\
+The conversation with the frontier AI model happens through a Next.js API route (`/api/art-official/chat`), which means the Anthropic API key never touches the browser \'97 it lives in server environment variables. At the confirmation step, the assembled record is written directly to the Artworks collection using Payload's local API (`payload.create()`), so the artwork appears in the CMS immediately with all fields populated.\
+\
+The stack in full: Payload CMS custom view (React) \uc0\u8594  Next.js API route (server-side) \u8594  Anthropic API (claude-sonnet-4-20250514) \u8594  Payload local API \u8594  Neon Postgres. CLIP embeddings are generated separately and stored via the pgvector extension on Neon.\
+\
+---\
+\
+## The complete Artworks collection schema\
+\
+This is the field schema that Art/Official populates. It represents the original archive design plus four additions identified in the April 2026 design session. Fields are grouped by layer. All fields should be defined in the Payload collection config with correct types \'97 no free text where a structured type is appropriate.\
+\
+**Identity fields.** Title (text, required), slug (auto-generated from title + year, unique), yearCreated (number), yearCompleted (number, optional \'97 for works made across multiple years), status (select: draft / published, default draft).\
+\
+**Physical fields.** Medium is a structured select or relation \'97 not free text \'97 covering the recurring combinations in the practice (acrylic photo transfer on canvas, acrylic on canvas, mixed media on canvas, etc.), with an override text field for edge cases. Dimensions are stored as three separate number fields: widthCm, heightCm, depthCm. Support is a select (canvas / paper / board / other). Additional physical fields: framing (select: framed / unframed / artist framed), weight (number, kg, optional), condition (select: excellent / good / fair / poor, with a conditionNotes text field).\
+\
+**Size and orientation fields.** These drive the layout logic on the public site \'97 artworks are displayed at a size that represents their real-world physical scale. SizeTier is a select with four values: sm, md, lg, xl. Orientation is a select: landscape / portrait / square. AspectRatio is a computed number stored at save time (width \'f7 height), used for layout calculations. These fields must always be present and accurate \'97 they are not optional decoration.\
+\
+**Classification fields.** Series is a relation to a Series collection (not a text field). City and country are text fields with a controlled vocabulary enforced at the UI level. MovementTags, styleTags, and subjectTags are arrays of relations to a Tags collection, categorised by type. All classification fields should be relations or enums wherever possible \'97 not free text.\
+\
+**Image fields.** PrimaryImage is a Payload upload field (high res, required). DetailImages is an array of upload fields. InstallationShots is an array of upload fields. ArTargetImage is a single upload field (optional, used for Mediums of Perception AR layer). For every image, the aspect ratio (width \'f7 height) is stored alongside it at upload time and used for layout.\
+\
+**Commercial fields.** AvailabilityStatus is a select: available / sold / not for sale / on loan. OriginalPrice is a number (EUR). EditionType is a select: unique / limited edition / open edition. EditionSize is a number. EditionRemaining is a number. PrintSizesAvailable is an array of text fields describing available print formats.\
+\
+**Human-layer fields \'97 captured through Art/Official dialogue.** These are the fields that cannot be automated and are the reason the conversational model exists. Intent is a long text field: the artist's own words about what the work means, what drove the decisions, what it is doing \'97 distinct from description, distinct from subject matter. This is first-person, confirmed by the artist, never AI-generated. ArtHistoricalContext is a medium text field: a short written note explaining why specific art historical connections exist, reasoned by the agent and confirmed or rewritten by the artist. This is prose, not a tag list. WorkState is a select with a notes field: the current physical state of the work (original / reworked / restored / damaged / lost), with a workStateNotes text field and a workStateDate. This field is versioned \'97 if a work is reworked, a new entry is added rather than the previous one overwritten.\
+\
+**AI-analysis fields \'97 filled silently during the session.** DominantColors is an array of hex values extracted by image analysis. PaintedFieldColors is an array of hex values specifically identifying the painted acrylic field areas \'97 suggested by the agent, curated by the artist at confirmation. CompositionalNotes is a text field: a brief structured description of the compositional structure as read by the agent. ArtHistoricalReferences is an array of relation fields to an ArtHistoricalReferences collection (or a controlled tag list) \'97 suggested by the agent, confirmed by the artist. This is the structured tag version; ArtHistoricalContext (above) is the prose explanation. ClipEmbedding is a vector field stored via pgvector on Neon \'97 generated after image upload, not displayed in the UI, used for nearest-neighbour similarity queries.\
+\
+**Overlay fields \'97 for the A Colorful History hover interaction.** OverlayColors is an array of hex values. OverlayRects is an array of objects with the shape `\{ color: string, x: number, y: number, w: number, h: number \}` \'97 coordinates expressed as percentages of image dimensions, not pixels, so they are resolution-independent. The agent suggests both based on reading the painted field positions in the image. The artist confirms at the end of the session. These fields are consumed by the front-end interaction \'97 Art/Official populates them, the website reads them.\
+\
+**Provenance and location fields \'97 private, role-restricted.** CurrentLocation is a text field (artist's studio / private collection / institution / on loan \'97 with a locationDetail text field). OwnershipHistory is an array of objects: `\{ owner: string, dateAcquired: string, dateRelinquished: string, notes: string \}`. LoanHistory is an array of objects: `\{ institution: string, dateOut: string, dateReturned: string, exhibition: string \}`. These fields are only visible to users with the artist or admin role \'97 not visible to any editor or public role.\
+\
+**Schema.org fields \'97 for JSON-LD output.** These map directly to VisualArtwork properties and are either computed from other fields or filled by the agent. ArtworkSurface (maps from support field), artMedium (maps from medium field), artform (select: painting / print / drawing / photograph / mixed media), material (array of materials present), locationCreated (maps from city + country), depicts (array of subject references for the JSON-LD depicts property). The full JSON-LD block is generated programmatically on the artwork page from these fields \'97 it is never hardcoded.\
+\
+**Series extension fields.** Series-specific fields live in a separate Payload tab on the Artwork collection, not in the base. The pattern is: base fields always present, series tab conditionally visible based on which series the artwork belongs to. Adding a new series means adding a new tab configuration, never modifying base fields. The Mediums of Perception tab includes: sourcePhotographDetails (text), imageCaptureType (select: daguerreotype / ambrotype / lithograph / aerial / satellite / digital), historicalContextEN (rich text), historicalContextDE (rich text), triptychPosition (select: panel 1 / panel 2 / panel 3 / standalone), triptychGroup (relation to a TriptychGroups collection), arVideoUrl (text), arRapScript (text), latLng (two number fields: lat and lng for map pin).\
+\
+---\
+\
+## The Art/Official session \'97 how it works\
+\
+A session begins when the artist navigates to `/admin/art-official` and uploads an artwork image. From that moment, two processes run in parallel.\
+\
+The conversation layer is what the artist experiences. The agent opens with an orienting observation \'97 something specific to what it sees in the image, cross-referenced against its knowledge of the practice. It does not ask a generic opening question. It says something like: "This looks like it's from the Berlin period \'97 the architectural transfer has a similar quality to the Gates work. Is that right?" The artist responds. The conversation moves through a defined sequence of question types, described below, but the agent adapts based on what it already knows and what the artist says.\
+\
+The analysis layer runs silently. While the conversation is happening, the agent has already analysed the image and is filling the AI-analysis fields in the background: dominant colours, compositional structure, painted field positions for the overlay rects, art historical reference suggestions, and the preliminary schema.org field mappings. The CLIP embedding is generated asynchronously after the image upload and stored independently of the conversation.\
+\
+The conversation sequence moves through these phases in order, though not every phase applies to every work and the agent should skip or compress phases where the answers are already clear from context.\
+\
+The opening orientation confirms series, period, and basic context \'97 ensuring the agent's assumptions are correct before building on them. Physical and factual fields come next \'97 year, dimensions, medium, support \'97 asked conversationally, with the agent inferring what it can from visual analysis to reduce the burden on the artist. Classification follows \'97 which series, whether the work fits an existing group, whether it opens something new. The intent phase is the most important and should receive the most time \'97 the agent asks about process, decision, and meaning, using what it sees in the image as a starting point for specific questions rather than open-ended prompts. The art historical resonances phase offers the agent's suggestions and asks the artist to confirm, correct, or extend them. Finally, relational fields close the session \'97 triptych or group membership, exhibition associations, relationships to other specific works.\
+\
+Throughout the conversation, a sidebar panel shows the fields being populated in real time, split into two visible sections: fields from the conversation (labelled as artist-confirmed) and fields from the analysis (labelled as agent-suggested, pending confirmation).\
+\
+The confirmation step presents the complete assembled record. The artist reviews both sections, can correct anything, and then commits the record. At commit, the server writes to the Artworks collection via Payload's local API. Nothing is committed without the artist's explicit confirmation.\
+\
+Fields the artist does not address during the session are left in one of two states: blank (if they genuinely require the artist's input) or agent-suggested at a pending status (if the agent has a reasonable value but it has not been confirmed). Pending fields are visually distinct in the Payload admin and can be confirmed or corrected at any time after the session.\
+\
+---\
+\
+## The Practice Knowledge base\
+\
+Every Art/Official session is briefed by a set of documents maintained in a Practice Knowledge section of the admin, accessible at `/admin/practice-knowledge`. These documents are fed into the system prompt of every cataloguing session so the agent begins each conversation already knowing the practice.\
+\
+The knowledge base contains a description of each series (conceptual framework, visual language, dates and cities, key works), a description of the recurring visual vocabulary across the whole practice (the photo transfer technique, the painted field approach, the relationship between the two), a list of art historical touchstones and references that recur in the practice, and a vocabulary document covering preferred terms and framings.\
+\
+The knowledge base is maintained by the artist and grows over time. It is not static documentation \'97 it is a living description of the practice that improves as the artist refines how they articulate their own work. After several cataloguing sessions, the artist may notice that certain framings come up repeatedly and add them to the knowledge base so the agent uses them fluently in future sessions.\
+\
+For the template version of Art/Official used by other artists, an onboarding session builds this knowledge base from scratch through a structured conversation before any artwork cataloguing begins. The onboarding protocol covers: practice overview, series to date, recurring themes and visual language, art historical touchstones, preferred vocabulary. This is a one-time session per artist.\
+\
+---\
+\
+## What to build first \'97 sequencing\
+\
+The schema comes before the agent. The Payload Artworks collection should be implemented first, with all fields defined and typed correctly. Art/Official cannot be built until it knows exactly what fields it is populating. The schema described in this document is complete enough to implement without ambiguity.\
+\
+Once the schema is in place, the API route comes next. This is the server-side conversation handler \'97 a Next.js API route at `/api/art-official/chat` that receives the conversation history and image data, calls the Anthropic API with the full context (system prompt including practice knowledge, conversation history, image), and returns the agent's response along with any field updates triggered by that response. This route is the core of Art/Official and should be built and tested in isolation before the UI exists \'97 it can be tested directly with API calls.\
+\
+The custom Payload view comes third. This is the React component that provides the conversation interface, the real-time field sidebar, and the confirmation step. It calls the API route on each message send and updates the field panel with the returned field data. The image upload at the start of a session should trigger the silent analysis pass and store preliminary field suggestions before the first conversation turn.\
+\
+The Practice Knowledge admin section can be built in parallel with the custom view \'97 it is a simpler interface (a set of editable documents) and does not depend on the conversation layer being complete.\
+\
+---\
+\
+## What Art/Official is NOT\
+\
+Art/Official is not the public-facing website. It is backend infrastructure that lives entirely inside the Payload admin and is never visible to site visitors. It is not a general-purpose AI assistant \'97 it has one job, which is guided artwork cataloguing. It is not autonomous \'97 it suggests and analyses, but the artist confirms everything before it is committed. It is not a replacement for the Payload collection admin \'97 the standard Payload UI for the Artworks collection still exists and can be used for manual edits after a session.\
+\
+---\
+\
+## Relationship to the broader archive\
+\
+Art/Official populates the fields that everything else depends on. The public-facing artwork pages read from these fields to generate JSON-LD. The CLIP embeddings it triggers power the nearest-neighbour similarity queries. The overlay fields it fills drive the A Colorful History hover interaction. The intent and art historical context fields it captures are the human layer of the machine-readable corpus. Build Art/Official well and the rest of the archive has the data it needs to do its work.\
+\
+---\
+\
+## For agents reading this document\
+\
+Do not start with the UI. Start with the Payload collection schema \'97 implement all fields with correct types before writing any agent code. The schema is the contract that everything else depends on. Do not use free text fields where a structured type is available. Do not normalise image display \'97 the sizeTier and orientation fields drive layout and must both apply simultaneously. Do not hardcode JSON-LD \'97 generate it programmatically from schema fields. Do not commit any record without explicit artist confirmation.\
+\
+The API key for the Anthropic API lives in server environment variables. It is never passed to the client. All AI calls happen server-side.\
+\
+*Document written: April 2026 \'97 from the design session that named Art/Official*}

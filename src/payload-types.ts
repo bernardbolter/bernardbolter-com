@@ -69,23 +69,47 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    artists: Artist;
+    'practice-knowledge': PracticeKnowledge;
+    'collection-knowledge': CollectionKnowledge;
+    'gallery-knowledge': GalleryKnowledge;
+    collectors: Collector;
+    galleries: Gallery;
     artworks: Artwork;
     people: Person;
     series: Series;
     exhibitions: Exhibition;
+    events: Event;
+    tags: Tag;
+    'art-historical-references': ArtHistoricalReference;
+    sessions: Session;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
   };
-  collectionsJoins: {};
+  collectionsJoins: {
+    artworks: {
+      events: 'events';
+    };
+  };
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    artists: ArtistsSelect<false> | ArtistsSelect<true>;
+    'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
+    'collection-knowledge': CollectionKnowledgeSelect<false> | CollectionKnowledgeSelect<true>;
+    'gallery-knowledge': GalleryKnowledgeSelect<false> | GalleryKnowledgeSelect<true>;
+    collectors: CollectorsSelect<false> | CollectorsSelect<true>;
+    galleries: GalleriesSelect<false> | GalleriesSelect<true>;
     artworks: ArtworksSelect<false> | ArtworksSelect<true>;
     people: PeopleSelect<false> | PeopleSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
     exhibitions: ExhibitionsSelect<false> | ExhibitionsSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    tags: TagsSelect<false> | TagsSelect<true>;
+    'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
+    sessions: SessionsSelect<false> | SessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -131,6 +155,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  roles: ('admin' | 'artist')[];
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -180,6 +205,289 @@ export interface Media {
   };
 }
 /**
+ * Canonical artist identity records (JSON-LD creator/performer). Single-tenant: one primary row.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "artists".
+ */
+export interface Artist {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  careerStage?: ('studio' | 'market' | 'institutional') | null;
+  primaryActorType?:
+    | ('artist' | 'collector' | 'gallery' | 'artist-collector' | 'artist-gallery' | 'artist-collector-gallery')
+    | null;
+  actorRoles?: ('artist' | 'collector' | 'gallery')[] | null;
+  /**
+   * Set automatically when the record is first created.
+   */
+  platformJoinDate?: string | null;
+  externalIdentifiers?:
+    | {
+        type: 'website' | 'instagram' | 'artnet' | 'wikidata' | 'json-ld' | 'google-knowledge-graph';
+        value: string;
+        verified?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Getty ULAN URI, e.g. http://vocab.getty.edu/ulan/500xxxxxx
+   */
+  ulanUri?: string | null;
+  /**
+   * Wikidata entity URI, e.g. https://www.wikidata.org/entity/Qxxxxxx
+   */
+  wikidataUri?: string | null;
+  bio?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  statement?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Earliest reference to this entity across records.
+   */
+  firstMentionDate?: string | null;
+  mergeCandidates?:
+    | {
+        candidateType: 'artist' | 'collector' | 'gallery' | 'event';
+        candidateId: string;
+        matchConfidence?: ('high' | 'medium' | 'low') | null;
+        matchBasis?: string | null;
+        status?: ('pending' | 'confirmed' | 'declined') | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Documents that brief the Art/Official agent at session start.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "practice-knowledge".
+ */
+export interface PracticeKnowledge {
+  id: number;
+  /**
+   * One of: biography, artist-statement, series, visual-vocabulary, art-historical-touchstones, preferred-vocabulary
+   */
+  slug: string;
+  /**
+   * Heading used when assembling the system prompt.
+   */
+  sectionLabel: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  status: 'active' | 'draft';
+  /**
+   * Lower numbers appear first in the prompt.
+   */
+  order: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Briefs the Art/Official agent for collector-cataloguing sessions.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collection-knowledge".
+ */
+export interface CollectionKnowledge {
+  id: number;
+  /**
+   * One of: collector-biography, collection-focus, dealer-relationships, acquisition-context, collection-overview
+   */
+  slug: string;
+  sectionLabel: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  status: 'active' | 'draft';
+  order: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-knowledge".
+ */
+export interface GalleryKnowledge {
+  id: number;
+  /**
+   * One of: gallery-biography, programme-focus, represented-artists, exhibition-history, curatorial-position
+   */
+  slug: string;
+  sectionLabel: string;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  status: 'active' | 'draft';
+  order: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collectors".
+ */
+export interface Collector {
+  id: number;
+  /**
+   * Stable UUID for this collector account.
+   */
+  collectorId?: string | null;
+  name: string;
+  collectionName?: string | null;
+  collectionFocus?: string | null;
+  dealerRelationships?: string | null;
+  acquisitionContext?: string | null;
+  platformRelationship?: ('artist-also' | 'collector-only') | null;
+  platformJoinDate?: string | null;
+  /**
+   * Earliest reference to this entity across records (entity resolution).
+   */
+  firstMentionDate?: string | null;
+  externalIdentifiers?:
+    | {
+        type: 'website' | 'instagram' | 'artnet' | 'wikidata' | 'json-ld' | 'google-knowledge-graph';
+        value: string;
+        verified?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Knowledge docs used to brief collector sessions.
+   */
+  collectionKnowledgeBase?: (number | CollectionKnowledge)[] | null;
+  mergeCandidates?:
+    | {
+        candidateType: 'artist' | 'collector' | 'gallery' | 'event';
+        candidateId: string;
+        matchConfidence?: ('high' | 'medium' | 'low') | null;
+        matchBasis?: string | null;
+        status?: ('pending' | 'confirmed' | 'declined') | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "galleries".
+ */
+export interface Gallery {
+  id: number;
+  name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  programmeFocus?: string | null;
+  location?: string | null;
+  foundingYear?: number | null;
+  platformJoinDate?: string | null;
+  firstMentionDate?: string | null;
+  externalIdentifiers?:
+    | {
+        type: 'website' | 'instagram' | 'artnet' | 'wikidata' | 'json-ld' | 'google-knowledge-graph';
+        value: string;
+        verified?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  representedArtists?:
+    | {
+        artistId: number | Artist;
+        status: 'active' | 'historical';
+        startDate?: string | null;
+        endDate?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  galleryKnowledgeBase?: (number | GalleryKnowledge)[] | null;
+  mergeCandidates?:
+    | {
+        candidateType: 'artist' | 'collector' | 'gallery' | 'event';
+        candidateId: string;
+        matchConfidence?: ('high' | 'medium' | 'low') | null;
+        matchBasis?: string | null;
+        status?: ('pending' | 'confirmed' | 'declined') | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * The complete archive of all artworks.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -187,21 +495,53 @@ export interface Media {
  */
 export interface Artwork {
   id: number;
+  /**
+   * Canonical high-res image for image-based works.
+   */
   primaryImage?: (number | null) | Media;
+  primaryMediaType?: ('image' | 'video' | 'image-and-video') | null;
+  /**
+   * Alt text for the primary image (accessibility).
+   */
+  primaryImageAltText?: string | null;
+  /**
+   * Thumbnail / social / timeline / video poster. Required when primary media type is video.
+   */
+  posterImage?: (number | null) | Media;
+  posterImageAltText?: string | null;
   /**
    * Temporary WordPress image URL until migrated to R2.
    */
   wpImageUrl?: string | null;
-  name: string;
+  title: string;
+  /**
+   * Alternate title — also known as (other language or market).
+   */
+  altTitle?: string | null;
   slug: string;
   creator: number | Person;
-  series?: (number | null) | Series;
+  series: number | Series;
   /**
    * Auto-set from series.
    */
   seriesSlug?: string | null;
   status: 'draft' | 'published' | 'archived';
-  dateCreated: string;
+  /**
+   * Set once at creation; immutable. Provenance of the catalogue record.
+   */
+  recordOrigin: 'artist-catalogued' | 'collector-catalogued' | 'migrated' | 'enrichment-agent';
+  /**
+   * Four-digit year the work was begun.
+   */
+  yearCreated: number;
+  /**
+   * Year finished if different from year created.
+   */
+  yearCompleted?: number | null;
+  /**
+   * Mirrors year created — reserved for future slug generation.
+   */
+  yearStart?: number | null;
   datePublished?: string | null;
   /**
    * Legacy WordPress ID.
@@ -211,22 +551,191 @@ export interface Artwork {
    * Legacy WordPress artwork URL.
    */
   oldWpUrl?: string | null;
-  artform: 'Painting' | 'Print' | 'Photography' | 'Drawing' | 'Sculpture' | 'Digital' | 'Installation' | 'MixedMedia';
+  medium:
+    | 'acrylic-photo-transfer-on-canvas'
+    | 'acrylic-on-canvas'
+    | 'mixed-media-on-canvas'
+    | 'photo-collage'
+    | 'video'
+    | 'digital'
+    | 'other';
   /**
-   * e.g. acrylic transfer and acrylic on canvas
+   * Override or specify when medium is “Other”.
    */
-  artMedium?: string | null;
-  artworkSurface?: string | null;
-  dimensions?: {
-    width?: number | null;
-    height?: number | null;
-    /**
-     * Only for 3D works.
-     */
-    depth?: number | null;
-    unitCode?: ('CMT' | 'MMT' | 'MTR' | 'INH') | null;
-  };
+  mediumOther?: string | null;
+  /**
+   * Gates which dimension sections apply. A work can combine types.
+   */
+  measurementType: ('physical' | 'digital' | 'time-based')[];
+  support?: ('canvas' | 'paper' | 'board' | 'screen' | 'file' | 'other') | null;
+  framing?: ('framed' | 'unframed' | 'artist-framed') | null;
+  /**
+   * Weight in kilograms (physical works).
+   */
+  weight?: number | null;
+  dimensionUnit?: ('cm' | 'in') | null;
+  widthWhole?: number | null;
+  /**
+   * Optional fraction, e.g. 3/16
+   */
+  widthFraction?: string | null;
+  heightWhole?: number | null;
+  /**
+   * Optional fraction
+   */
+  heightFraction?: string | null;
+  depthWhole?: number | null;
+  /**
+   * Optional fraction
+   */
+  depthFraction?: string | null;
+  /**
+   * Computed on save (Step 7 hook).
+   */
+  widthMm?: number | null;
+  /**
+   * Computed on save (Step 7 hook).
+   */
+  heightMm?: number | null;
+  /**
+   * Computed on save (Step 7 hook).
+   */
+  depthMm?: number | null;
+  /**
+   * Human-readable size string — computed on save (Step 7).
+   */
+  dimensionsDisplay?: string | null;
+  /**
+   * widthMm ÷ heightMm (physical) or widthPx ÷ heightPx (digital-only).
+   */
+  aspectRatio?: number | null;
+  widthPx?: number | null;
+  heightPx?: number | null;
+  resolutionDpi?: number | null;
+  /**
+   * Native working file format (TIFF, PSD, MP4, …).
+   */
+  fileFormat?: string | null;
+  /**
+   * File size in MB.
+   */
+  fileSize?: number | null;
+  colorSpace?: ('sRGB' | 'Adobe RGB' | 'P3' | 'CMYK' | 'other') | null;
+  /**
+   * e.g. HH:MM:SS or prose for open-ended works.
+   */
+  duration?: string | null;
+  /**
+   * Computed from duration (Step 7).
+   */
+  durationSeconds?: number | null;
+  looped?: boolean | null;
+  soundDesign?: ('sound' | 'silent' | 'ambient' | 'variable') | null;
+  condition?: ('excellent' | 'good' | 'fair' | 'poor') | null;
+  conditionNotes?: string | null;
+  workState?: ('original' | 'reworked' | 'restored' | 'damaged' | 'lost') | null;
+  workStateNotes?: string | null;
+  /**
+   * Date this work state was recorded.
+   */
+  workStateDate?: string | null;
+  /**
+   * Why these materials and process choices matter.
+   */
+  materialAndProcessMeaning?: string | null;
+  /**
+   * Timestamped change records: [{ date, description, type: restoration|rework|damage|relining|other }]
+   */
+  stateVersions?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Layout tier on the public site. Rule-of-thumb: longest side <300mm → sm; 300–800 → md; 800–2000 → lg; >2000 → xl.
+   */
+  sizeTier?: ('sm' | 'md' | 'lg' | 'xl') | null;
   orientation?: ('portrait' | 'landscape' | 'square') | null;
+  /**
+   * City where the work was made (controlled vocabulary).
+   */
+  city?: string | null;
+  /**
+   * Country (controlled vocabulary).
+   */
+  country?: string | null;
+  /**
+   * Getty TGN URI for the city (JSON-LD / agent).
+   */
+  cityTgnUri?: string | null;
+  movementTags?: (number | Tag)[] | null;
+  styleTags?: (number | Tag)[] | null;
+  subjectTags?: (number | Tag)[] | null;
+  genreTags?: (number | Tag)[] | null;
+  periodTags?: (number | Tag)[] | null;
+  /**
+   * Abstract terms (memory, erasure, mediation, …).
+   */
+  conceptualKeywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Step 10 — reverse of **Event → Artworks**. Edit memberships only on the event document.
+   */
+  events?: {
+    docs?: (number | Event)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  artHistoricalReferences?: (number | ArtHistoricalReference)[] | null;
+  /**
+   * Prose on art-historical connections (agent draft, artist confirms).
+   */
+  artHistoricalContext?: string | null;
+  /**
+   * Where this work sits in the practice arc.
+   */
+  seriesContext?: string | null;
+  /**
+   * What this work pushes against (intent layer).
+   */
+  consciousRejections?: string | null;
+  /**
+   * What this work does that has not been done before.
+   */
+  formalContributionAssessment?: string | null;
+  /**
+   * 1–3 sentences; meta, hover cards, schema.org (EN/DE via locale).
+   */
+  descriptionShort?: string | null;
+  /**
+   * Extended catalogue entry (EN/DE via locale).
+   */
+  descriptionLong?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Legacy body — prefer descriptionLong; kept for unmigrated rows.
+   */
   description?: {
     root: {
       type: string;
@@ -243,15 +752,97 @@ export interface Artwork {
     [k: string]: unknown;
   } | null;
   /**
-   * AI-generated visual description for search and accessibility.
+   * Artist: what the work means and does (first person). Never AI-generated.
+   */
+  intent?: string | null;
+  /**
+   * Intended vs actual outcome; productive failure.
+   */
+  intentVsOutcome?: string | null;
+  /**
+   * Experiential account of making (first person).
+   */
+  makingNote?: string | null;
+  /**
+   * Immediate seed (image, detail, memory) — not full art-historical context.
+   */
+  directInspiration?: string | null;
+  /**
+   * Standing in front of the work: scale, surface, light.
+   */
+  encounterNote?: string | null;
+  /**
+   * Where this sits in the practice flow vs neighbouring works.
+   */
+  workContext?: string | null;
+  /**
+   * Factual technique / departures from series norms (dialogue + inference).
+   */
+  processNotes?: string | null;
+  /**
+   * Photographic or archival sources incorporated; blank if none.
+   */
+  sourceMaterials?: string | null;
+  /**
+   * Agent visual draft — starting point for artist-edited public text.
    */
   aiDescription?: string | null;
   /**
-   * Semantic/mood description for embeddings.
+   * Semantic/mood seed — can inform encounterNote and embeddings pipeline.
    */
   aiVibe?: string | null;
   /**
-   * Vector embedding — auto-generated, do not edit.
+   * Agent-suggested hex values; artist may correct.
+   */
+  dominantColors?:
+    | {
+        hex: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Acrylic field areas vs transfer — when medium includes paint.
+   */
+  paintedFieldColors?:
+    | {
+        hex: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Agent: composition, visual weight, dominant direction.
+   */
+  compositionalNotes?: string | null;
+  /**
+   * Pipeline version, e.g. model + CLIP checkpoint.
+   */
+  analysisModelVersion?: string | null;
+  /**
+   * Artist-layer visibility history: [{ date, event, context, effect }]. JSON per Addendum F.
+   */
+  recognitionTimeline?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * CLIP embedding stored as vector(1536); use SQL/API for similarity, not this cell.
+   */
+  clipEmbedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Legacy JSON embedding placeholder — migrate to clipEmbedding / drop after cutover.
    */
   embedding?:
     | {
@@ -268,15 +859,68 @@ export interface Artwork {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Deprecated free-text genre — prefer Classification → genreTags.
+   */
   genre?: string | null;
-  additionalImages?:
+  /**
+   * Verso, installation angles, raking light, etc.
+   */
+  alternateViewImages?:
     | {
         image: number | Media;
         caption?: string | null;
-        imageRole?: ('detail' | 'installation' | 'process' | 'reverse' | 'other') | null;
+        altText?: string | null;
+        /**
+         * Width ÷ height for layout.
+         */
+        aspectRatio?: number | null;
         id?: string | null;
       }[]
     | null;
+  detailImages?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        altText?: string | null;
+        aspectRatio?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  installationShots?:
+    | {
+        image: number | Media;
+        venue?: string | null;
+        date?: string | null;
+        altText?: string | null;
+        aspectRatio?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * AR target (e.g. Mediums of Perception / mind.js). Series-specific.
+   */
+  arTargetImage?: (number | null) | Media;
+  /**
+   * Primary video file (MP4, MOV, WebM). Wins over videoUrl if both set.
+   */
+  videoFile?: (number | null) | Media;
+  /**
+   * Primary embeddable URL (YouTube, Vimeo, …). Cleared when videoFile is set.
+   */
+  videoUrl?: string | null;
+  videoCaption?: string | null;
+  /**
+   * Documentation of a physical work (walkthrough, process film) — URL.
+   */
+  documentationVideoUrl?: string | null;
+  /**
+   * Documentation video upload. Wins over documentationVideoUrl if both set.
+   */
+  documentationVideoFile?: (number | null) | Media;
+  /**
+   * Additional clips (making-of, interviews, etc.). Use videoRole primary/documentation for JSON-LD mapping.
+   */
   videos?:
     | {
         videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
@@ -285,10 +929,69 @@ export interface Artwork {
         posterImage?: (number | null) | Media;
         title?: string | null;
         description?: string | null;
-        videoRole?: ('makingOf' | 'documentation' | 'ar' | 'interview' | 'other') | null;
+        videoRole?: ('primary' | 'documentation' | 'makingOf' | 'ar' | 'interview' | 'other') | null;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Deprecated — migrate to alternateViewImages / detailImages / installationShots.
+   */
+  additionalImages?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        imageRole?: ('detail' | 'installation' | 'process' | 'reverse' | 'other') | null;
+        id?: string | null;
+      }[]
+    | null;
+  acquisitionYear?: number | null;
+  acquisitionChannel?: ('direct-from-artist' | 'dealer' | 'auction' | 'art-fair' | 'gift' | 'estate' | 'other') | null;
+  dealerSource?: string | null;
+  dealerLocation?: string | null;
+  priorOwner?: string | null;
+  /**
+   * Admin-only; never exposed in public APIs.
+   */
+  acquisitionPrice?: number | null;
+  acquisitionCurrency?: ('EUR' | 'GBP' | 'USD' | 'other') | null;
+  certificationDocs?: string | null;
+  saleHandoffReceived?: boolean | null;
+  artistRecognitionAtAcquisition?:
+    | ('unknown' | 'local-known' | 'nationally-known' | 'internationally-known' | 'institutionally-validated')
+    | null;
+  priorExhibitionAtAcquisition?: string | null;
+  encounterContext?: ('studio-visit' | 'dealer-recommendation' | 'art-fair' | 'online' | 'gift' | 'other') | null;
+  /**
+   * Drawn out through dialogue — not form-filled.
+   */
+  whyThisWork?: string | null;
+  collectorArtistRelationship?: ('none' | 'aware-of-practice' | 'personal-relationship') | null;
+  documentationPhotoContext?: string | null;
+  linkedArtistRecord?: (number | null) | Artwork;
+  linkedCollectorId?: (number | null) | Collector;
+  arEnabled?: boolean | null;
+  /**
+   * Metres; defaults from width mm ÷ 1000 on save.
+   */
+  arWidthM?: number | null;
+  /**
+   * Metres; defaults from height mm ÷ 1000 on save.
+   */
+  arHeightM?: number | null;
+  /**
+   * Depth in metres (framed works).
+   */
+  arDepthM?: number | null;
+  /**
+   * Generated .usdz URL (R2).
+   */
+  arModelUrl?: string | null;
+  /**
+   * Generated .glb URL for Android.
+   */
+  arModelGlbUrl?: string | null;
+  arAllowScaling?: boolean | null;
+  arLastGenerated?: string | null;
   locationCreated?: {
     /**
      * e.g. studio in CANK, Neukölln
@@ -324,10 +1027,150 @@ export interface Artwork {
     };
     [k: string]: unknown;
   } | null;
+  currentLocation?: {
+    category?: ('artists-studio' | 'private-collection' | 'institution' | 'on-loan') | null;
+    /**
+     * Address or holder detail (private).
+     */
+    locationDetail?: string | null;
+  };
   /**
-   * Select exhibitions this work appeared in.
+   * JSON array: { transactionId, ownerPrivate, displayName, city, dateAcquired, dateRelinquished, claimStatus, collectorVisible, notes }. Link sales via transactionId.
+   */
+  ownershipHistory?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Uncheck when the studio-to-collector chain is not traceable (collector records).
+   */
+  provenanceOriginKnown?: boolean | null;
+  /**
+   * JSON array: { institution, dateOut, dateReturned, eventId (numeric id → events), notes }.
+   */
+  loanHistory?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * JSON array: { claim, evidenceBasis, confidenceLevel: documented-fact | credible-inference | institutional-assertion | speculation }.
+   */
+  provenanceConfidenceLayer?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * DEPRECATED — use exhibition history → Events. Prefer Event → Artworks.
    */
   exhibitions?: (number | Exhibition)[] | null;
+  /**
+   * Structured link to Event records (replaces legacy exhibitions relation).
+   */
+  exhibitionHistory?:
+    | {
+        event: number | Event;
+        workIncluded?: boolean | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  availabilityStatus?: ('available' | 'sold' | 'not-for-sale' | 'on-loan' | 'reserved' | 'on-consignment') | null;
+  /**
+   * Gallery and dates when on consignment.
+   */
+  consignmentDetails?: string | null;
+  listingCurrency?: ('EUR' | 'USD' | 'GBP' | 'CHF' | 'other') | null;
+  /**
+   * In listingCurrency.
+   */
+  askingPrice?: number | null;
+  originalAskingPrice?: number | null;
+  priceNotes?: string | null;
+  insuranceValue?: number | null;
+  insuranceValueDate?: string | null;
+  /**
+   * Gallery inventory / stock id (private).
+   */
+  galleryReference?: string | null;
+  /**
+   * Current consignment gallery.
+   */
+  consignedTo?: (number | null) | Gallery;
+  consignmentHistory?:
+    | {
+        galleryId: number | Gallery;
+        status: 'active' | 'completed';
+        dateIn?: string | null;
+        dateOut?: string | null;
+        outcome?: ('sold' | 'returned' | 'transferred') | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Wall text / press release from the gallery for this work.
+   */
+  galleryText?: string | null;
+  /**
+   * Broker gallery (collector records).
+   */
+  placedBy?: (number | null) | Gallery;
+  /**
+   * JSON array of sales: transactionId (UUID), saleDate, salePrice, saleCurrency, exchangeRateToEur, buyerPrivate, buyerCity, channel, galleryName, auctionHouse, invoiceReference, commissionRate, netToArtist, vatApplicable, vatRate, editionNumber, notes.
+   */
+  salesRecord?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Σ netToArtist × exchangeRateToEur — computed on save.
+   */
+  totalRevenue?: number | null;
+  editionType?: ('unique' | 'limited-edition' | 'open-edition' | 'artist-proof-only') | null;
+  editions?:
+    | {
+        formatLabel: string;
+        widthCm?: number | null;
+        heightCm?: number | null;
+        substrate?: string | null;
+        printTechnique?: ('giclee' | 'screenprint' | 'lithograph' | 'etching' | 'other') | null;
+        totalEditionSize?: number | null;
+        artistProofs?: number | null;
+        remaining?: number | null;
+        pricePerPrint?: number | null;
+        currency?: ('EUR' | 'USD' | 'GBP') | null;
+        certificate?: boolean | null;
+        signature?: ('signed' | 'unsigned' | 'signed-on-request') | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Public-facing notes on the edition programme.
+   */
+  editionNotes?: string | null;
+  /**
+   * Legacy — use availabilityStatus.
+   */
   isForSale?: boolean | null;
   offers?: {
     price?: number | null;
@@ -335,6 +1178,9 @@ export interface Artwork {
     availability?: ('https://schema.org/InStock' | 'https://schema.org/SoldOut' | 'https://schema.org/PreOrder') | null;
     inquiryUrl?: string | null;
   };
+  /**
+   * Legacy — migrate rows into editions[].
+   */
   printEditions?:
     | {
         editionSize?: number | null;
@@ -354,12 +1200,142 @@ export interface Artwork {
     | null;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  /**
+   * Labeled external links for SEO. For schema.org URI list see Schema.org tab.
+   */
   sameAs?:
     | {
         url: string;
         label?: string | null;
         id?: string | null;
       }[]
+    | null;
+  /**
+   * Maps to rightsstatement.org / CC URIs in JSON-LD output.
+   */
+  license?: ('all-rights-reserved' | 'cc-by' | 'cc-by-nc' | 'cc-by-nc-nd' | 'cc-by-sa') | null;
+  /**
+   * Attribution line, e.g. Bernard Bolter, Title, 2021. Courtesy the artist.
+   */
+  creditText?: string | null;
+  /**
+   * Wikidata, institution, catalogue URLs for schema.org sameAs array.
+   */
+  sameAsUrls?:
+    | {
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Last generated VisualArtwork JSON-LD (Step 13).
+   */
+  jsonldPreview?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Stub: QuantitativeValue width — optional sub-preview for debugging.
+   */
+  jsonldWidthPreview?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Stub: QuantitativeValue height.
+   */
+  jsonldHeightPreview?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Stub: schema.org Person + identifier[] (ULAN, Wikidata).
+   */
+  jsonldCreatorPreview?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Source photograph: technology, origin, historical context.
+   */
+  mop_sourcePhotographDetails?: string | null;
+  mop_imageCaptureType?: ('daguerreotype' | 'ambrotype' | 'lithograph' | 'aerial' | 'satellite' | 'digital') | null;
+  /**
+   * Historical context (EN/DE via locale).
+   */
+  mop_historicalContext?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  mop_triptychPosition?: ('panel-1' | 'panel-2' | 'panel-3' | 'standalone') | null;
+  /**
+   * Triptych grouping label or id (replace with relation → TriptychGroups when that collection exists).
+   */
+  mop_triptychGroupNote?: string | null;
+  /**
+   * AR video layer (mind.js).
+   */
+  mop_arVideoUrl?: string | null;
+  /**
+   * Rap script for AR audio layer.
+   */
+  mop_arRapScript?: string | null;
+  /**
+   * Map pin (series-specific).
+   */
+  mop_lat?: number | null;
+  mop_lng?: number | null;
+  /**
+   * Agent-suggested rectangle colours; artist confirms.
+   */
+  ach_overlayColors?:
+    | {
+        hex: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Array of { color, x, y, w, h } in % of image dimensions — resolution-independent.
+   */
+  ach_overlayRects?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   /**
    * Historical context for AR/app.
@@ -618,7 +1594,7 @@ export interface Person {
   createdAt: string;
 }
 /**
- * Artwork series. Each sub-site (acolorfulhistory.com etc.) maps to one series.
+ * Practice series definitions used by artworks and public series pages.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "series".
@@ -626,16 +1602,7 @@ export interface Person {
 export interface Series {
   id: number;
   name: string;
-  /**
-   * e.g. a-colorful-history, digital-city-series, megacities
-   */
   slug: string;
-  status: 'active' | 'completed' | 'ongoing' | 'archived';
-  startYear?: number | null;
-  /**
-   * Leave empty if ongoing.
-   */
-  endYear?: number | null;
   description?: {
     root: {
       type: string;
@@ -651,37 +1618,293 @@ export interface Series {
     };
     [k: string]: unknown;
   } | null;
+  yearStart?: number | null;
   /**
-   * Max 160 chars. Used for series cards and meta descriptions.
+   * Leave empty when the series is ongoing.
    */
-  shortDescription?: string | null;
+  yearEnd?: number | null;
+  city?: string | null;
+  country?: string | null;
   coverImage?: (number | null) | Media;
-  hasSite?: boolean | null;
+  status: 'draft' | 'published';
   /**
-   * e.g. https://acolorfulhistory.com
+   * Computed JSON-LD snapshot for series pages.
    */
-  siteUrl?: string | null;
-  /**
-   * Display name for the sub-site.
-   */
-  siteName?: string | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
-  /**
-   * External references to this series e.g. Artsy, Wikipedia.
-   */
-  sameAs?:
+  jsonldOutput?:
     | {
-        url: string;
-        label?: string | null;
-        id?: string | null;
-      }[]
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
- * Exhibitions where artworks are displayed.
+ * Controlled vocabulary tags for artworks and events.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags".
+ */
+export interface Tag {
+  id: number;
+  label: string;
+  type: 'movement' | 'style' | 'subject' | 'genre' | 'period';
+  /**
+   * Optional Getty AAT URI.
+   */
+  aatUri?: string | null;
+  /**
+   * Optional Iconclass notation.
+   */
+  iconclassNotation?: string | null;
+  /**
+   * Optional Library of Congress Subject Heading URI.
+   */
+  lcshUri?: string | null;
+  description?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * All professional events in the artist CV and exhibition history.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  slug: string;
+  /**
+   * Stable UUID for merge / enrichment.
+   */
+  eventId?: string | null;
+  eventType:
+    | 'solo-exhibition'
+    | 'group-exhibition'
+    | 'art-fair'
+    | 'residency'
+    | 'award'
+    | 'publication'
+    | 'public-commission'
+    | 'talk-panel'
+    | 'screening'
+    | 'performance'
+    | 'other';
+  eventTypeCustom?: string | null;
+  status: 'draft' | 'published';
+  featured?: boolean | null;
+  startDate: string;
+  endDate?: string | null;
+  isOngoing?: boolean | null;
+  openingDate?: string | null;
+  /**
+   * Computed from startDate.
+   */
+  yearStart?: number | null;
+  venueName?: string | null;
+  venueCity?: string | null;
+  venueCountry?: string | null;
+  venueTgnUri?: string | null;
+  venueUrl?: string | null;
+  venueWikidataUri?: string | null;
+  isOnline?: boolean | null;
+  onlineEventUrl?: string | null;
+  additionalVenues?:
+    | {
+        venueName?: string | null;
+        venueCity?: string | null;
+        venueCountry?: string | null;
+        startDate?: string | null;
+        endDate?: string | null;
+        venueUrl?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Authority field for artwork ↔ event. Appears on Artwork → Classification → Events as a read-only join.
+   */
+  artworks?: (number | Artwork)[] | null;
+  /**
+   * How this work was presented in this event (optional).
+   */
+  artworkPresentationNote?: string | null;
+  organiser?: string | null;
+  curator?: string | null;
+  role?:
+    | (
+        | 'solo'
+        | 'group'
+        | 'duo'
+        | 'invited-artist'
+        | 'artist-in-residence'
+        | 'awardee'
+        | 'speaker'
+        | 'panellist'
+        | 'screened-artist'
+        | 'commissioned-artist'
+      )
+    | null;
+  coExhibitors?:
+    | {
+        name?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional — e.g. acquisition-related events.
+   */
+  collectors?: (number | Collector)[] | null;
+  catalogue?: boolean | null;
+  catalogueUrl?: string | null;
+  pressUrl?: string | null;
+  recordingUrl?: string | null;
+  descriptionShort?: string | null;
+  descriptionLong?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  artistNote?: string | null;
+  pressQuote?: string | null;
+  publicationTitle?: string | null;
+  publicationAuthor?: string | null;
+  publicationIssn?: string | null;
+  publicationIsbn?: string | null;
+  publicationPages?: string | null;
+  awardGrantingOrganisation?: string | null;
+  awardAmount?: number | null;
+  awardAmountCurrency?: ('EUR' | 'USD' | 'GBP' | 'CHF' | 'other') | null;
+  awardOutcome?: ('winner' | 'shortlisted' | 'nominated' | 'honourable-mention') | null;
+  residencyOrganisation?: string | null;
+  residencyType?: ('studio' | 'live-work' | 'research' | 'production' | 'international') | null;
+  residencyWorksProduced?: string | null;
+  commissionClient?: string | null;
+  commissionSite?: string | null;
+  commissionBudget?: number | null;
+  cvSection?:
+    | (
+        | 'solo-exhibitions'
+        | 'group-exhibitions'
+        | 'art-fairs'
+        | 'residencies'
+        | 'awards-prizes'
+        | 'publications'
+        | 'public-commissions'
+        | 'talks-panels'
+        | 'screenings'
+        | 'performances'
+        | 'other'
+      )
+    | null;
+  cvDisplayTitle?: string | null;
+  cvPriority?: number | null;
+  excludeFromCv?: boolean | null;
+  /**
+   * Computed on save (0–100).
+   */
+  completenessScore?: number | null;
+  mergeStaff?: {
+    sourceHistory?:
+      | {
+          source:
+            | 'artist-archive'
+            | 'gallery-import'
+            | 'collector-session'
+            | 'enrichment-agent'
+            | 'json-ld-scrape'
+            | 'manual';
+          actorId?: string | null;
+          addedAt?: string | null;
+          fieldsContributed?:
+            | {
+                field: string;
+                id?: string | null;
+              }[]
+            | null;
+          id?: string | null;
+        }[]
+      | null;
+    mergeStatus?: ('stub' | 'partial' | 'confirmed' | 'disputed') | null;
+    mergeLog?:
+      | {
+          mergeAction: 'entity-linked' | 'field-updated' | 'merge-proposed' | 'merge-confirmed' | 'merge-declined';
+          actorId?: string | null;
+          timestamp?: string | null;
+          note?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Actor id of the authoritative source for this event.
+     */
+    canonicalSource?: string | null;
+  };
+  jsonldSameAs?:
+    | {
+        uri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Computed event JSON-LD preview.
+   */
+  jsonldPreview?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Referenced artworks and artists in dialogue with Bernard's practice.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "art-historical-references".
+ */
+export interface ArtHistoricalReference {
+  id: number;
+  artworkTitle: string;
+  artistName: string;
+  yearCreated?: number | null;
+  medium?: string | null;
+  institution?: string | null;
+  /**
+   * Reference-only image URL (not publicly rendered).
+   */
+  imageUrl?: string | null;
+  /**
+   * Authoritative source URL (museum record, Wikidata, etc.).
+   */
+  referenceUrl?: string | null;
+  /**
+   * Optional Wikidata URI for the referenced work.
+   */
+  wikidataUri?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * DEPRECATED: legacy WordPress-era exhibitions. Prefer Events + Artwork.exhibitionHistory. Removal scheduled after migration.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "exhibitions".
@@ -769,6 +1992,74 @@ export interface Exhibition {
   createdAt: string;
 }
 /**
+ * Art/Official session transcripts (not exposed to anonymous API).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions".
+ */
+export interface Session {
+  id: number;
+  sessionId?: string | null;
+  sessionType:
+    | 'artwork-cataloguing'
+    | 'collector-cataloguing'
+    | 'gallery-cataloguing'
+    | 'artist-statement'
+    | 'biography'
+    | 'onboarding';
+  status: 'in-progress' | 'completed' | 'abandoned';
+  artistId?: (number | null) | Artist;
+  collectorId?: (number | null) | Collector;
+  artworkRecord?: (number | null) | Artwork;
+  completedAt?: string | null;
+  /**
+   * Full Anthropic message array (opaque).
+   */
+  messages?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  firstImpression?: string | null;
+  secondDescription?: string | null;
+  /**
+   * Array of { field, value, confidence, source, timestamp }.
+   */
+  fieldUpdateTimeline?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  agentDraftDescriptionShort?: string | null;
+  agentDraftDescriptionLong?: string | null;
+  agentDraftConceptualKeywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  agentDraftFormalContributionAssessment?: string | null;
+  sessionNotes?: string | null;
+  weakPhases?: ('pre-upload' | 'identity' | 'intent' | 'art-historical' | 'classification' | 'confirmation')[] | null;
+  blindDescriptionUseful?: boolean | null;
+  formalContributionAccuracy?: ('accurate' | 'partial' | 'missed') | null;
+  /**
+   * Flag for follow-up refinement pass.
+   */
+  dialogueRefinementFlag?: boolean | null;
+  refinementNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -801,6 +2092,30 @@ export interface PayloadLockedDocument {
         value: number | Media;
       } | null)
     | ({
+        relationTo: 'artists';
+        value: number | Artist;
+      } | null)
+    | ({
+        relationTo: 'practice-knowledge';
+        value: number | PracticeKnowledge;
+      } | null)
+    | ({
+        relationTo: 'collection-knowledge';
+        value: number | CollectionKnowledge;
+      } | null)
+    | ({
+        relationTo: 'gallery-knowledge';
+        value: number | GalleryKnowledge;
+      } | null)
+    | ({
+        relationTo: 'collectors';
+        value: number | Collector;
+      } | null)
+    | ({
+        relationTo: 'galleries';
+        value: number | Gallery;
+      } | null)
+    | ({
         relationTo: 'artworks';
         value: number | Artwork;
       } | null)
@@ -815,6 +2130,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'exhibitions';
         value: number | Exhibition;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'tags';
+        value: number | Tag;
+      } | null)
+    | ({
+        relationTo: 'art-historical-references';
+        value: number | ArtHistoricalReference;
+      } | null)
+    | ({
+        relationTo: 'sessions';
+        value: number | Session;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -863,6 +2194,7 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  roles?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -914,36 +2246,272 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "artists_select".
+ */
+export interface ArtistsSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  careerStage?: T;
+  primaryActorType?: T;
+  actorRoles?: T;
+  platformJoinDate?: T;
+  externalIdentifiers?:
+    | T
+    | {
+        type?: T;
+        value?: T;
+        verified?: T;
+        id?: T;
+      };
+  ulanUri?: T;
+  wikidataUri?: T;
+  bio?: T;
+  statement?: T;
+  firstMentionDate?: T;
+  mergeCandidates?:
+    | T
+    | {
+        candidateType?: T;
+        candidateId?: T;
+        matchConfidence?: T;
+        matchBasis?: T;
+        status?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "practice-knowledge_select".
+ */
+export interface PracticeKnowledgeSelect<T extends boolean = true> {
+  slug?: T;
+  sectionLabel?: T;
+  content?: T;
+  status?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collection-knowledge_select".
+ */
+export interface CollectionKnowledgeSelect<T extends boolean = true> {
+  slug?: T;
+  sectionLabel?: T;
+  content?: T;
+  status?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery-knowledge_select".
+ */
+export interface GalleryKnowledgeSelect<T extends boolean = true> {
+  slug?: T;
+  sectionLabel?: T;
+  content?: T;
+  status?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "collectors_select".
+ */
+export interface CollectorsSelect<T extends boolean = true> {
+  collectorId?: T;
+  name?: T;
+  collectionName?: T;
+  collectionFocus?: T;
+  dealerRelationships?: T;
+  acquisitionContext?: T;
+  platformRelationship?: T;
+  platformJoinDate?: T;
+  firstMentionDate?: T;
+  externalIdentifiers?:
+    | T
+    | {
+        type?: T;
+        value?: T;
+        verified?: T;
+        id?: T;
+      };
+  collectionKnowledgeBase?: T;
+  mergeCandidates?:
+    | T
+    | {
+        candidateType?: T;
+        candidateId?: T;
+        matchConfidence?: T;
+        matchBasis?: T;
+        status?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "galleries_select".
+ */
+export interface GalleriesSelect<T extends boolean = true> {
+  name?: T;
+  generateSlug?: T;
+  slug?: T;
+  programmeFocus?: T;
+  location?: T;
+  foundingYear?: T;
+  platformJoinDate?: T;
+  firstMentionDate?: T;
+  externalIdentifiers?:
+    | T
+    | {
+        type?: T;
+        value?: T;
+        verified?: T;
+        id?: T;
+      };
+  representedArtists?:
+    | T
+    | {
+        artistId?: T;
+        status?: T;
+        startDate?: T;
+        endDate?: T;
+        id?: T;
+      };
+  galleryKnowledgeBase?: T;
+  mergeCandidates?:
+    | T
+    | {
+        candidateType?: T;
+        candidateId?: T;
+        matchConfidence?: T;
+        matchBasis?: T;
+        status?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "artworks_select".
  */
 export interface ArtworksSelect<T extends boolean = true> {
   primaryImage?: T;
+  primaryMediaType?: T;
+  primaryImageAltText?: T;
+  posterImage?: T;
+  posterImageAltText?: T;
   wpImageUrl?: T;
-  name?: T;
+  title?: T;
+  altTitle?: T;
   slug?: T;
   creator?: T;
   series?: T;
   seriesSlug?: T;
   status?: T;
-  dateCreated?: T;
+  recordOrigin?: T;
+  yearCreated?: T;
+  yearCompleted?: T;
+  yearStart?: T;
   datePublished?: T;
   wp_id?: T;
   oldWpUrl?: T;
-  artform?: T;
-  artMedium?: T;
-  artworkSurface?: T;
-  dimensions?:
+  medium?: T;
+  mediumOther?: T;
+  measurementType?: T;
+  support?: T;
+  framing?: T;
+  weight?: T;
+  dimensionUnit?: T;
+  widthWhole?: T;
+  widthFraction?: T;
+  heightWhole?: T;
+  heightFraction?: T;
+  depthWhole?: T;
+  depthFraction?: T;
+  widthMm?: T;
+  heightMm?: T;
+  depthMm?: T;
+  dimensionsDisplay?: T;
+  aspectRatio?: T;
+  widthPx?: T;
+  heightPx?: T;
+  resolutionDpi?: T;
+  fileFormat?: T;
+  fileSize?: T;
+  colorSpace?: T;
+  duration?: T;
+  durationSeconds?: T;
+  looped?: T;
+  soundDesign?: T;
+  condition?: T;
+  conditionNotes?: T;
+  workState?: T;
+  workStateNotes?: T;
+  workStateDate?: T;
+  materialAndProcessMeaning?: T;
+  stateVersions?: T;
+  sizeTier?: T;
+  orientation?: T;
+  city?: T;
+  country?: T;
+  cityTgnUri?: T;
+  movementTags?: T;
+  styleTags?: T;
+  subjectTags?: T;
+  genreTags?: T;
+  periodTags?: T;
+  conceptualKeywords?:
     | T
     | {
-        width?: T;
-        height?: T;
-        depth?: T;
-        unitCode?: T;
+        keyword?: T;
+        id?: T;
       };
-  orientation?: T;
+  events?: T;
+  artHistoricalReferences?: T;
+  artHistoricalContext?: T;
+  seriesContext?: T;
+  consciousRejections?: T;
+  formalContributionAssessment?: T;
+  descriptionShort?: T;
+  descriptionLong?: T;
   description?: T;
+  intent?: T;
+  intentVsOutcome?: T;
+  makingNote?: T;
+  directInspiration?: T;
+  encounterNote?: T;
+  workContext?: T;
+  processNotes?: T;
+  sourceMaterials?: T;
   aiDescription?: T;
   aiVibe?: T;
+  dominantColors?:
+    | T
+    | {
+        hex?: T;
+        id?: T;
+      };
+  paintedFieldColors?:
+    | T
+    | {
+        hex?: T;
+        id?: T;
+      };
+  compositionalNotes?: T;
+  analysisModelVersion?: T;
+  recognitionTimeline?: T;
+  clipEmbedding?: T;
   embedding?: T;
   keywords?:
     | T
@@ -952,14 +2520,40 @@ export interface ArtworksSelect<T extends boolean = true> {
         id?: T;
       };
   genre?: T;
-  additionalImages?:
+  alternateViewImages?:
     | T
     | {
         image?: T;
         caption?: T;
-        imageRole?: T;
+        altText?: T;
+        aspectRatio?: T;
         id?: T;
       };
+  detailImages?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        altText?: T;
+        aspectRatio?: T;
+        id?: T;
+      };
+  installationShots?:
+    | T
+    | {
+        image?: T;
+        venue?: T;
+        date?: T;
+        altText?: T;
+        aspectRatio?: T;
+        id?: T;
+      };
+  arTargetImage?: T;
+  videoFile?: T;
+  videoUrl?: T;
+  videoCaption?: T;
+  documentationVideoUrl?: T;
+  documentationVideoFile?: T;
   videos?:
     | T
     | {
@@ -972,6 +2566,39 @@ export interface ArtworksSelect<T extends boolean = true> {
         videoRole?: T;
         id?: T;
       };
+  additionalImages?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        imageRole?: T;
+        id?: T;
+      };
+  acquisitionYear?: T;
+  acquisitionChannel?: T;
+  dealerSource?: T;
+  dealerLocation?: T;
+  priorOwner?: T;
+  acquisitionPrice?: T;
+  acquisitionCurrency?: T;
+  certificationDocs?: T;
+  saleHandoffReceived?: T;
+  artistRecognitionAtAcquisition?: T;
+  priorExhibitionAtAcquisition?: T;
+  encounterContext?: T;
+  whyThisWork?: T;
+  collectorArtistRelationship?: T;
+  documentationPhotoContext?: T;
+  linkedArtistRecord?: T;
+  linkedCollectorId?: T;
+  arEnabled?: T;
+  arWidthM?: T;
+  arHeightM?: T;
+  arDepthM?: T;
+  arModelUrl?: T;
+  arModelGlbUrl?: T;
+  arAllowScaling?: T;
+  arLastGenerated?: T;
   locationCreated?:
     | T
     | {
@@ -991,7 +2618,69 @@ export interface ArtworksSelect<T extends boolean = true> {
         holderUrl?: T;
       };
   provenanceNotes?: T;
+  currentLocation?:
+    | T
+    | {
+        category?: T;
+        locationDetail?: T;
+      };
+  ownershipHistory?: T;
+  provenanceOriginKnown?: T;
+  loanHistory?: T;
+  provenanceConfidenceLayer?: T;
   exhibitions?: T;
+  exhibitionHistory?:
+    | T
+    | {
+        event?: T;
+        workIncluded?: T;
+        notes?: T;
+        id?: T;
+      };
+  availabilityStatus?: T;
+  consignmentDetails?: T;
+  listingCurrency?: T;
+  askingPrice?: T;
+  originalAskingPrice?: T;
+  priceNotes?: T;
+  insuranceValue?: T;
+  insuranceValueDate?: T;
+  galleryReference?: T;
+  consignedTo?: T;
+  consignmentHistory?:
+    | T
+    | {
+        galleryId?: T;
+        status?: T;
+        dateIn?: T;
+        dateOut?: T;
+        outcome?: T;
+        id?: T;
+      };
+  galleryText?: T;
+  placedBy?: T;
+  salesRecord?: T;
+  totalRevenue?: T;
+  editionType?: T;
+  editions?:
+    | T
+    | {
+        formatLabel?: T;
+        widthCm?: T;
+        heightCm?: T;
+        substrate?: T;
+        printTechnique?: T;
+        totalEditionSize?: T;
+        artistProofs?: T;
+        remaining?: T;
+        pricePerPrint?: T;
+        currency?: T;
+        certificate?: T;
+        signature?: T;
+        notes?: T;
+        id?: T;
+      };
+  editionNotes?: T;
   isForSale?: T;
   offers?:
     | T
@@ -1021,6 +2710,34 @@ export interface ArtworksSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
+  license?: T;
+  creditText?: T;
+  sameAsUrls?:
+    | T
+    | {
+        url?: T;
+        id?: T;
+      };
+  jsonldPreview?: T;
+  jsonldWidthPreview?: T;
+  jsonldHeightPreview?: T;
+  jsonldCreatorPreview?: T;
+  mop_sourcePhotographDetails?: T;
+  mop_imageCaptureType?: T;
+  mop_historicalContext?: T;
+  mop_triptychPosition?: T;
+  mop_triptychGroupNote?: T;
+  mop_arVideoUrl?: T;
+  mop_arRapScript?: T;
+  mop_lat?: T;
+  mop_lng?: T;
+  ach_overlayColors?:
+    | T
+    | {
+        hex?: T;
+        id?: T;
+      };
+  ach_overlayRects?: T;
   ach_historyText?: T;
   ach_freestyleText?: T;
   ach_wikiLinkEn?: T;
@@ -1181,24 +2898,14 @@ export interface PeopleSelect<T extends boolean = true> {
 export interface SeriesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
-  status?: T;
-  startYear?: T;
-  endYear?: T;
   description?: T;
-  shortDescription?: T;
+  yearStart?: T;
+  yearEnd?: T;
+  city?: T;
+  country?: T;
   coverImage?: T;
-  hasSite?: T;
-  siteUrl?: T;
-  siteName?: T;
-  metaTitle?: T;
-  metaDescription?: T;
-  sameAs?:
-    | T
-    | {
-        url?: T;
-        label?: T;
-        id?: T;
-      };
+  status?: T;
+  jsonldOutput?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1247,6 +2954,186 @@ export interface ExhibitionsSelect<T extends boolean = true> {
         label?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  eventId?: T;
+  eventType?: T;
+  eventTypeCustom?: T;
+  status?: T;
+  featured?: T;
+  startDate?: T;
+  endDate?: T;
+  isOngoing?: T;
+  openingDate?: T;
+  yearStart?: T;
+  venueName?: T;
+  venueCity?: T;
+  venueCountry?: T;
+  venueTgnUri?: T;
+  venueUrl?: T;
+  venueWikidataUri?: T;
+  isOnline?: T;
+  onlineEventUrl?: T;
+  additionalVenues?:
+    | T
+    | {
+        venueName?: T;
+        venueCity?: T;
+        venueCountry?: T;
+        startDate?: T;
+        endDate?: T;
+        venueUrl?: T;
+        id?: T;
+      };
+  artworks?: T;
+  artworkPresentationNote?: T;
+  organiser?: T;
+  curator?: T;
+  role?: T;
+  coExhibitors?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
+  collectors?: T;
+  catalogue?: T;
+  catalogueUrl?: T;
+  pressUrl?: T;
+  recordingUrl?: T;
+  descriptionShort?: T;
+  descriptionLong?: T;
+  artistNote?: T;
+  pressQuote?: T;
+  publicationTitle?: T;
+  publicationAuthor?: T;
+  publicationIssn?: T;
+  publicationIsbn?: T;
+  publicationPages?: T;
+  awardGrantingOrganisation?: T;
+  awardAmount?: T;
+  awardAmountCurrency?: T;
+  awardOutcome?: T;
+  residencyOrganisation?: T;
+  residencyType?: T;
+  residencyWorksProduced?: T;
+  commissionClient?: T;
+  commissionSite?: T;
+  commissionBudget?: T;
+  cvSection?: T;
+  cvDisplayTitle?: T;
+  cvPriority?: T;
+  excludeFromCv?: T;
+  completenessScore?: T;
+  mergeStaff?:
+    | T
+    | {
+        sourceHistory?:
+          | T
+          | {
+              source?: T;
+              actorId?: T;
+              addedAt?: T;
+              fieldsContributed?:
+                | T
+                | {
+                    field?: T;
+                    id?: T;
+                  };
+              id?: T;
+            };
+        mergeStatus?: T;
+        mergeLog?:
+          | T
+          | {
+              mergeAction?: T;
+              actorId?: T;
+              timestamp?: T;
+              note?: T;
+              id?: T;
+            };
+        canonicalSource?: T;
+      };
+  jsonldSameAs?:
+    | T
+    | {
+        uri?: T;
+        id?: T;
+      };
+  jsonldPreview?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "tags_select".
+ */
+export interface TagsSelect<T extends boolean = true> {
+  label?: T;
+  type?: T;
+  aatUri?: T;
+  iconclassNotation?: T;
+  lcshUri?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "art-historical-references_select".
+ */
+export interface ArtHistoricalReferencesSelect<T extends boolean = true> {
+  artworkTitle?: T;
+  artistName?: T;
+  yearCreated?: T;
+  medium?: T;
+  institution?: T;
+  imageUrl?: T;
+  referenceUrl?: T;
+  wikidataUri?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions_select".
+ */
+export interface SessionsSelect<T extends boolean = true> {
+  sessionId?: T;
+  sessionType?: T;
+  status?: T;
+  artistId?: T;
+  collectorId?: T;
+  artworkRecord?: T;
+  completedAt?: T;
+  messages?: T;
+  firstImpression?: T;
+  secondDescription?: T;
+  fieldUpdateTimeline?: T;
+  agentDraftDescriptionShort?: T;
+  agentDraftDescriptionLong?: T;
+  agentDraftConceptualKeywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  agentDraftFormalContributionAssessment?: T;
+  sessionNotes?: T;
+  weakPhases?: T;
+  blindDescriptionUseful?: T;
+  formalContributionAccuracy?: T;
+  dialogueRefinementFlag?: T;
+  refinementNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
