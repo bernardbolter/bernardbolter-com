@@ -1,4 +1,7 @@
 import type { Metadata } from 'next'
+import { getPayload } from 'payload'
+import config from '@payload-config'
+
 import { buildCvSections } from '@/lib/cv/buildCvSections'
 import { getCvEvents } from '@/lib/payload/cvEvents'
 
@@ -6,13 +9,23 @@ export const revalidate = 3600
 
 export const metadata: Metadata = {
   title: 'Curriculum vitae',
-  description: 'Exhibitions, publications, awards, and professional activities.',
+  description: 'Education, exhibitions, publications, awards, and professional activities.',
   alternates: { canonical: '/cv' },
 }
 
 export default async function CvPage() {
+  const payload = await getPayload({ config })
+  const artistRes = await payload.find({
+    collection: 'artists',
+    locale: 'en',
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+  })
+  const artist = artistRes.docs[0] ?? null
+
   const events = await getCvEvents()
-  const sections = buildCvSections(events)
+  const sections = buildCvSections(events, artist)
 
   return (
     <main style={{ maxWidth: '42rem', margin: '0 auto', padding: '2rem 1.25rem 4rem' }}>

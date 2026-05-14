@@ -75,7 +75,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     },
   })
 
-  const sections = buildCvSections(eventsRes.docs)
+  const sections = buildCvSections(eventsRes.docs, artist)
 
   return NextResponse.json({
     artist: {

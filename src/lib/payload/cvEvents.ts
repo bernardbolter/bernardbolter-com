@@ -23,6 +23,7 @@ export const getCvEvents = unstable_cache(
       limit: 500,
       depth: 0,
       sort: '-startDate',
+      overrideAccess: false,
     })
     return docs
   },

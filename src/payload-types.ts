@@ -71,17 +71,11 @@ export interface Config {
     media: Media;
     artists: Artist;
     'practice-knowledge': PracticeKnowledge;
-    'collection-knowledge': CollectionKnowledge;
-    'gallery-knowledge': GalleryKnowledge;
-    collectors: Collector;
-    galleries: Gallery;
-    artworks: Artwork;
-    people: Person;
     series: Series;
-    exhibitions: Exhibition;
-    events: Event;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
+    events: Event;
+    artworks: Artwork;
     sessions: Session;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -98,17 +92,11 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     artists: ArtistsSelect<false> | ArtistsSelect<true>;
     'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
-    'collection-knowledge': CollectionKnowledgeSelect<false> | CollectionKnowledgeSelect<true>;
-    'gallery-knowledge': GalleryKnowledgeSelect<false> | GalleryKnowledgeSelect<true>;
-    collectors: CollectorsSelect<false> | CollectorsSelect<true>;
-    galleries: GalleriesSelect<false> | GalleriesSelect<true>;
-    artworks: ArtworksSelect<false> | ArtworksSelect<true>;
-    people: PeopleSelect<false> | PeopleSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
-    exhibitions: ExhibitionsSelect<false> | ExhibitionsSelect<true>;
-    events: EventsSelect<false> | EventsSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
+    events: EventsSelect<false> | EventsSelect<true>;
+    artworks: ArtworksSelect<false> | ArtworksSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -205,7 +193,7 @@ export interface Media {
   };
 }
 /**
- * Canonical artist identity records (JSON-LD creator/performer). Single-tenant: one primary row.
+ * Single artist identity record (JSON-LD creator). Module A — one row for this site.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "artists".
@@ -229,7 +217,7 @@ export interface Artist {
   platformJoinDate?: string | null;
   externalIdentifiers?:
     | {
-        type: 'website' | 'instagram' | 'artnet' | 'wikidata' | 'json-ld' | 'google-knowledge-graph';
+        type: 'website' | 'instagram' | 'artnet' | 'artsy' | 'wikidata' | 'ulan' | 'json-ld' | 'google-knowledge-graph';
         value: string;
         verified?: boolean | null;
         id?: string | null;
@@ -243,7 +231,7 @@ export interface Artist {
    * Wikidata entity URI, e.g. https://www.wikidata.org/entity/Qxxxxxx
    */
   wikidataUri?: string | null;
-  bio?: {
+  bioFull?: {
     root: {
       type: string;
       children: {
@@ -258,7 +246,7 @@ export interface Artist {
     };
     [k: string]: unknown;
   } | null;
-  statement?: {
+  bioMedium?: {
     root: {
       type: string;
       children: {
@@ -274,39 +262,10 @@ export interface Artist {
     [k: string]: unknown;
   } | null;
   /**
-   * Earliest reference to this entity across records.
+   * Single sentence, third person (plain text).
    */
-  firstMentionDate?: string | null;
-  mergeCandidates?:
-    | {
-        candidateType: 'artist' | 'collector' | 'gallery' | 'event';
-        candidateId: string;
-        matchConfidence?: ('high' | 'medium' | 'low') | null;
-        matchBasis?: string | null;
-        status?: ('pending' | 'confirmed' | 'declined') | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Documents that brief the Art/Official agent at session start.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "practice-knowledge".
- */
-export interface PracticeKnowledge {
-  id: number;
-  /**
-   * One of: biography, artist-statement, series, visual-vocabulary, art-historical-touchstones, preferred-vocabulary
-   */
-  slug: string;
-  /**
-   * Heading used when assembling the system prompt.
-   */
-  sectionLabel: string;
-  content: {
+  bioShort?: string | null;
+  statementFull?: {
     root: {
       type: string;
       children: {
@@ -320,29 +279,8 @@ export interface PracticeKnowledge {
       version: number;
     };
     [k: string]: unknown;
-  };
-  status: 'active' | 'draft';
-  /**
-   * Lower numbers appear first in the prompt.
-   */
-  order: number;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Briefs the Art/Official agent for collector-cataloguing sessions.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "collection-knowledge".
- */
-export interface CollectionKnowledge {
-  id: number;
-  /**
-   * One of: collector-biography, collection-focus, dealer-relationships, acquisition-context, collection-overview
-   */
-  slug: string;
-  sectionLabel: string;
-  content: {
+  } | null;
+  statementMedium?: {
     root: {
       type: string;
       children: {
@@ -356,24 +294,15 @@ export interface CollectionKnowledge {
       version: number;
     };
     [k: string]: unknown;
-  };
-  status: 'active' | 'draft';
-  order: number;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "gallery-knowledge".
- */
-export interface GalleryKnowledge {
-  id: number;
+  } | null;
   /**
-   * One of: gallery-biography, programme-focus, represented-artists, exhibition-history, curatorial-position
+   * One to two sentences (plain text).
    */
-  slug: string;
-  sectionLabel: string;
-  content: {
+  statementShort?: string | null;
+  /**
+   * How of making — populated gradually via cataloguing sessions.
+   */
+  practiceNote?: {
     root: {
       type: string;
       children: {
@@ -387,100 +316,63 @@ export interface GalleryKnowledge {
       version: number;
     };
     [k: string]: unknown;
-  };
-  status: 'active' | 'draft';
-  order: number;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "collectors".
- */
-export interface Collector {
-  id: number;
+  } | null;
   /**
-   * Stable UUID for this collector account.
+   * Canonical attribution string for listings and loans.
    */
-  collectorId?: string | null;
-  name: string;
-  collectionName?: string | null;
-  collectionFocus?: string | null;
-  dealerRelationships?: string | null;
-  acquisitionContext?: string | null;
-  platformRelationship?: ('artist-also' | 'collector-only') | null;
-  platformJoinDate?: string | null;
-  /**
-   * Earliest reference to this entity across records (entity resolution).
-   */
-  firstMentionDate?: string | null;
-  externalIdentifiers?:
+  creditLine?: string | null;
+  locations?:
     | {
-        type: 'website' | 'instagram' | 'artnet' | 'wikidata' | 'json-ld' | 'google-knowledge-graph';
-        value: string;
-        verified?: boolean | null;
+        city: string;
+        country: string;
+        type: 'studio' | 'residence' | 'live-work';
+        primary?: boolean | null;
+        current?: boolean | null;
+        /**
+         * Year this base was established (optional).
+         */
+        startYear?: number | null;
         id?: string | null;
       }[]
     | null;
   /**
-   * Knowledge docs used to brief collector sessions.
+   * Contact form destination — never render as raw text on the public site.
    */
-  collectionKnowledgeBase?: (number | CollectionKnowledge)[] | null;
-  mergeCandidates?:
+  publicEmail?: string | null;
+  website?: string | null;
+  instagramUrl?: string | null;
+  otherLinks?:
     | {
-        candidateType: 'artist' | 'collector' | 'gallery' | 'event';
-        candidateId: string;
-        matchConfidence?: ('high' | 'medium' | 'low') | null;
-        matchBasis?: string | null;
-        status?: ('pending' | 'confirmed' | 'declined') | null;
+        label: string;
+        url: string;
         id?: string | null;
       }[]
     | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "galleries".
- */
-export interface Gallery {
-  id: number;
-  name: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
-  programmeFocus?: string | null;
-  location?: string | null;
-  foundingYear?: number | null;
-  platformJoinDate?: string | null;
-  firstMentionDate?: string | null;
-  externalIdentifiers?:
+  education?:
     | {
-        type: 'website' | 'instagram' | 'artnet' | 'wikidata' | 'json-ld' | 'google-knowledge-graph';
-        value: string;
-        verified?: boolean | null;
+        institution: string;
+        degree?: string | null;
+        subject?: string | null;
+        yearStart?: number | null;
+        yearEnd?: number | null;
+        city?: string | null;
+        country?: string | null;
+        cvVisible?: boolean | null;
         id?: string | null;
       }[]
     | null;
-  representedArtists?:
+  selectedCollections?:
     | {
-        artistId: number | Artist;
-        status: 'active' | 'historical';
-        startDate?: string | null;
-        endDate?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  galleryKnowledgeBase?: (number | GalleryKnowledge)[] | null;
-  mergeCandidates?:
-    | {
-        candidateType: 'artist' | 'collector' | 'gallery' | 'event';
-        candidateId: string;
-        matchConfidence?: ('high' | 'medium' | 'low') | null;
-        matchBasis?: string | null;
-        status?: ('pending' | 'confirmed' | 'declined') | null;
+        institutionName: string;
+        city?: string | null;
+        country?: string | null;
+        acquisitionYear?: number | null;
+        cvVisible?: boolean | null;
+        sourceOfTruth?: ('manual' | 'derived') | null;
+        /**
+         * Optional link for future derivation workflows.
+         */
+        linkedArtworkId?: (number | null) | Artwork;
         id?: string | null;
       }[]
     | null;
@@ -519,7 +411,10 @@ export interface Artwork {
    */
   altTitle?: string | null;
   slug: string;
-  creator: number | Person;
+  /**
+   * Primary artist for this work.
+   */
+  creator: number | Artist;
   series: number | Series;
   /**
    * Auto-set from series.
@@ -529,7 +424,7 @@ export interface Artwork {
   /**
    * Set once at creation; immutable. Provenance of the catalogue record.
    */
-  recordOrigin: 'artist-catalogued' | 'collector-catalogued' | 'migrated' | 'enrichment-agent';
+  recordOrigin: 'artist-catalogued' | 'gallery-catalogued' | 'collector-catalogued' | 'migrated' | 'enrichment-agent';
   /**
    * Four-digit year the work was begun.
    */
@@ -944,31 +839,6 @@ export interface Artwork {
         id?: string | null;
       }[]
     | null;
-  acquisitionYear?: number | null;
-  acquisitionChannel?: ('direct-from-artist' | 'dealer' | 'auction' | 'art-fair' | 'gift' | 'estate' | 'other') | null;
-  dealerSource?: string | null;
-  dealerLocation?: string | null;
-  priorOwner?: string | null;
-  /**
-   * Admin-only; never exposed in public APIs.
-   */
-  acquisitionPrice?: number | null;
-  acquisitionCurrency?: ('EUR' | 'GBP' | 'USD' | 'other') | null;
-  certificationDocs?: string | null;
-  saleHandoffReceived?: boolean | null;
-  artistRecognitionAtAcquisition?:
-    | ('unknown' | 'local-known' | 'nationally-known' | 'internationally-known' | 'institutionally-validated')
-    | null;
-  priorExhibitionAtAcquisition?: string | null;
-  encounterContext?: ('studio-visit' | 'dealer-recommendation' | 'art-fair' | 'online' | 'gift' | 'other') | null;
-  /**
-   * Drawn out through dialogue — not form-filled.
-   */
-  whyThisWork?: string | null;
-  collectorArtistRelationship?: ('none' | 'aware-of-practice' | 'personal-relationship') | null;
-  documentationPhotoContext?: string | null;
-  linkedArtistRecord?: (number | null) | Artwork;
-  linkedCollectorId?: (number | null) | Collector;
   arEnabled?: boolean | null;
   /**
    * Metres; defaults from width mm ÷ 1000 on save.
@@ -1005,9 +875,8 @@ export interface Artwork {
   };
   artworkHolder?: {
     holderType?: ('Person' | 'Organization') | null;
-    holderPerson?: (number | null) | Person;
     /**
-     * If not in People collection.
+     * Display name for the current holder (private).
      */
     holderName?: string | null;
     holderUrl?: string | null;
@@ -1047,7 +916,7 @@ export interface Artwork {
     | boolean
     | null;
   /**
-   * Uncheck when the studio-to-collector chain is not traceable (collector records).
+   * Uncheck when the studio-to-first-owner chain is not traceable.
    */
   provenanceOriginKnown?: boolean | null;
   /**
@@ -1075,11 +944,7 @@ export interface Artwork {
     | boolean
     | null;
   /**
-   * DEPRECATED — use exhibition history → Events. Prefer Event → Artworks.
-   */
-  exhibitions?: (number | Exhibition)[] | null;
-  /**
-   * Structured link to Event records (replaces legacy exhibitions relation).
+   * Optional manual cross-links; prefer assigning works on the Event document.
    */
   exhibitionHistory?:
     | {
@@ -1108,27 +973,9 @@ export interface Artwork {
    */
   galleryReference?: string | null;
   /**
-   * Current consignment gallery.
-   */
-  consignedTo?: (number | null) | Gallery;
-  consignmentHistory?:
-    | {
-        galleryId: number | Gallery;
-        status: 'active' | 'completed';
-        dateIn?: string | null;
-        dateOut?: string | null;
-        outcome?: ('sold' | 'returned' | 'transferred') | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Wall text / press release from the gallery for this work.
+   * Wall text / press release for this work (when applicable).
    */
   galleryText?: string | null;
-  /**
-   * Broker gallery (collector records).
-   */
-  placedBy?: (number | null) | Gallery;
   /**
    * JSON array of sales: transactionId (UUID), saleDate, salePrice, saleCurrency, exchangeRateToEur, buyerPrivate, buyerCity, channel, galleryName, auctionHouse, invoiceReference, commissionRate, netToArtist, vatApplicable, vatRate, editionNumber, notes.
    */
@@ -1441,159 +1288,6 @@ export interface Artwork {
   createdAt: string;
 }
 /**
- * Artists, collectors, collaborators, curators and other people connected to the work.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "people".
- */
-export interface Person {
-  id: number;
-  name: string;
-  /**
-   * URL-safe identifier e.g. bernard-bolter
-   */
-  slug: string;
-  role: ('artist' | 'collaborator' | 'collector' | 'curator' | 'galleryOwner' | 'fabricator' | 'press' | 'other')[];
-  jobTitle?: string | null;
-  pronouns?: string | null;
-  nationality?: string | null;
-  knowsLanguage?:
-    | {
-        language?: ('en' | 'de' | 'nl' | 'fr' | 'es' | 'it' | 'zh' | 'ja') | null;
-        id?: string | null;
-      }[]
-    | null;
-  portrait?: (number | null) | Media;
-  bio?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Only shown when role includes Artist.
-   */
-  artistStatement?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Max 160 chars. Used for meta descriptions and social previews.
-   */
-  shortBio?: string | null;
-  birthDate?: string | null;
-  birthPlace?: {
-    city?: string | null;
-    region?: string | null;
-    country?: string | null;
-    countryCode?: string | null;
-  };
-  workLocations?:
-    | {
-        city?: string | null;
-        country?: string | null;
-        countryCode?: string | null;
-        lat?: number | null;
-        lng?: number | null;
-        current?: boolean | null;
-        id?: string | null;
-      }[]
-    | null;
-  primaryUrl?: string | null;
-  /**
-   * Verified profiles that are definitively this person.
-   */
-  authorityLinks?:
-    | {
-        type?:
-          | (
-              | 'wikipedia'
-              | 'wikidata'
-              | 'ulan'
-              | 'isni'
-              | 'viaf'
-              | 'instagram'
-              | 'linkedin'
-              | 'artsy'
-              | 'artnet'
-              | 'ownSite'
-              | 'other'
-            )
-          | null;
-        url: string;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Own websites and projects.
-   */
-  ownSites?:
-    | {
-        name?: string | null;
-        url?: string | null;
-        series?: (number | null) | Series;
-        role?: ('seriesArchive' | 'project' | 'shop' | 'other') | null;
-        id?: string | null;
-      }[]
-    | null;
-  alumniOf?:
-    | {
-        institution?: string | null;
-        city?: string | null;
-        country?: string | null;
-        yearStart?: number | null;
-        yearEnd?: number | null;
-        degree?: string | null;
-        url?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  affiliation?:
-    | {
-        organization?: string | null;
-        role?: string | null;
-        yearStart?: number | null;
-        yearEnd?: number | null;
-        url?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  award?:
-    | {
-        name?: string | null;
-        year?: number | null;
-        issuer?: string | null;
-        url?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Practice series definitions used by artworks and public series pages.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1679,7 +1373,7 @@ export interface Event {
   title: string;
   slug: string;
   /**
-   * Stable UUID for merge / enrichment.
+   * Stable UUID for integrations.
    */
   eventId?: string | null;
   eventType:
@@ -1689,10 +1383,12 @@ export interface Event {
     | 'residency'
     | 'award'
     | 'publication'
+    | 'bibliography'
     | 'public-commission'
     | 'talk-panel'
     | 'screening'
     | 'performance'
+    | 'education'
     | 'other';
   eventTypeCustom?: string | null;
   status: 'draft' | 'published';
@@ -1754,10 +1450,6 @@ export interface Event {
         id?: string | null;
       }[]
     | null;
-  /**
-   * Optional — e.g. acquisition-related events.
-   */
-  collectors?: (number | Collector)[] | null;
   catalogue?: boolean | null;
   catalogueUrl?: string | null;
   pressUrl?: string | null;
@@ -1782,9 +1474,11 @@ export interface Event {
   pressQuote?: string | null;
   publicationTitle?: string | null;
   publicationAuthor?: string | null;
+  bibliographyAuthor?: string | null;
   publicationIssn?: string | null;
   publicationIsbn?: string | null;
   publicationPages?: string | null;
+  publicationUrl?: string | null;
   awardGrantingOrganisation?: string | null;
   awardAmount?: number | null;
   awardAmountCurrency?: ('EUR' | 'USD' | 'GBP' | 'CHF' | 'other') | null;
@@ -1792,18 +1486,27 @@ export interface Event {
   residencyOrganisation?: string | null;
   residencyType?: ('studio' | 'live-work' | 'research' | 'production' | 'international') | null;
   residencyWorksProduced?: string | null;
+  institution?: string | null;
+  degree?: string | null;
+  subject?: string | null;
+  /**
+   * Include on public CV.
+   */
+  cvVisible?: boolean | null;
   commissionClient?: string | null;
   commissionSite?: string | null;
   commissionBudget?: number | null;
   cvSection?:
     | (
+        | 'education'
         | 'solo-exhibitions'
         | 'group-exhibitions'
         | 'art-fairs'
-        | 'residencies'
         | 'awards-prizes'
-        | 'publications'
+        | 'residencies'
         | 'public-commissions'
+        | 'publications'
+        | 'bibliography'
         | 'talks-panels'
         | 'screenings'
         | 'performances'
@@ -1813,46 +1516,6 @@ export interface Event {
   cvDisplayTitle?: string | null;
   cvPriority?: number | null;
   excludeFromCv?: boolean | null;
-  /**
-   * Computed on save (0–100).
-   */
-  completenessScore?: number | null;
-  mergeStaff?: {
-    sourceHistory?:
-      | {
-          source:
-            | 'artist-archive'
-            | 'gallery-import'
-            | 'collector-session'
-            | 'enrichment-agent'
-            | 'json-ld-scrape'
-            | 'manual';
-          actorId?: string | null;
-          addedAt?: string | null;
-          fieldsContributed?:
-            | {
-                field: string;
-                id?: string | null;
-              }[]
-            | null;
-          id?: string | null;
-        }[]
-      | null;
-    mergeStatus?: ('stub' | 'partial' | 'confirmed' | 'disputed') | null;
-    mergeLog?:
-      | {
-          mergeAction: 'entity-linked' | 'field-updated' | 'merge-proposed' | 'merge-confirmed' | 'merge-declined';
-          actorId?: string | null;
-          timestamp?: string | null;
-          note?: string | null;
-          id?: string | null;
-        }[]
-      | null;
-    /**
-     * Actor id of the authoritative source for this event.
-     */
-    canonicalSource?: string | null;
-  };
   jsonldSameAs?:
     | {
         uri?: string | null;
@@ -1904,19 +1567,22 @@ export interface ArtHistoricalReference {
   createdAt: string;
 }
 /**
- * DEPRECATED: legacy WordPress-era exhibitions. Prefer Events + Artwork.exhibitionHistory. Removal scheduled after migration.
+ * Documents that brief the Art/Official agent at session start.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "exhibitions".
+ * via the `definition` "practice-knowledge".
  */
-export interface Exhibition {
+export interface PracticeKnowledge {
   id: number;
-  name: string;
+  /**
+   * One of: biography, artist-statement, series, visual-vocabulary, art-historical-touchstones, preferred-vocabulary
+   */
   slug: string;
-  status: 'draft' | 'published' | 'archived';
-  startDate: string;
-  endDate?: string | null;
-  description?: {
+  /**
+   * Heading used when assembling the system prompt.
+   */
+  sectionLabel: string;
+  content: {
     root: {
       type: string;
       children: {
@@ -1930,64 +1596,12 @@ export interface Exhibition {
       version: number;
     };
     [k: string]: unknown;
-  } | null;
-  eventStatus?:
-    | (
-        | 'https://schema.org/EventScheduled'
-        | 'https://schema.org/EventPostponed'
-        | 'https://schema.org/EventCancelled'
-        | 'https://schema.org/EventRescheduled'
-      )
-    | null;
-  /**
-   * Person or organization organizing the exhibition.
-   */
-  organizer?: (number | null) | Person;
-  location?: {
-    /**
-     * Venue name
-     */
-    name?: string | null;
-    /**
-     * Full address
-     */
-    address?: string | null;
-    city?: string | null;
-    region?: string | null;
-    country?: string | null;
-    countryCode?: string | null;
-    postalCode?: string | null;
-    lat?: number | null;
-    lng?: number | null;
   };
+  status: 'active' | 'draft';
   /**
-   * Official exhibition website.
+   * Lower numbers appear first in the prompt.
    */
-  url?: string | null;
-  /**
-   * Artworks featured in this exhibition.
-   */
-  artworks?: (number | Artwork)[] | null;
-  /**
-   * Main exhibition image.
-   */
-  primaryImage?: (number | null) | Media;
-  additionalImages?:
-    | {
-        image: number | Media;
-        caption?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  metaTitle?: string | null;
-  metaDescription?: string | null;
-  sameAs?:
-    | {
-        url: string;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
+  order: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -2000,16 +1614,9 @@ export interface Exhibition {
 export interface Session {
   id: number;
   sessionId?: string | null;
-  sessionType:
-    | 'artwork-cataloguing'
-    | 'collector-cataloguing'
-    | 'gallery-cataloguing'
-    | 'artist-statement'
-    | 'biography'
-    | 'onboarding';
+  sessionType: 'artwork-cataloguing' | 'artist-statement' | 'biography' | 'onboarding';
   status: 'in-progress' | 'completed' | 'abandoned';
   artistId?: (number | null) | Artist;
-  collectorId?: (number | null) | Collector;
   artworkRecord?: (number | null) | Artwork;
   completedAt?: string | null;
   /**
@@ -2100,40 +1707,8 @@ export interface PayloadLockedDocument {
         value: number | PracticeKnowledge;
       } | null)
     | ({
-        relationTo: 'collection-knowledge';
-        value: number | CollectionKnowledge;
-      } | null)
-    | ({
-        relationTo: 'gallery-knowledge';
-        value: number | GalleryKnowledge;
-      } | null)
-    | ({
-        relationTo: 'collectors';
-        value: number | Collector;
-      } | null)
-    | ({
-        relationTo: 'galleries';
-        value: number | Gallery;
-      } | null)
-    | ({
-        relationTo: 'artworks';
-        value: number | Artwork;
-      } | null)
-    | ({
-        relationTo: 'people';
-        value: number | Person;
-      } | null)
-    | ({
         relationTo: 'series';
         value: number | Series;
-      } | null)
-    | ({
-        relationTo: 'exhibitions';
-        value: number | Exhibition;
-      } | null)
-    | ({
-        relationTo: 'events';
-        value: number | Event;
       } | null)
     | ({
         relationTo: 'tags';
@@ -2142,6 +1717,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'art-historical-references';
         value: number | ArtHistoricalReference;
+      } | null)
+    | ({
+        relationTo: 'events';
+        value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'artworks';
+        value: number | Artwork;
       } | null)
     | ({
         relationTo: 'sessions';
@@ -2266,17 +1849,58 @@ export interface ArtistsSelect<T extends boolean = true> {
       };
   ulanUri?: T;
   wikidataUri?: T;
-  bio?: T;
-  statement?: T;
-  firstMentionDate?: T;
-  mergeCandidates?:
+  bioFull?: T;
+  bioMedium?: T;
+  bioShort?: T;
+  statementFull?: T;
+  statementMedium?: T;
+  statementShort?: T;
+  practiceNote?: T;
+  creditLine?: T;
+  locations?:
     | T
     | {
-        candidateType?: T;
-        candidateId?: T;
-        matchConfidence?: T;
-        matchBasis?: T;
-        status?: T;
+        city?: T;
+        country?: T;
+        type?: T;
+        primary?: T;
+        current?: T;
+        startYear?: T;
+        id?: T;
+      };
+  publicEmail?: T;
+  website?: T;
+  instagramUrl?: T;
+  otherLinks?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  education?:
+    | T
+    | {
+        institution?: T;
+        degree?: T;
+        subject?: T;
+        yearStart?: T;
+        yearEnd?: T;
+        city?: T;
+        country?: T;
+        cvVisible?: T;
+        id?: T;
+      };
+  selectedCollections?:
+    | T
+    | {
+        institutionName?: T;
+        city?: T;
+        country?: T;
+        acquisitionYear?: T;
+        cvVisible?: T;
+        sourceOfTruth?: T;
+        linkedArtworkId?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -2297,107 +1921,140 @@ export interface PracticeKnowledgeSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "collection-knowledge_select".
+ * via the `definition` "series_select".
  */
-export interface CollectionKnowledgeSelect<T extends boolean = true> {
-  slug?: T;
-  sectionLabel?: T;
-  content?: T;
-  status?: T;
-  order?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "gallery-knowledge_select".
- */
-export interface GalleryKnowledgeSelect<T extends boolean = true> {
-  slug?: T;
-  sectionLabel?: T;
-  content?: T;
-  status?: T;
-  order?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "collectors_select".
- */
-export interface CollectorsSelect<T extends boolean = true> {
-  collectorId?: T;
+export interface SeriesSelect<T extends boolean = true> {
   name?: T;
-  collectionName?: T;
-  collectionFocus?: T;
-  dealerRelationships?: T;
-  acquisitionContext?: T;
-  platformRelationship?: T;
-  platformJoinDate?: T;
-  firstMentionDate?: T;
-  externalIdentifiers?:
-    | T
-    | {
-        type?: T;
-        value?: T;
-        verified?: T;
-        id?: T;
-      };
-  collectionKnowledgeBase?: T;
-  mergeCandidates?:
-    | T
-    | {
-        candidateType?: T;
-        candidateId?: T;
-        matchConfidence?: T;
-        matchBasis?: T;
-        status?: T;
-        id?: T;
-      };
+  slug?: T;
+  description?: T;
+  yearStart?: T;
+  yearEnd?: T;
+  city?: T;
+  country?: T;
+  coverImage?: T;
+  status?: T;
+  jsonldOutput?: T;
   updatedAt?: T;
   createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "galleries_select".
+ * via the `definition` "tags_select".
  */
-export interface GalleriesSelect<T extends boolean = true> {
-  name?: T;
-  generateSlug?: T;
+export interface TagsSelect<T extends boolean = true> {
+  label?: T;
+  type?: T;
+  aatUri?: T;
+  iconclassNotation?: T;
+  lcshUri?: T;
+  description?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "art-historical-references_select".
+ */
+export interface ArtHistoricalReferencesSelect<T extends boolean = true> {
+  artworkTitle?: T;
+  artistName?: T;
+  yearCreated?: T;
+  medium?: T;
+  institution?: T;
+  imageUrl?: T;
+  referenceUrl?: T;
+  wikidataUri?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events_select".
+ */
+export interface EventsSelect<T extends boolean = true> {
+  title?: T;
   slug?: T;
-  programmeFocus?: T;
-  location?: T;
-  foundingYear?: T;
-  platformJoinDate?: T;
-  firstMentionDate?: T;
-  externalIdentifiers?:
+  eventId?: T;
+  eventType?: T;
+  eventTypeCustom?: T;
+  status?: T;
+  featured?: T;
+  startDate?: T;
+  endDate?: T;
+  isOngoing?: T;
+  openingDate?: T;
+  yearStart?: T;
+  venueName?: T;
+  venueCity?: T;
+  venueCountry?: T;
+  venueTgnUri?: T;
+  venueUrl?: T;
+  venueWikidataUri?: T;
+  isOnline?: T;
+  onlineEventUrl?: T;
+  additionalVenues?:
     | T
     | {
-        type?: T;
-        value?: T;
-        verified?: T;
-        id?: T;
-      };
-  representedArtists?:
-    | T
-    | {
-        artistId?: T;
-        status?: T;
+        venueName?: T;
+        venueCity?: T;
+        venueCountry?: T;
         startDate?: T;
         endDate?: T;
+        venueUrl?: T;
         id?: T;
       };
-  galleryKnowledgeBase?: T;
-  mergeCandidates?:
+  artworks?: T;
+  artworkPresentationNote?: T;
+  organiser?: T;
+  curator?: T;
+  role?: T;
+  coExhibitors?:
     | T
     | {
-        candidateType?: T;
-        candidateId?: T;
-        matchConfidence?: T;
-        matchBasis?: T;
-        status?: T;
+        name?: T;
         id?: T;
       };
+  catalogue?: T;
+  catalogueUrl?: T;
+  pressUrl?: T;
+  recordingUrl?: T;
+  descriptionShort?: T;
+  descriptionLong?: T;
+  artistNote?: T;
+  pressQuote?: T;
+  publicationTitle?: T;
+  publicationAuthor?: T;
+  bibliographyAuthor?: T;
+  publicationIssn?: T;
+  publicationIsbn?: T;
+  publicationPages?: T;
+  publicationUrl?: T;
+  awardGrantingOrganisation?: T;
+  awardAmount?: T;
+  awardAmountCurrency?: T;
+  awardOutcome?: T;
+  residencyOrganisation?: T;
+  residencyType?: T;
+  residencyWorksProduced?: T;
+  institution?: T;
+  degree?: T;
+  subject?: T;
+  cvVisible?: T;
+  commissionClient?: T;
+  commissionSite?: T;
+  commissionBudget?: T;
+  cvSection?: T;
+  cvDisplayTitle?: T;
+  cvPriority?: T;
+  excludeFromCv?: T;
+  jsonldSameAs?:
+    | T
+    | {
+        uri?: T;
+        id?: T;
+      };
+  jsonldPreview?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2574,23 +2231,6 @@ export interface ArtworksSelect<T extends boolean = true> {
         imageRole?: T;
         id?: T;
       };
-  acquisitionYear?: T;
-  acquisitionChannel?: T;
-  dealerSource?: T;
-  dealerLocation?: T;
-  priorOwner?: T;
-  acquisitionPrice?: T;
-  acquisitionCurrency?: T;
-  certificationDocs?: T;
-  saleHandoffReceived?: T;
-  artistRecognitionAtAcquisition?: T;
-  priorExhibitionAtAcquisition?: T;
-  encounterContext?: T;
-  whyThisWork?: T;
-  collectorArtistRelationship?: T;
-  documentationPhotoContext?: T;
-  linkedArtistRecord?: T;
-  linkedCollectorId?: T;
   arEnabled?: T;
   arWidthM?: T;
   arHeightM?: T;
@@ -2613,7 +2253,6 @@ export interface ArtworksSelect<T extends boolean = true> {
     | T
     | {
         holderType?: T;
-        holderPerson?: T;
         holderName?: T;
         holderUrl?: T;
       };
@@ -2628,7 +2267,6 @@ export interface ArtworksSelect<T extends boolean = true> {
   provenanceOriginKnown?: T;
   loanHistory?: T;
   provenanceConfidenceLayer?: T;
-  exhibitions?: T;
   exhibitionHistory?:
     | T
     | {
@@ -2646,19 +2284,7 @@ export interface ArtworksSelect<T extends boolean = true> {
   insuranceValue?: T;
   insuranceValueDate?: T;
   galleryReference?: T;
-  consignedTo?: T;
-  consignmentHistory?:
-    | T
-    | {
-        galleryId?: T;
-        status?: T;
-        dateIn?: T;
-        dateOut?: T;
-        outcome?: T;
-        id?: T;
-      };
   galleryText?: T;
-  placedBy?: T;
   salesRecord?: T;
   totalRevenue?: T;
   editionType?: T;
@@ -2798,313 +2424,6 @@ export interface ArtworksSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "people_select".
- */
-export interface PeopleSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  role?: T;
-  jobTitle?: T;
-  pronouns?: T;
-  nationality?: T;
-  knowsLanguage?:
-    | T
-    | {
-        language?: T;
-        id?: T;
-      };
-  portrait?: T;
-  bio?: T;
-  artistStatement?: T;
-  shortBio?: T;
-  birthDate?: T;
-  birthPlace?:
-    | T
-    | {
-        city?: T;
-        region?: T;
-        country?: T;
-        countryCode?: T;
-      };
-  workLocations?:
-    | T
-    | {
-        city?: T;
-        country?: T;
-        countryCode?: T;
-        lat?: T;
-        lng?: T;
-        current?: T;
-        id?: T;
-      };
-  primaryUrl?: T;
-  authorityLinks?:
-    | T
-    | {
-        type?: T;
-        url?: T;
-        label?: T;
-        id?: T;
-      };
-  ownSites?:
-    | T
-    | {
-        name?: T;
-        url?: T;
-        series?: T;
-        role?: T;
-        id?: T;
-      };
-  alumniOf?:
-    | T
-    | {
-        institution?: T;
-        city?: T;
-        country?: T;
-        yearStart?: T;
-        yearEnd?: T;
-        degree?: T;
-        url?: T;
-        id?: T;
-      };
-  affiliation?:
-    | T
-    | {
-        organization?: T;
-        role?: T;
-        yearStart?: T;
-        yearEnd?: T;
-        url?: T;
-        id?: T;
-      };
-  award?:
-    | T
-    | {
-        name?: T;
-        year?: T;
-        issuer?: T;
-        url?: T;
-        id?: T;
-      };
-  metaTitle?: T;
-  metaDescription?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "series_select".
- */
-export interface SeriesSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  description?: T;
-  yearStart?: T;
-  yearEnd?: T;
-  city?: T;
-  country?: T;
-  coverImage?: T;
-  status?: T;
-  jsonldOutput?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "exhibitions_select".
- */
-export interface ExhibitionsSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  status?: T;
-  startDate?: T;
-  endDate?: T;
-  description?: T;
-  eventStatus?: T;
-  organizer?: T;
-  location?:
-    | T
-    | {
-        name?: T;
-        address?: T;
-        city?: T;
-        region?: T;
-        country?: T;
-        countryCode?: T;
-        postalCode?: T;
-        lat?: T;
-        lng?: T;
-      };
-  url?: T;
-  artworks?: T;
-  primaryImage?: T;
-  additionalImages?:
-    | T
-    | {
-        image?: T;
-        caption?: T;
-        id?: T;
-      };
-  metaTitle?: T;
-  metaDescription?: T;
-  sameAs?:
-    | T
-    | {
-        url?: T;
-        label?: T;
-        id?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "events_select".
- */
-export interface EventsSelect<T extends boolean = true> {
-  title?: T;
-  slug?: T;
-  eventId?: T;
-  eventType?: T;
-  eventTypeCustom?: T;
-  status?: T;
-  featured?: T;
-  startDate?: T;
-  endDate?: T;
-  isOngoing?: T;
-  openingDate?: T;
-  yearStart?: T;
-  venueName?: T;
-  venueCity?: T;
-  venueCountry?: T;
-  venueTgnUri?: T;
-  venueUrl?: T;
-  venueWikidataUri?: T;
-  isOnline?: T;
-  onlineEventUrl?: T;
-  additionalVenues?:
-    | T
-    | {
-        venueName?: T;
-        venueCity?: T;
-        venueCountry?: T;
-        startDate?: T;
-        endDate?: T;
-        venueUrl?: T;
-        id?: T;
-      };
-  artworks?: T;
-  artworkPresentationNote?: T;
-  organiser?: T;
-  curator?: T;
-  role?: T;
-  coExhibitors?:
-    | T
-    | {
-        name?: T;
-        id?: T;
-      };
-  collectors?: T;
-  catalogue?: T;
-  catalogueUrl?: T;
-  pressUrl?: T;
-  recordingUrl?: T;
-  descriptionShort?: T;
-  descriptionLong?: T;
-  artistNote?: T;
-  pressQuote?: T;
-  publicationTitle?: T;
-  publicationAuthor?: T;
-  publicationIssn?: T;
-  publicationIsbn?: T;
-  publicationPages?: T;
-  awardGrantingOrganisation?: T;
-  awardAmount?: T;
-  awardAmountCurrency?: T;
-  awardOutcome?: T;
-  residencyOrganisation?: T;
-  residencyType?: T;
-  residencyWorksProduced?: T;
-  commissionClient?: T;
-  commissionSite?: T;
-  commissionBudget?: T;
-  cvSection?: T;
-  cvDisplayTitle?: T;
-  cvPriority?: T;
-  excludeFromCv?: T;
-  completenessScore?: T;
-  mergeStaff?:
-    | T
-    | {
-        sourceHistory?:
-          | T
-          | {
-              source?: T;
-              actorId?: T;
-              addedAt?: T;
-              fieldsContributed?:
-                | T
-                | {
-                    field?: T;
-                    id?: T;
-                  };
-              id?: T;
-            };
-        mergeStatus?: T;
-        mergeLog?:
-          | T
-          | {
-              mergeAction?: T;
-              actorId?: T;
-              timestamp?: T;
-              note?: T;
-              id?: T;
-            };
-        canonicalSource?: T;
-      };
-  jsonldSameAs?:
-    | T
-    | {
-        uri?: T;
-        id?: T;
-      };
-  jsonldPreview?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "tags_select".
- */
-export interface TagsSelect<T extends boolean = true> {
-  label?: T;
-  type?: T;
-  aatUri?: T;
-  iconclassNotation?: T;
-  lcshUri?: T;
-  description?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "art-historical-references_select".
- */
-export interface ArtHistoricalReferencesSelect<T extends boolean = true> {
-  artworkTitle?: T;
-  artistName?: T;
-  yearCreated?: T;
-  medium?: T;
-  institution?: T;
-  imageUrl?: T;
-  referenceUrl?: T;
-  wikidataUri?: T;
-  notes?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sessions_select".
  */
 export interface SessionsSelect<T extends boolean = true> {
@@ -3112,7 +2431,6 @@ export interface SessionsSelect<T extends boolean = true> {
   sessionType?: T;
   status?: T;
   artistId?: T;
-  collectorId?: T;
   artworkRecord?: T;
   completedAt?: T;
   messages?: T;

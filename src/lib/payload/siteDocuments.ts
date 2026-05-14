@@ -13,6 +13,7 @@ export async function getArtistRecord(): Promise<Artist | null> {
     limit: 1,
     depth: 0,
     sort: 'id',
+    overrideAccess: false,
   })
   return result.docs[0] ?? null
 }
@@ -32,6 +33,7 @@ export async function getPublishedArtworkBySlug(slug: string): Promise<Artwork |
     },
     limit: 1,
     depth: 2,
+    overrideAccess: false,
   })
   return result.docs[0] ?? null
 }
@@ -46,6 +48,7 @@ export async function getPublishedEventBySlug(slug: string): Promise<Event | nul
     },
     limit: 1,
     depth: 0,
+    overrideAccess: false,
   })
   return result.docs[0] ?? null
 }

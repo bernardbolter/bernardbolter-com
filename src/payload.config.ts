@@ -13,19 +13,13 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
-import { Artworks } from './collections/Artworks'
-import { People } from './collections/People'
+import { Artists } from './collections/Artists'
+import { PracticeKnowledge } from './collections/PracticeKnowledge'
 import { Series } from './collections/Series'
-import { Exhibitions } from './collections/Exhibitions'
-import { Events } from './collections/Events'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
-import { Artists } from './collections/Artists'
-import { CollectionKnowledge } from './collections/CollectionKnowledge'
-import { Collectors } from './collections/Collectors'
-import { Galleries } from './collections/Galleries'
-import { GalleryKnowledge } from './collections/GalleryKnowledge'
-import { PracticeKnowledge } from './collections/PracticeKnowledge'
+import { Events } from './collections/Events'
+import { Artworks } from './collections/Artworks'
 import { Sessions } from './collections/Sessions'
 
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -37,6 +31,11 @@ const databaseUrl = process.env.DATABASE_URL
 
 if (!databaseUrl) {
   throw new Error('DATABASE_URL is not set in environment variables')
+}
+
+const payloadSecret = process.env.PAYLOAD_SECRET
+if (!payloadSecret) {
+  throw new Error('PAYLOAD_SECRET is not set in environment variables')
 }
 
 export default buildConfig({
@@ -68,21 +67,15 @@ export default buildConfig({
     Media,
     Artists,
     PracticeKnowledge,
-    CollectionKnowledge,
-    GalleryKnowledge,
-    Collectors,
-    Galleries,
-    Artworks,
-    People,
     Series,
-    Exhibitions,
-    Events,
     Tags,
     ArtHistoricalReferences,
+    Events,
+    Artworks,
     Sessions,
   ],
   editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET,
+  secret: payloadSecret,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

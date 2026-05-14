@@ -32,8 +32,6 @@ export const Sessions: CollectionConfig = {
       required: true,
       options: [
         { label: 'Artwork cataloguing', value: 'artwork-cataloguing' },
-        { label: 'Collector cataloguing', value: 'collector-cataloguing' },
-        { label: 'Gallery cataloguing', value: 'gallery-cataloguing' },
         { label: 'Artist statement', value: 'artist-statement' },
         { label: 'Biography', value: 'biography' },
         { label: 'Onboarding', value: 'onboarding' },
@@ -56,12 +54,6 @@ export const Sessions: CollectionConfig = {
       name: 'artistId',
       type: 'relationship',
       relationTo: 'artists',
-      admin: { position: 'sidebar' },
-    },
-    {
-      name: 'collectorId',
-      type: 'relationship',
-      relationTo: 'collectors',
       admin: { position: 'sidebar' },
     },
     {

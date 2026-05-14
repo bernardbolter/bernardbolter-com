@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 
 import { privateFieldAccess, isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 import { eventBeforeChange } from '@/hooks/eventBeforeChange'
+import { isPublished } from '@/utilities/accessControl'
 
 const eventTypeOptions = [
   { label: 'Solo Exhibition', value: 'solo-exhibition' },
@@ -10,21 +11,25 @@ const eventTypeOptions = [
   { label: 'Residency', value: 'residency' },
   { label: 'Award', value: 'award' },
   { label: 'Publication', value: 'publication' },
+  { label: 'Bibliography', value: 'bibliography' },
   { label: 'Public Commission', value: 'public-commission' },
   { label: 'Talk / Panel', value: 'talk-panel' },
   { label: 'Screening', value: 'screening' },
   { label: 'Performance', value: 'performance' },
+  { label: 'Education', value: 'education' },
   { label: 'Other', value: 'other' },
 ] as const
 
 const cvSectionOptions = [
+  { label: 'Education', value: 'education' },
   { label: 'Solo Exhibitions', value: 'solo-exhibitions' },
   { label: 'Group Exhibitions', value: 'group-exhibitions' },
   { label: 'Art Fairs', value: 'art-fairs' },
-  { label: 'Residencies', value: 'residencies' },
   { label: 'Awards & Prizes', value: 'awards-prizes' },
-  { label: 'Publications', value: 'publications' },
+  { label: 'Residencies', value: 'residencies' },
   { label: 'Public Commissions', value: 'public-commissions' },
+  { label: 'Publications', value: 'publications' },
+  { label: 'Bibliography', value: 'bibliography' },
   { label: 'Talks & Panels', value: 'talks-panels' },
   { label: 'Screenings', value: 'screenings' },
   { label: 'Performances', value: 'performances' },
@@ -37,11 +42,7 @@ export const Events: CollectionConfig = {
     beforeChange: [eventBeforeChange],
   },
   access: {
-    read: ({ req: { user } }) => {
-      if (isArtistOrAdmin(user)) return true
-      if (!user) return { status: { equals: 'published' } }
-      return { status: { equals: 'published' } }
-    },
+    read: isPublished,
     create: ({ req: { user } }) => isArtistOrAdmin(user),
     update: ({ req: { user } }) => isArtistOrAdmin(user),
     delete: ({ req: { user } }) => isArtistOrAdmin(user),
@@ -65,7 +66,7 @@ export const Events: CollectionConfig = {
               type: 'text',
               unique: true,
               index: true,
-              admin: { readOnly: true, position: 'sidebar', description: 'Stable UUID for merge / enrichment.' },
+              admin: { readOnly: true, position: 'sidebar', description: 'Stable UUID for integrations.' },
             },
             { name: 'eventType', type: 'select', required: true, options: [...eventTypeOptions] },
             {
@@ -182,13 +183,6 @@ export const Events: CollectionConfig = {
               type: 'array',
               fields: [{ name: 'name', type: 'text' }],
             },
-            {
-              name: 'collectors',
-              type: 'relationship',
-              relationTo: 'collectors',
-              hasMany: true,
-              admin: { description: 'Optional — e.g. acquisition-related events.' },
-            },
             { name: 'catalogue', type: 'checkbox', defaultValue: false },
             { name: 'catalogueUrl', type: 'text' },
             { name: 'pressUrl', type: 'text' },
@@ -210,12 +204,20 @@ export const Events: CollectionConfig = {
             {
               name: 'publicationTitle',
               type: 'text',
-              admin: { condition: (_, sibling) => sibling?.eventType === 'publication' },
+              admin: {
+                condition: (_, sibling) =>
+                  sibling?.eventType === 'publication' || sibling?.eventType === 'bibliography',
+              },
             },
             {
               name: 'publicationAuthor',
               type: 'text',
               admin: { condition: (_, sibling) => sibling?.eventType === 'publication' },
+            },
+            {
+              name: 'bibliographyAuthor',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'bibliography' },
             },
             {
               name: 'publicationIssn',
@@ -230,7 +232,15 @@ export const Events: CollectionConfig = {
             {
               name: 'publicationPages',
               type: 'text',
-              admin: { condition: (_, sibling) => sibling?.eventType === 'publication' },
+              admin: {
+                condition: (_, sibling) =>
+                  sibling?.eventType === 'publication' || sibling?.eventType === 'bibliography',
+              },
+            },
+            {
+              name: 'publicationUrl',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'bibliography' },
             },
             {
               name: 'awardGrantingOrganisation',
@@ -240,11 +250,13 @@ export const Events: CollectionConfig = {
             {
               name: 'awardAmount',
               type: 'number',
+              access: privateFieldAccess,
               admin: { condition: (_, sibling) => sibling?.eventType === 'award' },
             },
             {
               name: 'awardAmountCurrency',
               type: 'select',
+              access: privateFieldAccess,
               options: [
                 { label: 'EUR', value: 'EUR' },
                 { label: 'USD', value: 'USD' },
@@ -288,6 +300,30 @@ export const Events: CollectionConfig = {
               admin: { condition: (_, sibling) => sibling?.eventType === 'residency' },
             },
             {
+              name: 'institution',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'education' },
+            },
+            {
+              name: 'degree',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'education' },
+            },
+            {
+              name: 'subject',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'education' },
+            },
+            {
+              name: 'cvVisible',
+              type: 'checkbox',
+              defaultValue: true,
+              admin: {
+                condition: (_, sibling) => sibling?.eventType === 'education',
+                description: 'Include on public CV.',
+              },
+            },
+            {
               name: 'commissionClient',
               type: 'text',
               admin: { condition: (_, sibling) => sibling?.eventType === 'public-commission' },
@@ -300,6 +336,7 @@ export const Events: CollectionConfig = {
             {
               name: 'commissionBudget',
               type: 'number',
+              access: privateFieldAccess,
               admin: { condition: (_, sibling) => sibling?.eventType === 'public-commission' },
             },
           ],
@@ -315,90 +352,6 @@ export const Events: CollectionConfig = {
             { name: 'cvDisplayTitle', type: 'text', localized: true },
             { name: 'cvPriority', type: 'number', defaultValue: 5 },
             { name: 'excludeFromCv', type: 'checkbox', defaultValue: false },
-          ],
-        },
-        {
-          label: 'Source & merge',
-          admin: { description: 'Entity resolution, provenance of fields, merge audit (staff-only).' },
-          fields: [
-            {
-              name: 'completenessScore',
-              type: 'number',
-              admin: { readOnly: true, position: 'sidebar', description: 'Computed on save (0–100).' },
-            },
-            {
-              name: 'mergeStaff',
-              type: 'group',
-              access: privateFieldAccess,
-              fields: [
-                {
-                  name: 'sourceHistory',
-                  type: 'array',
-                  labels: { singular: 'Source', plural: 'Source history' },
-                  fields: [
-                    {
-                      name: 'source',
-                      type: 'select',
-                      required: true,
-                      options: [
-                        { label: 'Artist archive', value: 'artist-archive' },
-                        { label: 'Gallery import', value: 'gallery-import' },
-                        { label: 'Collector session', value: 'collector-session' },
-                        { label: 'Enrichment agent', value: 'enrichment-agent' },
-                        { label: 'JSON-LD scrape', value: 'json-ld-scrape' },
-                        { label: 'Manual', value: 'manual' },
-                      ],
-                    },
-                    { name: 'actorId', type: 'text' },
-                    { name: 'addedAt', type: 'date' },
-                    {
-                      name: 'fieldsContributed',
-                      type: 'array',
-                      fields: [{ name: 'field', type: 'text', required: true }],
-                    },
-                  ],
-                },
-                {
-                  name: 'mergeStatus',
-                  type: 'select',
-                  defaultValue: 'partial',
-                  options: [
-                    { label: 'Stub', value: 'stub' },
-                    { label: 'Partial', value: 'partial' },
-                    { label: 'Confirmed', value: 'confirmed' },
-                    { label: 'Disputed', value: 'disputed' },
-                  ],
-                  admin: { position: 'sidebar' },
-                },
-                {
-                  name: 'mergeLog',
-                  type: 'array',
-                  labels: { singular: 'Entry', plural: 'Merge log' },
-                  fields: [
-                    {
-                      name: 'mergeAction',
-                      type: 'select',
-                      required: true,
-                      options: [
-                        { label: 'Entity linked', value: 'entity-linked' },
-                        { label: 'Field updated', value: 'field-updated' },
-                        { label: 'Merge proposed', value: 'merge-proposed' },
-                        { label: 'Merge confirmed', value: 'merge-confirmed' },
-                        { label: 'Merge declined', value: 'merge-declined' },
-                      ],
-                    },
-                    { name: 'actorId', type: 'text' },
-                    { name: 'timestamp', type: 'date' },
-                    { name: 'note', type: 'textarea' },
-                  ],
-                },
-                {
-                  name: 'canonicalSource',
-                  type: 'text',
-                  admin: { description: 'Actor id of the authoritative source for this event.' },
-                },
-              ],
-            },
           ],
         },
         {

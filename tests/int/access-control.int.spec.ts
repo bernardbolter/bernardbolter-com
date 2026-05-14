@@ -37,7 +37,7 @@ describe.skipIf(!hasDb)('Payload access control (anonymous)', () => {
     }
   })
 
-  it('acquisitionPrice is not returned to anonymous local API reads', async () => {
+  it('askingPrice is not returned to anonymous local API reads', async () => {
     if (!schemaHasArtworkRecordOrigin) return
 
     const payload = await getPayload({ config })
@@ -48,6 +48,6 @@ describe.skipIf(!hasDb)('Payload access control (anonymous)', () => {
     })
     const doc = res.docs[0]
     if (!doc) return
-    expect(doc.acquisitionPrice).toBeUndefined()
+    expect(doc.askingPrice).toBeUndefined()
   })
 })

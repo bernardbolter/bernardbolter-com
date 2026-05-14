@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { slugField } from 'payload'
 
-import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { isArtistOrAdmin, privateFieldAccess } from '@/access/isArtistOrAdmin'
 
 export const Artists: CollectionConfig = {
   slug: 'artists',
@@ -10,11 +10,15 @@ export const Artists: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'careerStage', 'updatedAt'],
     description:
-      'Canonical artist identity records (JSON-LD creator/performer). Single-tenant: one primary row.',
+      'Single artist identity record (JSON-LD creator). Module A — one row for this site.',
   },
   access: {
     read: () => true,
-    create: ({ req: { user } }) => isArtistOrAdmin(user),
+    create: async ({ req }) => {
+      if (!req.user || !isArtistOrAdmin(req.user)) return false
+      const { totalDocs } = await req.payload.count({ collection: 'artists', req })
+      return totalDocs === 0
+    },
     update: ({ req: { user } }) => isArtistOrAdmin(user),
     delete: ({ req: { user } }) => isArtistOrAdmin(user),
   },
@@ -82,7 +86,9 @@ export const Artists: CollectionConfig = {
             { label: 'Website', value: 'website' },
             { label: 'Instagram', value: 'instagram' },
             { label: 'Artnet', value: 'artnet' },
+            { label: 'Artsy', value: 'artsy' },
             { label: 'Wikidata', value: 'wikidata' },
+            { label: 'ULAN', value: 'ulan' },
             { label: 'JSON-LD', value: 'json-ld' },
             { label: 'Google Knowledge Graph', value: 'google-knowledge-graph' },
           ],
@@ -106,72 +112,142 @@ export const Artists: CollectionConfig = {
       },
     },
     {
-      name: 'bio',
+      name: 'bioFull',
       type: 'richText',
       localized: true,
     },
     {
-      name: 'statement',
+      name: 'bioMedium',
       type: 'richText',
       localized: true,
     },
     {
-      type: 'collapsible',
-      label: 'Entity resolution',
-      admin: { initCollapsed: true },
+      name: 'bioShort',
+      type: 'text',
+      localized: true,
+      admin: { description: 'Single sentence, third person (plain text).' },
+    },
+    {
+      name: 'statementFull',
+      type: 'richText',
+      localized: true,
+    },
+    {
+      name: 'statementMedium',
+      type: 'richText',
+      localized: true,
+    },
+    {
+      name: 'statementShort',
+      type: 'text',
+      localized: true,
+      admin: { description: 'One to two sentences (plain text).' },
+    },
+    {
+      name: 'practiceNote',
+      type: 'richText',
+      localized: true,
+      admin: {
+        description: 'How of making — populated gradually via cataloguing sessions.',
+      },
+    },
+    {
+      name: 'creditLine',
+      type: 'text',
+      localized: true,
+      admin: { description: 'Canonical attribution string for listings and loans.' },
+    },
+    {
+      name: 'locations',
+      type: 'array',
+      labels: { singular: 'Location', plural: 'Locations' },
       fields: [
+        { name: 'city', type: 'text', required: true },
+        { name: 'country', type: 'text', required: true },
         {
-          name: 'firstMentionDate',
-          type: 'date',
-          admin: {
-            description: 'Earliest reference to this entity across records.',
-          },
+          name: 'type',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Studio', value: 'studio' },
+            { label: 'Residence', value: 'residence' },
+            { label: 'Live-work', value: 'live-work' },
+          ],
+        },
+        { name: 'primary', type: 'checkbox', defaultValue: false },
+        { name: 'current', type: 'checkbox', defaultValue: true },
+        {
+          name: 'startYear',
+          type: 'number',
+          admin: { description: 'Year this base was established (optional).' },
+        },
+      ],
+    },
+    {
+      name: 'publicEmail',
+      type: 'text',
+      access: privateFieldAccess,
+      admin: {
+        description: 'Contact form destination — never render as raw text on the public site.',
+      },
+    },
+    { name: 'website', type: 'text' },
+    { name: 'instagramUrl', type: 'text' },
+    {
+      name: 'otherLinks',
+      type: 'array',
+      labels: { singular: 'Link', plural: 'Other links' },
+      fields: [
+        { name: 'label', type: 'text', required: true },
+        { name: 'url', type: 'text', required: true },
+      ],
+    },
+    {
+      name: 'education',
+      type: 'array',
+      labels: { singular: 'Entry', plural: 'Education (CV)' },
+      fields: [
+        { name: 'institution', type: 'text', required: true },
+        { name: 'degree', type: 'text' },
+        { name: 'subject', type: 'text' },
+        { name: 'yearStart', type: 'number' },
+        { name: 'yearEnd', type: 'number' },
+        { name: 'city', type: 'text' },
+        { name: 'country', type: 'text' },
+        { name: 'cvVisible', type: 'checkbox', defaultValue: true },
+      ],
+    },
+    {
+      name: 'selectedCollections',
+      type: 'array',
+      labels: { singular: 'Holding', plural: 'Selected collections (CV)' },
+      fields: [
+        { name: 'institutionName', type: 'text', required: true },
+        { name: 'city', type: 'text' },
+        { name: 'country', type: 'text' },
+        { name: 'acquisitionYear', type: 'number' },
+        { name: 'cvVisible', type: 'checkbox', defaultValue: true },
+        {
+          name: 'sourceOfTruth',
+          type: 'select',
+          defaultValue: 'manual',
+          options: [
+            { label: 'Manual', value: 'manual' },
+            { label: 'Derived', value: 'derived' },
+          ],
         },
         {
-          name: 'mergeCandidates',
-          type: 'array',
-          labels: { singular: 'Candidate', plural: 'Merge candidates' },
-          fields: [
-            {
-              name: 'candidateType',
-              type: 'select',
-              required: true,
-              options: [
-                { label: 'Artist', value: 'artist' },
-                { label: 'Collector', value: 'collector' },
-                { label: 'Gallery', value: 'gallery' },
-                { label: 'Event', value: 'event' },
-              ],
-            },
-            { name: 'candidateId', type: 'text', required: true },
-            {
-              name: 'matchConfidence',
-              type: 'select',
-              options: [
-                { label: 'High', value: 'high' },
-                { label: 'Medium', value: 'medium' },
-                { label: 'Low', value: 'low' },
-              ],
-            },
-            { name: 'matchBasis', type: 'textarea' },
-            {
-              name: 'status',
-              type: 'select',
-              defaultValue: 'pending',
-              options: [
-                { label: 'Pending', value: 'pending' },
-                { label: 'Confirmed', value: 'confirmed' },
-                { label: 'Declined', value: 'declined' },
-              ],
-            },
-          ],
+          name: 'linkedArtworkId',
+          type: 'relationship',
+          relationTo: 'artworks',
+          admin: { description: 'Optional link for future derivation workflows.' },
         },
       ],
     },
   ],
   hooks: {
     beforeChange: [
-      async ({ data, operation, req }) => {
+      async ({ data, operation }) => {
         if (operation === 'create' && !data.platformJoinDate) {
           data.platformJoinDate = new Date().toISOString()
         }

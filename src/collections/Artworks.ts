@@ -1,4 +1,4 @@
-import { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnlyFieldAccess, privateFieldAccess, publicReadStaffWriteAccess, isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 import { artworkAfterChange } from '@/hooks/artworkAfterChange'
@@ -10,20 +10,13 @@ export const Artworks: CollectionConfig = {
   access: {
     read: ({ req: { user } }) => {
       if (isArtistOrAdmin(user)) return true
-      if (!user) {
-        return {
-          and: [
-            { status: { equals: 'published' } },
-            { recordOrigin: { equals: 'artist-catalogued' } },
-          ],
-        }
-      }
-      return {
+      const where: Where = {
         and: [
           { status: { equals: 'published' } },
           { recordOrigin: { equals: 'artist-catalogued' } },
         ],
       }
+      return where
     },
     create: ({ req: { user } }) => isArtistOrAdmin(user),
     update: ({ req: { user } }) => isArtistOrAdmin(user),
@@ -120,10 +113,9 @@ export const Artworks: CollectionConfig = {
             {
               name: 'creator',
               type: 'relationship',
-              relationTo: 'people',
+              relationTo: 'artists',
               required: true,
-              filterOptions: { role: { contains: 'artist' } },
-              admin: { position: 'sidebar' },
+              admin: { position: 'sidebar', description: 'Primary artist for this work.' },
             },
             {
               name: 'series',
@@ -178,6 +170,7 @@ export const Artworks: CollectionConfig = {
               },
               options: [
                 { label: 'Artist catalogued', value: 'artist-catalogued' },
+                { label: 'Gallery catalogued', value: 'gallery-catalogued' },
                 { label: 'Collector catalogued', value: 'collector-catalogued' },
                 { label: 'Migrated', value: 'migrated' },
                 { label: 'Enrichment agent', value: 'enrichment-agent' },
@@ -1083,111 +1076,6 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
-        // ── TAB: Collector corpus (collector-catalogued only) ──
-        {
-          label: 'Collector',
-          admin: {
-            condition: (_, data) => data?.recordOrigin === 'collector-catalogued',
-            description: 'Acquisition and recognition context (collector sessions).',
-          },
-          fields: [
-            {
-              name: 'acquisitionYear',
-              type: 'number',
-              admin: { position: 'sidebar' },
-            },
-            {
-              name: 'acquisitionChannel',
-              type: 'select',
-              options: [
-                { label: 'Direct from artist', value: 'direct-from-artist' },
-                { label: 'Dealer', value: 'dealer' },
-                { label: 'Auction', value: 'auction' },
-                { label: 'Art fair', value: 'art-fair' },
-                { label: 'Gift', value: 'gift' },
-                { label: 'Estate', value: 'estate' },
-                { label: 'Other', value: 'other' },
-              ],
-            },
-            { name: 'dealerSource', type: 'text' },
-            { name: 'dealerLocation', type: 'text' },
-            { name: 'priorOwner', type: 'text' },
-            {
-              name: 'acquisitionPrice',
-              type: 'number',
-              access: adminOnlyFieldAccess,
-              admin: { description: 'Admin-only; never exposed in public APIs.' },
-            },
-            {
-              name: 'acquisitionCurrency',
-              type: 'select',
-              options: [
-                { label: 'EUR', value: 'EUR' },
-                { label: 'GBP', value: 'GBP' },
-                { label: 'USD', value: 'USD' },
-                { label: 'Other', value: 'other' },
-              ],
-            },
-            { name: 'certificationDocs', type: 'textarea' },
-            {
-              name: 'saleHandoffReceived',
-              type: 'checkbox',
-              defaultValue: false,
-            },
-            {
-              name: 'artistRecognitionAtAcquisition',
-              type: 'select',
-              options: [
-                { label: 'Unknown', value: 'unknown' },
-                { label: 'Local known', value: 'local-known' },
-                { label: 'Nationally known', value: 'nationally-known' },
-                { label: 'Internationally known', value: 'internationally-known' },
-                { label: 'Institutionally validated', value: 'institutionally-validated' },
-              ],
-            },
-            { name: 'priorExhibitionAtAcquisition', type: 'textarea' },
-            {
-              name: 'encounterContext',
-              type: 'select',
-              options: [
-                { label: 'Studio visit', value: 'studio-visit' },
-                { label: 'Dealer recommendation', value: 'dealer-recommendation' },
-                { label: 'Art fair', value: 'art-fair' },
-                { label: 'Online', value: 'online' },
-                { label: 'Gift', value: 'gift' },
-                { label: 'Other', value: 'other' },
-              ],
-            },
-            {
-              name: 'whyThisWork',
-              type: 'textarea',
-              localized: true,
-              admin: { description: 'Drawn out through dialogue — not form-filled.' },
-            },
-            {
-              name: 'collectorArtistRelationship',
-              type: 'select',
-              options: [
-                { label: 'None', value: 'none' },
-                { label: 'Aware of practice', value: 'aware-of-practice' },
-                { label: 'Personal relationship', value: 'personal-relationship' },
-              ],
-            },
-            { name: 'documentationPhotoContext', type: 'text' },
-            {
-              name: 'linkedArtistRecord',
-              type: 'relationship',
-              relationTo: 'artworks',
-              filterOptions: { recordOrigin: { equals: 'artist-catalogued' } },
-            },
-            {
-              name: 'linkedCollectorId',
-              type: 'relationship',
-              relationTo: 'collectors',
-            },
-          ],
-        },
-
         // ── TAB: AR (Quick Look / model-viewer) ─────────────────
         {
           label: 'AR',
@@ -1292,17 +1180,9 @@ export const Artworks: CollectionConfig = {
                   ],
                 },
                 {
-                  name: 'holderPerson',
-                  type: 'relationship',
-                  relationTo: 'people',
-                  admin: {
-                    condition: (data) => data?.artworkHolder?.holderType === 'Person',
-                  },
-                },
-                {
                   name: 'holderName',
                   type: 'text',
-                  admin: { description: 'If not in People collection.' },
+                  admin: { description: 'Display name for the current holder (private).' },
                 },
                 { name: 'holderUrl', type: 'text' },
               ],
@@ -1350,7 +1230,7 @@ export const Artworks: CollectionConfig = {
               access: privateFieldAccess,
               admin: {
                 description:
-                  'Uncheck when the studio-to-collector chain is not traceable (collector records).',
+                  'Uncheck when the studio-to-first-owner chain is not traceable.',
               },
             },
             {
@@ -1374,23 +1254,14 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
-        // ── TAB 8: Exhibitions (legacy) ────────────────────────────────
+        // ── TAB 8: Exhibition history (Events) ───────────────────
         {
-          label: 'Exhibitions',
+          label: 'Exhibition history',
           admin: {
             description:
-              'Legacy WordPress-era relation. Canonical CV/show history: **Events** collection — add this work on each Event (Artworks tab); it appears under Classification → Events automatically.',
+              'Canonical CV/show history: add this work on each **Event** (Event → Artworks); reverse join appears under Classification → Events.',
           },
           fields: [
-            {
-              name: 'exhibitions',
-              type: 'relationship',
-              relationTo: 'exhibitions',
-              hasMany: true,
-              admin: {
-                description: 'DEPRECATED — use exhibition history → Events. Prefer Event → Artworks.',
-              },
-            },
             {
               name: 'exhibitionHistory',
               type: 'array',
@@ -1410,7 +1281,7 @@ export const Artworks: CollectionConfig = {
                 { name: 'notes', type: 'text' },
               ],
               admin: {
-                description: 'Structured link to Event records (replaces legacy exhibitions relation).',
+                description: 'Optional manual cross-links; prefer assigning works on the Event document.',
               },
             },
           ],
@@ -1492,62 +1363,11 @@ export const Artworks: CollectionConfig = {
               admin: { description: "Gallery inventory / stock id (private)." },
             },
             {
-              name: 'consignedTo',
-              type: 'relationship',
-              relationTo: 'galleries',
-              access: privateFieldAccess,
-              admin: { description: 'Current consignment gallery.' },
-            },
-            {
-              name: 'consignmentHistory',
-              type: 'array',
-              access: privateFieldAccess,
-              labels: { singular: 'Entry', plural: 'Consignment history' },
-              fields: [
-                {
-                  name: 'galleryId',
-                  type: 'relationship',
-                  relationTo: 'galleries',
-                  required: true,
-                },
-                {
-                  name: 'status',
-                  type: 'select',
-                  required: true,
-                  options: [
-                    { label: 'Active', value: 'active' },
-                    { label: 'Completed', value: 'completed' },
-                  ],
-                },
-                { name: 'dateIn', type: 'date' },
-                { name: 'dateOut', type: 'date' },
-                {
-                  name: 'outcome',
-                  type: 'select',
-                  options: [
-                    { label: 'Sold', value: 'sold' },
-                    { label: 'Returned', value: 'returned' },
-                    { label: 'Transferred', value: 'transferred' },
-                  ],
-                },
-              ],
-            },
-            {
               name: 'galleryText',
               type: 'textarea',
               localized: true,
               admin: {
-                description: 'Wall text / press release from the gallery for this work.',
-              },
-            },
-            {
-              name: 'placedBy',
-              type: 'relationship',
-              relationTo: 'galleries',
-              access: privateFieldAccess,
-              admin: {
-                description: 'Broker gallery (collector records).',
-                condition: (_, data) => data?.recordOrigin === 'collector-catalogued',
+                description: 'Wall text / press release for this work (when applicable).',
               },
             },
             {

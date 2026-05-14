@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, CollectionConfig } from 'payload'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 
@@ -6,7 +6,7 @@ import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 export const staffCollectionAccess: Access = ({ req: { user } }) => isArtistOrAdmin(user)
 
 /** Public read; create/update/delete for staff only. */
-export const publicReadStaffCollectionAccess: Access = {
+export const publicReadStaffCollectionAccess: NonNullable<CollectionConfig['access']> = {
   read: () => true,
   create: ({ req: { user } }) => isArtistOrAdmin(user),
   update: ({ req: { user } }) => isArtistOrAdmin(user),
@@ -14,7 +14,7 @@ export const publicReadStaffCollectionAccess: Access = {
 }
 
 /** Authenticated read; staff write. */
-export const authenticatedReadStaffWrite: Access = {
+export const authenticatedReadStaffWrite: NonNullable<CollectionConfig['access']> = {
   read: ({ req: { user } }) => Boolean(user),
   create: ({ req: { user } }) => isArtistOrAdmin(user),
   update: ({ req: { user } }) => isArtistOrAdmin(user),

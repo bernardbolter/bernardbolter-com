@@ -209,7 +209,7 @@ const WP_QUERY = `
 async function migrate() {
   try {
     const payload = await getPayload({ config })
-    console.log(`Schema mode: ${schemaMode}${dryRun ? ' (dry-run)' : ''}`)
+    console.log(dryRun ? 'migrate-wp-artworks (dry-run)' : 'migrate-wp-artworks (live)')
 
     // 1. Fetch all WP artworks
     console.log('Fetching from WordPress...')
@@ -232,16 +232,15 @@ async function migrate() {
     const wpArtworks = json.data?.allArtwork?.nodes || []
     console.log(`Found ${wpArtworks.length} artworks`)
 
-    // 2. Get your artist person ID
-    const people = await payload.find({
-      collection: 'people',
-      where: { role: { contains: 'artist' } },
+    // 2. Primary artist row (single-tenant)
+    const artists = await payload.find({
+      collection: 'artists',
       limit: 1,
     })
 
-    const artistId = people.docs[0]?.id
+    const artistId = artists.docs[0]?.id
     if (!artistId) {
-      throw new Error('No artist found in People collection')
+      throw new Error('No artist found in artists collection')
     }
 
     console.log(`Using artist ID: ${artistId}`)

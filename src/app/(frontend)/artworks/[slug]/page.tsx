@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
-import { getArtistGlobal, getPublishedArtworkBySlug } from '@/lib/payload/siteDocuments'
+import { getArtistRecord, getPublishedArtworkBySlug } from '@/lib/payload/siteDocuments'
 
 export const revalidate = 3600
 
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArtworkJsonLdPage({ params }: Props) {
   const { slug } = await params
-  const [artwork, artist] = await Promise.all([getPublishedArtworkBySlug(slug), getArtistGlobal()])
+  const [artwork, artist] = await Promise.all([getPublishedArtworkBySlug(slug), getArtistRecord()])
   if (!artwork) notFound()
 
   const jsonLd = buildArtworkJsonLd(artwork, artist)
