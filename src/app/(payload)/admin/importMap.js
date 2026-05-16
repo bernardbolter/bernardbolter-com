@@ -23,8 +23,11 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { MapField as MapField_1fab2107b56b859e2d0bd231f3236bc9 } from '../../../components/admin/MapField'
+import { ArtOfficialDashboardLink as ArtOfficialDashboardLink_4073412bffa07671731c75432da8cbf3 } from '../../../components/admin/ArtOfficialDashboardLink'
+import { ArtOfficialNavLink as ArtOfficialNavLink_d089545826d58bb72f7914c7a484afa8 } from '../../../components/admin/ArtOfficialNavLink'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { ArtOfficialView as ArtOfficialView_f78859173f06ab48b0500c265ac3fe37 } from '../../../components/admin/ArtOfficialView'
+import { ArtOfficialSessionView as ArtOfficialSessionView_e1c8ada76bdc244a4bf2f08ae3753543 } from '../../../components/admin/artOfficial/ArtOfficialSessionView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 export const importMap = {
@@ -53,7 +56,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "/components/admin/MapField#MapField": MapField_1fab2107b56b859e2d0bd231f3236bc9,
+  "/components/admin/ArtOfficialDashboardLink#ArtOfficialDashboardLink": ArtOfficialDashboardLink_4073412bffa07671731c75432da8cbf3,
+  "/components/admin/ArtOfficialNavLink#ArtOfficialNavLink": ArtOfficialNavLink_d089545826d58bb72f7914c7a484afa8,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "/components/admin/ArtOfficialView#ArtOfficialView": ArtOfficialView_f78859173f06ab48b0500c265ac3fe37,
+  "/components/admin/artOfficial/ArtOfficialSessionView#ArtOfficialSessionView": ArtOfficialSessionView_e1c8ada76bdc244a4bf2f08ae3753543,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

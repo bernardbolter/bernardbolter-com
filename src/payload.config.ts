@@ -45,11 +45,18 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     components: {
+      beforeNavLinks: ['/components/admin/ArtOfficialNavLink#ArtOfficialNavLink'],
+      beforeDashboard: ['/components/admin/ArtOfficialDashboardLink#ArtOfficialDashboardLink'],
       views: {
         artOfficial: {
           Component: '/components/admin/ArtOfficialView#ArtOfficialView',
           path: '/art-official',
           exact: true,
+        },
+        artOfficialSession: {
+          Component:
+            '/components/admin/artOfficial/ArtOfficialSessionView#ArtOfficialSessionView',
+          path: '/art-official/:sessionId',
         },
       },
     },
