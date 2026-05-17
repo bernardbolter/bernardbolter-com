@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { parseToolArgs, TOOL_UPDATE_FIELD } from '@/lib/artOfficial/agentTools'
+import {
+  parseToolArgs,
+  TOOL_LOOKUP_COMMONS_FILE,
+  TOOL_SEARCH_WIKIDATA,
+  TOOL_UPDATE_FIELD,
+} from '@/lib/artOfficial/agentTools'
 
 describe('parseToolArgs', () => {
   it('accepts valid update_field', () => {
@@ -32,6 +37,21 @@ describe('parseToolArgs', () => {
       value: 'Bodies of work include urban watercolours and studio still lifes.',
       confidence: 'confirmed',
       source: 'conversation',
+    })
+    expect(result.ok).toBe(true)
+  })
+
+  it('accepts lookup_commons_file', () => {
+    const result = parseToolArgs(TOOL_LOOKUP_COMMONS_FILE, {
+      commonsUrl: 'https://commons.wikimedia.org/wiki/File:Test.jpg',
+    })
+    expect(result.ok).toBe(true)
+  })
+
+  it('accepts search_wikidata', () => {
+    const result = parseToolArgs(TOOL_SEARCH_WIKIDATA, {
+      query: 'Brandenburg Gate',
+      limit: 3,
     })
     expect(result.ok).toBe(true)
   })

@@ -41,6 +41,20 @@ const KICKOFFS: Record<SessionType, SessionKickoff | null> = {
       "I'd like to work on my biography. Please begin — ask what you need first, one question at a time.",
   },
   'artwork-cataloguing': null,
+  'triptych-cataloguing': {
+    title: 'Triptych cataloguing',
+    intro:
+      'Document one MoP triptych as a single work — intent, series context, and descriptions that span all three panels. Panel wiring and commerce stay in the Triptychs admin.',
+    topics: [
+      'How the three technologies relate to the same place',
+      'Intent and meaning of the set as a whole',
+      'Art-historical framing across the arc',
+      'Formal contribution of the triptych',
+    ],
+    buttonLabel: 'Begin triptych session',
+    message:
+      "I'd like to catalogue a triptych. Please welcome me briefly, confirm we're documenting one MoP set (not a single panel), and ask your first question.",
+  },
 }
 
 export function getSessionKickoff(sessionType: string | null | undefined): SessionKickoff | null {

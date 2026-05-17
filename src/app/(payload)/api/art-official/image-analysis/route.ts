@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { runImageAnalysisStub } from '@/lib/artOfficial/imageAnalysisStub'
+import { runImageAnalysis } from '@/lib/artOfficial/runImageAnalysis'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 
 const bodySchema = z.object({
@@ -8,8 +8,8 @@ const bodySchema = z.object({
 })
 
 export async function POST(request: Request) {
-  const { ok } = await requireStaff()
-  if (!ok) {
+  const { ok, payload, user } = await requireStaff()
+  if (!ok || !user) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -25,6 +25,15 @@ export async function POST(request: Request) {
     return Response.json({ error: parsed.error.message }, { status: 400 })
   }
 
-  const result = await runImageAnalysisStub({ mediaId: parsed.data.mediaId })
-  return Response.json(result)
+  try {
+    const result = await runImageAnalysis({
+      mediaId: parsed.data.mediaId,
+      payload,
+      user,
+    })
+    return Response.json(result)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Image analysis failed'
+    return Response.json({ error: message }, { status: 500 })
+  }
 }

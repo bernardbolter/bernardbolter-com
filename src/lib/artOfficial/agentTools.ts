@@ -10,6 +10,11 @@ export const TOOL_TRIGGER_IMAGE_ANALYSIS = 'trigger_image_analysis'
 export const TOOL_GENERATE_CONFIRMATION_DRAFT = 'generate_confirmation_draft'
 export const TOOL_FLAG_WEAK_PHASE = 'flag_weak_phase'
 export const TOOL_ASSESS_FORMAL_CONTRIBUTION = 'assess_formal_contribution'
+export const TOOL_LOOKUP_COMMONS_FILE = 'lookup_commons_file'
+export const TOOL_SEARCH_WIKIDATA = 'search_wikidata'
+export const TOOL_GET_WIKIDATA_ENTITY = 'get_wikidata_entity'
+export const TOOL_FETCH_WIKIPEDIA_ARTICLE = 'fetch_wikipedia_article'
+export const TOOL_SEARCH_GETTY_TGN = 'search_getty_tgn'
 
 const targetCollectionSchema = z.enum([
   'artworks',
@@ -83,6 +88,32 @@ export const assessFormalContributionSchema = z.object({
   notes: z.string(),
 })
 
+export const lookupCommonsFileSchema = z.object({
+  commonsUrl: z.string().url(),
+})
+
+export const searchWikidataSchema = z.object({
+  query: z.string().min(1),
+  language: z.enum(['en', 'de']).optional(),
+  limit: z.number().int().min(1).max(10).optional(),
+})
+
+export const getWikidataEntitySchema = z.object({
+  entityId: z.string().min(1),
+  language: z.enum(['en', 'de']).optional(),
+})
+
+export const fetchWikipediaArticleSchema = z.object({
+  url: z.string().url().optional(),
+  title: z.string().min(1).optional(),
+  locale: z.enum(['en', 'de']).optional(),
+})
+
+export const searchGettyTgnSchema = z.object({
+  placeName: z.string().min(1),
+  limit: z.number().int().min(1).max(10).optional(),
+})
+
 const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_UPDATE_FIELD]: updateFieldSchema,
   [TOOL_STORE_SESSION_FIELD]: storeSessionFieldSchema,
@@ -90,6 +121,11 @@ const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_GENERATE_CONFIRMATION_DRAFT]: generateConfirmationDraftSchema,
   [TOOL_FLAG_WEAK_PHASE]: flagWeakPhaseSchema,
   [TOOL_ASSESS_FORMAL_CONTRIBUTION]: assessFormalContributionSchema,
+  [TOOL_LOOKUP_COMMONS_FILE]: lookupCommonsFileSchema,
+  [TOOL_SEARCH_WIKIDATA]: searchWikidataSchema,
+  [TOOL_GET_WIKIDATA_ENTITY]: getWikidataEntitySchema,
+  [TOOL_FETCH_WIKIPEDIA_ARTICLE]: fetchWikipediaArticleSchema,
+  [TOOL_SEARCH_GETTY_TGN]: searchGettyTgnSchema,
 }
 
 export type ParseToolResult<T> =
@@ -222,6 +258,67 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
         notes: { type: 'string' },
       },
       required: ['accuracy', 'notes'],
+    },
+  },
+  {
+    name: TOOL_LOOKUP_COMMONS_FILE,
+    description:
+      'Fetch structured metadata from a Wikimedia Commons File: page URL (title, artist, license, date, linked Wikidata id).',
+    input_schema: {
+      type: 'object',
+      properties: { commonsUrl: { type: 'string' } },
+      required: ['commonsUrl'],
+    },
+  },
+  {
+    name: TOOL_SEARCH_WIKIDATA,
+    description: 'Search Wikidata for entities by label (landmarks, creators, institutions).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string' },
+        language: { type: 'string', enum: ['en', 'de'] },
+        limit: { type: 'number' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: TOOL_GET_WIKIDATA_ENTITY,
+    description:
+      'Fetch a Wikidata entity summary by Q-id (label, description, Wikipedia URL, coordinates, inception year).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        entityId: { type: 'string', description: 'Q-number, e.g. Q82425' },
+        language: { type: 'string', enum: ['en', 'de'] },
+      },
+      required: ['entityId'],
+    },
+  },
+  {
+    name: TOOL_FETCH_WIKIPEDIA_ARTICLE,
+    description:
+      'Fetch Wikipedia intro and section excerpt candidates for location context (present 4–6 to the artist).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        url: { type: 'string' },
+        title: { type: 'string' },
+        locale: { type: 'string', enum: ['en', 'de'] },
+      },
+    },
+  },
+  {
+    name: TOOL_SEARCH_GETTY_TGN,
+    description: 'Search Getty TGN for a geographic name URI (ach.location.locationTGNUri).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        placeName: { type: 'string' },
+        limit: { type: 'number' },
+      },
+      required: ['placeName'],
     },
   },
 ]

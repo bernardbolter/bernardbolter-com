@@ -61,7 +61,9 @@ export function SessionSidebar({
             ? 'Biography commits bioFull / bioMedium / bioShort on your Artist record.'
             : sessionType === 'artist-statement'
               ? 'Statement commits statementFull / statementMedium / statementShort on Artist.'
-              : `${sessionType} — committed at confirmation only.`}
+              : sessionType === 'triptych-cataloguing'
+                ? 'Triptych commits corpus fields on Triptychs (panels and commerce stay in admin).'
+                : `${sessionType} — committed at confirmation only.`}
       </p>
       {timeline.length === 0 ? (
         <p style={{ opacity: 0.5 }}>No staged updates yet.</p>

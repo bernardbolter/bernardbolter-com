@@ -7,6 +7,7 @@ import {
   buildAchSessionBlock,
   buildFieldRoadmap,
   buildIdentityAndRole,
+  buildTriptychSessionBlock,
   DIALOGUE_RULES,
   refinementPreamble,
   sessionTypeOverride,
@@ -82,6 +83,9 @@ export async function buildSystemPromptParts(
   const dynamicParts = [sessionTypeOverride(sessionType)]
   if (sessionType === 'artwork-cataloguing') {
     dynamicParts.push(buildAchSessionBlock())
+  }
+  if (sessionType === 'triptych-cataloguing') {
+    dynamicParts.push(buildTriptychSessionBlock())
   }
   if (isRefinement && weakPhases?.length) {
     dynamicParts.push(refinementPreamble(weakPhases))

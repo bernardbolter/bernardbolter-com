@@ -1,3 +1,7 @@
+import type { Payload } from 'payload'
+
+import type { User } from '@/payload-types'
+
 import { parseToolArgs, TOOL_UPDATE_FIELD, updateFieldSchema } from './agentTools'
 import type { StoredMessage } from './chatMessages'
 import { isFieldAllowedForAgent } from './fieldAllowlist'
@@ -75,6 +79,47 @@ export function reconcileFieldUpdateTimeline(
   const repaired = timeline.length > existing.length
 
   return { timeline, repaired }
+}
+
+export type AppendTimelineArgs = {
+  targetCollection: string
+  field: string
+  value: unknown
+  confidence: 'confirmed' | 'inferred'
+  source: 'conversation' | 'image-analysis' | 'knowledge-base'
+}
+
+/** Persist one staged field on the session timeline (used for auto-staging on upload). */
+export async function appendSessionTimelineEntry(
+  payload: Payload,
+  user: User,
+  session: { id: number; fieldUpdateTimeline?: unknown },
+  entry: AppendTimelineArgs,
+): Promise<TimelineEntry[]> {
+  if (!isFieldAllowedForAgent(entry.targetCollection, entry.field)) {
+    throw new Error(`Field ${entry.targetCollection}.${entry.field} is not allowed for staging.`)
+  }
+
+  const timeline = Array.isArray(session.fieldUpdateTimeline)
+    ? [...(session.fieldUpdateTimeline as TimelineEntry[])]
+    : []
+
+  const row: TimelineEntry = {
+    ...entry,
+    timestamp: new Date().toISOString(),
+  }
+  timeline.push(row)
+
+  await payload.update({
+    collection: 'sessions',
+    id: session.id,
+    data: { fieldUpdateTimeline: timeline },
+    overrideAccess: false,
+    user,
+    context: { skipAgent: true },
+  })
+
+  return timeline
 }
 
 /** Onboarding commits only practice-knowledge rows; drop mistaken artists/artworks staging. */

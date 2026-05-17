@@ -3,6 +3,7 @@ import {
   buildArtworkPatchFromTimeline,
   mergeArtworkPatches,
 } from '@/lib/artOfficial/buildArtworkPatch'
+import { buildTriptychPatchFromTimeline } from '@/lib/artOfficial/buildTriptychPatch'
 import {
   applyPracticeKnowledgePatches,
   patchesFromSessionTimeline,
@@ -42,7 +43,16 @@ export async function POST(request: Request, context: RouteContext) {
   const refinementFlagged = weakCount > 1
 
   let artworkId: number | undefined
+  let triptychId: number | undefined
   let practiceKnowledge: Awaited<ReturnType<typeof applyPracticeKnowledgePatches>> | undefined
+
+  function slugifyTitle(input: string): string {
+    return input
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+  }
 
   switch (target.kind) {
     case 'create-artwork': {
@@ -82,6 +92,77 @@ export async function POST(request: Request, context: RouteContext) {
           user,
         })
         artworkId = created.id
+      }
+      break
+    }
+
+    case 'create-triptych': {
+      const serverPatch = buildTriptychPatchFromTimeline(session.fieldUpdateTimeline)
+      const clientPatch =
+        body.triptychData && typeof body.triptychData === 'object'
+          ? (body.triptychData as Record<string, unknown>)
+          : {}
+      const merged = {
+        ...clientPatch,
+        ...serverPatch,
+        status: 'draft' as const,
+      }
+
+      const existingId =
+        body.triptychId ??
+        (typeof session.triptychRecord === 'object'
+          ? session.triptychRecord?.id
+          : session.triptychRecord)
+
+      if (existingId) {
+        const updated = await payload.update({
+          collection: 'triptychs',
+          id: existingId,
+          data: merged as never,
+          overrideAccess: false,
+          user,
+        })
+        triptychId = updated.id
+      } else {
+        const title = typeof merged.title === 'string' ? merged.title.trim() : ''
+        if (!title) {
+          return Response.json(
+            {
+              error:
+                'Stage triptych title before commit, or link an existing triptych to this session.',
+            },
+            { status: 412 },
+          )
+        }
+        if (!merged.slug) {
+          merged.slug = slugifyTitle(title)
+        }
+        if (!merged.series) {
+          return Response.json(
+            {
+              error:
+                'New triptychs need a series relationship. Pass triptychData.series (series id) at commit, or create the shell in Triptychs admin and link triptychRecord to this session.',
+            },
+            { status: 412 },
+          )
+        }
+        const panels = merged.panels
+        if (!Array.isArray(panels) || panels.length < 3) {
+          return Response.json(
+            {
+              error:
+                'New triptychs need three panels (artwork + position I/II/III). Wire them in Triptychs admin or pass triptychData.panels at commit.',
+            },
+            { status: 412 },
+          )
+        }
+        const created = await payload.create({
+          collection: 'triptychs',
+          data: merged as never,
+          overrideAccess: false,
+          user,
+        })
+        triptychId = created.id
       }
       break
     }
@@ -167,6 +248,7 @@ export async function POST(request: Request, context: RouteContext) {
         completedAt: new Date().toISOString(),
         dialogueRefinementFlag: refinementFlagged,
         artworkRecord: artworkId ?? session.artworkRecord,
+        triptychRecord: triptychId ?? session.triptychRecord,
         ...(body.firstImpression ? { firstImpression: body.firstImpression } : {}),
         ...(body.secondDescription ? { secondDescription: body.secondDescription } : {}),
         ...(body.refinementNotes ? { refinementNotes: body.refinementNotes } : {}),
@@ -180,6 +262,7 @@ export async function POST(request: Request, context: RouteContext) {
   return Response.json({
     status: reapply ? session.status : 'completed',
     artworkId,
+    triptychId,
     refinementFlagged,
     practiceKnowledge,
   })

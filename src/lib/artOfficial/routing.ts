@@ -1,11 +1,13 @@
 export type SessionType =
   | 'artwork-cataloguing'
+  | 'triptych-cataloguing'
   | 'artist-statement'
   | 'biography'
   | 'onboarding'
 
 export const SESSION_TYPES: SessionType[] = [
   'artwork-cataloguing',
+  'triptych-cataloguing',
   'artist-statement',
   'biography',
   'onboarding',
@@ -15,8 +17,13 @@ export function requiresArtwork(t: SessionType): boolean {
   return t === 'artwork-cataloguing'
 }
 
+export function requiresTriptych(t: SessionType): boolean {
+  return t === 'triptych-cataloguing'
+}
+
 export type CommitTarget =
   | { kind: 'create-artwork' }
+  | { kind: 'create-triptych' }
   | { kind: 'update-artist-singleton' }
   | { kind: 'no-record-write' }
 
@@ -24,6 +31,8 @@ export function commitTarget(t: SessionType): CommitTarget {
   switch (t) {
     case 'artwork-cataloguing':
       return { kind: 'create-artwork' }
+    case 'triptych-cataloguing':
+      return { kind: 'create-triptych' }
     case 'artist-statement':
     case 'biography':
       return { kind: 'update-artist-singleton' }

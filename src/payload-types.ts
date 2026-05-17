@@ -2122,10 +2122,14 @@ export interface SmallPrint {
 export interface Session {
   id: number;
   sessionId?: string | null;
-  sessionType: 'artwork-cataloguing' | 'artist-statement' | 'biography' | 'onboarding';
+  sessionType: 'artwork-cataloguing' | 'triptych-cataloguing' | 'artist-statement' | 'biography' | 'onboarding';
   status: 'in-progress' | 'completed' | 'abandoned';
   artistId?: (number | null) | Artist;
   artworkRecord?: (number | null) | Artwork;
+  /**
+   * Optional — link when refining an existing triptych corpus.
+   */
+  triptychRecord?: (number | null) | Triptych;
   completedAt?: string | null;
   /**
    * Full Anthropic message array (opaque).
@@ -3122,6 +3126,7 @@ export interface SessionsSelect<T extends boolean = true> {
   status?: T;
   artistId?: T;
   artworkRecord?: T;
+  triptychRecord?: T;
   completedAt?: T;
   messages?: T;
   firstImpression?: T;

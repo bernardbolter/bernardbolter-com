@@ -4,20 +4,38 @@ import type { Session, User } from '@/payload-types'
 
 import {
   assessFormalContributionSchema,
+  fetchWikipediaArticleSchema,
   flagWeakPhaseSchema,
   generateConfirmationDraftSchema,
+  getWikidataEntitySchema,
+  lookupCommonsFileSchema,
   parseToolArgs,
+  searchGettyTgnSchema,
+  searchWikidataSchema,
   storeSessionFieldSchema,
   TOOL_ASSESS_FORMAL_CONTRIBUTION,
+  TOOL_FETCH_WIKIPEDIA_ARTICLE,
   TOOL_FLAG_WEAK_PHASE,
   TOOL_GENERATE_CONFIRMATION_DRAFT,
+  TOOL_GET_WIKIDATA_ENTITY,
+  TOOL_LOOKUP_COMMONS_FILE,
+  TOOL_SEARCH_GETTY_TGN,
+  TOOL_SEARCH_WIKIDATA,
   TOOL_STORE_SESSION_FIELD,
   TOOL_TRIGGER_IMAGE_ANALYSIS,
   TOOL_UPDATE_FIELD,
   triggerImageAnalysisSchema,
   updateFieldSchema,
 } from './agentTools'
+import {
+  fetchCommonsFileMetadata,
+  fetchWikipediaArticle,
+  getWikidataEntity,
+  searchGettyTgn,
+  searchWikidata,
+} from './externalLookups'
 import { isFieldAllowedForAgent } from './fieldAllowlist'
+import { runImageAnalysis } from './runImageAnalysis'
 
 const BIOGRAPHY_ARTIST_FIELDS = new Set(['bioFull', 'bioMedium', 'bioShort'])
 const STATEMENT_ARTIST_FIELDS = new Set([
@@ -25,7 +43,6 @@ const STATEMENT_ARTIST_FIELDS = new Set([
   'statementMedium',
   'statementShort',
 ])
-import { runImageAnalysisStub } from './imageAnalysisStub'
 
 export type ApplyAgentToolCtx = {
   payload: Payload
@@ -76,6 +93,14 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           ) {
             const message =
               'Artist statement sessions must use targetCollection "artists" and field one of: statementFull, statementMedium, statementShort.'
+            send('error', { tool: tool.name, message })
+            return toolResult({ ok: false, error: message })
+          }
+        }
+        if (session.sessionType === 'triptych-cataloguing') {
+          if (args.targetCollection !== 'triptychs') {
+            const message =
+              'Triptych sessions must use update_field with targetCollection "triptychs" only (corpus and core narrative fields — not panels or commerce).'
             send('error', { tool: tool.name, message })
             return toolResult({ ok: false, error: message })
           }
@@ -213,9 +238,87 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           return toolResult({ ok: false, error: parsed.error })
         }
         const args = triggerImageAnalysisSchema.parse(parsed.data)
-        const result = await runImageAnalysisStub({ mediaId: args.mediaId })
+        const result = await runImageAnalysis({
+          mediaId: args.mediaId,
+          payload,
+          user,
+        })
         send('image-analysis', result)
         return toolResult({ ok: true, analysis: result })
+      }
+
+      case TOOL_LOOKUP_COMMONS_FILE: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          send('error', { tool: tool.name, message: parsed.error })
+          return toolResult({ ok: false, error: parsed.error })
+        }
+        const args = lookupCommonsFileSchema.parse(parsed.data)
+        const result = await fetchCommonsFileMetadata(args.commonsUrl)
+        return toolResult(
+          'error' in result ? { ok: false, error: result.error } : { ok: true, metadata: result },
+        )
+      }
+
+      case TOOL_SEARCH_WIKIDATA: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          send('error', { tool: tool.name, message: parsed.error })
+          return toolResult({ ok: false, error: parsed.error })
+        }
+        const args = searchWikidataSchema.parse(parsed.data)
+        const result = await searchWikidata(args.query, args.language ?? 'en', args.limit ?? 5)
+        return toolResult(
+          'error' in result ? { ok: false, error: result.error } : { ok: true, hits: result },
+        )
+      }
+
+      case TOOL_GET_WIKIDATA_ENTITY: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          send('error', { tool: tool.name, message: parsed.error })
+          return toolResult({ ok: false, error: parsed.error })
+        }
+        const args = getWikidataEntitySchema.parse(parsed.data)
+        const result = await getWikidataEntity(args.entityId, args.language ?? 'en')
+        return toolResult(
+          'error' in result ? { ok: false, error: result.error } : { ok: true, entity: result },
+        )
+      }
+
+      case TOOL_FETCH_WIKIPEDIA_ARTICLE: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          send('error', { tool: tool.name, message: parsed.error })
+          return toolResult({ ok: false, error: parsed.error })
+        }
+        const args = fetchWikipediaArticleSchema.parse(parsed.data)
+        if (!args.url && !args.title) {
+          const message = 'Provide url or title for Wikipedia lookup.'
+          send('error', { tool: tool.name, message })
+          return toolResult({ ok: false, error: message })
+        }
+        const result = await fetchWikipediaArticle({
+          url: args.url,
+          title: args.title,
+          locale: args.locale,
+        })
+        return toolResult(
+          'error' in result ? { ok: false, error: result.error } : { ok: true, article: result },
+        )
+      }
+
+      case TOOL_SEARCH_GETTY_TGN: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          send('error', { tool: tool.name, message: parsed.error })
+          return toolResult({ ok: false, error: parsed.error })
+        }
+        const args = searchGettyTgnSchema.parse(parsed.data)
+        const result = await searchGettyTgn(args.placeName, args.limit ?? 5)
+        return toolResult(
+          'error' in result ? { ok: false, error: result.error } : { ok: true, hits: result },
+        )
       }
 
       default: {

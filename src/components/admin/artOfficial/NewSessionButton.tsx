@@ -9,6 +9,7 @@ import { SESSION_TYPES, type SessionType } from '@/lib/artOfficial/routing'
 
 const LABELS: Record<string, string> = {
   'artwork-cataloguing': 'Artwork cataloguing',
+  'triptych-cataloguing': 'Triptych cataloguing',
   'artist-statement': 'Artist statement',
   biography: 'Biography',
   onboarding: 'Onboarding',

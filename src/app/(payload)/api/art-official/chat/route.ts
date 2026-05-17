@@ -20,6 +20,8 @@ import {
   buildToolResultBlocks,
   runAnthropicTurn,
 } from '@/lib/artOfficial/runAnthropicTurn'
+import { runImageAnalysis } from '@/lib/artOfficial/runImageAnalysis'
+import { appendSessionTimelineEntry } from '@/lib/artOfficial/sessionTimeline'
 
 const MAX_TOOL_ROUNDS = 5
 
@@ -149,6 +151,56 @@ export async function POST(request: Request) {
         }
 
         try {
+          if (
+            imageMediaId &&
+            session.sessionType === 'artwork-cataloguing'
+          ) {
+            const timeline = Array.isArray(session.fieldUpdateTimeline)
+              ? (session.fieldUpdateTimeline as Array<{ field?: string }>)
+              : []
+            const hasPrimary = timeline.some((e) => e.field === 'primaryImage')
+            if (!hasPrimary) {
+              const updated = await appendSessionTimelineEntry(
+                payload,
+                user,
+                session,
+                {
+                  targetCollection: 'artworks',
+                  field: 'primaryImage',
+                  value: imageMediaId,
+                  confidence: 'confirmed',
+                  source: 'conversation',
+                },
+              )
+              session.fieldUpdateTimeline = updated
+              send('tool-staged', {
+                name: 'update_field',
+                input: {
+                  targetCollection: 'artworks',
+                  field: 'primaryImage',
+                  value: imageMediaId,
+                  confidence: 'confirmed',
+                  source: 'conversation',
+                },
+              })
+            }
+
+            try {
+              const analysis = await runImageAnalysis({
+                mediaId: imageMediaId,
+                payload,
+                user,
+              })
+              send('image-analysis', analysis)
+            } catch (analysisErr) {
+              console.error('[art-official/chat] image analysis', analysisErr)
+              send('error', {
+                message: formatChatError(analysisErr),
+                code: 'IMAGE_ANALYSIS',
+              })
+            }
+          }
+
           const anthropic = requireAnthropic()
           let apiMessages = buildAnthropicMessageHistory(
             priorMessages,

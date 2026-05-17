@@ -4,11 +4,13 @@ import { requireStaff } from '@/lib/artOfficial/requireStaff'
 const createSessionSchema = z.object({
   sessionType: z.enum([
     'artwork-cataloguing',
+    'triptych-cataloguing',
     'artist-statement',
     'biography',
     'onboarding',
   ]),
   artworkRecord: z.number().int().positive().optional(),
+  triptychRecord: z.number().int().positive().optional(),
 })
 
 export async function POST(request: Request) {
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
       sessionType: parsed.data.sessionType,
       artistId: artist.id,
       artworkRecord: parsed.data.artworkRecord,
+      triptychRecord: parsed.data.triptychRecord,
       status: 'in-progress',
       messages: [],
     },

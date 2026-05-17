@@ -60,6 +60,19 @@ export function ConfirmationPanel({
         }
       }
       body = { artistPatch: patch }
+    } else if (sessionType === 'triptych-cataloguing') {
+      const patch: Record<string, unknown> = {}
+      for (const entry of timeline) {
+        if (entry.targetCollection === 'triptychs' && entry.field) {
+          patch[entry.field] = entry.value
+        }
+      }
+      body = { triptychData: patch }
+      const existingTriptych =
+        typeof session.triptychRecord === 'object'
+          ? session.triptychRecord?.id
+          : session.triptychRecord
+      if (existingTriptych) body.triptychId = existingTriptych
     } else if (sessionType === 'onboarding') {
       body = {
         practiceKnowledgePatches: buildPracticeKnowledgePatches(timeline),
@@ -118,6 +131,15 @@ export function ConfirmationPanel({
     sessionType !== 'artwork-cataloguing' ||
     (timeline.some((e) => e.field === 'title') &&
       timeline.some((e) => e.field === 'yearCreated'))
+
+  const canCommitTriptych =
+    sessionType !== 'triptych-cataloguing' ||
+    timeline.some((e) => e.targetCollection === 'triptychs' && e.field === 'title') ||
+    Boolean(
+      typeof session.triptychRecord === 'object'
+        ? session.triptychRecord?.id
+        : session.triptychRecord,
+    )
 
   return (
     <div style={{ marginTop: 24, borderTop: '1px solid var(--theme-elevation-150)', paddingTop: 16 }}>
@@ -193,7 +215,11 @@ export function ConfirmationPanel({
 
           <Button
             buttonStyle="primary"
-            disabled={committing || (sessionType === 'artwork-cataloguing' && !canCommitArtwork)}
+            disabled={
+              committing ||
+              (sessionType === 'artwork-cataloguing' && !canCommitArtwork) ||
+              (sessionType === 'triptych-cataloguing' && !canCommitTriptych)
+            }
             onClick={() => void commit()}
           >
             {committing ? 'Committing…' : 'Commit record'}
@@ -214,6 +240,11 @@ export function ConfirmationPanel({
           {sessionType === 'artwork-cataloguing' && !canCommitArtwork ? (
             <p style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
               Stage at least title and yearCreated before committing.
+            </p>
+          ) : null}
+          {sessionType === 'triptych-cataloguing' && !canCommitTriptych ? (
+            <p style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
+              Stage a triptych title, or link an existing triptych to this session in the admin.
             </p>
           ) : null}
           {commitNotice ? (

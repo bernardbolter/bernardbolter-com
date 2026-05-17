@@ -245,6 +245,8 @@ function sessionTypeLabel(t: SessionType): string {
       return 'Onboarding'
     case 'artwork-cataloguing':
       return 'Artwork cataloguing'
+    case 'triptych-cataloguing':
+      return 'Triptych cataloguing'
     case 'artist-statement':
       return 'Artist statement'
     case 'biography':

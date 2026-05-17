@@ -32,6 +32,7 @@ export const Sessions: CollectionConfig = {
       required: true,
       options: [
         { label: 'Artwork cataloguing', value: 'artwork-cataloguing' },
+        { label: 'Triptych cataloguing', value: 'triptych-cataloguing' },
         { label: 'Artist statement', value: 'artist-statement' },
         { label: 'Biography', value: 'biography' },
         { label: 'Onboarding', value: 'onboarding' },
@@ -61,6 +62,15 @@ export const Sessions: CollectionConfig = {
       type: 'relationship',
       relationTo: 'artworks',
       admin: { position: 'sidebar' },
+    },
+    {
+      name: 'triptychRecord',
+      type: 'relationship',
+      relationTo: 'triptychs',
+      admin: {
+        position: 'sidebar',
+        description: 'Optional — link when refining an existing triptych corpus.',
+      },
     },
     {
       name: 'completedAt',
