@@ -21,7 +21,10 @@ import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
 import { ImageCaptureTechnologies } from './collections/ImageCaptureTechnologies'
 import { Artworks } from './collections/Artworks'
+import { Triptychs } from './collections/Triptychs'
+import { SmallPrints } from './collections/SmallPrints'
 import { Sessions } from './collections/Sessions'
+import { PrintSetConfig } from './globals/PrintSetConfig'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
@@ -81,8 +84,11 @@ export default buildConfig({
     Events,
     ImageCaptureTechnologies,
     Artworks,
+    Triptychs,
+    SmallPrints,
     Sessions,
   ],
+  globals: [PrintSetConfig],
   editor: lexicalEditor(),
   secret: payloadSecret,
   typescript: {

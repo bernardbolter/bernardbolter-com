@@ -2268,10 +2268,12 @@ export const Artworks: CollectionConfig = {
                     },
                     {
                       name: 'relatedTriptychs',
-                      type: 'text',
+                      type: 'relationship',
+                      relationTo: 'triptychs',
+                      hasMany: true,
                       admin: {
                         description:
-                          'Placeholder until the Triptychs collection ships (Phase B). Relation will be wired then.',
+                          'Editorial links to other triptychs in the MoP series. Optional.',
                       },
                     },
                   ],

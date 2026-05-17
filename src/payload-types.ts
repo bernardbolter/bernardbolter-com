@@ -77,6 +77,8 @@ export interface Config {
     events: Event;
     'image-capture-technologies': ImageCaptureTechnology;
     artworks: Artwork;
+    triptychs: Triptych;
+    'small-prints': SmallPrint;
     sessions: Session;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -99,6 +101,8 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     'image-capture-technologies': ImageCaptureTechnologiesSelect<false> | ImageCaptureTechnologiesSelect<true>;
     artworks: ArtworksSelect<false> | ArtworksSelect<true>;
+    triptychs: TriptychsSelect<false> | TriptychsSelect<true>;
+    'small-prints': SmallPrintsSelect<false> | SmallPrintsSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -109,8 +113,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'de') | ('en' | 'de')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'print-set-config': PrintSetConfig;
+  };
+  globalsSelect: {
+    'print-set-config': PrintSetConfigSelect<false> | PrintSetConfigSelect<true>;
+  };
   locale: 'en' | 'de';
   widgets: {
     collections: CollectionsWidget;
@@ -1512,9 +1520,9 @@ export interface Artwork {
        */
       availabilityStatus?: ('original-available' | 'sold' | 'prints-only') | null;
       /**
-       * Placeholder until the Triptychs collection ships (Phase B). Relation will be wired then.
+       * Editorial links to other triptychs in the MoP series. Optional.
        */
-      relatedTriptychs?: string | null;
+      relatedTriptychs?: (number | Triptych)[] | null;
     };
   };
   dcs_photoTitle?: string | null;
@@ -1914,6 +1922,140 @@ export interface ImageCaptureTechnology {
   createdAt: string;
 }
 /**
+ * MoP triptych sets — three panels sold and catalogued as a unit. Commerce fields live here, not on individual artworks.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "triptychs".
+ */
+export interface Triptych {
+  id: number;
+  title: string;
+  slug: string;
+  /**
+   * Usually Mediums of Perception or Mediums of War.
+   */
+  series: number | Series;
+  status: 'draft' | 'published' | 'archived';
+  /**
+   * Four-digit year the triptych was begun.
+   */
+  yearStart?: number | null;
+  /**
+   * Year finished if different from year start.
+   */
+  yearCompleted?: number | null;
+  /**
+   * Primary city context for this triptych.
+   */
+  city?: string | null;
+  country?: string | null;
+  /**
+   * Exactly three panels. Panel I = earliest technology, II = historical print, III = contemporary.
+   */
+  panels: {
+    artwork: number | Artwork;
+    position: 'I' | 'II' | 'III';
+    id?: string | null;
+  }[];
+  /**
+   * Overview of this triptych as a single work.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 1–3 sentences for cards and meta.
+   */
+  descriptionShort?: string | null;
+  descriptionLong?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * What this triptych means as a whole — first person. Never AI-generated.
+   */
+  intent?: string | null;
+  conceptualKeywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  artHistoricalReferences?: (number | ArtHistoricalReference)[] | null;
+  artHistoricalContext?: string | null;
+  /**
+   * Where this triptych sits in the MoP arc.
+   */
+  seriesContext?: string | null;
+  /**
+   * What this triptych does that has not been done before — confirmed by Bernard.
+   */
+  formalContributionAssessment?: string | null;
+  /**
+   * Vendure product ID for the original triptych set.
+   */
+  vendureProductId?: string | null;
+  printSets?:
+    | {
+        size: 'large' | 'small';
+        /**
+         * Total edition size (e.g. 15 large, 30 small). Never changes.
+         */
+        edition: number;
+        /**
+         * Vendure product ID for this print size.
+         */
+        vendureProductId: string;
+        /**
+         * Remaining prints — synced from Vendure via webhook only. Initialised from edition on first save.
+         */
+        printAvailableCount?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Date the print edition went on sale.
+   */
+  printEditionReleaseDate?: string | null;
+  /**
+   * Hand-signed and numbered by Bernard.
+   */
+  signedAndNumbered?: boolean | null;
+  /**
+   * Provenance — staff only, never in public API.
+   */
+  originalsSoldDate?: string | null;
+  /**
+   * Buyer name or institution — staff only.
+   */
+  originalsBuyer?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Documents that brief the Art/Official agent at session start.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1949,6 +2091,25 @@ export interface PracticeKnowledge {
    * Lower numbers appear first in the prompt.
    */
   order: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Curated square paintings available in the print set builder. Vendure product ID is on Print set config global — not per row.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "small-prints".
+ */
+export interface SmallPrint {
+  id: number;
+  /**
+   * Source painting — must have orientation “square”. Title, city, series, and primaryImage come from this relation.
+   */
+  artwork: number | Artwork;
+  /**
+   * Whether this print is selectable in the set builder.
+   */
+  available?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2076,6 +2237,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'artworks';
         value: number | Artwork;
+      } | null)
+    | ({
+        relationTo: 'triptychs';
+        value: number | Triptych;
+      } | null)
+    | ({
+        relationTo: 'small-prints';
+        value: number | SmallPrint;
       } | null)
     | ({
         relationTo: 'sessions';
@@ -2884,6 +3053,67 @@ export interface ArtworksSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "triptychs_select".
+ */
+export interface TriptychsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  series?: T;
+  status?: T;
+  yearStart?: T;
+  yearCompleted?: T;
+  city?: T;
+  country?: T;
+  panels?:
+    | T
+    | {
+        artwork?: T;
+        position?: T;
+        id?: T;
+      };
+  description?: T;
+  descriptionShort?: T;
+  descriptionLong?: T;
+  intent?: T;
+  conceptualKeywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  artHistoricalReferences?: T;
+  artHistoricalContext?: T;
+  seriesContext?: T;
+  formalContributionAssessment?: T;
+  vendureProductId?: T;
+  printSets?:
+    | T
+    | {
+        size?: T;
+        edition?: T;
+        vendureProductId?: T;
+        printAvailableCount?: T;
+        id?: T;
+      };
+  printEditionReleaseDate?: T;
+  signedAndNumbered?: T;
+  originalsSoldDate?: T;
+  originalsBuyer?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "small-prints_select".
+ */
+export interface SmallPrintsSelect<T extends boolean = true> {
+  artwork?: T;
+  available?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sessions_select".
  */
 export interface SessionsSelect<T extends boolean = true> {
@@ -2954,6 +3184,65 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Print set builder: Vendure product, pack size, and frame display labels. Not per SmallPrint row.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "print-set-config".
+ */
+export interface PrintSetConfig {
+  id: number;
+  /**
+   * Single Vendure product ID for the full print set (fixed price).
+   */
+  vendureProductId: string;
+  /**
+   * Number of prints the customer selects per order.
+   */
+  packSize: number;
+  /**
+   * Display name of the frame format (e.g. current product name on the site).
+   */
+  frameLabel?: string | null;
+  /**
+   * Public-facing notes about the frame / border treatment at fulfilment.
+   */
+  frameNotes?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * When off, the set builder is hidden on the storefront.
+   */
+  active?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "print-set-config_select".
+ */
+export interface PrintSetConfigSelect<T extends boolean = true> {
+  vendureProductId?: T;
+  packSize?: T;
+  frameLabel?: T;
+  frameNotes?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

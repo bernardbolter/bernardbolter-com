@@ -16,6 +16,7 @@ const targetCollectionSchema = z.enum([
   'artists',
   'events',
   'practice-knowledge',
+  'triptychs',
 ])
 
 const practiceKnowledgeSlugSchema = z.enum(PRACTICE_KNOWLEDGE_SLUGS)
@@ -126,7 +127,7 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
       properties: {
         targetCollection: {
           type: 'string',
-          enum: ['artworks', 'artists', 'events', 'practice-knowledge'],
+          enum: ['artworks', 'artists', 'events', 'practice-knowledge', 'triptychs'],
         },
         field: {
           type: 'string',
