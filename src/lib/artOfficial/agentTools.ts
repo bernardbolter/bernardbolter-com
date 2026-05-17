@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 import type { Tool } from '@anthropic-ai/sdk/resources/messages/messages'
 
+import { PRACTICE_KNOWLEDGE_SLUGS } from './practiceKnowledgeSlugs'
+
 export const TOOL_UPDATE_FIELD = 'update_field'
 export const TOOL_STORE_SESSION_FIELD = 'store_session_field'
 export const TOOL_TRIGGER_IMAGE_ANALYSIS = 'trigger_image_analysis'
@@ -9,15 +11,43 @@ export const TOOL_GENERATE_CONFIRMATION_DRAFT = 'generate_confirmation_draft'
 export const TOOL_FLAG_WEAK_PHASE = 'flag_weak_phase'
 export const TOOL_ASSESS_FORMAL_CONTRIBUTION = 'assess_formal_contribution'
 
-const targetCollectionSchema = z.enum(['artworks', 'artists', 'events'])
+const targetCollectionSchema = z.enum([
+  'artworks',
+  'artists',
+  'events',
+  'practice-knowledge',
+])
 
-export const updateFieldSchema = z.object({
-  targetCollection: targetCollectionSchema,
-  field: z.string().min(1),
-  value: z.unknown(),
-  confidence: z.enum(['confirmed', 'inferred']),
-  source: z.enum(['conversation', 'image-analysis', 'knowledge-base']),
-})
+const practiceKnowledgeSlugSchema = z.enum(PRACTICE_KNOWLEDGE_SLUGS)
+
+export const updateFieldSchema = z
+  .object({
+    targetCollection: targetCollectionSchema,
+    field: z.string().min(1),
+    value: z.unknown(),
+    confidence: z.enum(['confirmed', 'inferred']),
+    source: z.enum(['conversation', 'image-analysis', 'knowledge-base']),
+  })
+  .superRefine((data, ctx) => {
+    if (data.targetCollection !== 'practice-knowledge') return
+
+    const slug = practiceKnowledgeSlugSchema.safeParse(data.field)
+    if (!slug.success) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['field'],
+        message: `Must be a practice-knowledge slug: ${PRACTICE_KNOWLEDGE_SLUGS.join(', ')}`,
+      })
+    }
+
+    if (typeof data.value !== 'string' || !data.value.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['value'],
+        message: 'Must be a non-empty plain-text string (prose for that section)',
+      })
+    }
+  })
 
 export const storeSessionFieldSchema = z.object({
   field: z.enum(['firstImpression', 'secondDescription', 'sessionNotes']),
@@ -75,7 +105,13 @@ export function parseToolArgs<T = unknown>(
   }
   const result = schema.safeParse(raw)
   if (!result.success) {
-    return { ok: false, error: result.error.message }
+    const error = result.error.issues
+      .map((issue) => {
+        const path = issue.path.length ? issue.path.join('.') : 'input'
+        return `${path}: ${issue.message}`
+      })
+      .join('; ')
+    return { ok: false, error: error || result.error.message }
   }
   return { ok: true, data: result.data as T }
 }
@@ -84,13 +120,23 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
   {
     name: TOOL_UPDATE_FIELD,
     description:
-      'Stage a field value for later commit. Does not write to artworks or artists directly.',
+      'Stage a field value for later commit. For practice-knowledge (onboarding), set field to the section slug and value to plain-text prose. For artworks, field accepts dotted Payload paths into groups, e.g. "ach.overlay.overlayColors" or "ach.location.locationWikidataUri".',
     input_schema: {
       type: 'object',
       properties: {
-        targetCollection: { type: 'string', enum: ['artworks', 'artists', 'events'] },
-        field: { type: 'string', description: 'Exact Payload field name' },
-        value: { description: 'Field value matching the field type' },
+        targetCollection: {
+          type: 'string',
+          enum: ['artworks', 'artists', 'events', 'practice-knowledge'],
+        },
+        field: {
+          type: 'string',
+          description:
+            'Payload field name. Artworks support dotted paths into groups (e.g. "ach.sourcePhotograph.sourceTitle"). Artists/events use a top-level field name. Practice-knowledge uses one of: series, visual-vocabulary, art-historical-touchstones, preferred-vocabulary, biography, artist-statement.',
+        },
+        value: {
+          description:
+            'Field value. For practice-knowledge use a non-empty plain-text string. For rich-text artwork fields (e.g. ach.location.wikipediaExcerpt, ach.location.conceptCopy, ach.mapAndTour.tourStopCopy) pass plain-text prose — the server converts to Lexical at commit.',
+        },
         confidence: { type: 'string', enum: ['confirmed', 'inferred'] },
         source: {
           type: 'string',

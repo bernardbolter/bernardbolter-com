@@ -1,10 +1,11 @@
 'use client'
 
 import { Button } from '@payloadcms/ui'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import { SESSION_TYPES } from '@/lib/artOfficial/routing'
+import { SESSION_TYPES, type SessionType } from '@/lib/artOfficial/routing'
 
 const LABELS: Record<string, string> = {
   'artwork-cataloguing': 'Artwork cataloguing',
@@ -13,9 +14,19 @@ const LABELS: Record<string, string> = {
   onboarding: 'Onboarding',
 }
 
-export function NewSessionButton() {
+export function NewSessionButton({
+  defaultSessionType = 'artwork-cataloguing',
+  disabled = false,
+  artistsHref,
+  artistCreateHref,
+}: {
+  defaultSessionType?: SessionType
+  disabled?: boolean
+  artistsHref?: string
+  artistCreateHref?: string
+}) {
   const router = useRouter()
-  const [sessionType, setSessionType] = useState<string>('artwork-cataloguing')
+  const [sessionType, setSessionType] = useState<string>(defaultSessionType)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -30,12 +41,21 @@ export function NewSessionButton() {
       })
       if (!res.ok) {
         const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? `Failed (${res.status})`)
+        const message =
+          typeof data.error === 'string' ? data.error : `Failed (${res.status})`
+        if (res.status === 412 && message.toLowerCase().includes('artist')) {
+          throw new Error('ARTIST_MISSING')
+        }
+        throw new Error(message)
       }
       const data = await res.json()
       router.push(`/admin/art-official/${data.sessionId}`)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not start session')
+      if (e instanceof Error && e.message === 'ARTIST_MISSING') {
+        setError('ARTIST_MISSING')
+      } else {
+        setError(e instanceof Error ? e.message : 'Could not start session')
+      }
     } finally {
       setLoading(false)
     }
@@ -48,6 +68,7 @@ export function NewSessionButton() {
         <select
           value={sessionType}
           onChange={(e) => setSessionType(e.target.value)}
+          disabled={disabled}
           style={{ display: 'block', marginTop: 4, minWidth: 240 }}
         >
           {SESSION_TYPES.map((t) => (
@@ -57,10 +78,27 @@ export function NewSessionButton() {
           ))}
         </select>
       </label>
-      <Button buttonStyle="primary" disabled={loading} onClick={startSession}>
+      <Button
+        buttonStyle="primary"
+        disabled={disabled || loading}
+        onClick={startSession}
+      >
         {loading ? 'Starting…' : 'Start session'}
       </Button>
-      {error ? (
+      {disabled ? (
+        <p style={{ marginTop: 8, fontSize: 13, opacity: 0.8 }}>
+          Create your Artist record first (see instructions above), then return here.
+        </p>
+      ) : null}
+      {error === 'ARTIST_MISSING' && artistsHref && artistCreateHref ? (
+        <p style={{ color: 'var(--theme-error-500)', marginTop: 8, fontSize: 13, lineHeight: 1.5 }}>
+          No Artist record found.{' '}
+          <Link href={artistCreateHref}>Create Artist</Link>
+          {' or '}
+          <Link href={artistsHref}>open Artists</Link>
+          , save, refresh this page, then try again.
+        </p>
+      ) : error ? (
         <p style={{ color: 'var(--theme-error-500)', marginTop: 8, fontSize: 13 }}>
           {error}
         </p>

@@ -5,7 +5,9 @@ import { redirect } from 'next/navigation'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 import { AdminViewShell } from './AdminViewShell'
+import { ArtOfficialInstructions } from './artOfficial/ArtOfficialInstructions'
 import { NewSessionButton } from './artOfficial/NewSessionButton'
+import { getStartRecommendation } from '@/lib/artOfficial/startRecommendation'
 
 function SessionList({
   title,
@@ -50,6 +52,30 @@ export async function ArtOfficialView(props: AdminViewServerProps) {
 
   if (!user || !isArtistOrAdmin(user)) redirect('/admin')
 
+  const adminRoute = payload.config.routes.admin
+  const practiceKnowledgeHref = `${adminRoute}/collections/practice-knowledge`
+  const artistsHref = `${adminRoute}/collections/artists`
+  const artistCreateHref = `${artistsHref}/create`
+
+  const artists = await payload.find({
+    collection: 'artists',
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user,
+    req,
+  })
+  const artistExists = artists.docs.length > 0
+
+  const recommendation = await getStartRecommendation({ payload, req, user })
+
+  const practiceKnowledgeCount = await payload.count({
+    collection: 'practice-knowledge',
+    overrideAccess: false,
+    user,
+    req,
+  })
+
   const [inProgress, needsRefinement, completed] = await Promise.all([
     payload.find({
       collection: 'sessions',
@@ -87,7 +113,34 @@ export async function ArtOfficialView(props: AdminViewServerProps) {
         <p style={{ marginBottom: 16, opacity: 0.75 }}>
           Conversational cataloguing for the artist archive.
         </p>
-        <NewSessionButton />
+        {practiceKnowledgeCount.totalDocs === 0 ? (
+          <p
+            style={{
+              padding: 12,
+              marginBottom: 16,
+              background: 'var(--theme-warning-100)',
+              borderRadius: 4,
+              fontSize: 13,
+              lineHeight: 1.5,
+            }}
+          >
+            Practice Knowledge rows are missing. Onboarding commit cannot write until you run:{' '}
+            <code>npx tsx src/scripts/seed-practice-knowledge.ts</code>
+          </p>
+        ) : null}
+        <ArtOfficialInstructions
+          recommendation={recommendation}
+          practiceKnowledgeHref={practiceKnowledgeHref}
+          artistsHref={artistsHref}
+          artistCreateHref={artistCreateHref}
+          artistExists={artistExists}
+        />
+        <NewSessionButton
+          defaultSessionType={recommendation.sessionType}
+          disabled={!artistExists}
+          artistsHref={artistsHref}
+          artistCreateHref={artistCreateHref}
+        />
         <SessionList title="In progress" docs={inProgress.docs} />
         <SessionList title="Needs refinement" docs={needsRefinement.docs} />
         <SessionList title="Recent completed" docs={completed.docs} />

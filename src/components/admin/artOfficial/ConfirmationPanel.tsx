@@ -3,6 +3,8 @@
 import { Button } from '@payloadcms/ui'
 import { useState } from 'react'
 
+import { buildPracticeKnowledgePatches } from '@/lib/artOfficial/buildPracticeKnowledgePatches'
+
 import type { ArtOfficialSession, TimelineEntry } from './types'
 
 function buildArtworkDataFromTimeline(timeline: TimelineEntry[]): Record<string, unknown> {
@@ -27,13 +29,15 @@ export function ConfirmationPanel({
   const [open, setOpen] = useState(Boolean(session.agentDraftDescriptionShort))
   const [committing, setCommitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [commitNotice, setCommitNotice] = useState<string | null>(null)
 
   const sessionType = session.sessionType ?? 'artwork-cataloguing'
   const hasDrafts = Boolean(session.agentDraftDescriptionShort)
 
-  async function commit() {
+  async function commit(options?: { reapply?: boolean }) {
     setCommitting(true)
     setError(null)
+    setCommitNotice(null)
 
     let body: Record<string, unknown> = {}
 
@@ -56,6 +60,11 @@ export function ConfirmationPanel({
         }
       }
       body = { artistPatch: patch }
+    } else if (sessionType === 'onboarding') {
+      body = {
+        practiceKnowledgePatches: buildPracticeKnowledgePatches(timeline),
+        reapply: options?.reapply === true,
+      }
     } else {
       body = { practiceKnowledgePatches: [] }
     }
@@ -69,17 +78,41 @@ export function ConfirmationPanel({
           body: JSON.stringify(body),
         },
       )
+      const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error ?? `Commit failed (${res.status})`)
+        throw new Error(
+          typeof data.error === 'string' ? data.error : `Commit failed (${res.status})`,
+        )
       }
-      onCommitted()
+
+      const pk = data.practiceKnowledge as
+        | { updated?: string[]; missing?: string[]; patchCount?: number }
+        | undefined
+
+      if (sessionType === 'onboarding' && pk) {
+        if (pk.updated?.length) {
+          setCommitNotice(
+            `Updated Practice Knowledge: ${pk.updated.join(', ')}. Check the English (en) content field if Deutsch still looks empty.`,
+          )
+        } else if ((pk.patchCount ?? 0) === 0) {
+          setCommitNotice(
+            'Session marked complete, but no practice-knowledge sections were staged on this session.',
+          )
+        }
+      }
+
+      if (!options?.reapply) {
+        onCommitted()
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Commit failed')
     } finally {
       setCommitting(false)
     }
   }
+
+  const practicePatches =
+    sessionType === 'onboarding' ? buildPracticeKnowledgePatches(timeline) : []
 
   const canCommitArtwork =
     sessionType !== 'artwork-cataloguing' ||
@@ -94,6 +127,22 @@ export function ConfirmationPanel({
 
       {open ? (
         <div style={{ marginTop: 16 }}>
+          {practicePatches.length > 0 ? (
+            <>
+              <h4 style={{ margin: '0 0 8px' }}>Practice Knowledge to commit</h4>
+              <ul style={{ margin: '0 0 16px', paddingLeft: 20, fontSize: 13 }}>
+                {practicePatches.map((p) => (
+                  <li key={p.slug}>{p.slug}</li>
+                ))}
+              </ul>
+            </>
+          ) : sessionType === 'onboarding' ? (
+            <p style={{ fontSize: 13, opacity: 0.75, marginBottom: 16 }}>
+              No Practice Knowledge sections are staged yet. Ask Art/Official to summarize and
+              stage sections, or commit to close the session without writing PK rows.
+            </p>
+          ) : null}
+
           {hasDrafts ? (
             <>
               <h4 style={{ margin: '0 0 8px' }}>Agent drafts</h4>
@@ -145,14 +194,30 @@ export function ConfirmationPanel({
           <Button
             buttonStyle="primary"
             disabled={committing || (sessionType === 'artwork-cataloguing' && !canCommitArtwork)}
-            onClick={commit}
+            onClick={() => void commit()}
           >
             {committing ? 'Committing…' : 'Commit record'}
           </Button>
+          {sessionType === 'onboarding' &&
+          session.status === 'completed' &&
+          practicePatches.length > 0 ? (
+            <span style={{ marginLeft: 8, display: 'inline-block' }}>
+              <Button
+                buttonStyle="secondary"
+                disabled={committing}
+                onClick={() => void commit({ reapply: true })}
+              >
+                Re-apply Practice Knowledge
+              </Button>
+            </span>
+          ) : null}
           {sessionType === 'artwork-cataloguing' && !canCommitArtwork ? (
             <p style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
               Stage at least title and yearCreated before committing.
             </p>
+          ) : null}
+          {commitNotice ? (
+            <p style={{ fontSize: 13, marginTop: 8, lineHeight: 1.5 }}>{commitNotice}</p>
           ) : null}
           {error ? (
             <p style={{ color: 'var(--theme-error-500)', fontSize: 13, marginTop: 8 }}>

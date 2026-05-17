@@ -1,6 +1,7 @@
 import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnlyFieldAccess, privateFieldAccess, publicReadStaffWriteAccess, isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { artworkAchBeforeChange, artworkAchValidateAr } from '@/hooks/artworkAch'
 import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
@@ -23,7 +24,8 @@ export const Artworks: CollectionConfig = {
     delete: ({ req: { user } }) => isArtistOrAdmin(user),
   },
   hooks: {
-    beforeChange: [artworkBeforeChange],
+    beforeValidate: [artworkAchValidateAr],
+    beforeChange: [artworkBeforeChange, artworkAchBeforeChange],
     afterChange: [artworkAfterChange, artworkAfterChangeAr],
   },
   admin: {
@@ -1708,6 +1710,9 @@ export const Artworks: CollectionConfig = {
         },
 
         // ── TAB 13: A Colorful History ────────────────────────
+        // Spec: docs/handoff-ach-schema-extension.md (Part 2, Groups 1–7).
+        // All fields namespaced under the `ach` group so they don't collide with
+        // the model-viewer AR tab (top-level `arEnabled`, `arVideos`, etc).
         {
           label: 'A Colorful History',
           admin: {
@@ -1715,81 +1720,562 @@ export const Artworks: CollectionConfig = {
           },
           fields: [
             {
-              name: 'ach_overlayColors',
-              type: 'array',
-              labels: { singular: 'Hex', plural: 'Overlay colors (hover)' },
-              fields: [{ name: 'hex', type: 'text', required: true }],
-              admin: { description: 'Agent-suggested rectangle colours; artist confirms.' },
-            },
-            {
-              name: 'ach_overlayRects',
-              type: 'json',
+              name: 'ach',
+              type: 'group',
               admin: {
                 description:
-                  'Array of { color, x, y, w, h } in % of image dimensions — resolution-independent.',
-              },
-            },
-            {
-              name: 'ach_historyText',
-              type: 'richText',
-              localized: true,
-              admin: { description: 'Historical context for AR/app.' },
-            },
-            {
-              name: 'ach_freestyleText',
-              type: 'richText',
-              localized: true,
-            },
-            { name: 'ach_wikiLinkEn', type: 'text', label: 'Wikipedia (EN)' },
-            { name: 'ach_wikiLinkDe', type: 'text', label: 'Wikipedia (DE)' },
-            {
-              name: 'ach_arEnabled',
-              type: 'checkbox',
-              defaultValue: false,
-              label: 'AR Enhancement enabled',
-            },
-            {
-              name: 'ach_arVideos',
-              type: 'array',
-              admin: {
-                condition: (data) => Boolean(data?.ach_arEnabled),
+                  'A Colorful History series-specific data. Sub-groups map to spec Groups 1–7.',
               },
               fields: [
+                // ── Group 1 — Map & Tour ──────────────────────
                 {
-                  name: 'videoRole',
-                  type: 'select',
-                  required: true,
-                  options: [
-                    { label: 'Making Of', value: 'makingOf' },
-                    { label: 'History', value: 'history' },
-                    { label: 'Freestyle', value: 'freestyle' },
-                    { label: 'Other', value: 'other' },
+                  name: 'mapAndTour',
+                  type: 'group',
+                  label: 'Map & tour',
+                  fields: [
+                    {
+                      name: 'mapPresence',
+                      type: 'checkbox',
+                      defaultValue: false,
+                      admin: {
+                        description:
+                          'Whether this artwork appears on the ACH map. Default false; false for all MoW works.',
+                      },
+                    },
+                    {
+                      type: 'row',
+                      fields: [
+                        {
+                          name: 'lat',
+                          type: 'number',
+                          admin: {
+                            width: '50%',
+                            description: 'GPS latitude. Null if mapPresence is false.',
+                          },
+                        },
+                        {
+                          name: 'lng',
+                          type: 'number',
+                          admin: {
+                            width: '50%',
+                            description: 'GPS longitude. Null if mapPresence is false.',
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      name: 'cityPlaceholderColor',
+                      type: 'text',
+                      admin: {
+                        readOnly: true,
+                        description:
+                          'Computed from base city field via the Group 1 mapping. Never manually edited.',
+                      },
+                    },
+                    {
+                      name: 'tourSequence',
+                      type: 'number',
+                      admin: {
+                        description:
+                          'Position in the series tour for this artwork city. Set only when a tour is active.',
+                      },
+                    },
+                    {
+                      name: 'grandTour',
+                      type: 'checkbox',
+                      defaultValue: false,
+                      admin: { description: 'Include in the Grand Tour sequence.' },
+                    },
+                    {
+                      name: 'grandTourSequence',
+                      type: 'number',
+                      admin: {
+                        condition: (_, sibling) => Boolean(sibling?.grandTour),
+                        description: 'Position in the Grand Tour. Set only when grandTour is true.',
+                      },
+                    },
+                    {
+                      name: 'tourStopCopy',
+                      type: 'richText',
+                      localized: true,
+                      admin: {
+                        description:
+                          'What Bernard says when this stop is active in a tour. 2–4 sentences, first person. Never drafted by the agent.',
+                      },
+                    },
                   ],
                 },
+
+                // ── Group 2 — Overlay & Colour ────────────────
                 {
-                  name: 'videoType',
-                  type: 'select',
-                  required: true,
-                  options: [
-                    { label: 'Upload (R2)', value: 'upload' },
-                    { label: 'YouTube', value: 'youtube' },
-                    { label: 'Vimeo', value: 'vimeo' },
-                    { label: 'Other URL', value: 'url' },
+                  name: 'overlay',
+                  type: 'group',
+                  label: 'Overlay & colour',
+                  fields: [
+                    {
+                      name: 'overlayColors',
+                      type: 'array',
+                      labels: { singular: 'Hex', plural: 'Overlay colors' },
+                      minRows: 0,
+                      maxRows: 3,
+                      fields: [{ name: 'hex', type: 'text', required: true }],
+                      validate: ((value: unknown) => {
+                        if (value == null) return true
+                        if (!Array.isArray(value)) return 'Must be an array.'
+                        if (value.length !== 0 && value.length !== 3) {
+                          return 'overlayColors must contain exactly 3 hex strings.'
+                        }
+                        return true
+                      }) as any,
+                      admin: {
+                        description:
+                          'Exactly 3 colours extracted from painted fields. Ordered: used for overlay rects (rotating) and AR buttons (fixed positions).',
+                      },
+                    },
+                    {
+                      name: 'overlayRects',
+                      type: 'array',
+                      labels: { singular: 'Rect', plural: 'Overlay rects (1–4)' },
+                      minRows: 0,
+                      maxRows: 4,
+                      fields: [
+                        { name: 'color', type: 'text', required: true },
+                        { name: 'x', type: 'text', required: true, admin: { description: 'Percent string e.g. "8%".' } },
+                        { name: 'y', type: 'text', required: true, admin: { description: 'Percent string.' } },
+                        { name: 'w', type: 'text', required: true, admin: { description: 'Percent string.' } },
+                        { name: 'h', type: 'text', required: true, admin: { description: 'Percent string.' } },
+                      ],
+                      admin: {
+                        description:
+                          'Maximum 4 rectangles, positioned as percentage strings. Resolution-independent — never pixels or floats.',
+                      },
+                    },
                   ],
                 },
+
+                // ── Group 3 — Source Photograph ───────────────
                 {
-                  name: 'videoFile',
-                  type: 'upload',
-                  relationTo: 'media',
-                  admin: { condition: (_, s) => s?.videoType === 'upload' },
+                  name: 'sourcePhotograph',
+                  type: 'group',
+                  label: 'Source photograph',
+                  fields: [
+                    {
+                      name: 'sourceImage',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        description: 'The historical photograph Bernard transferred to canvas.',
+                      },
+                    },
+                    {
+                      name: 'sourceImageAltText',
+                      type: 'text',
+                      localized: true,
+                      admin: { description: 'Alt text for the source photograph.' },
+                    },
+                    {
+                      name: 'sourceTitle',
+                      type: 'text',
+                      localized: true,
+                      admin: { description: 'Title as known in the archive or catalogue.' },
+                    },
+                    {
+                      name: 'sourceCreator',
+                      type: 'text',
+                      admin: {
+                        description: 'Photographer or institution if individual creator unknown.',
+                      },
+                    },
+                    {
+                      name: 'sourceCreatorWikidataUri',
+                      type: 'text',
+                      admin: { description: 'Wikidata entity for the photographer or institution.' },
+                    },
+                    {
+                      name: 'approximateDate',
+                      type: 'text',
+                      admin: { description: 'Human-readable date. e.g. c. 1861 or 1895–1900.' },
+                    },
+                    {
+                      name: 'approximateDateYear',
+                      type: 'number',
+                      admin: {
+                        readOnly: true,
+                        description: 'Earliest 4-digit year parsed from approximateDate.',
+                      },
+                    },
+                    {
+                      name: 'imageCaptureType',
+                      type: 'relationship',
+                      relationTo: 'image-capture-technologies',
+                      admin: {
+                        description:
+                          'The technology used to make this source photograph. Agent proposes from date and image; Bernard confirms.',
+                      },
+                    },
+                    {
+                      name: 'sourceWikidataUri',
+                      type: 'text',
+                      admin: {
+                        description: 'Wikidata entity for this specific photograph, if one exists.',
+                      },
+                    },
+                    {
+                      name: 'sourceWikimediaCommonsUrl',
+                      type: 'text',
+                      admin: { description: 'Full Wikimedia Commons file-page URL.' },
+                    },
+                    {
+                      name: 'sourceInstitution',
+                      type: 'text',
+                      admin: {
+                        description: 'Archive, museum, or library holding the original.',
+                      },
+                    },
+                    {
+                      name: 'sourceInstitutionWikidataUri',
+                      type: 'text',
+                      admin: { description: 'Wikidata entity for the holding institution.' },
+                    },
+                    {
+                      name: 'sourceInstitutionUrl',
+                      type: 'text',
+                      admin: {
+                        description:
+                          'Direct URL to the institution catalogue record, if one exists.',
+                      },
+                    },
+                    {
+                      name: 'sourceLicense',
+                      type: 'select',
+                      options: [
+                        { label: 'CC0', value: 'cc0' },
+                        { label: 'CC BY', value: 'cc-by' },
+                        { label: 'CC BY-SA', value: 'cc-by-sa' },
+                        { label: 'Public domain', value: 'public-domain' },
+                        { label: 'Other', value: 'other' },
+                      ],
+                      admin: { description: 'License under which the source photograph is used.' },
+                    },
+                    {
+                      name: 'sourceLicenseUrl',
+                      type: 'text',
+                      admin: { description: 'URL to the specific license.' },
+                    },
+                    {
+                      name: 'sourceCredit',
+                      type: 'text',
+                      admin: {
+                        readOnly: true,
+                        description:
+                          'Assembled from creator, title, date, institution, license. Auto-generated.',
+                      },
+                    },
+                  ],
                 },
+
+                // ── Group 4 — Location & Historical Context ───
                 {
-                  name: 'videoUrl',
-                  type: 'text',
-                  admin: { condition: (_, s) => s?.videoType !== 'upload' },
+                  name: 'location',
+                  type: 'group',
+                  label: 'Location & historical context',
+                  fields: [
+                    {
+                      name: 'locationWikidataUri',
+                      type: 'text',
+                      admin: {
+                        description:
+                          'Wikidata entity for the specific landmark depicted (not just the city).',
+                      },
+                    },
+                    {
+                      name: 'locationTGNUri',
+                      type: 'text',
+                      admin: {
+                        description:
+                          'Getty Thesaurus of Geographic Names URI. Used in JSON-LD alongside Wikidata.',
+                      },
+                    },
+                    {
+                      name: 'wikipediaUrl',
+                      type: 'text',
+                      localized: true,
+                      admin: {
+                        description:
+                          'Wikipedia article for the depicted location. Localized — EN/DE editions.',
+                      },
+                    },
+                    {
+                      name: 'wikipediaExcerpt',
+                      type: 'richText',
+                      localized: true,
+                      admin: {
+                        description:
+                          'Passage Bernard selects as relevant — not the article introduction. Agent presents candidates; Bernard selects.',
+                      },
+                    },
+                    {
+                      name: 'keyHistoricalDates',
+                      type: 'array',
+                      labels: { singular: 'Date', plural: 'Key historical dates (3–5)' },
+                      fields: [
+                        { name: 'year', type: 'number', required: true },
+                        {
+                          name: 'event',
+                          type: 'text',
+                          localized: true,
+                          required: true,
+                          admin: { description: 'Short description of the event for that year.' },
+                        },
+                      ],
+                      admin: {
+                        description:
+                          'Editorial selection — not comprehensive history. Drawn out in dialogue, never drafted by agent.',
+                      },
+                    },
+                    {
+                      name: 'conceptCopy',
+                      type: 'richText',
+                      localized: true,
+                      admin: {
+                        description:
+                          'Bernard contextual text. For standalone works: what drove this painting. For MoP panels: image-capture context. Never drafted by agent.',
+                      },
+                    },
+                    {
+                      name: 'fieldRecordingUrl',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        description:
+                          'Ambient audio for the location. UI deferred post-June. Optional.',
+                      },
+                    },
+                    {
+                      name: 'fieldRecordingCredit',
+                      type: 'text',
+                      admin: {
+                        description: "Attribution if the recording is not Bernard's own.",
+                      },
+                    },
+                  ],
                 },
-                { name: 'posterImage', type: 'upload', relationTo: 'media' },
-                { name: 'title', type: 'text', localized: true },
+
+                // ── Group 5 — Reveal Slider ───────────────────
+                {
+                  name: 'revealSlider',
+                  type: 'group',
+                  label: 'Reveal slider',
+                  fields: [
+                    {
+                      name: 'transferImage',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        description:
+                          'Canvas after photo transfer, before painted fields. Must match the crop and framing of primaryImage exactly.',
+                      },
+                    },
+                    {
+                      name: 'sliderAxis',
+                      type: 'select',
+                      defaultValue: 'horizontal',
+                      options: [
+                        { label: 'Horizontal', value: 'horizontal' },
+                        { label: 'Vertical', value: 'vertical' },
+                      ],
+                      admin: {
+                        condition: (_, sibling) => Boolean(sibling?.transferImage),
+                        description:
+                          'Direction of the reveal slider. Bernard chooses per painting based on painted field positions.',
+                      },
+                    },
+                  ],
+                },
+
+                // ── Group 6 — AR Experience (schema only) ─────
+                {
+                  name: 'ar',
+                  type: 'group',
+                  label: 'AR experience',
+                  admin: {
+                    description:
+                      'Mind.js image-target AR experience. Schema-only at launch — Art/Official does not prompt for these fields yet.',
+                  },
+                  fields: [
+                    {
+                      name: 'arEnabled',
+                      type: 'checkbox',
+                      defaultValue: false,
+                      admin: {
+                        description:
+                          'Activates the AR section. Only true once at least one video and the marker file are ready.',
+                      },
+                    },
+                    {
+                      name: 'arMarkerFile',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        description:
+                          'Compiled .mind binary for mind-ar-js. Generate at hiukim.github.io/mind-ar-js-doc/tools/compile from primaryImage.',
+                      },
+                    },
+                    {
+                      name: 'arMarkerStatus',
+                      type: 'select',
+                      defaultValue: 'pending',
+                      options: [
+                        { label: 'Pending', value: 'pending' },
+                        { label: 'Generated', value: 'generated' },
+                        { label: 'Failed', value: 'failed' },
+                      ],
+                      admin: { description: 'Set by Art/Official after successful marker upload.' },
+                    },
+                    {
+                      name: 'arButtonColors',
+                      type: 'array',
+                      labels: { singular: 'Hex', plural: 'AR button colors (3)' },
+                      minRows: 0,
+                      maxRows: 3,
+                      fields: [{ name: 'hex', type: 'text', required: true }],
+                      validate: ((value: unknown) => {
+                        if (value == null) return true
+                        if (!Array.isArray(value)) return 'Must be an array.'
+                        if (value.length !== 0 && value.length !== 3) {
+                          return 'arButtonColors must contain exactly 3 hex strings.'
+                        }
+                        return true
+                      }) as any,
+                      admin: {
+                        description:
+                          'One colour per AR button: index 0 → Making, 1 → History, 2 → Freestyle. Pre-filled from overlayColors; Bernard may reorder.',
+                      },
+                    },
+                    {
+                      name: 'arVideos',
+                      type: 'array',
+                      labels: { singular: 'AR video', plural: 'AR videos (max 3)' },
+                      minRows: 0,
+                      maxRows: 3,
+                      admin: {
+                        description: 'One entry per type: making, history, freestyle.',
+                      },
+                      fields: [
+                        {
+                          name: 'type',
+                          type: 'select',
+                          required: true,
+                          options: [
+                            { label: 'Making', value: 'making' },
+                            { label: 'History', value: 'history' },
+                            { label: 'Freestyle', value: 'freestyle' },
+                          ],
+                        },
+                        {
+                          name: 'videoUrl',
+                          type: 'upload',
+                          relationTo: 'media',
+                          required: true,
+                        },
+                        { name: 'posterImage', type: 'upload', relationTo: 'media' },
+                        {
+                          name: 'duration',
+                          type: 'number',
+                          admin: { description: 'Duration in seconds.' },
+                        },
+                        {
+                          name: 'captions',
+                          type: 'upload',
+                          relationTo: 'media',
+                          admin: { description: 'VTT caption file.' },
+                        },
+                      ],
+                    },
+                    {
+                      name: 'historyTranscript',
+                      type: 'richText',
+                      localized: true,
+                      admin: {
+                        description:
+                          'Full transcript of the History video. Never AI-generated from inference — Bernard provides or Art/Official transcribes from audio.',
+                      },
+                    },
+                    {
+                      name: 'freestyleTranscript',
+                      type: 'richText',
+                      localized: true,
+                      admin: {
+                        description: 'Full transcript of the Freestyle rap video.',
+                      },
+                    },
+                  ],
+                },
+
+                // ── Group 7 — MoP Series (conditional) ────────
+                {
+                  name: 'mop',
+                  type: 'group',
+                  label: 'MoP series',
+                  admin: {
+                    condition: (data) =>
+                      data?.seriesSlug === 'mediums-of-perception' ||
+                      data?.seriesSlug === 'mediums-of-war',
+                    description:
+                      'Visible only when the artwork is in the Mediums of Perception or Mediums of War series.',
+                  },
+                  fields: [
+                    {
+                      name: 'imageCaptureType',
+                      type: 'relationship',
+                      relationTo: 'image-capture-technologies',
+                      admin: {
+                        description:
+                          'Confirmed from Group 3 work — typically the same value as ach.sourcePhotograph.imageCaptureType.',
+                      },
+                    },
+                    {
+                      name: 'imageCaptureLabel',
+                      type: 'text',
+                      localized: true,
+                      admin: {
+                        description:
+                          'Display label as it appears on the artwork page. e.g. "Daguerreotype, c. 1861".',
+                      },
+                    },
+                    {
+                      name: 'triptychPosition',
+                      type: 'select',
+                      options: [
+                        { label: 'I — earliest technology', value: 'I' },
+                        { label: 'II — historical print', value: 'II' },
+                        { label: 'III — contemporary', value: 'III' },
+                      ],
+                      admin: { description: 'Panel position in the triptych.' },
+                    },
+                    {
+                      name: 'availabilityStatus',
+                      type: 'select',
+                      options: [
+                        { label: 'Original available', value: 'original-available' },
+                        { label: 'Sold', value: 'sold' },
+                        { label: 'Prints only', value: 'prints-only' },
+                      ],
+                      admin: {
+                        description:
+                          'ACH page commerce status. Distinct from base archive availabilityStatus.',
+                      },
+                    },
+                    {
+                      name: 'relatedTriptychs',
+                      type: 'text',
+                      admin: {
+                        description:
+                          'Placeholder until the Triptychs collection ships (Phase B). Relation will be wired then.',
+                      },
+                    },
+                  ],
+                },
               ],
             },
           ],

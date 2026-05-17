@@ -21,9 +21,15 @@ export function artistAsSchemaPerson(artist: Artist | null | undefined): Record<
     })
   }
 
+  const legal =
+    typeof artist.nameLegal === 'string' && artist.nameLegal.trim()
+      ? artist.nameLegal.trim()
+      : null
+
   return {
     '@type': 'Person',
     name: artist.name,
+    ...(legal && legal !== artist.name ? { alternateName: legal } : {}),
     ...(identifiers.length ? { identifier: identifiers } : {}),
   }
 }

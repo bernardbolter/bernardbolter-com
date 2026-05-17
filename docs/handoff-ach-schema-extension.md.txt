@@ -1,0 +1,766 @@
+# Schema Extension Handoff — A Colorful History Tab
+## Artworks Collection · ACH Tab + ImageCaptureTechnologies Collection
+
+*May 2026 · Developed in dialogue: Bernard Bolter × Claude*
+*Read alongside: artist-archive-schema-final.md · art-official-dialogue-spec.md · cursor-implementation-plan-final.md*
+
+---
+
+## How to read this document
+
+This document specifies two things:
+
+1. **The ACH tab** — a new tab added to the existing `Artworks` collection in the bernardbolter.com Payload instance. All fields are ACH-specific. No base archive fields are duplicated here.
+2. **The `ImageCaptureTechnologies` collection** — a new dependent collection used by the ACH tab's `imageCaptureType` relation field.
+
+Read `artist-archive-schema-final.md` in full before implementing. The same schema-wide rules apply here without exception: no language-suffix variants, no auto-publish, no hardcoded JSON-LD, Payload v3 only, private fields always access-controlled.
+
+**Layer key** — identical to the archive schema:
+- `artist` — entered through Art/Official dialogue; Bernard confirms before record commits
+- `agent` — filled computationally or via external lookup; shown for Bernard review
+- `private` — role-restricted to artist and admin; never in public API response
+
+**Field type key:**
+- `CORE` — foundational display and descriptive data
+- `COMPUTED` — machine-generated from other fields
+- `RELATIONAL` — connections across works, collections, and external knowledge graphs
+- `INTENT` — artist-authored; agent may draft but Bernard must confirm in his own words
+- `SYSTEM` — infrastructure for AR, UI behaviour, and future features
+
+**Status key:**
+- `NEW` — needs implementing; does not exist yet
+
+All fields in this document are `NEW` — this is a greenfield tab.
+
+---
+
+## Schema-wide rules reminder
+
+These apply here exactly as in the archive schema. Not repeated per field.
+
+- All multilingual content: `localized: true` — never language-suffix variants
+- No free text where a structured type exists
+- No auto-publish — default status always `draft`
+- No hardcoded JSON-LD
+- Payload v3 collection config syntax only
+- Private fields: `access: { read: artistOrAdmin }` — never in public API
+
+---
+
+## Part 1 — ImageCaptureTechnologies Collection
+
+*Dependent collection. No dependencies — implement before the ACH tab.*
+
+This is the controlled vocabulary for photographic and image-making technologies referenced by MoP source photographs. It replaces the simple `imageCaptureType` select field with a proper linked record — meaning each technology carries its own description, date range, and external URIs, all of which flow into JSON-LD and the future photograph timeline UI without storing duplicate data on the artwork.
+
+### 1.1 Fields
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `name` | Text, localized | artist | CORE | Display name. e.g. *Daguerreotype*, *Wet plate collodion*, *Lithograph*, *Aerial photograph*. |
+| `slug` | Text | agent | COMPUTED | Auto-generated from `name`. Unique. Never changes after first publication. |
+| `description` | Rich text, localized | artist | CORE | What this technology is, how it works, what distinguishes its visual qualities. Agent drafts; Bernard confirms. |
+| `approximatePeriodStart` | Number | artist | CORE | Year this technology came into widespread use. Four-digit integer. |
+| `approximatePeriodEnd` | Number | artist | CORE | Year it fell out of common use. Null if still active. |
+| `exampleImage` | Upload → R2 | artist | CORE | A representative example image illustrating the technology's visual character. Nullable. |
+| `exampleImageCredit` | Text | artist | CORE | Attribution string for the example image. |
+| `wikidataUri` | Text (URI) | agent | RELATIONAL | Wikidata entity for this technology. e.g. Daguerreotype → `https://www.wikidata.org/entity/Q178227`. Agent looks up; Bernard confirms. |
+| `wikipediaUrl` | Text (URI), localized | agent | RELATIONAL | Wikipedia article. Localized — EN and DE editions link to respective language Wikipedia. Agent looks up; Bernard confirms. |
+
+### 1.2 Slug values (initial vocabulary)
+
+Implement these as the starting records. Bernard adds more as the series grows.
+
+```
+daguerreotype
+ambrotype
+wet-plate-collodion
+dry-plate
+glass-plate
+lithograph
+engraving
+woodblock-print
+early-aerial
+satellite
+digital-photograph
+```
+
+### 1.3 Relationships
+
+- `Artworks` (ACH tab) → `ImageCaptureTechnologies` via `imageCaptureType` relation field (many-to-one)
+- `SourcePhotograph` group → `ImageCaptureTechnologies` via `imageCaptureType` relation field (many-to-one)
+
+---
+
+## Part 2 — ACH Tab on Artworks Collection
+
+*Added as a new tab in the existing `Artworks` collection config. Do not modify any base archive fields.*
+
+The tab is organised into six groups. Each group maps to a distinct section of the artwork page and a distinct Art/Official population workflow.
+
+---
+
+### Group 1 — Map & Tour
+
+Fields that place the artwork on the ACH map and in tour sequences.
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `mapPresence` | Boolean | artist | SYSTEM | Whether this artwork appears on the ACH map. Default `false`. False for all MoW works. |
+| `lat` | Number (decimal) | artist | CORE | GPS latitude. Null if `mapPresence` is false. |
+| `lng` | Number (decimal) | artist | CORE | GPS longitude. Null if `mapPresence` is false. |
+| `cityPlaceholderColor` | Select | agent | COMPUTED | Colour shown while image loads. Computed from `city` field on the base Artwork record. Values: `#A8D6E8` (Berlin) · `#B8B8BC` (San Francisco / New York) · `#F0E8C0` (Munich) · `#C4907A` (Amsterdam) · `#F4F2EE` (fallback). Agent sets; Bernard does not need to confirm. |
+| `tourSequence` | Number | artist | SYSTEM | Position in the series tour for this artwork's city. Nullable — only set when a tour is activated. |
+| `grandTour` | Boolean | artist | SYSTEM | Include in the Grand Tour sequence. Default `false`. |
+| `grandTourSequence` | Number | artist | SYSTEM | Position in the Grand Tour. Nullable. Only set when `grandTour` is true. |
+| `tourStopCopy` | Rich text, localized | artist | INTENT | What Bernard says when this stop is active in a tour. Short — 2–4 sentences. First person. Agent does not draft this field. Bernard writes it in Art/Official dialogue. |
+
+**Art/Official — Group 1 population notes:**
+
+Agent pre-fills `lat`/`lng` by geocoding the `city` and `country` fields from the base record. Bernard confirms the pin placement is correct for the specific location depicted (the painting may show a specific street or building, not the city centre). `cityPlaceholderColor` is computed silently from the city mapping — no confirmation needed. `tourStopCopy` is drawn out in dialogue: *"If someone was standing in front of this painting on a tour stop, what would you want them to know about it — in your own words?"* Never drafted by the agent.
+
+---
+
+### Group 2 — Overlay & Colour
+
+Fields that drive the painted-field colour rect gesture and AR button colours.
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `overlayColors` | Array of exactly 3 hex strings | agent | COMPUTED | Three colours extracted from the painted fields in this canvas. Ordered deliberately: used for overlay rects (rotating) and AR buttons (fixed positions). Agent extracts from image analysis and proposes; Bernard confirms or swaps individual colours. |
+| `overlayRects` | Array of `{ color: hex, x: %, y: %, w: %, h: % }` | agent | COMPUTED | 1–4 positioned colour rectangles. All values as percentage of image dimensions — resolution-independent. Agent suggests positions based on painted field locations in the image; Bernard confirms or adjusts. Maximum 4 rects. |
+
+**Art/Official — Group 2 population notes:**
+
+On `primaryImage` upload, agent runs image analysis and proposes `overlayColors` (3 values from painted field regions, not from the photographic content) and `overlayRects` (rectangles positioned over the painted field areas). Agent presents these visually for Bernard's review. Bernard can swap individual hex values or drag rect positions. The constraint is that colours must come from the painted fields, not the transferred photograph — agent should weight its extraction toward solid-colour regions. Confirmation is required before these are saved.
+
+---
+
+### Group 3 — Source Photograph
+
+The historical photograph Bernard used as the transfer source. This group is the richest data section — Art/Official should treat populating it as a research task, not a form-fill.
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `sourceImage` | Upload → R2 | artist | CORE | The source photograph itself — the image Bernard transferred to canvas. Bernard uploads. |
+| `sourceImageAltText` | Text, localized | agent | CORE | Alt text for the source photograph. Agent drafts; Bernard confirms. |
+| `sourceTitle` | Text, localized | agent | CORE | Title of the photograph as known in the archive or catalogue. Agent looks up from Commons/institution; Bernard confirms. |
+| `sourceCreator` | Text | agent | CORE | Photographer name, or institution name if individual creator unknown. |
+| `sourceCreatorWikidataUri` | Text (URI) | agent | RELATIONAL | Wikidata entity for the photographer or creating institution. e.g. a named daguerreotypist → their Wikidata Q-number. Agent looks up; Bernard confirms. |
+| `approximateDate` | Text | agent | CORE | Human-readable date string for display. e.g. *c. 1861* or *1895–1900*. Agent drafts from known provenance; Bernard confirms. |
+| `approximateDateYear` | Number | agent | COMPUTED | Integer year for timeline computation. Use the earliest year in a range. Never displayed directly. Agent sets from `approximateDate`. |
+| `imageCaptureType` | Relation → ImageCaptureTechnologies | agent | RELATIONAL | The technology used to make this source photograph. Agent proposes from image analysis and date; Bernard confirms. |
+| `sourceWikidataUri` | Text (URI) | agent | RELATIONAL | Wikidata entity for this specific photograph, if one exists. Many Commons images have Wikidata entries. Agent looks up; Bernard confirms or leaves null. |
+| `sourceWikimediaCommonsUrl` | Text (URI) | agent | RELATIONAL | Full URL to the Wikimedia Commons file page. e.g. `https://commons.wikimedia.org/wiki/File:Brandenburg_Gate_1900.jpg`. Agent looks up or Bernard provides. |
+| `sourceInstitution` | Text | agent | CORE | Archive, museum, or library holding the original. e.g. *Bundesarchiv*, *Library of Congress*. Agent looks up from Commons metadata; Bernard confirms. |
+| `sourceInstitutionWikidataUri` | Text (URI) | agent | RELATIONAL | Wikidata entity for the holding institution. e.g. Bundesarchiv → `https://www.wikidata.org/entity/Q815628`. Agent looks up; Bernard confirms. |
+| `sourceInstitutionUrl` | Text (URI) | agent | RELATIONAL | Direct URL to the institution's catalogue record for this photograph, if one exists. Agent looks up; Bernard confirms or leaves null. |
+| `sourceLicense` | Select | agent | CORE | License under which the source photograph is used. Values: `cc0` · `cc-by` · `cc-by-sa` · `public-domain` · `other`. Agent determines from Commons license tag; Bernard confirms. |
+| `sourceLicenseUrl` | Text (URI) | agent | CORE | URL to the specific license. Agent fills from Commons; Bernard confirms. |
+| `sourceCredit` | Text | agent | COMPUTED | Full attribution string for display, auto-assembled from the structured fields above. Format: *[Creator], [Title], [Date]. [Institution]. [License].* Agent generates; Bernard may edit for clarity. |
+
+**Art/Official — Group 3 population notes:**
+
+Bernard provides the source image file and, if he has it, the Commons URL. From the Commons URL, agent fetches the file page and extracts: creator, date, institution, license, Wikidata file entity, institution name. Agent then looks up Wikidata entities for creator and institution separately. Agent assembles `sourceCredit` from these structured fields. Agent proposes `imageCaptureType` based on the date and visual character of the photograph — a c.1860 photograph is almost certainly daguerreotype or wet plate; a c.1895 is likely dry plate or glass plate. Bernard confirms. If Bernard doesn't have the Commons URL but knows the photograph, agent can search Commons by description. The goal is that Bernard uploads the image, shares what he knows, and agent does the research — not the other way around.
+
+---
+
+### Group 4 — Location & Historical Context
+
+Fields that connect the depicted location to the knowledge graph and provide historical grounding on the artwork page.
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `locationWikidataUri` | Text (URI) | agent | RELATIONAL | Wikidata entity for the specific location depicted. e.g. Brandenburg Gate → `https://www.wikidata.org/entity/Q82425`. Agent looks up from `city` and painting subject; Bernard confirms. |
+| `locationTGNUri` | Text (URI) | agent | RELATIONAL | Getty Thesaurus of Geographic Names URI for the location. Art-world standard. Used in JSON-LD `locationCreated.sameAs` alongside Wikidata. Agent looks up; Bernard confirms. |
+| `wikipediaUrl` | Text (URI), localized | agent | RELATIONAL | Wikipedia article for the depicted location. Localized — EN links to English Wikipedia, DE links to German Wikipedia. Agent looks up both; Bernard confirms. |
+| `wikipediaExcerpt` | Rich text, localized | artist | INTENT | A passage from the Wikipedia article that Bernard selects as relevant to understanding the painting. Not the first paragraph — the passage Bernard finds interesting. Agent fetches the article and presents candidate passages; Bernard selects and may edit. Localized — DE version can be translated post-June. |
+| `keyHistoricalDates` | Array of `{ year: number, event: localized text }` | artist | INTENT | 3–5 dates Bernard considers anchoring for this location's history as it relates to the work. Not comprehensive history — editorial selection. Agent does not propose these. Drawn out in dialogue. |
+| `conceptCopy` | Rich text, localized | artist | INTENT | Bernard's contextual text about this specific artwork. For standalone works: what drove this painting. For MoP panels: the image-capture technology context and what it means for how we see the place. Agent does not draft this. Drawn out in dialogue. |
+| `fieldRecordingUrl` | Upload → R2 | artist | SYSTEM | Ambient audio for the location — street recording, archival clip, or other sound. Nullable. UI implementation deferred post-June. Bernard uploads when available. |
+| `fieldRecordingCredit` | Text | artist | CORE | Attribution if the recording is not Bernard's own. Nullable. |
+
+**Art/Official — Group 4 population notes:**
+
+Agent looks up `locationWikidataUri` from the painting's subject (not just the city — Brandenburg Gate, not Berlin). Agent then looks up `locationTGNUri` from the same subject via the Getty LOD endpoint. Both are confirmed by Bernard. Agent fetches both EN and DE Wikipedia articles and presents them; Bernard confirms the URLs. For `wikipediaExcerpt`, agent presents 4–6 candidate passages from the article — not the introduction, but passages that touch on historical change, visual character, or political significance. Bernard reads and selects. `keyHistoricalDates` and `conceptCopy` are never drafted by agent — drawn out in dialogue: *"What are the dates that matter most to understanding this place in relation to the painting?"* and *"What's the conceptual core of this work — what were you thinking about when you made it?"*
+
+---
+
+### Group 5 — Reveal Slider
+
+Fields for the three-state reveal slider: source photograph → transfer on canvas → finished painting.
+
+The finished painting is `primaryImage` on the base Artwork record. The slider adds the two intermediate states.
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `transferImage` | Upload → R2 | artist | CORE | The canvas with photo transfer only, before painted fields are added. Must match the crop and framing of `primaryImage` exactly — same camera position, same canvas bounds. Nullable — not every artwork has an in-process photograph. |
+| `sliderAxis` | Select | artist | SYSTEM | Direction of the reveal slider. Values: `horizontal` · `vertical`. Default `horizontal`. Bernard chooses per painting based on where the painted fields sit — vertical works better when fields are at top/bottom. Nullable — only set when `transferImage` is present. |
+
+The slider renders only when `transferImage` is present. When present, all three states are shown: `sourceImage` (from Group 3) → `transferImage` → `primaryImage`. If `sourceImage` is not present, the slider shows two states only: `transferImage` → `primaryImage`.
+
+**Art/Official — Group 5 population notes:**
+
+Agent prompts Bernard: *"Do you have a photograph of the canvas after the transfer but before you added the painted fields?"* If yes, Bernard uploads it. Agent reminds Bernard that it must match the crop and framing of the primary image exactly. `sliderAxis` is chosen by Bernard — agent can suggest based on the position of painted fields in the finished painting, but this is always Bernard's decision.
+
+---
+
+### Group 6 — AR Experience
+
+Fields for the three-part AR video experience. Gates behind `arEnabled`. All video content nullable — the AR section builds progressively as content is produced.
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `arEnabled` | Boolean | artist | SYSTEM | Activates the AR section on this artwork's page. Default `false`. Set true only when at least one video and the marker file are ready. |
+| `arMarkerFile` | Upload → R2 | artist | SYSTEM | The compiled `.mind` binary for mind.js image targeting. Bernard generates at `hiukim.github.io/mind-ar-js-doc/tools/compile` using the `primaryImage`, downloads the `.mind` file, and uploads here through the Payload admin UI. |
+| `arMarkerStatus` | Select | artist | SYSTEM | Values: `pending` · `generated` · `failed`. Set to `generated` by Art/Official after successful marker upload. Default `pending`. |
+| `arButtonColors` | Array of exactly 3 hex strings | agent | COMPUTED | One colour per AR button: index 0 → Making, index 1 → History, index 2 → Freestyle. Pre-filled from `overlayColors` (Group 2). Bernard can reorder — the assignment of colour to button is his decision. |
+| `arVideos` | Array | artist | CORE | The three AR video entries. See sub-fields below. Maximum 3 entries, one per type. |
+| `arVideos[].type` | Select | artist | CORE | Values: `making` · `history` · `freestyle`. One entry per type. |
+| `arVideos[].videoUrl` | Upload → R2 | artist | CORE | The video file. Bernard uploads via Payload admin. |
+| `arVideos[].posterImage` | Upload → R2 | artist | CORE | Poster frame for the video. Used as the button image in the AR UI. Nullable — button renders without poster if not present, but strongly recommended. |
+| `arVideos[].duration` | Number | artist | CORE | Video duration in seconds. Optional — used to display duration badge on poster. |
+| `arVideos[].captions` | Upload → R2 | artist | CORE | VTT caption file. Nullable. For future DE subtitle addition. |
+| `historyTranscript` | Rich text, localized | artist | INTENT | Full transcript of the History video. Localized — DE translation can be added post-June. Agent does not generate this from the video — Bernard provides the text or Art/Official transcribes from the audio in dialogue. |
+| `freestyleTranscript` | Rich text, localized | artist | INTENT | Full transcript of the Freestyle rap video. Localized. Same process as `historyTranscript`. |
+
+**Art/Official — Group 6 population notes:**
+
+Art/Official walks Bernard through the marker generation process: *"Go to hiukim.github.io/mind-ar-js-doc/tools/compile, upload the primary painting image, let it compile, download the .mind file, and bring it back here."* Bernard returns with the file; Art/Official uploads it through the Payload upload field and sets `arMarkerStatus: generated`. For `arButtonColors`, agent pre-fills from `overlayColors` with a default assignment (painting order = button order) and presents it to Bernard: *"These three colours will be assigned to Making, History, and Freestyle respectively — does that order feel right, or would you like to swap them?"* For transcripts, Art/Official plays through the video audio (if accessible) or asks Bernard to read/paste the text, then formats it as clean rich text. Both transcripts are drawn out in dialogue — never AI-generated from inference.
+
+---
+
+### Group 7 — MoP Series (conditional)
+
+*Display this group in the Payload admin UI only when `series` (base Artwork field) is Mediums of Perception or Mediums of War.*
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `imageCaptureType` | Relation → ImageCaptureTechnologies | agent | RELATIONAL | The image capture technology of the source photograph used in this panel. Relation to the `ImageCaptureTechnologies` collection. Agent proposes; Bernard confirms. |
+| `imageCaptureLabel` | Text, localized | agent | CORE | Display label as it appears on the artwork page. e.g. *Daguerreotype, c. 1861*. Agent assembles from `imageCaptureType.name` + `approximateDate`; Bernard refines. |
+| `triptychPosition` | Select | artist | CORE | This panel's position in the triptych. Values: `I` · `II` · `III`. Panel I = earliest technology, Panel II = historical print, Panel III = contemporary. |
+| `availabilityStatus` | Select | artist | CORE | Commerce-facing status for this artwork's page. Values: `original-available` · `sold` · `prints-only`. Distinct from the base archive `availabilityStatus` (which is `available / sold / not-for-sale / on-consignment`). This field drives the status badge and CTA on the ACH artwork page. |
+| `relatedTriptychs` | Relation → Triptychs (array) | artist | RELATIONAL | Editorial connections to other triptychs in the MoP series. Empty until Bernard decides to use it. Nullable. No UI implementation until post-June. |
+
+**Art/Official — Group 7 population notes:**
+
+`imageCaptureType` is proposed by agent based on the `sourceImage` analysis and `approximateDate` — same logic as in Group 3. `imageCaptureLabel` is assembled by agent and refined by Bernard: *"Does 'Daguerreotype, c. 1861' read correctly for this panel, or would you phrase it differently?"* `triptychPosition` is set by Bernard. `availabilityStatus` is set by Bernard based on current commercial state. `relatedTriptychs` is left empty at launch.
+
+---
+
+## Part 3 — Triptych Collection: Commerce Fields
+
+*Added to the existing `Triptychs` collection. These fields handle all commercial data for MoP triptych originals and print editions. Commerce data lives on the Triptych record — not on individual Artwork records — because originals and prints are always sold as a set of three, never individually.*
+
+### 3.1 Architecture principle
+
+Payload and Vendure are loosely coupled. Only three things cross the boundary:
+
+1. `vendureProductId` stored in Payload — so ACH knows which Vendure product to call for add-to-cart
+2. `printAvailableCount` synced back to Payload via webhook — so pages render remaining count without a live Vendure API call on every page load
+3. Payload document IDs passed into Vendure order custom fields — so any order can be resolved back to the archive record permanently
+
+Everything else stays on its own side. Prices, inventory, cart, checkout, order history — all Vendure. Artwork data, edition facts, provenance — all Payload. When Vendure is replaced in the future, the archive is completely untouched.
+
+**Why webhook sync rather than live Vendure call for count display:**
+Page render hits Payload once — one fast database read, no external dependency. A live Vendure call on every page load adds latency and a failure point. At MoP edition sizes (15 large, 30 small) the window where Payload's count is stale is seconds, only during an active purchase. The live inventory check happens where it matters — at add-to-cart in Vendure, which will correctly reject if the last item just sold.
+
+### 3.2 Fields to add to Triptychs collection
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `vendureProductId` | Text | artist | SYSTEM | Vendure product ID for the original set. Links Payload triptych record to the Vendure product. Set once when the Vendure product is created. |
+| `printSets` | Array | artist | CORE | One entry per print edition size. See sub-fields below. |
+| `printSets[].size` | Select | artist | CORE | Values: `large` · `small`. Large = A3, Small = A5. |
+| `printSets[].edition` | Number | artist | CORE | Total edition size. 15 for large, 30 for small. Permanent archival record — never changes even after sold out. |
+| `printSets[].vendureProductId` | Text | artist | SYSTEM | Vendure product ID for this print edition size. |
+| `printSets[].printAvailableCount` | Number | agent | COMPUTED | Remaining prints in this edition. Synced from Vendure via webhook on each sale. Never entered manually. Default equals `edition` total at launch. |
+| `printEditionReleaseDate` | Date | artist | CORE | Date the print edition went on sale. Permanent archival record. |
+| `signedAndNumbered` | Boolean | artist | CORE | Whether prints are hand-signed and numbered by Bernard. Default `true`. Physical object fact — belongs in the permanent record. |
+| `originalsSoldDate` | Date | private | CORE | Date the original set sold. Provenance record. Access-controlled — never in public API. |
+| `originalsBuyer` | Text | private | CORE | Buyer name or institution. Provenance record. Access-controlled — never in public API. |
+
+### 3.3 Vendure webhook — implementation note for Cursor
+
+When a print sells in Vendure, Vendure fires a webhook to an ACH API endpoint. That endpoint:
+
+1. Receives the Vendure order payload
+2. Identifies which `printSets[]` entry to update via `vendureProductId` match
+3. Decrements `printAvailableCount` by the quantity sold
+4. Saves the updated Triptych record in Payload
+
+```
+POST /api/webhooks/vendure-sale
+Body: { vendureProductId, quantitySold }
+Action: find Triptych where printSets[].vendureProductId matches
+        → decrement printSets[].printAvailableCount by quantitySold
+        → save record
+```
+
+Endpoint must be authenticated — Vendure webhook secret verified before any Payload write.
+
+### 3.4 What NOT to do — commerce fields
+
+- ✗ Do not store prices in Payload — price lives in Vendure only, changes without touching Payload
+- ✗ Do not put commerce fields on individual Artwork records — originals and prints are sold as triptych sets only
+- ✗ Do not manually update `printAvailableCount` — webhook only
+- ✗ Do not make `originalsSoldDate` or `originalsBuyer` readable by the public API — private fields, access-controlled
+
+---
+
+## Part 4 — SmallPrints Collection
+
+*New collection for the RIBBA set builder. Cross-series — any square painting from the full archive, not MoP-specific. Post-June feature but schema implemented now.*
+
+### 4.1 Purpose
+
+Bernard has approximately 80 square paintings across all series (New York, Amsterdam, San Francisco, Berlin) that exist as small prints. The RIBBA set builder lets a user select any 5 of these and purchase them as a pack at a fixed price. The collection is a curated subset of the archive — not every artwork, only those Bernard has made available as small prints.
+
+### 4.2 Fields
+
+| Field | Type | Layer | Field Type | Definition |
+|---|---|---|---|---|
+| `artwork` | Relation → Artworks | artist | RELATIONAL | The source painting from the archive. One-to-one. All title, city, series, year, dimension data comes from this relation — nothing duplicated on SmallPrints. |
+| `available` | Boolean | artist | SYSTEM | Whether this print is currently available for set building. Default `true`. Set `false` when out of stock. |
+| `vendureProductId` | Text | artist | SYSTEM | Vendure product ID. Note: the RIBBA set is one Vendure product with a fixed price. The 5 selected SmallPrint Payload document IDs are passed as custom fields on the Vendure order line — not as separate products. |
+
+**No `image` field** — the `primaryImage` from the related Artwork record is used directly. Bernard confirmed no crop is needed for the small print format. The white border is applied via a print template at fulfilment, not stored in the database.
+
+**No `triptych` relation** — SmallPrints is cross-series. City, series, and all other context come from the `artwork` relation to the base Artwork record.
+
+### 4.3 Validation constraint
+
+The `artwork` relation must point to an Artwork where `orientation: square` (base archive field). Implement as a Payload validate hook on the `artwork` field — reject if the related artwork is not square. This prevents non-square works from being added to the RIBBA collection accidentally.
+
+### 4.4 Vendure order custom fields — RIBBA set
+
+When a user completes a RIBBA set purchase, the 5 selected SmallPrint Payload document IDs are passed as a custom field on the Vendure order line:
+
+```
+Order line custom fields: {
+  selectedPrintIds: [
+    "payload-doc-id-001",
+    "payload-doc-id-047",
+    "payload-doc-id-023",
+    "payload-doc-id-061",
+    "payload-doc-id-008"
+  ]
+}
+```
+
+These IDs are stable Payload document IDs — permanently resolvable back to the Artwork record and the full archive. Bernard can look up any order and identify exactly which 5 paintings were purchased. Order confirmation email can be templated in Vendure to list the 5 painting titles by resolving these IDs.
+
+### 4.5 Art/Official — SmallPrints population notes
+
+Adding a painting to SmallPrints is straightforward — Art/Official creates a new SmallPrints record, sets the `artwork` relation to the correct Artwork record, confirms `orientation: square` on that record, sets `available: true`. No other fields to fill. Bernard reviews and confirms before publish.
+
+---
+
+## Part 5 — JSON-LD Extensions
+
+*Previously Part 3. Renumbered to accommodate Triptych commerce and SmallPrints sections.*
+
+The ACH tab fields extend the `VisualArtwork` JSON-LD generated by the archive. The following additions apply when ACH fields are present.
+
+All JSON-LD is generated programmatically at render time. Never hardcoded.
+
+```json
+{
+  "@context": "https://schema.org",
+  "@type": "VisualArtwork",
+
+  "locationCreated": {
+    "@type": "Place",
+    "name": "[city]",
+    "sameAs": [
+      "[locationWikidataUri]",
+      "[locationTGNUri]"
+    ]
+  },
+
+  "isBasedOn": {
+    "@type": "Photograph",
+    "name": "[sourceTitle]",
+    "dateCreated": "[approximateDate]",
+    "creator": {
+      "@type": "Person",
+      "name": "[sourceCreator]",
+      "sameAs": "[sourceCreatorWikidataUri]"
+    },
+    "contentUrl": "[sourceImage R2 URL]",
+    "acquireLicensePage": "[sourceLicenseUrl]",
+    "creditText": "[sourceCredit]",
+    "sameAs": "[sourceWikidataUri]",
+    "isPartOf": {
+      "@type": "Archive",
+      "name": "[sourceInstitution]",
+      "sameAs": "[sourceInstitutionWikidataUri]",
+      "url": "[sourceInstitutionUrl]"
+    }
+  },
+
+  "about": {
+    "@type": "Place",
+    "name": "[location name]",
+    "sameAs": "[locationWikidataUri]"
+  }
+}
+```
+
+**Rules for JSON-LD generation — agents must not violate:**
+
+- `locationCreated.sameAs` must be an array containing both Wikidata and TGN URIs when both are present
+- `isBasedOn` must only be output when `sourceImage` is present
+- `isBasedOn.creator` must be a typed `Person` or `Organization` object — never a plain name string
+- `sourceCreatorWikidataUri` maps to `isBasedOn.creator.sameAs`
+- All URIs must be full absolute URLs — never relative paths or Wikidata Q-numbers alone
+- `isBasedOn` is omitted entirely if no source photograph data is present
+
+---
+
+## Part 6 — Cursor Implementation Instructions
+
+### 6.1 Implementation order
+
+Implement in this sequence. Do not reorder.
+
+| Step | Task | Dependency |
+|---|---|---|
+| 1 | `ImageCaptureTechnologies` collection | None |
+| 2 | Seed initial ImageCaptureTechnologies records | Step 1 |
+| 3 | ACH tab on `Artworks` — Groups 1, 2, 7 | ImageCaptureTechnologies |
+| 4 | ACH tab — Group 3 (SourcePhotograph) | ImageCaptureTechnologies |
+| 5 | ACH tab — Groups 4, 5, 6 | None beyond Step 3 |
+| 6 | Triptych commerce fields | Triptychs collection exists |
+| 7 | `SmallPrints` collection | Artworks collection exists |
+| 8 | Vendure webhook endpoint | Triptychs commerce fields (Step 6) |
+| 9 | JSON-LD extension in `generateArtworkJsonLd.ts` | All ACH fields present |
+
+### 6.2 Cursor prompt template — Step 1
+
+```
+CURSOR AGENT PROMPT — ACH STEP 1: ImageCaptureTechnologies collection
+
+Read first:
+- handoff-ach-schema-extension.md — Part 1 (ImageCaptureTechnologies)
+- artist-archive-schema-final.md — Schema-wide rules section
+- artist-archive-schema-final.md — Section 5.2 (What NOT to do)
+
+Task:
+Create the ImageCaptureTechnologies collection. This is a dependent collection
+with no dependencies — implement before any ACH tab work.
+
+Files to create or modify:
+- src/collections/ImageCaptureTechnologies.ts
+- src/payload.config.ts (register the collection)
+
+Constraints:
+- Payload v3 collection config syntax
+- localized: true on name and description fields
+- slug: auto-generated, never editable after first publish
+- No private fields in this collection — all fields are public
+- wikidataUri and wikipediaUrl are plain text fields (URI type) — not relation fields
+- wikipediaUrl must be localized (EN and DE point to different Wikipedia editions)
+
+Done when:
+- Collection appears in Payload admin
+- All fields from Part 1 field table are present with correct types
+- localized fields render EN/DE tabs in admin UI
+- slug auto-generates from name on save
+```
+
+### 6.3 Cursor prompt template — Step 3
+
+```
+CURSOR AGENT PROMPT — ACH STEP 3: ACH tab on Artworks — Groups 1, 2, 7
+
+Read first:
+- handoff-ach-schema-extension.md — Part 2, Groups 1, 2, 7
+- artist-archive-schema-final.md — Section 1 (Artworks collection)
+- artist-archive-schema-final.md — Schema-wide rules
+
+Task:
+Add an "A Colorful History" tab to the existing Artworks collection.
+Implement Groups 1 (Map & Tour), 2 (Overlay & Colour), and 7 (MoP Series).
+Do not touch any existing base archive fields.
+
+Files to create or modify:
+- src/collections/Artworks.ts (add tab only)
+
+Constraints:
+- Tab is added inside the existing Artworks collection config — not a new collection
+- overlayColors: array field, exactly 3 hex string items, validated
+- overlayRects: array of objects { color: text, x: text, y: text, w: text, h: text }
+  All position values stored as percentage strings e.g. "8%" — not floats
+- arButtonColors: array field, exactly 3 hex string items, pre-filled from overlayColors
+  via a Payload afterChange hook — not manually entered
+- Group 7 fields are conditionally displayed using Payload's admin.condition
+  based on the series field value — show only when series slug is
+  mediums-of-perception or mediums-of-war
+- imageCaptureType: relation to ImageCaptureTechnologies collection
+- availabilityStatus select values must match exactly:
+  original-available | sold | prints-only
+- relatedTriptychs: relation to Triptychs collection, hasMany: true, nullable
+
+Done when:
+- ACH tab appears in Artworks admin UI
+- All Group 1, 2, 7 fields present and correctly typed
+- overlayColors and arButtonColors enforce exactly-3 item arrays
+- Group 7 fields hidden when series is not MoP or MoW
+- No base archive fields are modified
+```
+
+### 6.4 Cursor prompt template — Step 4
+
+```
+CURSOR AGENT PROMPT — ACH STEP 4: ACH tab — Group 3 (Source Photograph)
+
+Read first:
+- handoff-ach-schema-extension.md — Part 2, Group 3
+- handoff-ach-schema-extension.md — Part 3 (JSON-LD extensions)
+
+Task:
+Add Group 3 (Source Photograph) fields to the ACH tab on Artworks.
+This group has the most external URI fields — implement carefully.
+
+Files to create or modify:
+- src/collections/Artworks.ts (add Group 3 to ACH tab)
+
+Constraints:
+- sourceImage: Payload upload field pointing to R2 — same upload config as primaryImage
+- All URI fields (sourceWikidataUri, sourceWikimediaCommonsUrl, sourceInstitutionWikidataUri,
+  sourceInstitutionUrl, sourceLicenseUrl) are plain text fields — not Payload relation fields
+- sourceLicense select values: cc0 | cc-by | cc-by-sa | public-domain | other
+- approximateDateYear: number field, not editable in admin UI (admin.readOnly: true)
+  — set programmatically from approximateDate via beforeChange hook
+- sourceCredit: text field, admin.readOnly: true — assembled by hook, not manually entered
+- sourceImageAltText: localized text field
+- imageCaptureType: relation to ImageCaptureTechnologies (same collection as Group 7)
+
+Done when:
+- All Group 3 fields present in ACH tab
+- approximateDateYear is read-only in admin
+- sourceCredit is read-only in admin
+- sourceImage upload works and stores to R2
+- imageCaptureType relation correctly references ImageCaptureTechnologies
+```
+
+### 6.5 Cursor prompt template — Step 6 (Triptych commerce fields)
+
+```
+CURSOR AGENT PROMPT — ACH STEP 6: Triptych commerce fields
+
+Read first:
+- handoff-ach-schema-extension.md — Part 3 (Triptych commerce fields)
+- artist-archive-schema-final.md — Schema-wide rules
+
+Task:
+Add commerce fields to the existing Triptychs collection.
+Do not touch any existing Triptych fields.
+
+Files to create or modify:
+- src/collections/Triptychs.ts (add commerce fields only)
+- src/app/api/webhooks/vendure-sale/route.ts (new webhook endpoint)
+
+Constraints:
+- printSets is an array field — each entry has size, edition, vendureProductId, printAvailableCount
+- printSets[].size select values: large | small
+- printAvailableCount: number field, admin.readOnly: true — updated by webhook only, never manually
+- originalsSoldDate and originalsBuyer: private fields, access: { read: artistOrAdmin }
+  — never appear in public API response
+- signedAndNumbered: boolean, default true
+- Webhook endpoint must verify Vendure webhook secret from process.env before any Payload write
+- Webhook finds Triptych by matching printSets[].vendureProductId, decrements printAvailableCount
+- Do not store prices anywhere in Payload — price lives in Vendure only
+
+Done when:
+- All commerce fields present on Triptychs collection
+- printAvailableCount is read-only in admin UI
+- originalsSoldDate and originalsBuyer are not readable via public API
+- Webhook endpoint accepts POST, verifies secret, decrements correct printAvailableCount
+- Webhook returns 200 on success, 401 on bad secret, 404 if product ID not found
+```
+
+### 6.6 Cursor prompt template — Step 7 (SmallPrints collection)
+
+```
+CURSOR AGENT PROMPT — ACH STEP 7: SmallPrints collection
+
+Read first:
+- handoff-ach-schema-extension.md — Part 4 (SmallPrints collection)
+- artist-archive-schema-final.md — Schema-wide rules
+
+Task:
+Create the SmallPrints collection for the RIBBA set builder.
+
+Files to create or modify:
+- src/collections/SmallPrints.ts
+- src/payload.config.ts (register the collection)
+
+Constraints:
+- artwork: relation to Artworks collection, required
+- Add a validate hook on the artwork field that rejects if the related
+  artwork's orientation field is not 'square'
+- available: boolean, default true
+- vendureProductId: plain text field — this is the single RIBBA set Vendure product ID,
+  not per-print. One value for the whole collection config, not per record.
+  Store as a global config value or environment variable, not per SmallPrint record.
+- No image field — primaryImage comes from the artwork relation
+- No triptych relation — city and series come from the artwork relation
+- All fields are public — no private fields in this collection
+
+Done when:
+- Collection appears in Payload admin
+- artwork relation correctly references Artworks collection
+- validate hook rejects non-square artworks
+- Collection registered in payload.config.ts
+```
+
+### 6.7 Cursor prompt template — Step 9 (JSON-LD)
+
+```
+CURSOR AGENT PROMPT — ACH STEP 9: JSON-LD extension
+
+Read first:
+- handoff-ach-schema-extension.md — Part 3 (JSON-LD extensions)
+- artist-archive-schema-final.md — Section 1.10 (JSON-LD)
+
+Task:
+Extend generateArtworkJsonLd.ts to include ACH tab fields in the VisualArtwork output.
+
+Files to create or modify:
+- src/utilities/generateArtworkJsonLd.ts
+
+Constraints:
+- locationCreated.sameAs must be an array: [locationWikidataUri, locationTGNUri]
+  Include only the URIs that are present — omit null values from the array
+- isBasedOn block is omitted entirely when sourceImage is null
+- isBasedOn.creator must be a typed object { @type: Person, name, sameAs }
+  Never a plain string. Omit sameAs if sourceCreatorWikidataUri is null
+- All URIs must be full absolute URLs
+- Do not hardcode any values — all output from stored field values only
+- Do not modify the base VisualArtwork output — only add new blocks
+
+Done when:
+- locationCreated.sameAs outputs array with both URIs when both present
+- isBasedOn block present and correctly typed when sourceImage exists
+- isBasedOn absent when sourceImage is null
+- No hardcoded values anywhere in the utility
+- Existing JSON-LD output unchanged for artworks without ACH fields
+```
+
+### 6.8 What NOT to do
+
+These constraints apply to every agent working on this implementation.
+
+- ✗ Do not create a separate ACH collection — all fields live as a tab on the existing `Artworks` collection
+- ✗ Do not duplicate any base archive fields on the ACH tab — `title`, `year`, `medium`, `dimensions`, `series`, `city`, `country`, `status`, `primaryImage` are all on the base record
+- ✗ Do not use language-suffix variants anywhere — `conceptCopyDE`, `wikipediaExcerptEN` etc are all wrong. Use `localized: true`
+- ✗ Do not make `overlayColors` or `arButtonColors` more than 3 items — enforce array length validation
+- ✗ Do not store overlay rect positions as floats or pixels — percentage strings only, resolution-independent
+- ✗ Do not set `arEnabled: true` unless `arMarkerFile` is uploaded — add a Payload validate hook that enforces this
+- ✗ Do not hardcode `cityPlaceholderColor` — compute from the `city` field value via the mapping in Group 1
+- ✗ Do not output `isBasedOn.creator` as a plain string in JSON-LD
+- ✗ Do not add `Group 7` fields to artworks outside MoP/MoW series — admin.condition must gate display
+- ✗ Do not touch `artist-archive-schema-final.md` base fields — this is an extension only
+- ✗ Do not store prices in Payload — prices live in Vendure only
+- ✗ Do not put commerce fields on individual Artwork records — triptych originals and prints are sold as sets only, commerce data belongs on the Triptych record
+- ✗ Do not manually update `printAvailableCount` — webhook only, read-only in admin
+- ✗ Do not make `originalsSoldDate` or `originalsBuyer` readable by the public API
+- ✗ Do not add an `image` field to SmallPrints — use `primaryImage` from the artwork relation
+- ✗ Do not allow non-square artworks in SmallPrints — validate hook must enforce `orientation: square`
+- ✗ Do not pass SmallPrint images or descriptions to Vendure — only Payload document IDs go into Vendure order custom fields
+
+---
+
+## Part 7 — Art/Official Population Checklist
+
+*Reference for the Art/Official agent when opening a new MoP artwork record. Run through this sequence in order.*
+
+**Before starting:** Confirm Bernard has the `primaryImage` ready at 1600×1600px JPEG quality 8.
+
+```
+□ Upload primaryImage to base Artwork record
+□ Base fields confirmed: title, yearCreated, medium, dimensions, series, city, country
+
+ACH Tab — run in order:
+
+Group 2 — Overlay & Colour
+□ Agent analyses primaryImage → proposes overlayColors (3 values from painted fields)
+□ Agent proposes overlayRects (1–4 rectangles over painted field regions)
+□ Bernard confirms or adjusts colours and rect positions
+
+Group 3 — Source Photograph
+□ Bernard uploads sourceImage (the historical photograph)
+□ Bernard provides Wikimedia Commons URL if available
+□ Agent fetches Commons page → extracts creator, date, institution, license, Wikidata entity
+□ Agent looks up sourceCreatorWikidataUri and sourceInstitutionWikidataUri
+□ Agent proposes imageCaptureType based on date and image analysis
+□ Agent assembles sourceCredit string
+□ Bernard confirms all Group 3 fields
+
+Group 4 — Location & Historical Context
+□ Agent looks up locationWikidataUri from painting subject (specific landmark, not just city)
+□ Agent looks up locationTGNUri from Getty LOD
+□ Agent fetches EN + DE Wikipedia articles → proposes 4–6 candidate excerpt passages
+□ Bernard selects and optionally edits wikipediaExcerpt
+□ Dialogue: "What are the 3–5 dates that matter most to understanding this place?"
+□ Bernard provides keyHistoricalDates entries
+□ Dialogue: "What's the conceptual core of this work — what were you thinking about?"
+□ Bernard provides conceptCopy
+
+Group 1 — Map & Tour
+□ Agent geocodes city/country → proposes lat/lng
+□ Bernard confirms pin location is correct for the specific depicted subject
+□ mapPresence: true for MoP, false for MoW
+□ tourStopCopy: drawn out in dialogue only when tour is being activated
+
+Group 5 — Reveal Slider
+□ Dialogue: "Do you have an in-process photo of the canvas after transfer, before painting?"
+□ If yes: Bernard uploads transferImage
+□ Bernard selects sliderAxis (horizontal or vertical) based on painted field positions
+
+Group 7 — MoP Series (MoP artworks only)
+□ imageCaptureType: confirm from Group 3 work
+□ Agent assembles imageCaptureLabel → Bernard refines
+□ Bernard sets triptychPosition (I, II, or III)
+□ Bernard sets availabilityStatus
+
+Group 6 — AR Experience (when videos are ready)
+□ Bernard generates .mind file at mind-ar compiler, uploads as arMarkerFile
+□ Art/Official sets arMarkerStatus: generated
+□ Agent pre-fills arButtonColors from overlayColors → Bernard confirms order
+□ Bernard uploads arVideos entries (video + poster per type)
+□ Dialogue: transcript for historyTranscript
+□ Dialogue: transcript for freestyleTranscript
+□ When all required fields present: Bernard sets arEnabled: true
+
+Triptych Record — Commerce (when going on sale)
+□ Confirm Vendure products created for originals and both print edition sizes
+□ Bernard sets vendureProductId on the Triptych record
+□ Bernard sets printSets[].vendureProductId for large and small editions
+□ Bernard sets printSets[].edition (15 large / 30 small)
+□ printSets[].printAvailableCount initialised to match edition total — webhook handles all subsequent updates
+□ Bernard sets printEditionReleaseDate
+□ Bernard confirms signedAndNumbered (default true)
+□ When originals sell: Bernard sets originalsSoldDate (private)
+□ When originals sell: Bernard sets originalsBuyer (private)
+
+SmallPrints — adding a painting to the RIBBA collection
+□ Confirm source Artwork exists in archive and orientation: square
+□ Create new SmallPrint record → set artwork relation
+□ Validate hook confirms square orientation — reject if not
+□ Set available: true
+□ Bernard confirms before publish
+
+
+□ Bernard reviews complete record
+□ Bernard sets status: published
+□ Art/Official never publishes without explicit Bernard confirmation
+```
+
+---
+
+*This document is the authoritative spec for the ACH tab, Triptych commerce fields, and SmallPrints collection implementation.*
+*Update schema-summary.md after implementation is complete.*
+*Next sessions: ACH Artwork Page design, MoP Triptych Detail design.*

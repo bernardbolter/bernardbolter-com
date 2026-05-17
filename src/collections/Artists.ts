@@ -8,7 +8,7 @@ export const Artists: CollectionConfig = {
   labels: { singular: 'Artist', plural: 'Artists' },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'careerStage', 'updatedAt'],
+    defaultColumns: ['name', 'nameLegal', 'slug', 'careerStage', 'updatedAt'],
     description:
       'Single artist identity record (JSON-LD creator). Module A — one row for this site.',
   },
@@ -28,6 +28,20 @@ export const Artists: CollectionConfig = {
       type: 'text',
       required: true,
       defaultValue: 'Bernard Bolter',
+      label: 'Professional name',
+      admin: {
+        description:
+          'Name you work under publicly (e.g. Bernard Bolter). Used for the site, JSON-LD, and slug.',
+      },
+    },
+    {
+      name: 'nameLegal',
+      type: 'text',
+      label: 'Legal / full name',
+      admin: {
+        description:
+          'Full legal name if different (e.g. Bernard John Bolter IV). Used for credits and formal records; optional.',
+      },
     },
     slugField({ useAsSlug: 'name' }),
     {
@@ -52,7 +66,11 @@ export const Artists: CollectionConfig = {
         { label: 'Artist + Gallery', value: 'artist-gallery' },
         { label: 'Artist + Collector + Gallery', value: 'artist-collector-gallery' },
       ],
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        condition: () => false,
+        description: 'Hidden on this site — artist, gallery, and collector are separate properties.',
+      },
     },
     {
       name: 'actorRoles',
@@ -63,7 +81,10 @@ export const Artists: CollectionConfig = {
         { label: 'Collector', value: 'collector' },
         { label: 'Gallery', value: 'gallery' },
       ],
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        condition: () => false,
+      },
     },
     {
       name: 'platformJoinDate',

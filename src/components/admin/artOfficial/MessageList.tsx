@@ -1,5 +1,7 @@
 'use client'
 
+import './artOfficialChat.scss'
+
 type Message = {
   role: 'user' | 'assistant'
   content: string
@@ -17,23 +19,17 @@ function MessageBubble({
   const isUser = role === 'user'
   return (
     <div
-      style={{
-        alignSelf: isUser ? 'flex-end' : 'flex-start',
-        maxWidth: '85%',
-        padding: '10px 14px',
-        borderRadius: 8,
-        background: isUser
-          ? 'var(--theme-elevation-150)'
-          : 'var(--theme-elevation-50)',
-        opacity: faded ? 0.7 : 1,
-        whiteSpace: 'pre-wrap',
-        fontSize: 14,
-        lineHeight: 1.5,
-      }}
+      className={[
+        'art-official-chat__bubble',
+        isUser ? 'art-official-chat__bubble--user' : '',
+        faded ? 'art-official-chat__bubble--faded' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
-      <strong style={{ display: 'block', marginBottom: 4, fontSize: 11, opacity: 0.6 }}>
+      <span className="art-official-chat__bubble-label">
         {isUser ? 'You' : 'Art/Official'}
-      </strong>
+      </span>
       {content}
     </div>
   )
@@ -47,9 +43,7 @@ export function MessageList({
   streaming: string
 }) {
   return (
-    <div
-      style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}
-    >
+    <div className="art-official-chat__messages">
       {messages.map((m, i) => (
         <MessageBubble key={i} role={m.role} content={m.content} />
       ))}

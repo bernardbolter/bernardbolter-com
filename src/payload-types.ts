@@ -75,6 +75,7 @@ export interface Config {
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
     events: Event;
+    'image-capture-technologies': ImageCaptureTechnology;
     artworks: Artwork;
     sessions: Session;
     'payload-kv': PayloadKv;
@@ -96,6 +97,7 @@ export interface Config {
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    'image-capture-technologies': ImageCaptureTechnologiesSelect<false> | ImageCaptureTechnologiesSelect<true>;
     artworks: ArtworksSelect<false> | ArtworksSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -200,13 +202,23 @@ export interface Media {
  */
 export interface Artist {
   id: number;
+  /**
+   * Name you work under publicly (e.g. Bernard Bolter). Used for the site, JSON-LD, and slug.
+   */
   name: string;
+  /**
+   * Full legal name if different (e.g. Bernard John Bolter IV). Used for credits and formal records; optional.
+   */
+  nameLegal?: string | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
   careerStage?: ('studio' | 'market' | 'institutional') | null;
+  /**
+   * Hidden on this site — artist, gallery, and collector are separate properties.
+   */
   primaryActorType?:
     | ('artist' | 'collector' | 'gallery' | 'artist-collector' | 'artist-gallery' | 'artist-collector-gallery')
     | null;
@@ -1164,73 +1176,347 @@ export interface Artwork {
   mop_lat?: number | null;
   mop_lng?: number | null;
   /**
-   * Agent-suggested rectangle colours; artist confirms.
+   * A Colorful History series-specific data. Sub-groups map to spec Groups 1–7.
    */
-  ach_overlayColors?:
-    | {
-        hex: string;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Array of { color, x, y, w, h } in % of image dimensions — resolution-independent.
-   */
-  ach_overlayRects?:
-    | {
+  ach?: {
+    mapAndTour?: {
+      /**
+       * Whether this artwork appears on the ACH map. Default false; false for all MoW works.
+       */
+      mapPresence?: boolean | null;
+      /**
+       * GPS latitude. Null if mapPresence is false.
+       */
+      lat?: number | null;
+      /**
+       * GPS longitude. Null if mapPresence is false.
+       */
+      lng?: number | null;
+      /**
+       * Computed from base city field via the Group 1 mapping. Never manually edited.
+       */
+      cityPlaceholderColor?: string | null;
+      /**
+       * Position in the series tour for this artwork city. Set only when a tour is active.
+       */
+      tourSequence?: number | null;
+      /**
+       * Include in the Grand Tour sequence.
+       */
+      grandTour?: boolean | null;
+      /**
+       * Position in the Grand Tour. Set only when grandTour is true.
+       */
+      grandTourSequence?: number | null;
+      /**
+       * What Bernard says when this stop is active in a tour. 2–4 sentences, first person. Never drafted by the agent.
+       */
+      tourStopCopy?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
         [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Historical context for AR/app.
-   */
-  ach_historyText?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
+      } | null;
     };
-    [k: string]: unknown;
-  } | null;
-  ach_freestyleText?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
+    overlay?: {
+      /**
+       * Exactly 3 colours extracted from painted fields. Ordered: used for overlay rects (rotating) and AR buttons (fixed positions).
+       */
+      overlayColors?:
+        | {
+            hex: string;
+            id?: string | null;
+          }[]
+        | null;
+      /**
+       * Maximum 4 rectangles, positioned as percentage strings. Resolution-independent — never pixels or floats.
+       */
+      overlayRects?:
+        | {
+            color: string;
+            /**
+             * Percent string e.g. "8%".
+             */
+            x: string;
+            /**
+             * Percent string.
+             */
+            y: string;
+            /**
+             * Percent string.
+             */
+            w: string;
+            /**
+             * Percent string.
+             */
+            h: string;
+            id?: string | null;
+          }[]
+        | null;
     };
-    [k: string]: unknown;
-  } | null;
-  ach_wikiLinkEn?: string | null;
-  ach_wikiLinkDe?: string | null;
-  ach_arEnabled?: boolean | null;
-  ach_arVideos?:
-    | {
-        videoRole: 'makingOf' | 'history' | 'freestyle' | 'other';
-        videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
-        videoFile?: (number | null) | Media;
-        videoUrl?: string | null;
-        posterImage?: (number | null) | Media;
-        title?: string | null;
-        id?: string | null;
-      }[]
-    | null;
+    sourcePhotograph?: {
+      /**
+       * The historical photograph Bernard transferred to canvas.
+       */
+      sourceImage?: (number | null) | Media;
+      /**
+       * Alt text for the source photograph.
+       */
+      sourceImageAltText?: string | null;
+      /**
+       * Title as known in the archive or catalogue.
+       */
+      sourceTitle?: string | null;
+      /**
+       * Photographer or institution if individual creator unknown.
+       */
+      sourceCreator?: string | null;
+      /**
+       * Wikidata entity for the photographer or institution.
+       */
+      sourceCreatorWikidataUri?: string | null;
+      /**
+       * Human-readable date. e.g. c. 1861 or 1895–1900.
+       */
+      approximateDate?: string | null;
+      /**
+       * Earliest 4-digit year parsed from approximateDate.
+       */
+      approximateDateYear?: number | null;
+      /**
+       * The technology used to make this source photograph. Agent proposes from date and image; Bernard confirms.
+       */
+      imageCaptureType?: (number | null) | ImageCaptureTechnology;
+      /**
+       * Wikidata entity for this specific photograph, if one exists.
+       */
+      sourceWikidataUri?: string | null;
+      /**
+       * Full Wikimedia Commons file-page URL.
+       */
+      sourceWikimediaCommonsUrl?: string | null;
+      /**
+       * Archive, museum, or library holding the original.
+       */
+      sourceInstitution?: string | null;
+      /**
+       * Wikidata entity for the holding institution.
+       */
+      sourceInstitutionWikidataUri?: string | null;
+      /**
+       * Direct URL to the institution catalogue record, if one exists.
+       */
+      sourceInstitutionUrl?: string | null;
+      /**
+       * License under which the source photograph is used.
+       */
+      sourceLicense?: ('cc0' | 'cc-by' | 'cc-by-sa' | 'public-domain' | 'other') | null;
+      /**
+       * URL to the specific license.
+       */
+      sourceLicenseUrl?: string | null;
+      /**
+       * Assembled from creator, title, date, institution, license. Auto-generated.
+       */
+      sourceCredit?: string | null;
+    };
+    location?: {
+      /**
+       * Wikidata entity for the specific landmark depicted (not just the city).
+       */
+      locationWikidataUri?: string | null;
+      /**
+       * Getty Thesaurus of Geographic Names URI. Used in JSON-LD alongside Wikidata.
+       */
+      locationTGNUri?: string | null;
+      /**
+       * Wikipedia article for the depicted location. Localized — EN/DE editions.
+       */
+      wikipediaUrl?: string | null;
+      /**
+       * Passage Bernard selects as relevant — not the article introduction. Agent presents candidates; Bernard selects.
+       */
+      wikipediaExcerpt?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
+        [k: string]: unknown;
+      } | null;
+      /**
+       * Editorial selection — not comprehensive history. Drawn out in dialogue, never drafted by agent.
+       */
+      keyHistoricalDates?:
+        | {
+            year: number;
+            /**
+             * Short description of the event for that year.
+             */
+            event: string;
+            id?: string | null;
+          }[]
+        | null;
+      /**
+       * Bernard contextual text. For standalone works: what drove this painting. For MoP panels: image-capture context. Never drafted by agent.
+       */
+      conceptCopy?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
+        [k: string]: unknown;
+      } | null;
+      /**
+       * Ambient audio for the location. UI deferred post-June. Optional.
+       */
+      fieldRecordingUrl?: (number | null) | Media;
+      /**
+       * Attribution if the recording is not Bernard's own.
+       */
+      fieldRecordingCredit?: string | null;
+    };
+    revealSlider?: {
+      /**
+       * Canvas after photo transfer, before painted fields. Must match the crop and framing of primaryImage exactly.
+       */
+      transferImage?: (number | null) | Media;
+      /**
+       * Direction of the reveal slider. Bernard chooses per painting based on painted field positions.
+       */
+      sliderAxis?: ('horizontal' | 'vertical') | null;
+    };
+    /**
+     * Mind.js image-target AR experience. Schema-only at launch — Art/Official does not prompt for these fields yet.
+     */
+    ar?: {
+      /**
+       * Activates the AR section. Only true once at least one video and the marker file are ready.
+       */
+      arEnabled?: boolean | null;
+      /**
+       * Compiled .mind binary for mind-ar-js. Generate at hiukim.github.io/mind-ar-js-doc/tools/compile from primaryImage.
+       */
+      arMarkerFile?: (number | null) | Media;
+      /**
+       * Set by Art/Official after successful marker upload.
+       */
+      arMarkerStatus?: ('pending' | 'generated' | 'failed') | null;
+      /**
+       * One colour per AR button: index 0 → Making, 1 → History, 2 → Freestyle. Pre-filled from overlayColors; Bernard may reorder.
+       */
+      arButtonColors?:
+        | {
+            hex: string;
+            id?: string | null;
+          }[]
+        | null;
+      /**
+       * One entry per type: making, history, freestyle.
+       */
+      arVideos?:
+        | {
+            type: 'making' | 'history' | 'freestyle';
+            videoUrl: number | Media;
+            posterImage?: (number | null) | Media;
+            /**
+             * Duration in seconds.
+             */
+            duration?: number | null;
+            /**
+             * VTT caption file.
+             */
+            captions?: (number | null) | Media;
+            id?: string | null;
+          }[]
+        | null;
+      /**
+       * Full transcript of the History video. Never AI-generated from inference — Bernard provides or Art/Official transcribes from audio.
+       */
+      historyTranscript?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
+        [k: string]: unknown;
+      } | null;
+      /**
+       * Full transcript of the Freestyle rap video.
+       */
+      freestyleTranscript?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
+        [k: string]: unknown;
+      } | null;
+    };
+    /**
+     * Visible only when the artwork is in the Mediums of Perception or Mediums of War series.
+     */
+    mop?: {
+      /**
+       * Confirmed from Group 3 work — typically the same value as ach.sourcePhotograph.imageCaptureType.
+       */
+      imageCaptureType?: (number | null) | ImageCaptureTechnology;
+      /**
+       * Display label as it appears on the artwork page. e.g. "Daguerreotype, c. 1861".
+       */
+      imageCaptureLabel?: string | null;
+      /**
+       * Panel position in the triptych.
+       */
+      triptychPosition?: ('I' | 'II' | 'III') | null;
+      /**
+       * ACH page commerce status. Distinct from base archive availabilityStatus.
+       */
+      availabilityStatus?: ('original-available' | 'sold' | 'prints-only') | null;
+      /**
+       * Placeholder until the Triptychs collection ships (Phase B). Relation will be wired then.
+       */
+      relatedTriptychs?: string | null;
+    };
+  };
   dcs_photoTitle?: string | null;
   dcs_cityData?: {
     population?: number | null;
@@ -1567,6 +1853,67 @@ export interface ArtHistoricalReference {
   createdAt: string;
 }
 /**
+ * Photographic and image-making technologies referenced by ACH source photographs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "image-capture-technologies".
+ */
+export interface ImageCaptureTechnology {
+  id: number;
+  /**
+   * Display name. e.g. Daguerreotype, Wet plate collodion.
+   */
+  name: string;
+  /**
+   * Auto-generated from name on create; immutable thereafter.
+   */
+  slug?: string | null;
+  /**
+   * What this technology is, how it works, what distinguishes its visual qualities.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Four-digit year this technology came into widespread use.
+   */
+  approximatePeriodStart?: number | null;
+  /**
+   * Four-digit year it fell out of common use. Leave null if still active.
+   */
+  approximatePeriodEnd?: number | null;
+  /**
+   * Representative example illustrating the technology's visual character.
+   */
+  exampleImage?: (number | null) | Media;
+  /**
+   * Attribution string for the example image.
+   */
+  exampleImageCredit?: string | null;
+  /**
+   * Wikidata entity URI. e.g. https://www.wikidata.org/entity/Q178227 (Daguerreotype).
+   */
+  wikidataUri?: string | null;
+  /**
+   * Wikipedia article URL. Localized — EN and DE link to their respective language editions.
+   */
+  wikipediaUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Documents that brief the Art/Official agent at session start.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1723,6 +2070,10 @@ export interface PayloadLockedDocument {
         value: number | Event;
       } | null)
     | ({
+        relationTo: 'image-capture-technologies';
+        value: number | ImageCaptureTechnology;
+      } | null)
+    | ({
         relationTo: 'artworks';
         value: number | Artwork;
       } | null)
@@ -1833,6 +2184,7 @@ export interface MediaSelect<T extends boolean = true> {
  */
 export interface ArtistsSelect<T extends boolean = true> {
   name?: T;
+  nameLegal?: T;
   generateSlug?: T;
   slug?: T;
   careerStage?: T;
@@ -2055,6 +2407,23 @@ export interface EventsSelect<T extends boolean = true> {
         id?: T;
       };
   jsonldPreview?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "image-capture-technologies_select".
+ */
+export interface ImageCaptureTechnologiesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  approximatePeriodStart?: T;
+  approximatePeriodEnd?: T;
+  exampleImage?: T;
+  exampleImageCredit?: T;
+  wikidataUri?: T;
+  wikipediaUrl?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2357,28 +2726,119 @@ export interface ArtworksSelect<T extends boolean = true> {
   mop_arRapScript?: T;
   mop_lat?: T;
   mop_lng?: T;
-  ach_overlayColors?:
+  ach?:
     | T
     | {
-        hex?: T;
-        id?: T;
-      };
-  ach_overlayRects?: T;
-  ach_historyText?: T;
-  ach_freestyleText?: T;
-  ach_wikiLinkEn?: T;
-  ach_wikiLinkDe?: T;
-  ach_arEnabled?: T;
-  ach_arVideos?:
-    | T
-    | {
-        videoRole?: T;
-        videoType?: T;
-        videoFile?: T;
-        videoUrl?: T;
-        posterImage?: T;
-        title?: T;
-        id?: T;
+        mapAndTour?:
+          | T
+          | {
+              mapPresence?: T;
+              lat?: T;
+              lng?: T;
+              cityPlaceholderColor?: T;
+              tourSequence?: T;
+              grandTour?: T;
+              grandTourSequence?: T;
+              tourStopCopy?: T;
+            };
+        overlay?:
+          | T
+          | {
+              overlayColors?:
+                | T
+                | {
+                    hex?: T;
+                    id?: T;
+                  };
+              overlayRects?:
+                | T
+                | {
+                    color?: T;
+                    x?: T;
+                    y?: T;
+                    w?: T;
+                    h?: T;
+                    id?: T;
+                  };
+            };
+        sourcePhotograph?:
+          | T
+          | {
+              sourceImage?: T;
+              sourceImageAltText?: T;
+              sourceTitle?: T;
+              sourceCreator?: T;
+              sourceCreatorWikidataUri?: T;
+              approximateDate?: T;
+              approximateDateYear?: T;
+              imageCaptureType?: T;
+              sourceWikidataUri?: T;
+              sourceWikimediaCommonsUrl?: T;
+              sourceInstitution?: T;
+              sourceInstitutionWikidataUri?: T;
+              sourceInstitutionUrl?: T;
+              sourceLicense?: T;
+              sourceLicenseUrl?: T;
+              sourceCredit?: T;
+            };
+        location?:
+          | T
+          | {
+              locationWikidataUri?: T;
+              locationTGNUri?: T;
+              wikipediaUrl?: T;
+              wikipediaExcerpt?: T;
+              keyHistoricalDates?:
+                | T
+                | {
+                    year?: T;
+                    event?: T;
+                    id?: T;
+                  };
+              conceptCopy?: T;
+              fieldRecordingUrl?: T;
+              fieldRecordingCredit?: T;
+            };
+        revealSlider?:
+          | T
+          | {
+              transferImage?: T;
+              sliderAxis?: T;
+            };
+        ar?:
+          | T
+          | {
+              arEnabled?: T;
+              arMarkerFile?: T;
+              arMarkerStatus?: T;
+              arButtonColors?:
+                | T
+                | {
+                    hex?: T;
+                    id?: T;
+                  };
+              arVideos?:
+                | T
+                | {
+                    type?: T;
+                    videoUrl?: T;
+                    posterImage?: T;
+                    duration?: T;
+                    captions?: T;
+                    id?: T;
+                  };
+              historyTranscript?: T;
+              freestyleTranscript?: T;
+            };
+        mop?:
+          | T
+          | {
+              imageCaptureType?: T;
+              imageCaptureLabel?: T;
+              triptychPosition?: T;
+              availabilityStatus?: T;
+              relatedTriptychs?: T;
+            };
       };
   dcs_photoTitle?: T;
   dcs_cityData?:

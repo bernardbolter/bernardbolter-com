@@ -1,3 +1,5 @@
+import { isPracticeKnowledgeSlug } from './practiceKnowledgeSlugs'
+
 const FORBIDDEN = new Set([
   'artworks.askingPrice',
   'artworks.listingCurrency',
@@ -22,5 +24,8 @@ const FORBIDDEN = new Set([
 ])
 
 export function isFieldAllowedForAgent(collection: string, field: string): boolean {
+  if (collection === 'practice-knowledge') {
+    return isPracticeKnowledgeSlug(field)
+  }
   return !FORBIDDEN.has(`${collection}.${field}`)
 }

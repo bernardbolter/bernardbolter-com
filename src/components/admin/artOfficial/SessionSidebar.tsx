@@ -1,27 +1,12 @@
 'use client'
 
+import './artOfficialChat.scss'
+
 import type { TimelineEntry } from './types'
 
 function truncate(value: unknown, max = 80): string {
   const s = typeof value === 'string' ? value : JSON.stringify(value)
   return s.length > max ? `${s.slice(0, max)}…` : s
-}
-
-function Pill({ label }: { label: string }) {
-  return (
-    <span
-      style={{
-        display: 'inline-block',
-        marginLeft: 6,
-        padding: '1px 6px',
-        fontSize: 10,
-        borderRadius: 3,
-        background: 'var(--theme-elevation-200)',
-      }}
-    >
-      {label}
-    </span>
-  )
 }
 
 function TimelineGroup({
@@ -33,24 +18,18 @@ function TimelineGroup({
 }) {
   return (
     <div style={{ marginBottom: 16 }}>
-      <h4 style={{ margin: '0 0 8px', fontSize: 12, textTransform: 'uppercase' }}>
-        {title}
-      </h4>
+      <h4 className="art-official-sidebar__group-title">{title}</h4>
       <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
         {entries.map((e, i) => (
-          <li
-            key={i}
-            style={{
-              marginBottom: 8,
-              padding: 8,
-              background: 'var(--theme-elevation-50)',
-              borderRadius: 4,
-            }}
-          >
-            <code style={{ fontSize: 11 }}>{e.field}</code>
-            <Pill label={e.confidence ?? '?'} />
-            <Pill label={e.source ?? '?'} />
-            <div style={{ marginTop: 4, opacity: 0.85 }}>{truncate(e.value)}</div>
+          <li key={i} className="art-official-sidebar__entry">
+            <div className="art-official-sidebar__entry-meta">
+              <code className="art-official-sidebar__field">
+                {e.targetCollection === 'practice-knowledge' ? `pk:${e.field}` : e.field}
+              </code>
+              <span className="art-official-sidebar__pill">{e.confidence ?? '?'}</span>
+              <span className="art-official-sidebar__pill">{e.source ?? '?'}</span>
+            </div>
+            <div className="art-official-sidebar__entry-value">{truncate(e.value)}</div>
           </li>
         ))}
       </ul>
@@ -73,16 +52,16 @@ export function SessionSidebar({
   }, {})
 
   return (
-    <aside
-      style={{
-        borderLeft: '1px solid var(--theme-elevation-150)',
-        paddingLeft: 16,
-        fontSize: 13,
-      }}
-    >
-      <h3 style={{ margin: '0 0 12px', fontSize: 14 }}>Staged fields</h3>
-      <p style={{ margin: '0 0 16px', opacity: 0.65, fontSize: 12 }}>
-        {sessionType} — committed at confirmation only.
+    <aside className="art-official-sidebar">
+      <h3 className="art-official-sidebar__title">Staged fields</h3>
+      <p className="art-official-sidebar__hint">
+        {sessionType === 'onboarding'
+          ? 'Onboarding commits practice-knowledge (pk:…) sections only.'
+          : sessionType === 'biography'
+            ? 'Biography commits bioFull / bioMedium / bioShort on your Artist record.'
+            : sessionType === 'artist-statement'
+              ? 'Statement commits statementFull / statementMedium / statementShort on Artist.'
+              : `${sessionType} — committed at confirmation only.`}
       </p>
       {timeline.length === 0 ? (
         <p style={{ opacity: 0.5 }}>No staged updates yet.</p>

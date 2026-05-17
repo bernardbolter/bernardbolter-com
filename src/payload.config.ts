@@ -19,6 +19,7 @@ import { Series } from './collections/Series'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
+import { ImageCaptureTechnologies } from './collections/ImageCaptureTechnologies'
 import { Artworks } from './collections/Artworks'
 import { Sessions } from './collections/Sessions'
 
@@ -78,6 +79,7 @@ export default buildConfig({
     Tags,
     ArtHistoricalReferences,
     Events,
+    ImageCaptureTechnologies,
     Artworks,
     Sessions,
   ],

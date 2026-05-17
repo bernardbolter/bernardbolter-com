@@ -80,6 +80,111 @@ function isoDurationFromSeconds(sec: number): string {
   return s > 0 ? `PT${m}M${s}S` : `PT${m}M`
 }
 
+/**
+ * Subset of the `ach.*` group used by the JSON-LD generator. Typed locally because
+ * payload-types.ts is regenerated lazily and we don't want this file to depend on
+ * a freshly-typed Artwork shape. Matches `Artworks.ts` ACH tab structure.
+ */
+type AchPayload = {
+  location?: {
+    locationWikidataUri?: string | null
+    locationTGNUri?: string | null
+  } | null
+  sourcePhotograph?: {
+    sourceImage?: number | Media | null
+    sourceTitle?: string | null
+    sourceCreator?: string | null
+    sourceCreatorWikidataUri?: string | null
+    approximateDate?: string | null
+    sourceWikidataUri?: string | null
+    sourceLicenseUrl?: string | null
+    sourceCredit?: string | null
+    sourceInstitution?: string | null
+    sourceInstitutionWikidataUri?: string | null
+    sourceInstitutionUrl?: string | null
+  } | null
+}
+
+function uniqueUris(values: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const value of values) {
+    if (typeof value !== 'string') continue
+    const trimmed = value.trim()
+    if (!trimmed) continue
+    if (seen.has(trimmed)) continue
+    seen.add(trimmed)
+    out.push(trimmed)
+  }
+  return out
+}
+
+/**
+ * Spec: docs/handoff-ach-schema-extension.md Part 5.
+ * `isBasedOn` is omitted entirely when the source photograph image is absent. The
+ * creator is always emitted as a typed Person object — never a plain name string.
+ */
+function buildIsBasedOn(
+  source: AchPayload['sourcePhotograph'] | undefined,
+): Record<string, unknown> | undefined {
+  if (!source) return undefined
+  const contentUrl = mediaUrl(source.sourceImage)
+  if (!contentUrl) return undefined
+
+  const creator =
+    source.sourceCreator && source.sourceCreator.trim()
+      ? {
+          '@type': 'Person',
+          name: source.sourceCreator.trim(),
+          ...(source.sourceCreatorWikidataUri
+            ? { sameAs: source.sourceCreatorWikidataUri }
+            : {}),
+        }
+      : undefined
+
+  const isPartOf =
+    source.sourceInstitution && source.sourceInstitution.trim()
+      ? {
+          '@type': 'Archive',
+          name: source.sourceInstitution.trim(),
+          ...(source.sourceInstitutionWikidataUri
+            ? { sameAs: source.sourceInstitutionWikidataUri }
+            : {}),
+          ...(source.sourceInstitutionUrl ? { url: source.sourceInstitutionUrl } : {}),
+        }
+      : undefined
+
+  return {
+    '@type': 'Photograph',
+    ...(source.sourceTitle ? { name: source.sourceTitle } : {}),
+    ...(source.approximateDate ? { dateCreated: source.approximateDate } : {}),
+    ...(creator ? { creator } : {}),
+    contentUrl,
+    ...(source.sourceLicenseUrl ? { acquireLicensePage: source.sourceLicenseUrl } : {}),
+    ...(source.sourceCredit ? { creditText: source.sourceCredit } : {}),
+    ...(source.sourceWikidataUri ? { sameAs: source.sourceWikidataUri } : {}),
+    ...(isPartOf ? { isPartOf } : {}),
+  }
+}
+
+/**
+ * Spec: Part 5 — `about` is a typed Place object referencing the specific landmark
+ * via Wikidata. Falls back to the conceptual keywords array (existing behaviour)
+ * when no ACH location is present.
+ */
+function buildAchAbout(
+  artwork: Artwork,
+  location: AchPayload['location'] | undefined,
+): Record<string, unknown> | undefined {
+  if (!location?.locationWikidataUri) return undefined
+  const placeName = [artwork.city, artwork.country].filter(Boolean).join(', ') || undefined
+  return {
+    '@type': 'Place',
+    ...(placeName ? { name: placeName } : {}),
+    sameAs: location.locationWikidataUri,
+  }
+}
+
 export type BuildArtworkJsonLdOptions = {
   baseUrl?: string
 }
@@ -166,6 +271,17 @@ export function buildArtworkJsonLd(
     }
   }
 
+  const ach = (artwork as unknown as { ach?: AchPayload | null }).ach ?? null
+
+  // locationCreated.sameAs is an ARRAY when multiple URIs are available
+  // (cityTgnUri + ach.location.locationWikidataUri + ach.location.locationTGNUri).
+  // When only one URI is present it is emitted as a single string for back-compat.
+  const locationSameAs = uniqueUris([
+    typeof artwork.cityTgnUri === 'string' ? artwork.cityTgnUri : null,
+    ach?.location?.locationWikidataUri,
+    ach?.location?.locationTGNUri,
+  ])
+
   const locationCreated =
     artwork.city || artwork.country ?
       {
@@ -176,9 +292,16 @@ export function buildArtworkJsonLd(
           ...(artwork.city ? { addressLocality: artwork.city } : {}),
           ...(artwork.country ? { addressCountry: artwork.country } : {}),
         },
-        ...(artwork.cityTgnUri ? { sameAs: artwork.cityTgnUri } : {}),
+        ...(locationSameAs.length === 1
+          ? { sameAs: locationSameAs[0] }
+          : locationSameAs.length > 1
+            ? { sameAs: locationSameAs }
+            : {}),
       }
     : undefined
+
+  const isBasedOn = buildIsBasedOn(ach?.sourcePhotograph)
+  const aboutPlace = buildAchAbout(artwork, ach?.location)
 
   const mediumKey = artwork.medium
   const artMedium =
@@ -239,7 +362,12 @@ export function buildArtworkJsonLd(
     ...(thumbUrl ? { thumbnailUrl: thumbUrl } : {}),
     ...(sameAs.length ? { sameAs } : {}),
     ...(keywords.length ? { keywords } : {}),
-    ...(conceptual.length ? { about: conceptual } : {}),
+    ...(aboutPlace
+      ? { about: aboutPlace }
+      : conceptual.length
+        ? { about: conceptual }
+        : {}),
+    ...(isBasedOn ? { isBasedOn } : {}),
     ...(artwork.creditText ? { creditText: artwork.creditText } : {}),
     ...(licenseUri ? { license: licenseUri } : {}),
     ...(typeof artwork.durationSeconds === 'number' && artwork.durationSeconds > 0 ?
