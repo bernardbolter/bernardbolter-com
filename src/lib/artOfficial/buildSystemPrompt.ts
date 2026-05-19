@@ -3,10 +3,14 @@ import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
 
 import { lexicalToPlain } from './lexicalToPlain'
+import { buildArtworkMediaAgentBlock } from './artworkMediaPrompt'
+import { buildArtworkUploadAgentBlock } from './artworkUploadCopy'
 import {
   buildAchSessionBlock,
   buildFieldRoadmap,
   buildIdentityAndRole,
+  buildPreUploadSessionBlock,
+  buildSessionCloseBlock,
   buildTriptychSessionBlock,
   DIALOGUE_RULES,
   refinementPreamble,
@@ -82,7 +86,11 @@ export async function buildSystemPromptParts(
 
   const dynamicParts = [sessionTypeOverride(sessionType)]
   if (sessionType === 'artwork-cataloguing') {
+    dynamicParts.push(buildPreUploadSessionBlock())
+    dynamicParts.push(buildArtworkUploadAgentBlock())
+    dynamicParts.push(buildArtworkMediaAgentBlock())
     dynamicParts.push(buildAchSessionBlock())
+    dynamicParts.push(buildSessionCloseBlock())
   }
   if (sessionType === 'triptych-cataloguing') {
     dynamicParts.push(buildTriptychSessionBlock())

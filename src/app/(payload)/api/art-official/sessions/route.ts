@@ -56,6 +56,9 @@ export async function POST(request: Request) {
       triptychRecord: parsed.data.triptychRecord,
       status: 'in-progress',
       messages: [],
+      ...(parsed.data.sessionType === 'artwork-cataloguing'
+        ? { preUploadStep: 1 }
+        : {}),
     },
     overrideAccess: false,
     user,

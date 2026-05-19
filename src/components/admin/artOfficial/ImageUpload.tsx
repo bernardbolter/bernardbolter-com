@@ -2,10 +2,18 @@
 
 import { useState } from 'react'
 
+import { uploadMediaFile } from '@/lib/artOfficial/uploadMedia'
+
 export function ImageUpload({
   onUploaded,
+  disabled = false,
+  accept = 'image/jpeg,image/png,image/webp',
+  altLabel,
 }: {
   onUploaded: (mediaId: number) => void
+  disabled?: boolean
+  accept?: string
+  altLabel?: string
 }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -18,35 +26,26 @@ export function ImageUpload({
     setError(null)
 
     try {
-      const form = new FormData()
-      form.append('file', file)
-      form.append('alt', file.name)
-
-      const res = await fetch('/api/media', { method: 'POST', body: form })
-      if (!res.ok) {
-        throw new Error(`Upload failed (${res.status})`)
-      }
-      const doc = await res.json()
-      const id = doc.doc?.id ?? doc.id
-      if (!id) throw new Error('No media id returned')
-      onUploaded(Number(id))
+      const id = await uploadMediaFile(file, altLabel)
+      onUploaded(id)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
       setUploading(false)
+      e.target.value = ''
     }
   }
 
   return (
-    <div style={{ margin: '16px 0', padding: 12, border: '1px dashed var(--theme-elevation-300)' }}>
-      <p style={{ margin: '0 0 8px', fontSize: 13 }}>
-        Upload the artwork image to continue cataloguing.
-      </p>
-      <input type="file" accept="image/*" disabled={uploading} onChange={handleChange} />
-      {uploading ? <p style={{ fontSize: 12, marginTop: 8 }}>Uploading…</p> : null}
-      {error ? (
-        <p style={{ color: 'var(--theme-error-500)', fontSize: 12, marginTop: 8 }}>{error}</p>
-      ) : null}
+    <div className="art-official-chat__upload-input">
+      <input
+        type="file"
+        accept={accept}
+        disabled={disabled || uploading}
+        onChange={handleChange}
+      />
+      {uploading ? <p className="art-official-chat__upload-hint">Uploading…</p> : null}
+      {error ? <p className="art-official-chat__upload-error">{error}</p> : null}
     </div>
   )
 }

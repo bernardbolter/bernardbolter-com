@@ -16,6 +16,25 @@ function wikiApiBase(locale: string): string {
   return `https://${code}.wikipedia.org/w/api.php`
 }
 
+/** MediaWiki `parse.text` is usually HTML string; some responses wrap it or use non-string shapes. */
+export function wikipediaSectionHtmlToPlain(text: unknown): string {
+  if (typeof text === 'string') return text
+  if (text && typeof text === 'object') {
+    const wrapped = text as Record<string, unknown>
+    if (typeof wrapped['*'] === 'string') return wrapped['*']
+  }
+  return ''
+}
+
+function stripHtmlToPlain(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function titleFromUrl(url: string, locale: string): string | null {
   try {
     const parsed = new URL(url)
@@ -116,16 +135,10 @@ export async function fetchWikipediaArticle(
       })
       if (!sectionRes.ok) continue
       const sectionData = (await sectionRes.json()) as {
-        parse?: { text?: string }
+        parse?: { text?: unknown }
       }
-      const html = sectionData.parse?.text ?? ''
-      const text = html
-        .replace(/<script[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]+>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 1200)
+      const html = wikipediaSectionHtmlToPlain(sectionData.parse?.text)
+      const text = stripHtmlToPlain(html).slice(0, 1200)
       if (text.length > 80) {
         candidates.push({ section: section.line ?? 'Section', text })
       }

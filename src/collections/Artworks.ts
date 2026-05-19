@@ -140,11 +140,21 @@ export const Artworks: CollectionConfig = {
                 beforeChange: [
                   async ({ siblingData, req }) => {
                     if (!siblingData?.series) return null
-                    const s = await req.payload.findByID({
-                      collection: 'series',
-                      id: siblingData.series,
-                    })
-                    return s?.slug ?? null
+                    const seriesId =
+                      typeof siblingData.series === 'object' && siblingData.series !== null
+                        ? (siblingData.series as { id?: number }).id
+                        : siblingData.series
+                    if (seriesId == null || seriesId === '') return null
+                    try {
+                      const s = await req.payload.findByID({
+                        collection: 'series',
+                        id: seriesId,
+                        depth: 0,
+                      })
+                      return s?.slug ?? null
+                    } catch {
+                      return null
+                    }
                   },
                 ],
               },
@@ -915,7 +925,10 @@ export const Artworks: CollectionConfig = {
                   admin: { description: 'Width ÷ height for layout.' },
                 },
               ],
-              admin: { description: 'Verso, installation angles, raking light, etc.' },
+              admin: {
+                description:
+                  'Other photographs that are part of understanding the work — different angles (e.g. sculpture sides), verso, raking light, scale in hand. Not studio/process documentation (use Documentation photos).',
+              },
             },
             {
               name: 'detailImages',
@@ -932,6 +945,9 @@ export const Artworks: CollectionConfig = {
                 { name: 'altText', type: 'text', localized: true },
                 { name: 'aspectRatio', type: 'number' },
               ],
+              admin: {
+                description: 'Close-ups — texture, passage, signature, material surface.',
+              },
             },
             {
               name: 'installationShots',
@@ -949,6 +965,40 @@ export const Artworks: CollectionConfig = {
                 { name: 'altText', type: 'text', localized: true },
                 { name: 'aspectRatio', type: 'number' },
               ],
+              admin: {
+                description: 'Work shown installed in a space (venue and date optional).',
+              },
+            },
+            {
+              name: 'documentationImages',
+              type: 'array',
+              labels: { singular: 'Documentation photo', plural: 'Documentation photos' },
+              fields: [
+                {
+                  name: 'image',
+                  type: 'upload',
+                  relationTo: 'media',
+                  required: true,
+                },
+                { name: 'caption', type: 'text', localized: true },
+                { name: 'altText', type: 'text', localized: true },
+                { name: 'aspectRatio', type: 'number' },
+                {
+                  name: 'documentationRole',
+                  type: 'select',
+                  options: [
+                    { label: 'Studio / work in progress', value: 'studio' },
+                    { label: 'Process / making', value: 'process' },
+                    { label: 'Materials / condition', value: 'condition' },
+                    { label: 'Publication / press', value: 'publication' },
+                    { label: 'Other', value: 'other' },
+                  ],
+                },
+              ],
+              admin: {
+                description:
+                  'Photographs that document the work’s making or context — not other angles of the finished piece (use Alternate views) and not gallery installation (use Installation shots).',
+              },
             },
             {
               name: 'arTargetImage',

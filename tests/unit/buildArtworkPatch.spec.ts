@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildArtworkDraftPatchFromSession,
   buildArtworkPatchFromTimeline,
   mergeArtworkPatches,
+  normalizeConceptualKeywords,
+  sanitizeArtworkCommitPatch,
 } from '@/lib/artOfficial/buildArtworkPatch'
 
 describe('buildArtworkPatchFromTimeline', () => {
@@ -76,6 +79,65 @@ describe('buildArtworkPatchFromTimeline', () => {
     expect(buildArtworkPatchFromTimeline(null)).toEqual({})
     expect(buildArtworkPatchFromTimeline(undefined)).toEqual({})
     expect(buildArtworkPatchFromTimeline('nope')).toEqual({})
+  })
+})
+
+describe('normalizeConceptualKeywords', () => {
+  it('wraps plain strings as keyword rows', () => {
+    expect(normalizeConceptualKeywords(['Gates of Perception', 'memory'])).toEqual([
+      { keyword: 'Gates of Perception' },
+      { keyword: 'memory' },
+    ])
+  })
+
+  it('passes through valid rows', () => {
+    expect(normalizeConceptualKeywords([{ keyword: 'mediation' }])).toEqual([
+      { keyword: 'mediation' },
+    ])
+  })
+})
+
+describe('buildArtworkPatchFromTimeline conceptualKeywords', () => {
+  it('normalizes string arrays staged via update_field', () => {
+    const patch = buildArtworkPatchFromTimeline([
+      {
+        targetCollection: 'artworks',
+        field: 'conceptualKeywords',
+        value: ['Gates of Perception', 'erasure'],
+      },
+    ])
+    expect(patch.conceptualKeywords).toEqual([
+      { keyword: 'Gates of Perception' },
+      { keyword: 'erasure' },
+    ])
+  })
+})
+
+describe('buildArtworkDraftPatchFromSession', () => {
+  it('maps agent draft fields onto artwork patch keys', () => {
+    const patch = buildArtworkDraftPatchFromSession({
+      agentDraftDescriptionShort: 'Short copy.',
+      agentDraftDescriptionLong: 'Long copy.',
+      agentDraftConceptualKeywords: ['memory', { keyword: 'mediation' }],
+      agentDraftFormalContributionAssessment: 'Formal note.',
+    })
+    expect(patch.descriptionShort).toBe('Short copy.')
+    expect(patch.formalContributionAssessment).toBe('Formal note.')
+    expect(patch.conceptualKeywords).toEqual([
+      { keyword: 'memory' },
+      { keyword: 'mediation' },
+    ])
+    expect(patch.descriptionLong).toMatchObject({ root: { children: expect.any(Array) } })
+  })
+})
+
+describe('sanitizeArtworkCommitPatch', () => {
+  it('fixes conceptualKeywords on the merged commit payload', () => {
+    const out = sanitizeArtworkCommitPatch({
+      title: 'Test',
+      conceptualKeywords: ['Gates of Perception'],
+    })
+    expect(out.conceptualKeywords).toEqual([{ keyword: 'Gates of Perception' }])
   })
 })
 

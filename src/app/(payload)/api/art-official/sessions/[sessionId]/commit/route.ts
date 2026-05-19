@@ -1,13 +1,18 @@
 import { buildArtistPatchFromTimeline } from '@/lib/artOfficial/buildArtistPatch'
 import {
+  buildArtworkDraftPatchFromSession,
   buildArtworkPatchFromTimeline,
   mergeArtworkPatches,
+  sanitizeArtworkCommitPatch,
 } from '@/lib/artOfficial/buildArtworkPatch'
+import { mergeStagedMediaIntoArtworkPatch } from '@/lib/artOfficial/stagedMedia'
 import { buildTriptychPatchFromTimeline } from '@/lib/artOfficial/buildTriptychPatch'
 import {
   applyPracticeKnowledgePatches,
   patchesFromSessionTimeline,
 } from '@/lib/artOfficial/applyPracticeKnowledgePatches'
+import { formatPayloadValidationError } from '@/lib/artOfficial/formatPayloadValidationError'
+import { resolveArtworkCommitReferences } from '@/lib/artOfficial/resolveArtworkCommitReferences'
 import { commitTarget } from '@/lib/artOfficial/routing'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 import type { SessionType } from '@/lib/artOfficial/routing'
@@ -56,7 +61,10 @@ export async function POST(request: Request, context: RouteContext) {
 
   switch (target.kind) {
     case 'create-artwork': {
-      const serverPatch = buildArtworkPatchFromTimeline(session.fieldUpdateTimeline)
+      const serverPatch = mergeStagedMediaIntoArtworkPatch(
+        buildArtworkPatchFromTimeline(session.fieldUpdateTimeline),
+        session.stagedMedia,
+      )
       const clientPatch =
         body.artworkData && typeof body.artworkData === 'object'
           ? (body.artworkData as Record<string, unknown>)
@@ -64,7 +72,24 @@ export async function POST(request: Request, context: RouteContext) {
       // `as any` mirrors the original pattern (data was effectively `any` from
       // `body.artworkData ?? {}`). Required-field validation runs in Payload at
       // commit time; TypeScript can't infer those fields are present statically.
-      const merged = mergeArtworkPatches(clientPatch, serverPatch) as any
+      const draftPatch = buildArtworkDraftPatchFromSession(session)
+      let merged = sanitizeArtworkCommitPatch(
+        mergeArtworkPatches(
+          mergeArtworkPatches(clientPatch, serverPatch),
+          draftPatch,
+        ),
+      ) as Record<string, unknown>
+
+      try {
+        merged = await resolveArtworkCommitReferences(
+          { payload, user, session },
+          merged,
+        )
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Invalid artwork commit data'
+        return Response.json({ error: message }, { status: 412 })
+      }
+
       const artworkData = {
         ...merged,
         status: 'draft' as const,
@@ -75,23 +100,31 @@ export async function POST(request: Request, context: RouteContext) {
           ? session.artworkRecord?.id
           : session.artworkRecord)
 
-      if (existingId) {
-        const updated = await payload.update({
-          collection: 'artworks',
-          id: existingId,
-          data: artworkData,
-          overrideAccess: false,
-          user,
-        })
-        artworkId = updated.id
-      } else {
-        const created = await payload.create({
-          collection: 'artworks',
-          data: artworkData,
-          overrideAccess: false,
-          user,
-        })
-        artworkId = created.id
+      try {
+        if (existingId) {
+          const updated = await payload.update({
+            collection: 'artworks',
+            id: existingId,
+            data: artworkData,
+            overrideAccess: false,
+            user,
+          })
+          artworkId = updated.id
+        } else {
+          const created = await payload.create({
+            collection: 'artworks',
+            data: artworkData,
+            overrideAccess: false,
+            user,
+          })
+          artworkId = created.id
+        }
+      } catch (err) {
+        const message =
+          formatPayloadValidationError(err) ??
+          (err instanceof Error ? err.message : 'Failed to save artwork record')
+        console.error('[art-official] commit create/update failed:', err)
+        return Response.json({ error: message }, { status: 412 })
       }
       break
     }

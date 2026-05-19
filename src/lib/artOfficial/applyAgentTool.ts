@@ -17,6 +17,7 @@ import {
   TOOL_FETCH_WIKIPEDIA_ARTICLE,
   TOOL_FLAG_WEAK_PHASE,
   TOOL_GENERATE_CONFIRMATION_DRAFT,
+  TOOL_GET_MEDIA_UPLOAD_STATUS,
   TOOL_GET_WIKIDATA_ENTITY,
   TOOL_LOOKUP_COMMONS_FILE,
   TOOL_SEARCH_GETTY_TGN,
@@ -35,6 +36,10 @@ import {
   searchWikidata,
 } from './externalLookups'
 import { isFieldAllowedForAgent } from './fieldAllowlist'
+import {
+  formatMediaStatusForAgent,
+  resolveMediaSlotStates,
+} from './stagedMedia'
 import { runImageAnalysis } from './runImageAnalysis'
 
 const BIOGRAPHY_ARTIST_FIELDS = new Set(['bioFull', 'bioMedium', 'bioShort'])
@@ -56,6 +61,12 @@ function toolResult(payload: Record<string, unknown>): string {
   return JSON.stringify(payload)
 }
 
+/** Log and return a failed tool_result — never emit SSE `error` (that aborts the chat UI). */
+function failTool(tool: string, message: string): string {
+  console.warn(`[art-official] tool ${tool}:`, message)
+  return toolResult({ ok: false, error: message })
+}
+
 /** Apply tool side effects and return JSON for Anthropic `tool_result` content. */
 export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
   const { payload, user, session, tool, send } = ctx
@@ -65,8 +76,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_UPDATE_FIELD: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = updateFieldSchema.parse(parsed.data)
         if (
@@ -75,15 +85,13 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
         ) {
           const message =
             'Onboarding only stages practice-knowledge. Use targetCollection "practice-knowledge" and field = slug (series, visual-vocabulary, art-historical-touchstones, preferred-vocabulary).'
-          send('error', { tool: tool.name, message })
-          return toolResult({ ok: false, error: message })
+          return failTool(tool.name, message)
         }
         if (session.sessionType === 'biography') {
           if (args.targetCollection !== 'artists' || !BIOGRAPHY_ARTIST_FIELDS.has(args.field)) {
             const message =
               'Biography sessions must use update_field with targetCollection "artists" and field one of: bioFull, bioMedium, bioShort (plain-text value).'
-            send('error', { tool: tool.name, message })
-            return toolResult({ ok: false, error: message })
+            return failTool(tool.name, message)
           }
         }
         if (session.sessionType === 'artist-statement') {
@@ -93,22 +101,19 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           ) {
             const message =
               'Artist statement sessions must use targetCollection "artists" and field one of: statementFull, statementMedium, statementShort.'
-            send('error', { tool: tool.name, message })
-            return toolResult({ ok: false, error: message })
+            return failTool(tool.name, message)
           }
         }
         if (session.sessionType === 'triptych-cataloguing') {
           if (args.targetCollection !== 'triptychs') {
             const message =
               'Triptych sessions must use update_field with targetCollection "triptychs" only (corpus and core narrative fields — not panels or commerce).'
-            send('error', { tool: tool.name, message })
-            return toolResult({ ok: false, error: message })
+            return failTool(tool.name, message)
           }
         }
         if (!isFieldAllowedForAgent(args.targetCollection, args.field)) {
           const message = `Field ${args.targetCollection}.${args.field} is not writable by the agent.`
-          send('error', { tool: tool.name, message })
-          return toolResult({ ok: false, error: message })
+          return failTool(tool.name, message)
         }
         const timeline = Array.isArray(session.fieldUpdateTimeline)
           ? [...(session.fieldUpdateTimeline as Array<Record<string, unknown>>)]
@@ -144,14 +149,24 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_STORE_SESSION_FIELD: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = storeSessionFieldSchema.parse(parsed.data)
+        const sessionData: Record<string, unknown> =
+          args.field === 'preUploadStep'
+            ? { preUploadStep: Number(args.value) }
+            : { [args.field]: args.value }
+        if (args.field === 'preUploadStep') {
+          session.preUploadStep = Number(args.value)
+        } else if (args.field === 'firstImpression') {
+          session.firstImpression = args.value
+        } else if (args.field === 'highlightedMediaSlot') {
+          session.highlightedMediaSlot = args.value
+        }
         await payload.update({
           collection: 'sessions',
           id: session.id,
-          data: { [args.field]: args.value },
+          data: sessionData,
           overrideAccess: false,
           user,
           context: { skipAgent: true },
@@ -163,8 +178,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_GENERATE_CONFIRMATION_DRAFT: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = generateConfirmationDraftSchema.parse(parsed.data)
         await payload.update({
@@ -190,8 +204,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_FLAG_WEAK_PHASE: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = flagWeakPhaseSchema.parse(parsed.data)
         const current = Array.isArray(session.weakPhases) ? session.weakPhases : []
@@ -212,8 +225,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_ASSESS_FORMAL_CONTRIBUTION: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = assessFormalContributionSchema.parse(parsed.data)
         const prior = session.refinementNotes ?? ''
@@ -234,8 +246,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_TRIGGER_IMAGE_ANALYSIS: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = triggerImageAnalysisSchema.parse(parsed.data)
         const result = await runImageAnalysis({
@@ -250,8 +261,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_LOOKUP_COMMONS_FILE: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = lookupCommonsFileSchema.parse(parsed.data)
         const result = await fetchCommonsFileMetadata(args.commonsUrl)
@@ -263,8 +273,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_SEARCH_WIKIDATA: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = searchWikidataSchema.parse(parsed.data)
         const result = await searchWikidata(args.query, args.language ?? 'en', args.limit ?? 5)
@@ -276,8 +285,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_GET_WIKIDATA_ENTITY: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = getWikidataEntitySchema.parse(parsed.data)
         const result = await getWikidataEntity(args.entityId, args.language ?? 'en')
@@ -289,14 +297,12 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_FETCH_WIKIPEDIA_ARTICLE: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = fetchWikipediaArticleSchema.parse(parsed.data)
         if (!args.url && !args.title) {
           const message = 'Provide url or title for Wikipedia lookup.'
-          send('error', { tool: tool.name, message })
-          return toolResult({ ok: false, error: message })
+          return failTool(tool.name, message)
         }
         const result = await fetchWikipediaArticle({
           url: args.url,
@@ -311,8 +317,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
       case TOOL_SEARCH_GETTY_TGN: {
         const parsed = parseToolArgs(tool.name, tool.input)
         if (!parsed.ok) {
-          send('error', { tool: tool.name, message: parsed.error })
-          return toolResult({ ok: false, error: parsed.error })
+          return failTool(tool.name, parsed.error)
         }
         const args = searchGettyTgnSchema.parse(parsed.data)
         const result = await searchGettyTgn(args.placeName, args.limit ?? 5)
@@ -321,15 +326,43 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
         )
       }
 
+      case TOOL_GET_MEDIA_UPLOAD_STATUS: {
+        if (session.sessionType !== 'artwork-cataloguing') {
+          return toolResult({
+            ok: false,
+            error: 'Media upload status is only for artwork-cataloguing sessions.',
+          })
+        }
+        const timeline = Array.isArray(session.fieldUpdateTimeline)
+          ? (session.fieldUpdateTimeline as Array<{ targetCollection?: string; field?: string; value?: unknown }>)
+          : []
+        const hasPrimary = timeline.some((e) => e.field === 'primaryImage')
+        const seriesSlug = timeline.find((e) => e.field === 'seriesSlug')?.value
+        const isAch =
+          seriesSlug === 'a-colorful-history' ||
+          timeline.some((e) => String(e.field ?? '').startsWith('ach.'))
+        const states = resolveMediaSlotStates({
+          timeline: timeline as never,
+          stagedMedia: session.stagedMedia,
+          hasPrimary,
+          highlightedMediaSlot: session.highlightedMediaSlot,
+          isAchWork: isAch,
+        })
+        return toolResult({
+          ok: true,
+          slots: formatMediaStatusForAgent(states),
+          highlightedMediaSlot: session.highlightedMediaSlot ?? null,
+        })
+      }
+
       default: {
-        const message = `Unknown tool: ${tool.name}`
-        send('error', { message })
-        return toolResult({ ok: false, error: message })
+        return failTool(tool.name, `Unknown tool: ${tool.name}`)
       }
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Tool application failed'
-    send('error', { tool: tool.name, message })
+    console.error('[art-official] tool failed:', tool.name, err)
+    // Return to the model only — avoid chat-level "Something went wrong" for recoverable tool errors.
     return toolResult({ ok: false, error: message })
   }
 }

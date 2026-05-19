@@ -2,15 +2,24 @@
 
 import { Button } from '@payloadcms/ui'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
+import {
+  ARTWORK_UPLOAD_COMPOSER_HINT,
+  ARTWORK_UPLOAD_WAITING_PLACEHOLDER,
+} from '@/lib/artOfficial/artworkUploadCopy'
 import { messagesForDisplay } from '@/lib/artOfficial/chatMessages'
 import { formatChatError } from '@/lib/artOfficial/formatChatError'
 import { parseChatHttpError } from '@/lib/artOfficial/parseChatHttpError'
+import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
+import type { StagedMediaAttachment } from '@/lib/artOfficial/stagedMedia'
 
 import { AutoGrowTextarea } from './AutoGrowTextarea'
+import { type AgentActivity, ChatAgentStatus } from './ChatAgentStatus'
 import { ChatErrorBanner } from './ChatErrorBanner'
+import { ComposerUploadBar } from './ComposerUploadBar'
 import { ConfirmationPanel } from './ConfirmationPanel'
+import { MediaUploadPanel } from './MediaUploadPanel'
 import { MessageList } from './MessageList'
 import { PreUploadPanel } from './PreUploadPanel'
 import { SessionGuidePanel } from './SessionGuidePanel'
@@ -51,35 +60,32 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
   const [sending, setSending] = useState(false)
   const [chatError, setChatError] = useState<string | null>(null)
   const [chatErrorCode, setChatErrorCode] = useState<string | undefined>()
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [agentActivity, setAgentActivity] = useState<AgentActivity>('idle')
+  const [imageUploaded, setImageUploaded] = useState(() =>
+    parseTimeline(initialSession).some(
+      (e) => e.targetCollection === 'artworks' && e.field === 'primaryImage',
+    ),
+  )
   const errorRef = useRef<HTMLDivElement>(null)
 
   const isArtworkSession = session.sessionType === 'artwork-cataloguing'
   const hasFirstImpression = Boolean(session.firstImpression)
   const hasMessages = messages.length > 0 || Boolean(pending)
-
-  const scrollToLatest = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [])
-
-  useEffect(() => {
-    scrollToLatest()
-  }, [messages, pending, scrollToLatest])
-
-  useEffect(() => {
-    if (chatError) {
-      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-    }
-  }, [chatError])
+  const assistantTurns = messages.filter((m) => m.role === 'assistant').length
+  const needsImageUpload = isArtworkSession && hasFirstImpression && !imageUploaded
 
   const sendChat = useCallback(
     async (
       userMessage: string,
-      imageMediaId?: number,
-      options?: { showUserInThread?: boolean },
+      options?: {
+        showUserInThread?: boolean
+        imageMediaId?: number
+        mediaUpload?: MediaUploadPayload
+      },
     ) => {
       const showUserInThread = options?.showUserInThread !== false
       setSending(true)
+      setAgentActivity('waiting')
       setChatError(null)
       setChatErrorCode(undefined)
       if (showUserInThread) {
@@ -94,7 +100,8 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
           body: JSON.stringify({
             sessionId: session.sessionId,
             userMessage,
-            imageMediaId,
+            imageMediaId: options?.imageMediaId,
+            mediaUpload: options?.mediaUpload,
           }),
         })
 
@@ -109,12 +116,14 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
           const parsed = parseChatHttpError(res.status, body, rawText)
           setChatError(parsed.message)
           setChatErrorCode(parsed.code)
+          setAgentActivity('error')
           return
         }
 
         if (!res.body) {
           setChatError('No response stream from server.')
           setChatErrorCode('SERVER_ERROR')
+          setAgentActivity('error')
           return
         }
 
@@ -157,11 +166,36 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
                   : 'Chat error'
               streamErrorCode =
                 typeof data.code === 'string' ? data.code : 'STREAM_ERROR'
+              setAgentActivity('error')
             }
 
             if (type === 'token' && typeof data.text === 'string') {
               assistantText += data.text
               setPending(assistantText)
+              setAgentActivity('streaming')
+            }
+            if (type === 'image-analysis') {
+              setAgentActivity('analyzing')
+            }
+            if (type === 'tool-staged') {
+              setAgentActivity('tools')
+            }
+            if (type === 'media-staged') {
+              const attachment = data.attachment as StagedMediaAttachment | undefined
+              if (attachment) {
+                setSession((s) => {
+                  const prev = Array.isArray(s.stagedMedia)
+                    ? (s.stagedMedia as StagedMediaAttachment[])
+                    : []
+                  const next = attachment.kind === 'skipped'
+                    ? [...prev.filter((r) => r.slotId !== attachment.slotId), attachment]
+                    : [...prev, attachment]
+                  return { ...s, stagedMedia: next }
+                })
+              }
+              if (data.slotId === 'primary') {
+                setImageUploaded(true)
+              }
             }
             if (type === 'tool-staged' && data.name === 'update_field' && data.input) {
               const input = data.input as TimelineEntry
@@ -169,12 +203,49 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
                 ...t,
                 { ...input, timestamp: new Date().toISOString() },
               ])
+              if (input.field === 'primaryImage') {
+                setImageUploaded(true)
+              }
             }
             if (type === 'tool-staged' && data.name === 'store_session_field') {
               const input = data.input as { field?: string; value?: string }
               if (input.field === 'firstImpression') {
                 setSession((s) => ({ ...s, firstImpression: input.value }))
               }
+              if (input.field === 'secondDescription') {
+                setSession((s) => ({ ...s, secondDescription: input.value }))
+              }
+              if (input.field === 'highlightedMediaSlot') {
+                setSession((s) => ({ ...s, highlightedMediaSlot: input.value }))
+              }
+              if (input.field === 'preUploadStep' && input.value) {
+                const step = Number(input.value)
+                if (step >= 1 && step <= 4) {
+                  setSession((s) => ({ ...s, preUploadStep: step }))
+                }
+              }
+            }
+            if (
+              type === 'tool-staged' &&
+              data.name === 'generate_confirmation_draft' &&
+              data.input
+            ) {
+              const input = data.input as {
+                agentDraftDescriptionShort?: string
+                agentDraftDescriptionLong?: string
+                agentDraftConceptualKeywords?: string[]
+                agentDraftFormalContributionAssessment?: string
+              }
+              setSession((s) => ({
+                ...s,
+                agentDraftDescriptionShort: input.agentDraftDescriptionShort,
+                agentDraftDescriptionLong: input.agentDraftDescriptionLong,
+                agentDraftConceptualKeywords: input.agentDraftConceptualKeywords?.map(
+                  (keyword) => ({ keyword }),
+                ),
+                agentDraftFormalContributionAssessment:
+                  input.agentDraftFormalContributionAssessment,
+              }))
             }
           }
         }
@@ -182,18 +253,22 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
         if (streamError) {
           setChatError(streamError)
           setChatErrorCode(streamErrorCode)
+          setAgentActivity('error')
         } else if (assistantText.trim()) {
           setMessages((m) => [...m, { role: 'assistant', content: assistantText }])
+          setAgentActivity('idle')
         } else {
           setChatError(
             'No reply text was received. Check ANTHROPIC_API_KEY in .env, restart npm run dev, and try again.',
           )
           setChatErrorCode('STREAM_ERROR')
+          setAgentActivity('error')
         }
         setPending('')
       } catch (e) {
         setChatError(formatChatError(e))
         setChatErrorCode('STREAM_ERROR')
+        setAgentActivity('error')
       } finally {
         setSending(false)
       }
@@ -209,8 +284,29 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
   }
 
   async function onImageUploaded(mediaId: number) {
-    await sendChat('I have uploaded the artwork image.', mediaId)
+    setImageUploaded(true)
+    await sendChat('I have uploaded the primary artwork image.', {
+      mediaUpload: { slotId: 'primary', mediaId },
+    })
   }
+
+  async function onMediaAction(upload: MediaUploadPayload, label: string) {
+    if (upload.slotId === 'primary' && upload.mediaId != null) {
+      setImageUploaded(true)
+    }
+    const userMessage = upload.skip
+      ? `Not applicable: ${label}`
+      : upload.url
+        ? `Link added for ${label}: ${upload.url}`
+        : `Uploaded: ${label}`
+    await sendChat(userMessage, { mediaUpload: upload })
+  }
+
+  const displayActivity: AgentActivity = chatError
+    ? 'error'
+    : sending
+      ? agentActivity
+      : 'idle'
 
   const refinementBanner =
     session.dialogueRefinementFlag && session.weakPhases?.length ? (
@@ -224,27 +320,40 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
       <div className="art-official-chat__layout">
         <div className="art-official-chat__main">
           {refinementBanner}
-          {!isArtworkSession ? (
-            <SessionGuidePanel
-              sessionType={session.sessionType}
-              hasMessages={hasMessages}
-              disabled={sending}
-              onStart={(message) =>
-                void sendChat(message, undefined, { showUserInThread: false })
-              }
-            />
-          ) : null}
+          <SessionGuidePanel
+            sessionType={session.sessionType}
+            hasMessages={hasMessages}
+            disabled={sending}
+            onStart={(message) => void sendChat(message, { showUserInThread: false })}
+          />
           {isArtworkSession ? (
             <PreUploadPanel
               hasFirstImpression={hasFirstImpression}
-              onImageUploaded={onImageUploaded}
+              preUploadStep={session.preUploadStep}
+              assistantTurns={assistantTurns}
+              awaitingAssistant={sending && !hasFirstImpression}
+              needsImageUpload={needsImageUpload}
+            />
+          ) : null}
+
+          {isArtworkSession && hasFirstImpression ? (
+            <MediaUploadPanel
+              timeline={timeline}
+              stagedMedia={session.stagedMedia}
+              highlightedMediaSlot={session.highlightedMediaSlot}
+              hasPrimary={imageUploaded}
+              disabled={sending}
+              onMediaAction={(upload, label) => void onMediaAction(upload, label)}
             />
           ) : null}
 
           <MessageList messages={messages} streaming={pending} />
-          <div ref={messagesEndRef} aria-hidden />
 
           <div className="art-official-chat__composer-block">
+            <ChatAgentStatus activity={displayActivity} />
+            {needsImageUpload ? (
+              <ComposerUploadBar onUploaded={onImageUploaded} disabled={sending} />
+            ) : null}
             {chatError ? (
               <div ref={errorRef}>
                 <ChatErrorBanner
@@ -253,16 +362,26 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
                   onDismiss={() => {
                     setChatError(null)
                     setChatErrorCode(undefined)
+                    setAgentActivity('idle')
                   }}
                 />
               </div>
+            ) : null}
+            {needsImageUpload ? (
+              <p className="art-official-chat__composer-hint art-official-chat__composer-hint--upload">
+                {ARTWORK_UPLOAD_COMPOSER_HINT}
+              </p>
             ) : null}
             <AutoGrowTextarea
               className="art-official-chat__composer"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              disabled={sending}
-              placeholder="Type your message… (Enter for a new line, ⌘/Ctrl+Enter to send)"
+              disabled={sending || needsImageUpload}
+              placeholder={
+                needsImageUpload
+                  ? ARTWORK_UPLOAD_WAITING_PLACEHOLDER
+                  : 'Type your message… (Enter for a new line, ⌘/Ctrl+Enter to send)'
+              }
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                   e.preventDefault()
@@ -271,7 +390,11 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
               }}
             />
             <div className="art-official-chat__actions">
-              <Button buttonStyle="primary" disabled={sending || !input.trim()} onClick={send}>
+              <Button
+                buttonStyle="primary"
+                disabled={sending || needsImageUpload || !input.trim()}
+                onClick={send}
+              >
                 {sending ? 'Sending…' : 'Send'}
               </Button>
             </div>

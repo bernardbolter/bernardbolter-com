@@ -40,10 +40,10 @@
 
   &__chevron {
     flex-shrink: 0;
-    margin-top: 2px;
-    font-size: 12px;
+    align-self: center;
+    font-size: 36px;
     line-height: 1;
-    opacity: 0.65;
+    opacity: 0.75;
     transition: transform 0.15s ease;
   }
 

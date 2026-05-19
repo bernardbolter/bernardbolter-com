@@ -779,7 +779,7 @@ export interface Artwork {
    */
   genre?: string | null;
   /**
-   * Verso, installation angles, raking light, etc.
+   * Other photographs that are part of understanding the work — different angles (e.g. sculpture sides), verso, raking light, scale in hand. Not studio/process documentation (use Documentation photos).
    */
   alternateViewImages?:
     | {
@@ -793,6 +793,9 @@ export interface Artwork {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Close-ups — texture, passage, signature, material surface.
+   */
   detailImages?:
     | {
         image: number | Media;
@@ -802,6 +805,9 @@ export interface Artwork {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Work shown installed in a space (venue and date optional).
+   */
   installationShots?:
     | {
         image: number | Media;
@@ -809,6 +815,19 @@ export interface Artwork {
         date?: string | null;
         altText?: string | null;
         aspectRatio?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Photographs that document the work’s making or context — not other angles of the finished piece (use Alternate views) and not gallery installation (use Installation shots).
+   */
+  documentationImages?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        altText?: string | null;
+        aspectRatio?: number | null;
+        documentationRole?: ('studio' | 'process' | 'condition' | 'publication' | 'other') | null;
         id?: string | null;
       }[]
     | null;
@@ -2143,8 +2162,28 @@ export interface Session {
     | number
     | boolean
     | null;
+  /**
+   * Current pre-upload question (1–4). Updated by Art/Official as the dialogue advances.
+   */
+  preUploadStep?: number | null;
   firstImpression?: string | null;
   secondDescription?: string | null;
+  /**
+   * Art/Official: slot id highlighted in the Media uploads panel (set by the agent).
+   */
+  highlightedMediaSlot?: string | null;
+  /**
+   * Art/Official staged media attachments (images, videos, URLs) before commit.
+   */
+  stagedMedia?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   /**
    * Array of { field, value, confidence, source, timestamp }.
    */
@@ -2747,6 +2786,16 @@ export interface ArtworksSelect<T extends boolean = true> {
         aspectRatio?: T;
         id?: T;
       };
+  documentationImages?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        altText?: T;
+        aspectRatio?: T;
+        documentationRole?: T;
+        id?: T;
+      };
   arTargetImage?: T;
   videoFile?: T;
   videoUrl?: T;
@@ -3129,8 +3178,11 @@ export interface SessionsSelect<T extends boolean = true> {
   triptychRecord?: T;
   completedAt?: T;
   messages?: T;
+  preUploadStep?: T;
   firstImpression?: T;
   secondDescription?: T;
+  highlightedMediaSlot?: T;
+  stagedMedia?: T;
   fieldUpdateTimeline?: T;
   agentDraftDescriptionShort?: T;
   agentDraftDescriptionLong?: T;

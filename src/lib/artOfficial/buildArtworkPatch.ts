@@ -49,6 +49,68 @@ function isPlainTextString(value: unknown): value is string {
   return typeof value === 'string' && value.trim() !== ''
 }
 
+/** Payload array rows: `{ keyword: string }`. Agents often send plain strings. */
+export function normalizeConceptualKeywords(
+  value: unknown,
+): Array<{ keyword: string }> | undefined {
+  if (!Array.isArray(value)) return undefined
+
+  const out: Array<{ keyword: string }> = []
+  for (const item of value) {
+    if (typeof item === 'string') {
+      const keyword = item.trim()
+      if (keyword) out.push({ keyword })
+      continue
+    }
+    if (item && typeof item === 'object' && 'keyword' in item) {
+      const keyword = String((item as { keyword: unknown }).keyword ?? '').trim()
+      if (keyword) out.push({ keyword })
+    }
+  }
+  return out.length > 0 ? out : undefined
+}
+
+export type SessionArtworkDrafts = {
+  agentDraftDescriptionShort?: string | null
+  agentDraftDescriptionLong?: string | null
+  agentDraftConceptualKeywords?: Array<{ keyword?: string | null } | string> | null
+  agentDraftFormalContributionAssessment?: string | null
+}
+
+/** Confirmation-step drafts stored on the session (not the timeline). */
+export function buildArtworkDraftPatchFromSession(
+  session: SessionArtworkDrafts,
+): Record<string, unknown> {
+  const patch: Record<string, unknown> = {}
+
+  const short = session.agentDraftDescriptionShort?.trim()
+  if (short) patch.descriptionShort = short
+
+  const long = session.agentDraftDescriptionLong?.trim()
+  if (long) patch.descriptionLong = plainToLexical(long)
+
+  const formal = session.agentDraftFormalContributionAssessment?.trim()
+  if (formal) patch.formalContributionAssessment = formal
+
+  const keywords = normalizeConceptualKeywords(session.agentDraftConceptualKeywords)
+  if (keywords) patch.conceptualKeywords = keywords
+
+  return patch
+}
+
+/** Final pass before Payload create/update — normalizes known fragile shapes. */
+export function sanitizeArtworkCommitPatch(
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  const out = { ...patch }
+  if ('conceptualKeywords' in out) {
+    const keywords = normalizeConceptualKeywords(out.conceptualKeywords)
+    if (keywords) out.conceptualKeywords = keywords
+    else delete out.conceptualKeywords
+  }
+  return out
+}
+
 export function buildArtworkPatchFromTimeline(
   timeline: unknown,
 ): Record<string, unknown> {
@@ -66,7 +128,12 @@ export function buildArtworkPatchFromTimeline(
     if (RICH_TEXT_PATHS.has(field) && isPlainTextString(value)) {
       value = plainToLexical(value.trim())
     }
-    setPath(patch, field, value)
+    if (field === 'conceptualKeywords' || field.endsWith('.conceptualKeywords')) {
+      value = normalizeConceptualKeywords(value)
+    }
+    if (value !== undefined) {
+      setPath(patch, field, value)
+    }
   }
 
   return patch

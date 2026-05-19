@@ -175,6 +175,8 @@ export function refinementPreamble(weakPhases: string[]): string {
  * Field paths use the Payload group `ach.*` namespace. The Group 6 (AR experience)
  * fields are deliberately omitted here — schema-only at launch, not prompted.
  */
+export { buildPreUploadSessionBlock } from './preUploadGuide'
+
 export function buildAchSessionBlock(): string {
   return `A COLORFUL HISTORY — SERIES WORKFLOW (apply only when the artwork is in the a-colorful-history series)
 
@@ -191,7 +193,7 @@ SEQUENCE — follow in this order
    - Propose ach.overlay.overlayRects (1–4 rectangles) covering painted field regions. Each entry: { color: "#RRGGBB", x: "8%", y: "12%", w: "30%", h: "20%" }. All positions as PERCENT STRINGS, never pixels or floats. Maximum 4 rects.
 
 2) ach.sourcePhotograph (Source Photograph)
-   - Ask the artist to upload the historical source photograph (sourceImage) and share the Wikimedia Commons URL if known.
+   - Ask the artist to upload the historical source photograph via the Media panel (slot id \`ach-source\` → ach.sourcePhotograph.sourceImage) and share the Wikimedia Commons URL if known.
    - From the Commons URL or your knowledge, stage: ach.sourcePhotograph.sourceTitle, sourceCreator, approximateDate, sourceInstitution, sourceLicense (one of cc0 | cc-by | cc-by-sa | public-domain | other), sourceLicenseUrl, sourceWikimediaCommonsUrl.
    - Look up and stage Wikidata URIs (full https URLs, not Q-numbers alone): sourceCreatorWikidataUri, sourceInstitutionWikidataUri, sourceWikidataUri (if the photograph itself has an entry). Mark confidence "inferred" until the artist confirms.
    - Stage ach.sourcePhotograph.imageCaptureType as a relationship to the matching image-capture-technologies record (use its numeric id when you have it; otherwise propose the slug name in conversation and let the artist pick in the admin). Base proposal on the photograph's date and visual character: c.1840s–1850s → daguerreotype; c.1850s–1875 → ambrotype or wet-plate-collodion; c.1870s–1925 → dry-plate or glass-plate; aerial → early-aerial; satellite → satellite.
@@ -212,7 +214,7 @@ SEQUENCE — follow in this order
    - tourStopCopy is drawn out only when a tour is being activated. Otherwise leave null.
 
 5) ach.revealSlider (Reveal Slider)
-   - Ask: "Do you have an in-process photo of the canvas after transfer, before the painted fields?" If yes, the artist uploads transferImage. Stage nothing if not.
+   - Ask: "Do you have an in-process photo of the canvas after transfer, before the painted fields?" If yes, the artist uploads via Media panel slot \`ach-transfer\`. Stage nothing if not.
    - Stage ach.revealSlider.sliderAxis (horizontal | vertical) based on where the painted fields sit — vertical works better when fields are at top/bottom. Artist confirms.
 
 6) ach.mop (MoP Series — only if series is mediums-of-perception or mediums-of-war)
@@ -256,4 +258,23 @@ Focus on intent, seriesContext, artHistoricalContext, formalContributionAssessme
 Never stage panels, slug, series, or commerce fields. If Bernard has not linked panels yet, say he should attach the three artworks in the Triptychs admin before commit (or supply panels at commit).
 
 Use generate_confirmation_draft only when you have enough material for descriptionShort, descriptionLong, and keywords at wrap-up.`
+}
+
+/** Wrap-up and commit — artwork cataloguing only. */
+export function buildSessionCloseBlock(): string {
+  return `SESSION CLOSE AND COMMIT (artwork cataloguing)
+
+When the artist says they are ready to finish, commit, or wrap up:
+
+1. Do NOT call update_field with empty or partial arguments. Every update_field must include targetCollection, field, value, confidence ("confirmed" | "inferred"), and source ("conversation" | "image-analysis" | "knowledge-base").
+
+2. Do NOT stage descriptionShort, descriptionLong, or conceptualKeywords via update_field — those are generated only through generate_confirmation_draft.
+
+3. If the second description (post-upload reflection) is not yet stored, use store_session_field({ field: "secondDescription", value: "<artist's words>" }) — plain text only.
+
+4. Call generate_confirmation_draft once with agentDraftDescriptionShort, agentDraftDescriptionLong, agentDraftConceptualKeywords (string array), and agentDraftFormalContributionAssessment synthesized from the full session.
+
+5. Tell the artist clearly: open **Wrap up / confirm** in the sidebar, review the staged fields and your drafts, edit anything needed, then press **Commit**. You cannot write to the Artworks collection from chat — only Bernard commits from that panel.
+
+6. If a tool returns ok: false, read the error, fix the arguments, and retry — do not apologize for a "system error" unless the artist must refresh.`
 }

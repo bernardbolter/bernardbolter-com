@@ -4,8 +4,11 @@ import { Button } from '@payloadcms/ui'
 import { useState } from 'react'
 
 import { buildPracticeKnowledgePatches } from '@/lib/artOfficial/buildPracticeKnowledgePatches'
+import { commitButtonHint, wrapUpSummary } from '@/lib/artOfficial/confirmationCopy'
 
 import type { ArtOfficialSession, TimelineEntry } from './types'
+
+import './artOfficialChat.scss'
 
 function buildArtworkDataFromTimeline(timeline: TimelineEntry[]): Record<string, unknown> {
   const data: Record<string, unknown> = { status: 'draft' }
@@ -33,6 +36,8 @@ export function ConfirmationPanel({
 
   const sessionType = session.sessionType ?? 'artwork-cataloguing'
   const hasDrafts = Boolean(session.agentDraftDescriptionShort)
+  const summary = wrapUpSummary(sessionType)
+  const commitHint = commitButtonHint(sessionType)
 
   async function commit(options?: { reapply?: boolean }) {
     setCommitting(true)
@@ -142,24 +147,34 @@ export function ConfirmationPanel({
     )
 
   return (
-    <div style={{ marginTop: 24, borderTop: '1px solid var(--theme-elevation-150)', paddingTop: 16 }}>
+    <section className="art-official-confirm" aria-labelledby="art-official-confirm-heading">
+      <h2 id="art-official-confirm-heading" className="art-official-confirm__heading">
+        Finish session
+      </h2>
+      <p className="art-official-confirm__summary">{summary}</p>
+
       <Button buttonStyle="secondary" onClick={() => setOpen((v) => !v)}>
-        {open ? 'Hide confirmation' : 'Wrap up / confirm'}
+        {open ? 'Hide review panel' : 'Wrap up / confirm'}
       </Button>
+      <p className="art-official-confirm__toggle-hint">
+        {open
+          ? 'Review drafts and staged fields below, then commit when ready.'
+          : 'Opens a review of agent drafts, blind vs second description, and what will be saved.'}
+      </p>
 
       {open ? (
-        <div style={{ marginTop: 16 }}>
+        <div className="art-official-confirm__panel">
           {practicePatches.length > 0 ? (
             <>
-              <h4 style={{ margin: '0 0 8px' }}>Practice Knowledge to commit</h4>
-              <ul style={{ margin: '0 0 16px', paddingLeft: 20, fontSize: 13 }}>
+              <h4 className="art-official-confirm__subheading">Practice Knowledge to commit</h4>
+              <ul className="art-official-confirm__list">
                 {practicePatches.map((p) => (
                   <li key={p.slug}>{p.slug}</li>
                 ))}
               </ul>
             </>
           ) : sessionType === 'onboarding' ? (
-            <p style={{ fontSize: 13, opacity: 0.75, marginBottom: 16 }}>
+            <p className="art-official-confirm__note">
               No Practice Knowledge sections are staged yet. Ask Art/Official to summarize and
               stage sections, or commit to close the session without writing PK rows.
             </p>
@@ -167,22 +182,22 @@ export function ConfirmationPanel({
 
           {hasDrafts ? (
             <>
-              <h4 style={{ margin: '0 0 8px' }}>Agent drafts</h4>
-              <label style={{ display: 'block', fontSize: 13, marginBottom: 12 }}>
+              <h4 className="art-official-confirm__subheading">Agent drafts</h4>
+              <label className="art-official-confirm__field">
                 descriptionShort
                 <textarea
                   readOnly
                   rows={2}
-                  style={{ width: '100%', marginTop: 4 }}
+                  className="art-official-confirm__textarea"
                   value={session.agentDraftDescriptionShort ?? ''}
                 />
               </label>
-              <label style={{ display: 'block', fontSize: 13, marginBottom: 12 }}>
+              <label className="art-official-confirm__field">
                 descriptionLong
                 <textarea
                   readOnly
                   rows={4}
-                  style={{ width: '100%', marginTop: 4 }}
+                  className="art-official-confirm__textarea"
                   value={session.agentDraftDescriptionLong ?? ''}
                 />
               </label>
@@ -190,44 +205,33 @@ export function ConfirmationPanel({
           ) : null}
 
           {session.firstImpression || session.secondDescription ? (
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 16,
-                marginBottom: 16,
-              }}
-            >
+            <div className="art-official-confirm__descriptions">
               <div>
-                <h4 style={{ margin: '0 0 8px', fontSize: 13 }}>Blind description</h4>
-                <p style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>
-                  {session.firstImpression ?? '—'}
-                </p>
+                <h4 className="art-official-confirm__subheading">Blind description</h4>
+                <p className="art-official-confirm__prose">{session.firstImpression ?? '—'}</p>
               </div>
               <div>
-                <h4 style={{ margin: '0 0 8px', fontSize: 13 }}>Second description</h4>
-                <p style={{ fontSize: 13, whiteSpace: 'pre-wrap' }}>
-                  {session.secondDescription ?? '—'}
-                </p>
+                <h4 className="art-official-confirm__subheading">Second description</h4>
+                <p className="art-official-confirm__prose">{session.secondDescription ?? '—'}</p>
               </div>
             </div>
           ) : null}
 
-          <Button
-            buttonStyle="primary"
-            disabled={
-              committing ||
-              (sessionType === 'artwork-cataloguing' && !canCommitArtwork) ||
-              (sessionType === 'triptych-cataloguing' && !canCommitTriptych)
-            }
-            onClick={() => void commit()}
-          >
-            {committing ? 'Committing…' : 'Commit record'}
-          </Button>
-          {sessionType === 'onboarding' &&
-          session.status === 'completed' &&
-          practicePatches.length > 0 ? (
-            <span style={{ marginLeft: 8, display: 'inline-block' }}>
+          <div className="art-official-confirm__actions">
+            <Button
+              buttonStyle="primary"
+              disabled={
+                committing ||
+                (sessionType === 'artwork-cataloguing' && !canCommitArtwork) ||
+                (sessionType === 'triptych-cataloguing' && !canCommitTriptych)
+              }
+              onClick={() => void commit()}
+            >
+              {committing ? 'Committing…' : 'Commit record'}
+            </Button>
+            {sessionType === 'onboarding' &&
+            session.status === 'completed' &&
+            practicePatches.length > 0 ? (
               <Button
                 buttonStyle="secondary"
                 disabled={committing}
@@ -235,28 +239,24 @@ export function ConfirmationPanel({
               >
                 Re-apply Practice Knowledge
               </Button>
-            </span>
-          ) : null}
+            ) : null}
+          </div>
+          <p className="art-official-confirm__commit-hint">{commitHint}</p>
+
           {sessionType === 'artwork-cataloguing' && !canCommitArtwork ? (
-            <p style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
-              Stage at least title and yearCreated before committing.
+            <p className="art-official-confirm__warning">
+              Stage at least title and yearCreated in chat before committing.
             </p>
           ) : null}
           {sessionType === 'triptych-cataloguing' && !canCommitTriptych ? (
-            <p style={{ fontSize: 12, opacity: 0.65, marginTop: 8 }}>
+            <p className="art-official-confirm__warning">
               Stage a triptych title, or link an existing triptych to this session in the admin.
             </p>
           ) : null}
-          {commitNotice ? (
-            <p style={{ fontSize: 13, marginTop: 8, lineHeight: 1.5 }}>{commitNotice}</p>
-          ) : null}
-          {error ? (
-            <p style={{ color: 'var(--theme-error-500)', fontSize: 13, marginTop: 8 }}>
-              {error}
-            </p>
-          ) : null}
+          {commitNotice ? <p className="art-official-confirm__notice">{commitNotice}</p> : null}
+          {error ? <p className="art-official-confirm__error">{error}</p> : null}
         </div>
       ) : null}
-    </div>
+    </section>
   )
 }

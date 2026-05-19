@@ -19,6 +19,14 @@ describe('parseToolArgs', () => {
     expect(result.ok).toBe(true)
   })
 
+  it('rejects empty update_field input', () => {
+    const result = parseToolArgs(TOOL_UPDATE_FIELD, {})
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error).toContain('targetCollection')
+    }
+  })
+
   it('rejects invalid confidence', () => {
     const result = parseToolArgs(TOOL_UPDATE_FIELD, {
       targetCollection: 'artworks',

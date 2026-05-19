@@ -150,9 +150,11 @@ export function ArtOfficialInstructions({
             Artist record but does not require artworks yet.
           </li>
           <li style={{ marginBottom: 10 }}>
-            <strong>Artwork cataloguing</strong> — One work per session. You answer a short pre-upload
-            sequence, add an image, then talk through year, medium, series, meaning, and references.
-            Commit creates a new <strong>draft artwork</strong>.
+            <strong>Artwork cataloguing</strong> — One work per session. Four pre-upload questions in
+            chat first (time, place in your practice, where you made it, then a{' '}
+            <strong>blind description</strong> before either of you sees the image). Upload unlocks
+            after that; then year, medium, series, meaning, and references. Commit creates a new{' '}
+            <strong>draft artwork</strong>.
           </li>
           <li style={{ marginBottom: 10 }}>
             <strong>Artist statement</strong> — Conversation to draft or refresh your statement text.
@@ -202,8 +204,10 @@ export function ArtOfficialInstructions({
             you are satisfied.
           </li>
           <li style={{ marginBottom: 8 }}>
-            <strong>Artwork cataloguing:</strong> answer the pre-upload questions in chat first; the
-            upload control appears after the agent stores your first impression.
+            <strong>Artwork cataloguing:</strong> the guide above the chat shows one pre-upload
+            question at a time (1 of 4). Answer only that question in the message box; upload
+            unlocks after the blind description. Use <strong>Begin cataloguing</strong> or type
+            your own opener.
           </li>
           <li style={{ marginBottom: 8 }}>
             Reply in your own words. Short answers are fine; the agent will ask follow-ups where

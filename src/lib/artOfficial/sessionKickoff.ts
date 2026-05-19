@@ -40,7 +40,20 @@ const KICKOFFS: Record<SessionType, SessionKickoff | null> = {
     message:
       "I'd like to work on my biography. Please begin — ask what you need first, one question at a time.",
   },
-  'artwork-cataloguing': null,
+  'artwork-cataloguing': {
+    title: 'Artwork cataloguing',
+    intro:
+      'One artwork per session. You will answer four short pre-upload questions in chat (including a blind description before either of you sees the file), then upload a still image of the work and continue cataloguing with that image in view.',
+    topics: [
+      'How long you have lived with the work (time)',
+      'Whether it belongs to an ongoing series or stands alone',
+      'Where you were when you made it',
+      'A blind description from memory — before upload',
+    ],
+    buttonLabel: 'Begin cataloguing',
+    message:
+      "I'd like to catalogue an artwork. Please open with your briefing on my practice (brief, no generic welcome), then ask your first pre-upload question.",
+  },
   'triptych-cataloguing': {
     title: 'Triptych cataloguing',
     intro:

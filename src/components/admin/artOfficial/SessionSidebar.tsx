@@ -1,8 +1,11 @@
 'use client'
 
-import './artOfficialChat.scss'
+import { primaryImageMediaIdFromTimeline } from '@/lib/artOfficial/primaryImageFromTimeline'
 
+import { StagedArtworkPreview } from './StagedArtworkPreview'
 import type { TimelineEntry } from './types'
+
+import './artOfficialChat.scss'
 
 function truncate(value: unknown, max = 80): string {
   const s = typeof value === 'string' ? value : JSON.stringify(value)
@@ -37,6 +40,13 @@ function TimelineGroup({
   )
 }
 
+function displayEntries(entries: TimelineEntry[], hidePrimaryImageId: boolean): TimelineEntry[] {
+  if (!hidePrimaryImageId) return entries
+  return entries.filter(
+    (e) => !(e.targetCollection === 'artworks' && e.field === 'primaryImage'),
+  )
+}
+
 export function SessionSidebar({
   timeline,
   sessionType,
@@ -44,6 +54,9 @@ export function SessionSidebar({
   timeline: TimelineEntry[]
   sessionType: string
 }) {
+  const primaryMediaId =
+    sessionType === 'artwork-cataloguing' ? primaryImageMediaIdFromTimeline(timeline) : null
+
   const grouped = timeline.reduce<Record<string, TimelineEntry[]>>((acc, entry) => {
     const key = entry.targetCollection ?? 'session'
     if (!acc[key]) acc[key] = []
@@ -53,25 +66,38 @@ export function SessionSidebar({
 
   return (
     <aside className="art-official-sidebar">
-      <h3 className="art-official-sidebar__title">Staged fields</h3>
-      <p className="art-official-sidebar__hint">
-        {sessionType === 'onboarding'
-          ? 'Onboarding commits practice-knowledge (pk:…) sections only.'
-          : sessionType === 'biography'
-            ? 'Biography commits bioFull / bioMedium / bioShort on your Artist record.'
-            : sessionType === 'artist-statement'
-              ? 'Statement commits statementFull / statementMedium / statementShort on Artist.'
-              : sessionType === 'triptych-cataloguing'
-                ? 'Triptych commits corpus fields on Triptychs (panels and commerce stay in admin).'
-                : `${sessionType} — committed at confirmation only.`}
-      </p>
-      {timeline.length === 0 ? (
-        <p style={{ opacity: 0.5 }}>No staged updates yet.</p>
-      ) : (
-        Object.entries(grouped).map(([collection, entries]) => (
-          <TimelineGroup key={collection} title={collection} entries={entries} />
-        ))
-      )}
+      <div className="art-official-sidebar__head">
+        <h3 className="art-official-sidebar__title">Staged fields</h3>
+        <p className="art-official-sidebar__hint">
+          {sessionType === 'onboarding'
+            ? 'Onboarding commits practice-knowledge (pk:…) sections only.'
+            : sessionType === 'biography'
+              ? 'Biography commits bioFull / bioMedium / bioShort on your Artist record.'
+              : sessionType === 'artist-statement'
+                ? 'Statement commits statementFull / statementMedium / statementShort on Artist.'
+                : sessionType === 'triptych-cataloguing'
+                  ? 'Triptych commits corpus fields on Triptychs (panels and commerce stay in admin).'
+                  : `${sessionType} — committed at confirmation only.`}
+        </p>
+      </div>
+      <div className="art-official-sidebar__fields">
+        {timeline.length === 0 ? (
+          <p className="art-official-sidebar__empty">No staged updates yet.</p>
+        ) : (
+          Object.entries(grouped).map(([collection, entries]) => (
+            <TimelineGroup
+              key={collection}
+              title={collection}
+              entries={displayEntries(entries, primaryMediaId != null)}
+            />
+          ))
+        )}
+      </div>
+      {primaryMediaId != null ? (
+        <div className="art-official-sidebar__preview-dock">
+          <StagedArtworkPreview mediaId={primaryMediaId} />
+        </div>
+      ) : null}
     </aside>
   )
 }

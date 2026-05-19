@@ -10,7 +10,7 @@ export type ImageAnalysisResult = {
   paintedFieldRects: Array<{ color: string; x: string; y: string; w: string; h: string }>
 }
 
-const ANALYSIS_PROMPT = `You are analysing a painting photograph for catalogue metadata.
+const ANALYSIS_PROMPT = `You are analysing an artwork photograph (still image) for catalogue metadata.
 
 Return ONLY valid JSON (no markdown) with this shape:
 {

@@ -20,8 +20,12 @@ import {
   buildToolResultBlocks,
   runAnthropicTurn,
 } from '@/lib/artOfficial/runAnthropicTurn'
+import { getMediaSlot } from '@/lib/artOfficial/artworkMediaSlots'
 import { runImageAnalysis } from '@/lib/artOfficial/runImageAnalysis'
-import { appendSessionTimelineEntry } from '@/lib/artOfficial/sessionTimeline'
+import {
+  stageArtworkMediaUpload,
+  type MediaUploadPayload,
+} from '@/lib/artOfficial/stageArtworkMedia'
 
 const MAX_TOOL_ROUNDS = 5
 
@@ -52,14 +56,22 @@ export async function POST(request: Request) {
       )
     }
 
-    let body: { sessionId?: string; userMessage?: string; imageMediaId?: number }
+    let body: {
+      sessionId?: string
+      userMessage?: string
+      imageMediaId?: number
+      mediaUpload?: MediaUploadPayload
+    }
     try {
       body = await request.json()
     } catch {
       return jsonError('Invalid JSON in request body.', 400)
     }
 
-    const { sessionId, userMessage, imageMediaId } = body
+    const { sessionId, userMessage, imageMediaId, mediaUpload: mediaUploadBody } = body
+    const mediaUpload: MediaUploadPayload | undefined =
+      mediaUploadBody ??
+      (imageMediaId != null ? { slotId: 'primary', mediaId: imageMediaId } : undefined)
     if (!sessionId || !userMessage?.trim()) {
       return jsonError('sessionId and userMessage are required.', 400)
     }
@@ -116,22 +128,6 @@ export async function POST(request: Request) {
     const system = buildAnthropicSystemBlocks(systemParts)
     const tools = withToolCaching(ANTHROPIC_TOOL_SCHEMAS)
 
-    let imageMediaUrl: string | null = null
-    if (imageMediaId) {
-      try {
-        const media = await payload.findByID({
-          collection: 'media',
-          id: imageMediaId,
-          depth: 0,
-          overrideAccess: false,
-          user,
-        })
-        imageMediaUrl = media.url ?? null
-      } catch {
-        imageMediaUrl = null
-      }
-    }
-
     const priorMessages = (Array.isArray(session.messages)
       ? session.messages
       : []) as StoredMessage[]
@@ -151,53 +147,74 @@ export async function POST(request: Request) {
         }
 
         try {
-          if (
-            imageMediaId &&
-            session.sessionType === 'artwork-cataloguing'
-          ) {
-            const timeline = Array.isArray(session.fieldUpdateTimeline)
-              ? (session.fieldUpdateTimeline as Array<{ field?: string }>)
-              : []
-            const hasPrimary = timeline.some((e) => e.field === 'primaryImage')
-            if (!hasPrimary) {
-              const updated = await appendSessionTimelineEntry(
+          if (mediaUpload && session.sessionType === 'artwork-cataloguing') {
+            try {
+              const staged = await stageArtworkMediaUpload({
                 payload,
                 user,
                 session,
-                {
-                  targetCollection: 'artworks',
-                  field: 'primaryImage',
-                  value: imageMediaId,
-                  confidence: 'confirmed',
-                  source: 'conversation',
-                },
-              )
-              session.fieldUpdateTimeline = updated
-              send('tool-staged', {
-                name: 'update_field',
-                input: {
-                  targetCollection: 'artworks',
-                  field: 'primaryImage',
-                  value: imageMediaId,
-                  confidence: 'confirmed',
-                  source: 'conversation',
-                },
+                upload: mediaUpload,
+              })
+              if (staged.timeline) {
+                session.fieldUpdateTimeline = staged.timeline
+              }
+              session.stagedMedia = staged.stagedMedia
+              send('media-staged', {
+                slotId: mediaUpload.slotId,
+                attachment: staged.attachment,
+              })
+              if (staged.stagedTimelineEntry) {
+                send('tool-staged', {
+                  name: 'update_field',
+                  input: {
+                    ...staged.stagedTimelineEntry,
+                    confidence: 'confirmed',
+                    source: 'conversation',
+                  },
+                })
+              }
+
+              const visionMediaId = mediaUpload.mediaId
+              const slot = getMediaSlot(mediaUpload.slotId)
+              if (visionMediaId != null && slot?.kind === 'image') {
+                try {
+                  const analysis = await runImageAnalysis({
+                    mediaId: visionMediaId,
+                    payload,
+                    user,
+                  })
+                  send('image-analysis', { slotId: mediaUpload.slotId, ...analysis })
+                } catch (analysisErr) {
+                  console.error('[art-official/chat] image analysis', analysisErr)
+                  send('error', {
+                    message: formatChatError(analysisErr),
+                    code: 'IMAGE_ANALYSIS',
+                  })
+                }
+              }
+            } catch (mediaErr) {
+              console.error('[art-official/chat] media upload', mediaErr)
+              send('error', {
+                message: formatChatError(mediaErr),
+                code: 'MEDIA_UPLOAD',
               })
             }
+          }
 
+          let imageMediaUrl: string | null = null
+          const visionMediaId = mediaUpload?.mediaId ?? imageMediaId ?? null
+          if (visionMediaId != null) {
             try {
-              const analysis = await runImageAnalysis({
-                mediaId: imageMediaId,
-                payload,
+              const media = await payload.findByID({
+                collection: 'media',
+                id: visionMediaId,
+                depth: 0,
+                overrideAccess: false,
                 user,
               })
-              send('image-analysis', analysis)
-            } catch (analysisErr) {
-              console.error('[art-official/chat] image analysis', analysisErr)
-              send('error', {
-                message: formatChatError(analysisErr),
-                code: 'IMAGE_ANALYSIS',
-              })
+              imageMediaUrl = media.url ?? null
+            } catch {
+              imageMediaUrl = null
             }
           }
 

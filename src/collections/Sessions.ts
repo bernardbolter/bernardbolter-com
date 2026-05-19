@@ -82,8 +82,34 @@ export const Sessions: CollectionConfig = {
       type: 'json',
       admin: { description: 'Full Anthropic message array (opaque).' },
     },
+    {
+      name: 'preUploadStep',
+      type: 'number',
+      min: 1,
+      max: 4,
+      admin: {
+        description:
+          'Current pre-upload question (1–4). Updated by Art/Official as the dialogue advances.',
+      },
+    },
     { name: 'firstImpression', type: 'textarea' },
     { name: 'secondDescription', type: 'textarea' },
+    {
+      name: 'highlightedMediaSlot',
+      type: 'text',
+      admin: {
+        description:
+          'Art/Official: slot id highlighted in the Media uploads panel (set by the agent).',
+      },
+    },
+    {
+      name: 'stagedMedia',
+      type: 'json',
+      admin: {
+        description:
+          'Art/Official staged media attachments (images, videos, URLs) before commit.',
+      },
+    },
     {
       name: 'fieldUpdateTimeline',
       type: 'json',

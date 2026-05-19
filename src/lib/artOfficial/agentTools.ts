@@ -15,6 +15,7 @@ export const TOOL_SEARCH_WIKIDATA = 'search_wikidata'
 export const TOOL_GET_WIKIDATA_ENTITY = 'get_wikidata_entity'
 export const TOOL_FETCH_WIKIPEDIA_ARTICLE = 'fetch_wikipedia_article'
 export const TOOL_SEARCH_GETTY_TGN = 'search_getty_tgn'
+export const TOOL_GET_MEDIA_UPLOAD_STATUS = 'get_media_upload_status'
 
 const targetCollectionSchema = z.enum([
   'artworks',
@@ -55,10 +56,33 @@ export const updateFieldSchema = z
     }
   })
 
-export const storeSessionFieldSchema = z.object({
-  field: z.enum(['firstImpression', 'secondDescription', 'sessionNotes']),
-  value: z.string(),
-})
+export const storeSessionFieldSchema = z
+  .object({
+    field: z.enum([
+      'firstImpression',
+      'secondDescription',
+      'sessionNotes',
+      'preUploadStep',
+      'highlightedMediaSlot',
+    ]),
+    value: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.field === 'preUploadStep' && !/^[1-4]$/.test(data.value.trim())) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['value'],
+        message: 'preUploadStep must be "1", "2", "3", or "4"',
+      })
+    }
+    if (data.field === 'highlightedMediaSlot' && !data.value.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['value'],
+        message: 'highlightedMediaSlot must be a non-empty slot id',
+      })
+    }
+  })
 
 export const triggerImageAnalysisSchema = z.object({
   mediaId: z.number().int().positive(),
@@ -114,6 +138,8 @@ export const searchGettyTgnSchema = z.object({
   limit: z.number().int().min(1).max(10).optional(),
 })
 
+export const getMediaUploadStatusSchema = z.object({})
+
 const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_UPDATE_FIELD]: updateFieldSchema,
   [TOOL_STORE_SESSION_FIELD]: storeSessionFieldSchema,
@@ -126,6 +152,7 @@ const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_GET_WIKIDATA_ENTITY]: getWikidataEntitySchema,
   [TOOL_FETCH_WIKIPEDIA_ARTICLE]: fetchWikipediaArticleSchema,
   [TOOL_SEARCH_GETTY_TGN]: searchGettyTgnSchema,
+  [TOOL_GET_MEDIA_UPLOAD_STATUS]: getMediaUploadStatusSchema,
 }
 
 export type ParseToolResult<T> =
@@ -185,13 +212,20 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
   },
   {
     name: TOOL_STORE_SESSION_FIELD,
-    description: 'Store a value on the session record only (not on Artworks).',
+    description:
+      'Store a value on the session record only (not on Artworks). Use preUploadStep ("1"–"4") before each pre-upload question. Use firstImpression for the blind description. Use highlightedMediaSlot with a media slot id (e.g. ach-source) to highlight a row in the Media uploads panel.',
     input_schema: {
       type: 'object',
       properties: {
         field: {
           type: 'string',
-          enum: ['firstImpression', 'secondDescription', 'sessionNotes'],
+          enum: [
+            'firstImpression',
+            'secondDescription',
+            'sessionNotes',
+            'preUploadStep',
+            'highlightedMediaSlot',
+          ],
         },
         value: { type: 'string' },
       },
@@ -319,6 +353,15 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
         limit: { type: 'number' },
       },
       required: ['placeName'],
+    },
+  },
+  {
+    name: TOOL_GET_MEDIA_UPLOAD_STATUS,
+    description:
+      'List artwork media upload slots and whether each is pending, staged, or skipped (artwork-cataloguing sessions).',
+    input_schema: {
+      type: 'object',
+      properties: {},
     },
   },
 ]

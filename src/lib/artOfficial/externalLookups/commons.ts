@@ -29,8 +29,10 @@ function extMetaValue(
   key: string,
 ): string | undefined {
   const raw = extmetadata?.[key]?.value
-  if (!raw) return undefined
-  return raw.replace(/<[^>]+>/g, '').trim() || undefined
+  if (raw == null) return undefined
+  const text = typeof raw === 'string' ? raw : typeof raw === 'number' ? String(raw) : undefined
+  if (!text) return undefined
+  return text.replace(/<[^>]+>/g, '').trim() || undefined
 }
 
 /**
