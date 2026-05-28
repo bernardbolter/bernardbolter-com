@@ -75,6 +75,7 @@ export interface Config {
     lines: Line;
     'studio-conversations': StudioConversation;
     'pattern-reports': PatternReport;
+    episodes: Episode;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
     events: Event;
@@ -102,6 +103,7 @@ export interface Config {
     lines: LinesSelect<false> | LinesSelect<true>;
     'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     'pattern-reports': PatternReportsSelect<false> | PatternReportsSelect<true>;
+    episodes: EpisodesSelect<false> | EpisodesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
@@ -2166,11 +2168,59 @@ export interface StudioConversation {
     | null;
   lines?: (number | Line)[] | null;
   relatedArtwork?: (number | null) | Artwork;
-  /**
-   * Temporary episode id reference. Migrates to relationship once Episodes collection is registered.
-   */
-  relatedEpisode?: number | null;
+  relatedEpisode?: (number | null) | Episode;
   recordOrigin: 'user';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * MoP episode records with storyboard and clip assembly notes.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "episodes".
+ */
+export interface Episode {
+  id: number;
+  title: string;
+  series: 'outsider-art-review' | 'rap-critic' | 'studio-fails' | 'studio-series';
+  status: 'concept' | 'storyboard' | 'shot' | 'uploaded' | 'edited' | 'posted';
+  concept?: string | null;
+  shotList?: string | null;
+  storyboard?:
+    | {
+        name: string;
+        mediaType?: string | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  assembly?:
+    | {
+        beatName?: string | null;
+        /**
+         * Temporary FieldNote id linkage until field-notes collection is registered.
+         */
+        clipFieldNoteId?: number | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  captionDrafts?:
+    | {
+        text: string;
+        channel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  lines?: (number | Line)[] | null;
+  /**
+   * Temporary join substitute until field-notes collection is registered.
+   */
+  clipFieldNoteIds?:
+    | {
+        id: number;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2364,6 +2414,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'pattern-reports';
         value: number | PatternReport;
+      } | null)
+    | ({
+        relationTo: 'episodes';
+        value: number | Episode;
       } | null)
     | ({
         relationTo: 'tags';
@@ -2661,6 +2715,48 @@ export interface PatternReportsSelect<T extends boolean = true> {
       };
   digestSummary?: T;
   recordOrigin?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "episodes_select".
+ */
+export interface EpisodesSelect<T extends boolean = true> {
+  title?: T;
+  series?: T;
+  status?: T;
+  concept?: T;
+  shotList?: T;
+  storyboard?:
+    | T
+    | {
+        name?: T;
+        mediaType?: T;
+        notes?: T;
+        id?: T;
+      };
+  assembly?:
+    | T
+    | {
+        beatName?: T;
+        clipFieldNoteId?: T;
+        notes?: T;
+        id?: T;
+      };
+  captionDrafts?:
+    | T
+    | {
+        text?: T;
+        channel?: T;
+        id?: T;
+      };
+  lines?: T;
+  clipFieldNoteIds?:
+    | T
+    | {
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

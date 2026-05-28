@@ -62,11 +62,8 @@ export const StudioConversations: CollectionConfig = {
     },
     {
       name: 'relatedEpisode',
-      type: 'number',
-      admin: {
-        description:
-          'Temporary episode id reference. Migrates to relationship once Episodes collection is registered.',
-      },
+      type: 'relationship',
+      relationTo: 'episodes' as never,
     },
     {
       name: 'recordOrigin',

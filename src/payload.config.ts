@@ -19,6 +19,7 @@ import { Series } from './collections/Series'
 import { Lines } from './collections/Lines'
 import { StudioConversations } from './collections/StudioConversations'
 import { PatternReports } from './collections/PatternReports'
+import { Episodes } from './collections/Episodes'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
@@ -85,6 +86,7 @@ export default buildConfig({
     Lines,
     StudioConversations,
     PatternReports,
+    Episodes,
     Tags,
     ArtHistoricalReferences,
     Events,
