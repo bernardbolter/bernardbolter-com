@@ -76,6 +76,7 @@ export interface Config {
     'studio-conversations': StudioConversation;
     'pattern-reports': PatternReport;
     episodes: Episode;
+    'field-notes': FieldNote;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
     events: Event;
@@ -104,6 +105,7 @@ export interface Config {
     'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     'pattern-reports': PatternReportsSelect<false> | PatternReportsSelect<true>;
     episodes: EpisodesSelect<false> | EpisodesSelect<true>;
+    'field-notes': FieldNotesSelect<false> | FieldNotesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
@@ -2256,6 +2258,73 @@ export interface PatternReport {
   createdAt: string;
 }
 /**
+ * Unified capture records for text, photos, video clips, and voice memos.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "field-notes".
+ */
+export interface FieldNote {
+  id: number;
+  mediaType:
+    | 'text'
+    | 'photo'
+    | 'video-broll'
+    | 'video-observation'
+    | 'video-performance'
+    | 'video-process'
+    | 'voice-memo';
+  capturedAt?: string | null;
+  city?: string | null;
+  location?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  locationName?: string | null;
+  mediaFile?: (number | null) | Media;
+  writtenNote?: string | null;
+  relatedArtwork?: (number | null) | Artwork;
+  relatedEpisode?: (number | null) | Episode;
+  processingStatus: 'pending' | 'processing' | 'complete' | 'failed';
+  register?: ('exploratory' | 'resolved' | 'frustrated' | 'excited' | 'observational') | null;
+  processStage?: ('early' | 'mid' | 'late' | 'completed') | null;
+  conceptualThread?:
+    | ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle')
+    | null;
+  lines?: (number | Line)[] | null;
+  audioTranscript?: string | null;
+  transcriptType?: ('shooter-description' | 'speech' | 'none') | null;
+  keyframes?:
+    | {
+        timestamp: number;
+        imageUrl: string;
+        tags?:
+          | {
+              tag: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  detectedLanguage?: string | null;
+  duration?: number | null;
+  /**
+   * JSON number array until vector columns are introduced.
+   */
+  transcriptEmbedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  recordOrigin: 'user' | 'pipeline' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Curated square paintings available in the print set builder. Vendure product ID is on Print set config global — not per row.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2418,6 +2487,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'episodes';
         value: number | Episode;
+      } | null)
+    | ({
+        relationTo: 'field-notes';
+        value: number | FieldNote;
       } | null)
     | ({
         relationTo: 'tags';
@@ -2757,6 +2830,52 @@ export interface EpisodesSelect<T extends boolean = true> {
     | {
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "field-notes_select".
+ */
+export interface FieldNotesSelect<T extends boolean = true> {
+  mediaType?: T;
+  capturedAt?: T;
+  city?: T;
+  location?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  locationName?: T;
+  mediaFile?: T;
+  writtenNote?: T;
+  relatedArtwork?: T;
+  relatedEpisode?: T;
+  processingStatus?: T;
+  register?: T;
+  processStage?: T;
+  conceptualThread?: T;
+  lines?: T;
+  audioTranscript?: T;
+  transcriptType?: T;
+  keyframes?:
+    | T
+    | {
+        timestamp?: T;
+        imageUrl?: T;
+        tags?:
+          | T
+          | {
+              tag?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  detectedLanguage?: T;
+  duration?: T;
+  transcriptEmbedding?: T;
+  recordOrigin?: T;
   updatedAt?: T;
   createdAt?: T;
 }

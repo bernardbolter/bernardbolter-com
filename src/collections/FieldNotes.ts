@@ -1,0 +1,195 @@
+import type { CollectionConfig } from 'payload'
+
+import { authenticatedReadStaffWrite } from '@/access/staffAccess'
+
+export const FieldNotes: CollectionConfig = {
+  slug: 'field-notes',
+  labels: { singular: 'Field note', plural: 'Field notes' },
+  admin: {
+    useAsTitle: 'locationName',
+    defaultColumns: ['mediaType', 'capturedAt', 'city', 'processingStatus', 'updatedAt'],
+    description: 'Unified capture records for text, photos, video clips, and voice memos.',
+  },
+  access: authenticatedReadStaffWrite,
+  fields: [
+    {
+      name: 'mediaType',
+      type: 'select',
+      required: true,
+      options: [
+        { label: 'Text', value: 'text' },
+        { label: 'Photo', value: 'photo' },
+        { label: 'Video — B-roll', value: 'video-broll' },
+        { label: 'Video — Observation', value: 'video-observation' },
+        { label: 'Video — Performance', value: 'video-performance' },
+        { label: 'Video — Process', value: 'video-process' },
+        { label: 'Voice memo', value: 'voice-memo' },
+      ],
+    },
+    {
+      name: 'capturedAt',
+      type: 'date',
+      defaultValue: () => new Date().toISOString(),
+    },
+    {
+      name: 'city',
+      type: 'text',
+    },
+    {
+      name: 'location',
+      type: 'group',
+      fields: [
+        { name: 'lat', type: 'number' },
+        { name: 'lng', type: 'number' },
+      ],
+    },
+    {
+      name: 'locationName',
+      type: 'text',
+    },
+    {
+      name: 'mediaFile',
+      type: 'upload',
+      relationTo: 'media',
+    },
+    {
+      name: 'writtenNote',
+      type: 'textarea',
+    },
+    {
+      name: 'relatedArtwork',
+      type: 'relationship',
+      relationTo: 'artworks',
+    },
+    {
+      name: 'relatedEpisode',
+      type: 'relationship',
+      relationTo: 'episodes' as never,
+    },
+    {
+      name: 'processingStatus',
+      type: 'select',
+      required: true,
+      defaultValue: 'pending',
+      options: [
+        { label: 'Pending', value: 'pending' },
+        { label: 'Processing', value: 'processing' },
+        { label: 'Complete', value: 'complete' },
+        { label: 'Failed', value: 'failed' },
+      ],
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'register',
+      type: 'select',
+      options: [
+        { label: 'Exploratory', value: 'exploratory' },
+        { label: 'Resolved', value: 'resolved' },
+        { label: 'Frustrated', value: 'frustrated' },
+        { label: 'Excited', value: 'excited' },
+        { label: 'Observational', value: 'observational' },
+      ],
+    },
+    {
+      name: 'processStage',
+      type: 'select',
+      options: [
+        { label: 'Early', value: 'early' },
+        { label: 'Mid', value: 'mid' },
+        { label: 'Late', value: 'late' },
+        { label: 'Completed', value: 'completed' },
+      ],
+    },
+    {
+      name: 'conceptualThread',
+      type: 'select',
+      options: [
+        { label: 'Daguerreotype', value: 'daguerreotype' },
+        { label: 'Wet plate', value: 'wet-plate' },
+        { label: 'Aerial', value: 'aerial' },
+        { label: 'Digital', value: 'digital' },
+        { label: 'Layering', value: 'layering' },
+        { label: 'Light quality', value: 'light-quality' },
+        { label: 'Historical angle', value: 'historical-angle' },
+      ],
+    },
+    {
+      name: 'lines',
+      type: 'relationship',
+      relationTo: 'lines',
+      hasMany: true,
+    },
+    {
+      name: 'audioTranscript',
+      type: 'textarea',
+      access: {
+        update: () => false,
+      },
+    },
+    {
+      name: 'transcriptType',
+      type: 'select',
+      options: [
+        { label: 'Shooter description', value: 'shooter-description' },
+        { label: 'Speech', value: 'speech' },
+        { label: 'None', value: 'none' },
+      ],
+      access: {
+        update: () => false,
+      },
+    },
+    {
+      name: 'keyframes',
+      type: 'array',
+      access: {
+        update: () => false,
+      },
+      fields: [
+        { name: 'timestamp', type: 'number', required: true },
+        { name: 'imageUrl', type: 'text', required: true },
+        {
+          name: 'tags',
+          type: 'array',
+          fields: [{ name: 'tag', type: 'text', required: true }],
+        },
+      ],
+    },
+    {
+      name: 'detectedLanguage',
+      type: 'text',
+      access: {
+        update: () => false,
+      },
+    },
+    {
+      name: 'duration',
+      type: 'number',
+      access: {
+        update: () => false,
+      },
+    },
+    {
+      name: 'transcriptEmbedding',
+      type: 'json',
+      access: {
+        update: () => false,
+      },
+      admin: {
+        description: 'JSON number array until vector columns are introduced.',
+      },
+    },
+    {
+      name: 'recordOrigin',
+      type: 'select',
+      required: true,
+      defaultValue: 'user',
+      options: [
+        { label: 'User', value: 'user' },
+        { label: 'Pipeline', value: 'pipeline' },
+        { label: 'Small model', value: 'small-model' },
+      ],
+      admin: { position: 'sidebar' },
+    },
+  ],
+  timestamps: true,
+}
