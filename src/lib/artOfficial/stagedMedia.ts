@@ -152,7 +152,7 @@ export function mergeStagedMediaIntoArtworkPatch(
       appendArrayRow(out, 'installationShots', { image: row.mediaId })
       continue
     }
-    if (slot.arrayField === 'videos' && row.kind !== 'skipped') {
+    if (slot.arrayField === 'videos') {
       const videoType =
         row.videoType ??
         (row.mediaId != null ? 'upload' : row.url ? detectUrlVideoType(row.url) : null)

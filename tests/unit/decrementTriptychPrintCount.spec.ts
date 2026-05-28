@@ -9,8 +9,8 @@ describe('decrementTriptychPrintAvailableCount', () => {
   const triptych = {
     id: 1,
     printSets: [
-      { size: 'large', edition: 15, vendureProductId: 'vp-large', printAvailableCount: 10 },
-      { size: 'small', edition: 30, vendureProductId: 'vp-small', printAvailableCount: 30 },
+      { size: 'large' as const, edition: 15, vendureProductId: 'vp-large', printAvailableCount: 10 },
+      { size: 'small' as const, edition: 30, vendureProductId: 'vp-small', printAvailableCount: 30 },
     ],
   }
 

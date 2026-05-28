@@ -22,7 +22,7 @@ export function AdminViewShell({
       permissions={permissions}
       req={req}
       searchParams={searchParams}
-      user={req.user}
+      user={req.user ?? undefined}
       viewActions={viewActions}
       visibleEntities={{
         collections: visibleEntities.collections,

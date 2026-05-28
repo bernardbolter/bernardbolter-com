@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   await payload.update({
     collection: 'triptychs',
     id: result.triptychId,
-    data: { printSets: result.printSets },
+    data: { printSets: result.printSets } as never,
     overrideAccess: true,
     context: { skipHooks: true },
   })

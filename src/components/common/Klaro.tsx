@@ -60,8 +60,9 @@ export default function KlaroComponent() {
             callback: (consent: boolean) => {
               if (!consent) return;
 
-              window.dataLayer = window.dataLayer || [];
-              const gtag: any = (...args: any[]) => window.dataLayer.push(args);
+              const dataLayer = window.dataLayer || [];
+              window.dataLayer = dataLayer;
+              const gtag = (...args: unknown[]) => dataLayer.push(args);
               window.gtag = gtag;
 
               gtag('consent', 'default', {

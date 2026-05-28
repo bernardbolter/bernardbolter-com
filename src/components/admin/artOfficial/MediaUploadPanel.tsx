@@ -115,20 +115,20 @@ function MediaSlotBody({
                   : 'image/jpeg,image/png,image/webp'
             }
             altLabel={slot.label}
-            disabled={disabled || status === 'locked'}
+            disabled={disabled}
             onUploaded={(id) => onFileUploaded(slot.id, id)}
           />
         )}
         {showUrl ? (
           <VideoUrlForm
-            disabled={disabled || status === 'locked'}
+            disabled={disabled}
             onSubmit={(url) => onUrlSubmit(slot.id, url)}
           />
         ) : null}
         {status !== 'staged' || slot.arrayField ? (
           <Button
             buttonStyle="secondary"
-            disabled={disabled || status === 'locked'}
+            disabled={disabled}
             onClick={() => onSkip(slot.id)}
           >
             Not applicable

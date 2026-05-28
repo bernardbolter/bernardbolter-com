@@ -107,7 +107,10 @@ export const formatFilteredArtworkWithTimeMargin = (
 };
 
 // Helper function to normalize timestamps to Date objects
-function normalizeDate(date: Date | string | number): Date {
+function normalizeDate(date: Date | string | number | null | undefined): Date {
+  if (date == null) {
+    return new Date(0);
+  }
   if (date instanceof Date) {
     return date;
   }

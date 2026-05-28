@@ -105,7 +105,7 @@ export async function POST(request: Request, context: RouteContext) {
           const updated = await payload.update({
             collection: 'artworks',
             id: existingId,
-            data: artworkData,
+            data: artworkData as never,
             overrideAccess: false,
             user,
           })
@@ -113,7 +113,7 @@ export async function POST(request: Request, context: RouteContext) {
         } else {
           const created = await payload.create({
             collection: 'artworks',
-            data: artworkData,
+            data: artworkData as never,
             overrideAccess: false,
             user,
           })
@@ -135,7 +135,7 @@ export async function POST(request: Request, context: RouteContext) {
         body.triptychData && typeof body.triptychData === 'object'
           ? (body.triptychData as Record<string, unknown>)
           : {}
-      const merged = {
+      const merged: Record<string, unknown> = {
         ...clientPatch,
         ...serverPatch,
         status: 'draft' as const,

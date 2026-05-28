@@ -34,7 +34,7 @@ export function useFormattedArtworks(
 
   // Update context with formatted artworks
   useEffect(() => {
-    setArtworks(prev => ({
+    setArtworks((prev: typeof artworks) => ({
       ...prev,
       formattedArtworks
     }));
@@ -44,7 +44,7 @@ export function useFormattedArtworks(
   useEffect(() => {
     if (formattedArtworks.artworksArray.length > 0 && 
         artworks.currentArtworkIndex >= formattedArtworks.artworksArray.length) {
-      setArtworks(prev => ({
+      setArtworks((prev: typeof artworks) => ({
         ...prev,
         currentArtworkIndex: 0
       }));

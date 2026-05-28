@@ -156,7 +156,7 @@ export async function POST(request: Request) {
                 upload: mediaUpload,
               })
               if (staged.timeline) {
-                session.fieldUpdateTimeline = staged.timeline
+                session.fieldUpdateTimeline = staged.timeline as never
               }
               session.stagedMedia = staged.stagedMedia
               send('media-staged', {
