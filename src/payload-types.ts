@@ -72,6 +72,7 @@ export interface Config {
     artists: Artist;
     'practice-knowledge': PracticeKnowledge;
     series: Series;
+    lines: Line;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
     events: Event;
@@ -96,6 +97,7 @@ export interface Config {
     artists: ArtistsSelect<false> | ArtistsSelect<true>;
     'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
+    lines: LinesSelect<false> | LinesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
@@ -2114,6 +2116,24 @@ export interface PracticeKnowledge {
   createdAt: string;
 }
 /**
+ * Active investigations that connect FieldNotes, Episodes, Artworks, and conversations.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lines".
+ */
+export interface Line {
+  id: number;
+  name: string;
+  description?: string | null;
+  status: 'active' | 'dormant' | 'closed';
+  /**
+   * Who introduced this line (manual or model suggestion).
+   */
+  recordOrigin: 'user' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Curated square paintings available in the print set builder. Vendure product ID is on Print set config global — not per row.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2260,6 +2280,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'series';
         value: number | Series;
+      } | null)
+    | ({
+        relationTo: 'lines';
+        value: number | Line;
       } | null)
     | ({
         relationTo: 'tags';
@@ -2498,6 +2522,18 @@ export interface SeriesSelect<T extends boolean = true> {
   coverImage?: T;
   status?: T;
   jsonldOutput?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lines_select".
+ */
+export interface LinesSelect<T extends boolean = true> {
+  name?: T;
+  description?: T;
+  status?: T;
+  recordOrigin?: T;
   updatedAt?: T;
   createdAt?: T;
 }
