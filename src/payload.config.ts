@@ -18,6 +18,7 @@ import { PracticeKnowledge } from './collections/PracticeKnowledge'
 import { Series } from './collections/Series'
 import { Lines } from './collections/Lines'
 import { StudioConversations } from './collections/StudioConversations'
+import { PatternReports } from './collections/PatternReports'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
@@ -83,6 +84,7 @@ export default buildConfig({
     Series,
     Lines,
     StudioConversations,
+    PatternReports,
     Tags,
     ArtHistoricalReferences,
     Events,
