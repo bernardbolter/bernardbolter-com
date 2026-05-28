@@ -1,0 +1,57 @@
+.studio-shell {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.studio-shell__header {
+  border-bottom: 1px solid #d9e1ea;
+  background: #fff;
+  padding: 0.9rem 1rem;
+}
+
+.studio-shell__title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.studio-shell__main {
+  padding: 1rem;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.studio-tabbar {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.25rem;
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid #d9e1ea;
+  background: #fff;
+  padding: 0.5rem;
+}
+
+.studio-tabbar a {
+  text-align: center;
+  border-radius: 8px;
+  padding: 0.5rem 0.2rem;
+  color: #384353;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.studio-tabbar a.active {
+  background: #111827;
+  color: #fff;
+}
+
+@media (min-width: 900px) {
+  .studio-tabbar {
+    position: static;
+    border-top: 0;
+    border-bottom: 1px solid #d9e1ea;
+    padding: 0.6rem 1rem;
+    background: #fff;
+  }
+}
