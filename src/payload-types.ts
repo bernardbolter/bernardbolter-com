@@ -73,6 +73,7 @@ export interface Config {
     'practice-knowledge': PracticeKnowledge;
     series: Series;
     lines: Line;
+    'studio-conversations': StudioConversation;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
     events: Event;
@@ -98,6 +99,7 @@ export interface Config {
     'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
     lines: LinesSelect<false> | LinesSelect<true>;
+    'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
@@ -2134,6 +2136,43 @@ export interface Line {
   createdAt: string;
 }
 /**
+ * Long-form thinking captured through small-model conversation.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "studio-conversations".
+ */
+export interface StudioConversation {
+  id: number;
+  messages: {
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: string;
+    id?: string | null;
+  }[];
+  summary?: string | null;
+  /**
+   * JSON number array until pgvector columns are introduced.
+   */
+  summaryEmbedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lines?: (number | Line)[] | null;
+  relatedArtwork?: (number | null) | Artwork;
+  /**
+   * Temporary episode id reference. Migrates to relationship once Episodes collection is registered.
+   */
+  relatedEpisode?: number | null;
+  recordOrigin: 'user';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Curated square paintings available in the print set builder. Vendure product ID is on Print set config global — not per row.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2284,6 +2323,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'lines';
         value: number | Line;
+      } | null)
+    | ({
+        relationTo: 'studio-conversations';
+        value: number | StudioConversation;
       } | null)
     | ({
         relationTo: 'tags';
@@ -2533,6 +2576,28 @@ export interface LinesSelect<T extends boolean = true> {
   name?: T;
   description?: T;
   status?: T;
+  recordOrigin?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "studio-conversations_select".
+ */
+export interface StudioConversationsSelect<T extends boolean = true> {
+  messages?:
+    | T
+    | {
+        role?: T;
+        content?: T;
+        timestamp?: T;
+        id?: T;
+      };
+  summary?: T;
+  summaryEmbedding?: T;
+  lines?: T;
+  relatedArtwork?: T;
+  relatedEpisode?: T;
   recordOrigin?: T;
   updatedAt?: T;
   createdAt?: T;

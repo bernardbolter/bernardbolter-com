@@ -17,6 +17,7 @@ import { Artists } from './collections/Artists'
 import { PracticeKnowledge } from './collections/PracticeKnowledge'
 import { Series } from './collections/Series'
 import { Lines } from './collections/Lines'
+import { StudioConversations } from './collections/StudioConversations'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
@@ -81,6 +82,7 @@ export default buildConfig({
     PracticeKnowledge,
     Series,
     Lines,
+    StudioConversations,
     Tags,
     ArtHistoricalReferences,
     Events,
