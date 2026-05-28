@@ -7,6 +7,9 @@ import 'klaro/dist/klaro.css';
 export default function KlaroComponent() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const path = window.location.pathname
+    // Internal tooling should not run consent/data overlays.
+    if (path.startsWith('/studio') || path.startsWith('/admin')) return
 
     void import('klaro').then((klaro) => {
       const config = {

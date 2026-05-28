@@ -9,6 +9,7 @@ export default function GoogleAnalytics() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (pathname.startsWith('/studio') || pathname.startsWith('/admin')) return;
     if (!process.env.NEXT_PUBLIC_GA_ID) return;
 
     const url = pathname + (searchParams.toString() ? `?${searchParams}` : '');
