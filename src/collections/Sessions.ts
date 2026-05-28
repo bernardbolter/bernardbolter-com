@@ -36,6 +36,8 @@ export const Sessions: CollectionConfig = {
         { label: 'Artist statement', value: 'artist-statement' },
         { label: 'Biography', value: 'biography' },
         { label: 'Onboarding', value: 'onboarding' },
+        { label: 'Episode storyboard', value: 'episode-storyboard' },
+        { label: 'Episode assembly', value: 'episode-assembly' },
       ],
       admin: { position: 'sidebar' },
     },
@@ -70,6 +72,16 @@ export const Sessions: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: 'Optional — link when refining an existing triptych corpus.',
+      },
+    },
+    {
+      name: 'lines',
+      type: 'relationship',
+      relationTo: 'lines',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Active Lines this session contributes to.',
       },
     },
     {
