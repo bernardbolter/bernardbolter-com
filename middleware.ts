@@ -7,13 +7,21 @@ const PAYLOAD_TOKEN = 'payload-token'
 
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-studio-path', pathname)
 
   if (!pathname.startsWith(STUDIO_ROOT) || pathname.startsWith(STUDIO_LOGIN)) {
-    return NextResponse.next()
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    })
   }
 
   const token = request.cookies.get(PAYLOAD_TOKEN)?.value
-  if (token) return NextResponse.next()
+  if (token) {
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    })
+  }
 
   const redirectURL = new URL(STUDIO_LOGIN, request.url)
   const from = `${pathname}${search}`
@@ -22,5 +30,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/studio/:path*'],
+  matcher: ['/studio', '/studio/:path*'],
 }
