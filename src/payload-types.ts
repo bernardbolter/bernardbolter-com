@@ -92,6 +92,7 @@ export interface Config {
   };
   collectionsJoins: {
     artworks: {
+      processPhotos: 'field-notes';
       events: 'events';
     };
   };
@@ -435,6 +436,26 @@ export interface Artwork {
    * Temporary WordPress image URL until migrated to R2.
    */
   wpImageUrl?: string | null;
+  /**
+   * Final studio reference image used for timelapse correction.
+   */
+  finalReferenceImage?: (number | null) | Media;
+  /**
+   * Generated timelapse output for process documentation.
+   */
+  timelapseFile?: (number | null) | Media;
+  /**
+   * All linked FieldNotes for this artwork (photos, clips, notes) in reverse relation.
+   */
+  processPhotos?: {
+    docs?: (number | FieldNote)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * Active Lines this artwork contributes to.
+   */
+  lines?: (number | Line)[] | null;
   title: string;
   /**
    * Alternate title — also known as (other language or market).
@@ -1611,6 +1632,142 @@ export interface Artwork {
   createdAt: string;
 }
 /**
+ * Unified capture records for text, photos, video clips, and voice memos.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "field-notes".
+ */
+export interface FieldNote {
+  id: number;
+  mediaType:
+    | 'text'
+    | 'photo'
+    | 'video-broll'
+    | 'video-observation'
+    | 'video-performance'
+    | 'video-process'
+    | 'voice-memo';
+  capturedAt?: string | null;
+  city?: string | null;
+  location?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  locationName?: string | null;
+  mediaFile?: (number | null) | Media;
+  writtenNote?: string | null;
+  relatedArtwork?: (number | null) | Artwork;
+  relatedEpisode?: (number | null) | Episode;
+  processingStatus: 'pending' | 'processing' | 'complete' | 'failed';
+  register?: ('exploratory' | 'resolved' | 'frustrated' | 'excited' | 'observational') | null;
+  processStage?: ('early' | 'mid' | 'late' | 'completed') | null;
+  conceptualThread?:
+    | ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle')
+    | null;
+  lines?: (number | Line)[] | null;
+  audioTranscript?: string | null;
+  transcriptType?: ('shooter-description' | 'speech' | 'none') | null;
+  keyframes?:
+    | {
+        timestamp: number;
+        imageUrl: string;
+        tags?:
+          | {
+              tag: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  detectedLanguage?: string | null;
+  duration?: number | null;
+  /**
+   * JSON number array until vector columns are introduced.
+   */
+  transcriptEmbedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  recordOrigin: 'user' | 'pipeline' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * MoP episode records with storyboard and clip assembly notes.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "episodes".
+ */
+export interface Episode {
+  id: number;
+  title: string;
+  series: 'outsider-art-review' | 'rap-critic' | 'studio-fails' | 'studio-series';
+  status: 'concept' | 'storyboard' | 'shot' | 'uploaded' | 'edited' | 'posted';
+  concept?: string | null;
+  shotList?: string | null;
+  storyboard?:
+    | {
+        name: string;
+        mediaType?: string | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  assembly?:
+    | {
+        beatName?: string | null;
+        /**
+         * Temporary FieldNote id linkage until field-notes collection is registered.
+         */
+        clipFieldNoteId?: number | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  captionDrafts?:
+    | {
+        text: string;
+        channel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  lines?: (number | Line)[] | null;
+  /**
+   * Temporary join substitute until field-notes collection is registered.
+   */
+  clipFieldNoteIds?:
+    | {
+        id: number;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Active investigations that connect FieldNotes, Episodes, Artworks, and conversations.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lines".
+ */
+export interface Line {
+  id: number;
+  name: string;
+  description?: string | null;
+  status: 'active' | 'dormant' | 'closed';
+  /**
+   * Who introduced this line (manual or model suggestion).
+   */
+  recordOrigin: 'user' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Practice series definitions used by artworks and public series pages.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2124,24 +2281,6 @@ export interface PracticeKnowledge {
   createdAt: string;
 }
 /**
- * Active investigations that connect FieldNotes, Episodes, Artworks, and conversations.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "lines".
- */
-export interface Line {
-  id: number;
-  name: string;
-  description?: string | null;
-  status: 'active' | 'dormant' | 'closed';
-  /**
-   * Who introduced this line (manual or model suggestion).
-   */
-  recordOrigin: 'user' | 'small-model';
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Long-form thinking captured through small-model conversation.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2176,57 +2315,6 @@ export interface StudioConversation {
   createdAt: string;
 }
 /**
- * MoP episode records with storyboard and clip assembly notes.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "episodes".
- */
-export interface Episode {
-  id: number;
-  title: string;
-  series: 'outsider-art-review' | 'rap-critic' | 'studio-fails' | 'studio-series';
-  status: 'concept' | 'storyboard' | 'shot' | 'uploaded' | 'edited' | 'posted';
-  concept?: string | null;
-  shotList?: string | null;
-  storyboard?:
-    | {
-        name: string;
-        mediaType?: string | null;
-        notes?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  assembly?:
-    | {
-        beatName?: string | null;
-        /**
-         * Temporary FieldNote id linkage until field-notes collection is registered.
-         */
-        clipFieldNoteId?: number | null;
-        notes?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  captionDrafts?:
-    | {
-        text: string;
-        channel?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  lines?: (number | Line)[] | null;
-  /**
-   * Temporary join substitute until field-notes collection is registered.
-   */
-  clipFieldNoteIds?:
-    | {
-        id: number;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Weekly cross-corpus surfacing generated by small-model jobs.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2254,73 +2342,6 @@ export interface PatternReport {
     | null;
   digestSummary?: string | null;
   recordOrigin: 'small-model';
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Unified capture records for text, photos, video clips, and voice memos.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "field-notes".
- */
-export interface FieldNote {
-  id: number;
-  mediaType:
-    | 'text'
-    | 'photo'
-    | 'video-broll'
-    | 'video-observation'
-    | 'video-performance'
-    | 'video-process'
-    | 'voice-memo';
-  capturedAt?: string | null;
-  city?: string | null;
-  location?: {
-    lat?: number | null;
-    lng?: number | null;
-  };
-  locationName?: string | null;
-  mediaFile?: (number | null) | Media;
-  writtenNote?: string | null;
-  relatedArtwork?: (number | null) | Artwork;
-  relatedEpisode?: (number | null) | Episode;
-  processingStatus: 'pending' | 'processing' | 'complete' | 'failed';
-  register?: ('exploratory' | 'resolved' | 'frustrated' | 'excited' | 'observational') | null;
-  processStage?: ('early' | 'mid' | 'late' | 'completed') | null;
-  conceptualThread?:
-    | ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle')
-    | null;
-  lines?: (number | Line)[] | null;
-  audioTranscript?: string | null;
-  transcriptType?: ('shooter-description' | 'speech' | 'none') | null;
-  keyframes?:
-    | {
-        timestamp: number;
-        imageUrl: string;
-        tags?:
-          | {
-              tag: string;
-              id?: string | null;
-            }[]
-          | null;
-        id?: string | null;
-      }[]
-    | null;
-  detectedLanguage?: string | null;
-  duration?: number | null;
-  /**
-   * JSON number array until vector columns are introduced.
-   */
-  transcriptEmbedding?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  recordOrigin: 'user' | 'pipeline' | 'small-model';
   updatedAt: string;
   createdAt: string;
 }
@@ -3028,6 +3049,10 @@ export interface ArtworksSelect<T extends boolean = true> {
   posterImage?: T;
   posterImageAltText?: T;
   wpImageUrl?: T;
+  finalReferenceImage?: T;
+  timelapseFile?: T;
+  processPhotos?: T;
+  lines?: T;
   title?: T;
   altTitle?: T;
   slug?: T;

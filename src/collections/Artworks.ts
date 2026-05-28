@@ -84,6 +84,41 @@ export const Artworks: CollectionConfig = {
         position: 'sidebar',
       },
     },
+    {
+      name: 'finalReferenceImage',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'Final studio reference image used for timelapse correction.',
+      },
+    },
+    {
+      name: 'timelapseFile',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'Generated timelapse output for process documentation.',
+      },
+    },
+    {
+      name: 'processPhotos',
+      type: 'join',
+      collection: 'field-notes',
+      on: 'relatedArtwork',
+      admin: {
+        description:
+          'All linked FieldNotes for this artwork (photos, clips, notes) in reverse relation.',
+      },
+    },
+    {
+      name: 'lines',
+      type: 'relationship',
+      relationTo: 'lines',
+      hasMany: true,
+      admin: {
+        description: 'Active Lines this artwork contributes to.',
+      },
+    },
 
     {
       type: 'tabs',
