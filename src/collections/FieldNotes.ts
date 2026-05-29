@@ -120,6 +120,20 @@ export const FieldNotes: CollectionConfig = {
       hasMany: true,
     },
     {
+      name: 'suggestedLines',
+      type: 'array',
+      admin: {
+        readOnly: true,
+        description:
+          'Candidate Line connections from embedding jobs — confirm or dismiss in the studio Notes detail view.',
+      },
+      fields: [
+        { name: 'lineId', type: 'number', required: true },
+        { name: 'lineName', type: 'text' },
+        { name: 'score', type: 'number' },
+      ],
+    },
+    {
       name: 'audioTranscript',
       type: 'textarea',
       access: {

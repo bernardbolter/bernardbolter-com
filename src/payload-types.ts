@@ -1665,6 +1665,17 @@ export interface FieldNote {
     | ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle')
     | null;
   lines?: (number | Line)[] | null;
+  /**
+   * Candidate Line connections from embedding jobs — confirm or dismiss in the studio Notes detail view.
+   */
+  suggestedLines?:
+    | {
+        lineId: number;
+        lineName?: string | null;
+        score?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   audioTranscript?: string | null;
   transcriptType?: ('shooter-description' | 'speech' | 'none') | null;
   keyframes?:
@@ -2389,6 +2400,10 @@ export interface Session {
    */
   triptychRecord?: (number | null) | Triptych;
   /**
+   * MoP episode for storyboard or assembly sessions.
+   */
+  episodeRecord?: (number | null) | Episode;
+  /**
    * Active Lines this session contributes to.
    */
   lines?: (number | Line)[] | null;
@@ -2889,6 +2904,14 @@ export interface FieldNotesSelect<T extends boolean = true> {
   processStage?: T;
   conceptualThread?: T;
   lines?: T;
+  suggestedLines?:
+    | T
+    | {
+        lineId?: T;
+        lineName?: T;
+        score?: T;
+        id?: T;
+      };
   audioTranscript?: T;
   transcriptType?: T;
   keyframes?:
@@ -3590,6 +3613,7 @@ export interface SessionsSelect<T extends boolean = true> {
   artistId?: T;
   artworkRecord?: T;
   triptychRecord?: T;
+  episodeRecord?: T;
   lines?: T;
   completedAt?: T;
   messages?: T;
