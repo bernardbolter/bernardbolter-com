@@ -21,6 +21,7 @@ const targetCollectionSchema = z.enum([
   'artworks',
   'artists',
   'events',
+  'episodes',
   'practice-knowledge',
   'triptychs',
 ])
@@ -190,7 +191,7 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
       properties: {
         targetCollection: {
           type: 'string',
-          enum: ['artworks', 'artists', 'events', 'practice-knowledge', 'triptychs'],
+          enum: ['artworks', 'artists', 'events', 'episodes', 'practice-knowledge', 'triptychs'],
         },
         field: {
           type: 'string',

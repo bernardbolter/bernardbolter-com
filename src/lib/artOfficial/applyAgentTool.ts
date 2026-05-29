@@ -111,6 +111,16 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
             return failTool(tool.name, message)
           }
         }
+        if (
+          session.sessionType === 'episode-storyboard' ||
+          session.sessionType === 'episode-assembly'
+        ) {
+          if (args.targetCollection !== 'episodes') {
+            const message =
+              'Episode sessions must use update_field with targetCollection "episodes" only.'
+            return failTool(tool.name, message)
+          }
+        }
         if (!isFieldAllowedForAgent(args.targetCollection, args.field)) {
           const message = `Field ${args.targetCollection}.${args.field} is not writable by the agent.`
           return failTool(tool.name, message)

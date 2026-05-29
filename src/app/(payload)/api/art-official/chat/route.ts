@@ -106,6 +106,11 @@ export async function POST(request: Request) {
     const isRefinement =
       session.status === 'completed' && Boolean(session.dialogueRefinementFlag)
 
+    const episodeId =
+      typeof session.episodeRecord === 'object'
+        ? (session.episodeRecord?.id as number | undefined)
+        : (session.episodeRecord as number | undefined)
+
     let systemParts
     try {
       systemParts = await buildSystemPromptParts({
@@ -113,6 +118,7 @@ export async function POST(request: Request) {
         user,
         sessionType: session.sessionType as SessionType,
         artistId,
+        episodeId,
         weakPhases: session.weakPhases,
         isRefinement,
       })

@@ -75,6 +75,15 @@ export const Sessions: CollectionConfig = {
       },
     },
     {
+      name: 'episodeRecord',
+      type: 'relationship',
+      relationTo: 'episodes' as never,
+      admin: {
+        position: 'sidebar',
+        description: 'MoP episode for storyboard or assembly sessions.',
+      },
+    },
+    {
       name: 'lines',
       type: 'relationship',
       relationTo: 'lines',

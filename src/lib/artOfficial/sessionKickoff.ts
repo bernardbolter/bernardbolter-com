@@ -68,6 +68,22 @@ const KICKOFFS: Record<SessionType, SessionKickoff | null> = {
     message:
       "I'd like to catalogue a triptych. Please welcome me briefly, confirm we're documenting one MoP set (not a single panel), and ask your first question.",
   },
+  'episode-storyboard': {
+    title: 'Episode storyboard',
+    intro:
+      'Structure this MoP episode as named beats before shooting. The agent stages storyboard rows on the episode record.',
+    buttonLabel: 'Begin storyboard session',
+    message:
+      "I'd like to storyboard this episode. Please review the concept and ask your first question about beat structure.",
+  },
+  'episode-assembly': {
+    title: 'Episode assembly',
+    intro:
+      'Map tagged clips and transcripts to beats for the edit. Uses FieldNotes linked to this episode.',
+    buttonLabel: 'Begin assembly session',
+    message:
+      "I'd like to assemble this episode from clips. Please review linked FieldNotes and ask your first question about the edit map.",
+  },
 }
 
 export function getSessionKickoff(sessionType: string | null | undefined): SessionKickoff | null {

@@ -54,6 +54,14 @@ const TRIPTYCH_FORBIDDEN = new Set([
   'originalsBuyer',
 ])
 
+const EPISODE_AGENT_FIELDS = new Set([
+  'concept',
+  'shotList',
+  'storyboard',
+  'assembly',
+  'captionDrafts',
+])
+
 export function isFieldAllowedForAgent(collection: string, field: string): boolean {
   if (collection === 'practice-knowledge') {
     return isPracticeKnowledgeSlug(field)
@@ -67,6 +75,10 @@ export function isFieldAllowedForAgent(collection: string, field: string): boole
     if (TRIPTYCH_FORBIDDEN.has(field)) return false
     if (field.startsWith('printSets')) return false
     return TRIPTYCH_AGENT_FIELDS.has(field)
+  }
+
+  if (collection === 'episodes') {
+    return EPISODE_AGENT_FIELDS.has(field)
   }
 
   return !FORBIDDEN.has(`${collection}.${field}`)

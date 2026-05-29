@@ -1,4 +1,5 @@
 import { buildArtistPatchFromTimeline } from '@/lib/artOfficial/buildArtistPatch'
+import { buildEpisodePatchFromTimeline } from '@/lib/artOfficial/buildEpisodePatch'
 import {
   buildArtworkDraftPatchFromSession,
   buildArtworkPatchFromTimeline,
@@ -49,6 +50,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   let artworkId: number | undefined
   let triptychId: number | undefined
+  let episodeId: number | undefined
   let practiceKnowledge: Awaited<ReturnType<typeof applyPracticeKnowledgePatches>> | undefined
 
   function slugifyTitle(input: string): string {
@@ -248,6 +250,38 @@ export async function POST(request: Request, context: RouteContext) {
       break
     }
 
+    case 'update-episode': {
+      const linkedEpisodeId =
+        typeof session.episodeRecord === 'object'
+          ? session.episodeRecord?.id
+          : session.episodeRecord
+      if (!linkedEpisodeId) {
+        return Response.json({ error: 'Session is not linked to an episode' }, { status: 412 })
+      }
+
+      const timeline = Array.isArray(session.fieldUpdateTimeline)
+        ? session.fieldUpdateTimeline
+        : []
+      const episodePatch = buildEpisodePatchFromTimeline(timeline)
+
+      if (Object.keys(episodePatch).length === 0) {
+        return Response.json(
+          { error: 'No episode fields were staged. Continue the chat, then commit again.' },
+          { status: 412 },
+        )
+      }
+
+      await payload.update({
+        collection: 'episodes',
+        id: linkedEpisodeId as number,
+        data: episodePatch,
+        overrideAccess: false,
+        user,
+      })
+      episodeId = linkedEpisodeId as number
+      break
+    }
+
     case 'no-record-write': {
       const patches = patchesFromSessionTimeline(
         session.fieldUpdateTimeline,
@@ -282,6 +316,7 @@ export async function POST(request: Request, context: RouteContext) {
         dialogueRefinementFlag: refinementFlagged,
         artworkRecord: artworkId ?? session.artworkRecord,
         triptychRecord: triptychId ?? session.triptychRecord,
+        episodeRecord: episodeId ?? session.episodeRecord,
         ...(body.firstImpression ? { firstImpression: body.firstImpression } : {}),
         ...(body.secondDescription ? { secondDescription: body.secondDescription } : {}),
         ...(body.refinementNotes ? { refinementNotes: body.refinementNotes } : {}),
@@ -296,6 +331,7 @@ export async function POST(request: Request, context: RouteContext) {
     status: reapply ? session.status : 'completed',
     artworkId,
     triptychId,
+    episodeId,
     refinementFlagged,
     practiceKnowledge,
   })

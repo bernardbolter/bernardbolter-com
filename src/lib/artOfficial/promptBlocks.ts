@@ -114,7 +114,9 @@ export function sessionTypeOverride(
     | 'triptych-cataloguing'
     | 'artist-statement'
     | 'biography'
-    | 'onboarding',
+    | 'onboarding'
+    | 'episode-storyboard'
+    | 'episode-assembly',
 ): string {
   switch (sessionType) {
     case 'artwork-cataloguing':
@@ -156,9 +158,42 @@ Example:
 update_field({ targetCollection: "practice-knowledge", field: "series", value: "Paragraph about bodies of work…", confidence: "confirmed", source: "conversation" })
 
 At wrap-up, stage all sections you can from the conversation (separate tool call per slug). Then invite the artist to use "Wrap up / confirm" and Commit. Do not use targetCollection artworks, artists, or events in onboarding.`
+    case 'episode-storyboard':
+      return 'SESSION TYPE: Episode storyboard — structure beats for a MoP episode. Stage updates on episodes only (storyboard array, concept, shotList).'
+    case 'episode-assembly':
+      return 'SESSION TYPE: Episode assembly — map clips and transcripts to beats. Stage updates on episodes only (assembly array, captionDrafts).'
     default:
       return ''
   }
+}
+
+export function buildEpisodeStoryboardBlock(episodeTitle: string, concept?: string | null): string {
+  return `EPISODE STORYBOARD — ${episodeTitle}
+
+You are helping Bernard structure this episode as named beats before shooting.
+
+Current concept (if any):
+${concept?.trim() || '(none yet)'}
+
+Use update_field with targetCollection "episodes" and field "storyboard". Value is a JSON array of objects: { name, mediaType?, notes? }.
+
+Work one beat at a time when needed. At wrap-up, ensure storyboard reflects the agreed structure and invite Commit to save to the episode record.`
+}
+
+export function buildEpisodeAssemblyBlock(
+  episodeTitle: string,
+  clipSummaries: string,
+): string {
+  return `EPISODE ASSEMBLY — ${episodeTitle}
+
+You are assembling an edit map from FieldNotes already tagged to this episode.
+
+Clips and notes available:
+${clipSummaries || '(no clips linked yet — ask Bernard to tag FieldNotes to this episode first)'}
+
+Use update_field with targetCollection "episodes" and field "assembly". Value is a JSON array: { beatName?, clipFieldNoteId?, notes? }.
+
+Reference clipFieldNoteId from the list above. At wrap-up, stage the full assembly and invite Commit.`
 }
 
 export function refinementPreamble(weakPhases: string[]): string {
