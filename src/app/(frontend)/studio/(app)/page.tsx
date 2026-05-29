@@ -1,8 +1,14 @@
+import { UploadForm } from '@/components/studio/UploadForm'
+
 export default function StudioUploadPage() {
   return (
-    <section>
+    <section className="studio-upload-page">
       <h2>Upload</h2>
-      <p>Fast capture form lands in this view in Phase C.</p>
+      <p className="studio-upload-page__lede">
+        Fast capture for photos, clips, voice memos, and text notes. Processing runs in the
+        background.
+      </p>
+      <UploadForm />
     </section>
   )
 }
