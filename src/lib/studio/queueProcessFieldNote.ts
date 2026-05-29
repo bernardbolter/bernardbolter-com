@@ -1,4 +1,5 @@
-/** Stub until Phase D2 wires pg-boss `process-fieldnote` jobs. */
-export async function queueProcessFieldNote(_fieldNoteId: number): Promise<void> {
-  // no-op
+import { enqueueProcessFieldNote } from '@/lib/queue/enqueue'
+
+export async function queueProcessFieldNote(fieldNoteId: number): Promise<void> {
+  await enqueueProcessFieldNote(fieldNoteId)
 }
