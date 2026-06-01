@@ -79,7 +79,9 @@ export async function createStudioArtwork(
   const series = await resolveSeriesId(payload, user, input.seriesId)
   const slug = `${slugifyStudioTitle(title)}-${Date.now().toString(36)}`
   const year = new Date().getFullYear()
+  const artworkStatus: Artwork['status'] = 'draft'
 
+  // Cast avoids Payload create overload matching `status: 'draft'` as version-draft.
   return payload.create({
     collection: 'artworks',
     data: {
@@ -87,13 +89,13 @@ export async function createStudioArtwork(
       slug,
       creator,
       series,
-      status: 'draft',
+      status: artworkStatus,
       recordOrigin: 'artist-catalogued',
       yearCreated: year,
       medium: (input.medium as Artwork['medium']) ?? 'acrylic-on-canvas',
       measurementType: ['physical'],
       support: 'canvas',
-    },
+    } as Omit<Artwork, 'id' | 'createdAt' | 'updatedAt'>,
     overrideAccess: false,
     user,
   })

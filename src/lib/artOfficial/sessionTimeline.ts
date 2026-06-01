@@ -13,15 +13,63 @@ export type TimelineEntry = {
   confidence?: string
   source?: string
   timestamp?: string
+  /** Sequencing sessions: disambiguate per-artwork staging for the same field. */
+  artworkSlug?: string
 }
 
-function timelineKey(entry: TimelineEntry): string {
-  return `${entry.targetCollection ?? ''}:${entry.field ?? ''}`
+export function timelineEntryKey(entry: TimelineEntry): string {
+  const base = `${entry.targetCollection ?? ''}:${entry.field ?? ''}`
+  const slug = typeof entry.artworkSlug === 'string' ? entry.artworkSlug.trim() : ''
+  return slug ? `${base}@${slug}` : base
 }
 
 function entryTime(entry: TimelineEntry): number {
   const t = entry.timestamp ? Date.parse(entry.timestamp) : 0
   return Number.isNaN(t) ? 0 : t
+}
+
+/** Keep only the latest staged value per targetCollection + field (+ artworkSlug). */
+export function collapseTimelineToLatest(timeline: TimelineEntry[]): TimelineEntry[] {
+  const merged = new Map<string, TimelineEntry>()
+
+  for (const entry of timeline) {
+    if (!entry.field) continue
+    const key = timelineEntryKey(entry)
+    const prev = merged.get(key)
+    if (!prev || entryTime(entry) >= entryTime(prev)) {
+      merged.set(key, entry)
+    }
+  }
+
+  return [...merged.values()].sort((a, b) => entryTime(a) - entryTime(b))
+}
+
+/** Replace an existing row for the same field key, or append if new. */
+export function upsertTimelineEntry(
+  timeline: TimelineEntry[],
+  entry: TimelineEntry,
+): TimelineEntry[] {
+  const row: TimelineEntry = {
+    ...entry,
+    timestamp: entry.timestamp ?? new Date().toISOString(),
+  }
+  const key = timelineEntryKey(row)
+  const next = timeline.filter((e) => timelineEntryKey(e) !== key)
+  next.push(row)
+  return next.sort((a, b) => entryTime(a) - entryTime(b))
+}
+
+function timelinesMatch(a: TimelineEntry[], b: TimelineEntry[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i += 1) {
+    const left = a[i]
+    const right = b[i]
+    if (timelineEntryKey(left) !== timelineEntryKey(right)) return false
+    if (left.value !== right.value) return false
+    if (left.confidence !== right.confidence) return false
+    if (left.source !== right.source) return false
+  }
+  return true
 }
 
 /** Extract successful update_field stages recorded in message history. */
@@ -66,9 +114,9 @@ export function reconcileFieldUpdateTimeline(
   const fromMessages = extractTimelineFromMessages(messages)
   const merged = new Map<string, TimelineEntry>()
 
-  for (const entry of [...existing, ...fromMessages]) {
+  for (const entry of [...collapseTimelineToLatest(existing), ...fromMessages]) {
     if (!entry.field) continue
-    const key = timelineKey(entry)
+    const key = timelineEntryKey(entry)
     const prev = merged.get(key)
     if (!prev || entryTime(entry) >= entryTime(prev)) {
       merged.set(key, entry)
@@ -76,7 +124,9 @@ export function reconcileFieldUpdateTimeline(
   }
 
   const timeline = [...merged.values()].sort((a, b) => entryTime(a) - entryTime(b))
-  const repaired = timeline.length > existing.length
+  const collapsedExisting = collapseTimelineToLatest(existing)
+  const repaired =
+    existing.length !== timeline.length || !timelinesMatch(timeline, collapsedExisting)
 
   return { timeline, repaired }
 }
@@ -100,26 +150,28 @@ export async function appendSessionTimelineEntry(
     throw new Error(`Field ${entry.targetCollection}.${entry.field} is not allowed for staging.`)
   }
 
-  const timeline = Array.isArray(session.fieldUpdateTimeline)
-    ? [...(session.fieldUpdateTimeline as TimelineEntry[])]
-    : []
+  const timeline = collapseTimelineToLatest(
+    Array.isArray(session.fieldUpdateTimeline)
+      ? [...(session.fieldUpdateTimeline as TimelineEntry[])]
+      : [],
+  )
 
   const row: TimelineEntry = {
     ...entry,
     timestamp: new Date().toISOString(),
   }
-  timeline.push(row)
+  const next = upsertTimelineEntry(timeline, row)
 
   await payload.update({
     collection: 'sessions',
     id: session.id,
-    data: { fieldUpdateTimeline: timeline },
+    data: { fieldUpdateTimeline: next },
     overrideAccess: false,
     user,
     context: { skipAgent: true },
   })
 
-  return timeline
+  return next
 }
 
 /** Onboarding commits only practice-knowledge rows; drop mistaken artists/artworks staging. */

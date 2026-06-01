@@ -4,7 +4,7 @@ export const Series: CollectionConfig = {
   slug: 'series',
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'slug', 'status', 'yearStart', 'yearEnd'],
+    defaultColumns: ['name', 'slug', 'parentSeries', 'status', 'yearStart', 'yearEnd'],
     description: 'Practice series definitions used by artworks and public series pages.',
   },
   fields: [
@@ -20,6 +20,15 @@ export const Series: CollectionConfig = {
       required: true,
       unique: true,
       index: true,
+    },
+    {
+      name: 'parentSeries',
+      type: 'relationship',
+      relationTo: 'series',
+      admin: {
+        position: 'sidebar',
+        description: 'Set when this is a sub-series (e.g. Gates of Perception → A Colorful History).',
+      },
     },
     {
       name: 'description',

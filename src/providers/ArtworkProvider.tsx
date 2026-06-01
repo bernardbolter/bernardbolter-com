@@ -15,7 +15,6 @@ interface ArtworksProviderProps {
 
 // Helper to check if artwork has an image
 function hasImage(artwork: any): boolean {
-  // Check R2/Payload media
   if (
     artwork.primaryImage &&
     typeof artwork.primaryImage === 'object' &&
@@ -23,8 +22,11 @@ function hasImage(artwork: any): boolean {
   ) {
     return true
   }
-  // Check WordPress fallback URL
-  if (artwork.wpImageUrl) {
+  if (
+    artwork.posterImage &&
+    typeof artwork.posterImage === 'object' &&
+    artwork.posterImage.url
+  ) {
     return true
   }
   return false

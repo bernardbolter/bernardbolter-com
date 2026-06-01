@@ -1,6 +1,7 @@
 'use client'
 
 import { primaryImageMediaIdFromTimeline } from '@/lib/artOfficial/primaryImageFromTimeline'
+import { collapseTimelineToLatest } from '@/lib/artOfficial/sessionTimeline'
 
 import { StagedArtworkPreview } from './StagedArtworkPreview'
 import type { TimelineEntry } from './types'
@@ -57,7 +58,9 @@ export function SessionSidebar({
   const primaryMediaId =
     sessionType === 'artwork-cataloguing' ? primaryImageMediaIdFromTimeline(timeline) : null
 
-  const grouped = timeline.reduce<Record<string, TimelineEntry[]>>((acc, entry) => {
+  const displayTimeline = collapseTimelineToLatest(timeline)
+
+  const grouped = displayTimeline.reduce<Record<string, TimelineEntry[]>>((acc, entry) => {
     const key = entry.targetCollection ?? 'session'
     if (!acc[key]) acc[key] = []
     acc[key].push(entry)
@@ -81,7 +84,7 @@ export function SessionSidebar({
         </p>
       </div>
       <div className="art-official-sidebar__fields">
-        {timeline.length === 0 ? (
+        {displayTimeline.length === 0 ? (
           <p className="art-official-sidebar__empty">No staged updates yet.</p>
         ) : (
           Object.entries(grouped).map(([collection, entries]) => (

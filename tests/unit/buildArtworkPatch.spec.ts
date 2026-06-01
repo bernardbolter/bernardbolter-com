@@ -59,6 +59,23 @@ describe('buildArtworkPatchFromTimeline', () => {
     expect(conceptCopy.root.children).toBeInstanceOf(Array)
   })
 
+  it('materialises tag and support fields at the top level', () => {
+    const patch = buildArtworkPatchFromTimeline([
+      {
+        targetCollection: 'artworks',
+        field: 'movementTags',
+        value: ['Photomontage', 'New objectivity'],
+      },
+      {
+        targetCollection: 'artworks',
+        field: 'support',
+        value: 'aluminum-mount',
+      },
+    ])
+    expect(patch.movementTags).toEqual(['Photomontage', 'New objectivity'])
+    expect(patch.support).toBe('aluminum-mount')
+  })
+
   it('ignores entries from other collections', () => {
     const patch = buildArtworkPatchFromTimeline([
       {

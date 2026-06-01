@@ -58,10 +58,14 @@ export function resolveMediaSlotStates(args: {
   hasPrimary: boolean
   highlightedMediaSlot?: string | null
   isAchWork?: boolean
+  isDcsWork?: boolean
+  isMegacitiesWork?: boolean
 }): MediaSlotState[] {
   const staged = parseStagedMedia(args.stagedMedia)
   const slots = ARTWORK_MEDIA_SLOTS.filter((s) => {
-    if (s.achOnly && args.isAchWork === false) return false
+    if (s.achOnly && !args.isAchWork) return false
+    if (s.dcsOnly && !args.isDcsWork) return false
+    if (s.megacitiesOnly && !args.isMegacitiesWork) return false
     return true
   })
 

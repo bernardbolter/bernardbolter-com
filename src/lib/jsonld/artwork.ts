@@ -1,5 +1,6 @@
 import type { Artwork, Artist, Media, Series, Tag } from '@/payload-types'
 
+import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
@@ -223,7 +224,7 @@ export function buildArtworkJsonLd(
     depth = mmToQuantitativeValue(artwork.depthMm, unit)
   }
 
-  const primaryUrl = mediaUrl(artwork.primaryImage) ?? artwork.wpImageUrl ?? undefined
+  const primaryUrl = mediaUrl(artwork.primaryImage) ?? mediaUrl(artwork.posterImage) ?? undefined
   const thumbUrl = mediaUrl(artwork.posterImage) ?? primaryUrl
 
   const image =
@@ -335,6 +336,8 @@ export function buildArtworkJsonLd(
   const licenseUri =
     artwork.license ? LICENSE_TO_URI[artwork.license] ?? undefined : undefined
 
+  const seo = resolveArtworkSeo(artwork)
+
   const doc: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'VisualArtwork',
@@ -350,7 +353,7 @@ export function buildArtworkJsonLd(
     copyrightHolder: { ...creator },
     copyrightYear: artwork.yearCreated,
     dateCreated,
-    description: artwork.descriptionShort ?? undefined,
+    description: seo.description,
     artMedium,
     ...(artworkSurface ? { artworkSurface } : {}),
     ...(width ? { width } : {}),

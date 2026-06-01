@@ -7,19 +7,29 @@ import { buildArtworkMediaAgentBlock } from './artworkMediaPrompt'
 import { buildArtworkUploadAgentBlock } from './artworkUploadCopy'
 import {
   buildAchSessionBlock,
+  buildDcsSessionBlock,
+  buildMegacitiesSessionBlock,
   buildEpisodeAssemblyBlock,
   buildEpisodeStoryboardBlock,
   buildFieldRoadmap,
   buildIdentityAndRole,
+  buildLegacyLookupBlock,
   buildPreUploadSessionBlock,
+  buildReflectiveWeaveBlock,
+  buildSequencingBlock,
   buildSessionCloseBlock,
+  buildTagClassificationBlock,
+  buildTimeBasedWorkBlock,
   buildTriptychSessionBlock,
   DIALOGUE_RULES,
   refinementPreamble,
   sessionTypeOverride,
 } from './promptBlocks'
+import { buildPreUploadStateBlock, type PreUploadSessionState } from './preUploadGuide'
 import type { SystemPromptParts } from './promptCache'
 import type { SessionType } from './routing'
+import { buildSeriesSlugPromptBlock, listSeriesWithParents, isSlugDescendantOf } from './seriesSlugs'
+import { buildArtworkRefinementBlock } from './artworkRefinement'
 
 export type BuildSystemPromptArgs = {
   payload: Payload
@@ -27,8 +37,10 @@ export type BuildSystemPromptArgs = {
   sessionType: SessionType
   artistId: number
   episodeId?: number
+  artworkRecordId?: number
   weakPhases?: string[] | null
   isRefinement?: boolean
+  preUpload?: PreUploadSessionState
 }
 
 const SITE_URL = 'https://bernardbolter.com'
@@ -36,7 +48,8 @@ const SITE_URL = 'https://bernardbolter.com'
 export async function buildSystemPromptParts(
   args: BuildSystemPromptArgs,
 ): Promise<SystemPromptParts> {
-  const { payload, user, sessionType, artistId, episodeId, weakPhases, isRefinement } = args
+  const { payload, user, sessionType, artistId, episodeId, artworkRecordId, weakPhases, isRefinement, preUpload } =
+    args
 
   const artist = await payload.findByID({
     collection: 'artists',
@@ -80,23 +93,82 @@ export async function buildSystemPromptParts(
     .filter(Boolean)
     .join('\n\n---\n\n')
 
-  const cachedPrefix = [
+  const cachedPrefixParts = [
     buildIdentityAndRole(artistName, siteUrl, nameLegal),
     knowledgeBlocks || '(Practice knowledge sections are empty — rely on the conversation.)',
     DIALOGUE_RULES,
     buildFieldRoadmap(careerStage),
-  ].join('\n\n---\n\n')
+  ]
+
+  if (sessionType === 'artwork-cataloguing') {
+    const seriesRecords = await listSeriesWithParents({ payload, user })
+    cachedPrefixParts.push(buildSeriesSlugPromptBlock(seriesRecords))
+    cachedPrefixParts.push(
+      buildPreUploadSessionBlock(),
+      buildArtworkUploadAgentBlock(),
+      buildArtworkMediaAgentBlock(),
+      buildLegacyLookupBlock(),
+      buildTagClassificationBlock(),
+      buildTimeBasedWorkBlock(),
+      buildReflectiveWeaveBlock(),
+      buildAchSessionBlock(),
+      buildDcsSessionBlock(),
+      buildMegacitiesSessionBlock(),
+      buildSessionCloseBlock(),
+    )
+  }
+  if (sessionType === 'triptych-cataloguing') {
+    cachedPrefixParts.push(buildTriptychSessionBlock())
+  }
+  if (sessionType === 'sequencing') {
+    cachedPrefixParts.push(buildSequencingBlock())
+  }
+
+  const cachedPrefix = cachedPrefixParts.join('\n\n---\n\n')
 
   const dynamicParts = [sessionTypeOverride(sessionType)]
   if (sessionType === 'artwork-cataloguing') {
-    dynamicParts.push(buildPreUploadSessionBlock())
-    dynamicParts.push(buildArtworkUploadAgentBlock())
-    dynamicParts.push(buildArtworkMediaAgentBlock())
-    dynamicParts.push(buildAchSessionBlock())
-    dynamicParts.push(buildSessionCloseBlock())
-  }
-  if (sessionType === 'triptych-cataloguing') {
-    dynamicParts.push(buildTriptychSessionBlock())
+    if (artworkRecordId) {
+      // Refinement mode: inject existing artwork context instead of pre-upload state
+      const refinementBlock = await buildArtworkRefinementBlock({ payload, user, artworkId: artworkRecordId })
+      dynamicParts.push(refinementBlock)
+
+      // If the linked artwork is in an ACH sub-series, tell the agent explicitly so
+      // it applies the full ACH workflow rather than skipping due to the series slug not
+      // literally matching "a-colorful-history".
+      try {
+        const artwork = await payload.findByID({
+          collection: 'artworks',
+          id: artworkRecordId,
+          depth: 1,
+          overrideAccess: false,
+          user,
+          select: { series: true },
+        })
+        const seriesSlug =
+          artwork.series && typeof artwork.series === 'object' && 'slug' in artwork.series
+            ? (artwork.series as { slug: string }).slug
+            : typeof artwork.series === 'string'
+              ? artwork.series
+              : null
+        if (seriesSlug) {
+          const seriesRecords = await listSeriesWithParents({ payload, user })
+          if (
+            seriesSlug !== 'a-colorful-history' &&
+            isSlugDescendantOf(seriesRecords, seriesSlug, 'a-colorful-history')
+          ) {
+            dynamicParts.push(
+              `SERIES HIERARCHY NOTE\n\nThis artwork's series "${seriesSlug}" is a sub-series of A Colorful History. Apply the full ACH workflow (all ach.* fields) exactly as you would for a-colorful-history artworks — the series gate in the ACH block applies to this work.`,
+            )
+          }
+        }
+      } catch {
+        // Non-fatal — continue without the note
+      }
+    } else {
+      const stateBlock = preUpload ? buildPreUploadStateBlock(preUpload) : null
+      if (stateBlock) dynamicParts.push(stateBlock)
+    }
   }
   if (sessionType === 'episode-storyboard' && episodeId) {
     const episode = await payload.findByID({

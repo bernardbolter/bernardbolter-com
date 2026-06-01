@@ -64,9 +64,23 @@ export async function runAnthropicTurn({
     }
   }
 
-  await stream.finalMessage()
+  const finalMessage = await stream.finalMessage()
+  logAnthropicCacheUsage(finalMessage.usage)
 
   return { assistantText, toolUses: toolAcc.finish() }
+}
+
+function logAnthropicCacheUsage(usage: {
+  input_tokens?: number
+  cache_creation_input_tokens?: number | null
+  cache_read_input_tokens?: number | null
+}): void {
+  if (process.env.ART_OFFICIAL_LOG_CACHE !== 'true') return
+  console.info('[art-official] anthropic cache usage', {
+    input_tokens: usage.input_tokens ?? 0,
+    cache_creation_input_tokens: usage.cache_creation_input_tokens ?? 0,
+    cache_read_input_tokens: usage.cache_read_input_tokens ?? 0,
+  })
 }
 
 export function buildAssistantToolBlocks(

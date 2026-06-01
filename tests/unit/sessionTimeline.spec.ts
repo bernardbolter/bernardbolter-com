@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 
 import type { StoredMessage } from '@/lib/artOfficial/chatMessages'
 import {
+  collapseTimelineToLatest,
   finalizeOnboardingTimeline,
   reconcileFieldUpdateTimeline,
+  upsertTimelineEntry,
 } from '@/lib/artOfficial/sessionTimeline'
 
 describe('reconcileFieldUpdateTimeline', () => {
@@ -90,5 +92,57 @@ describe('reconcileFieldUpdateTimeline', () => {
     expect(dropped).toBe(1)
     expect(timeline).toHaveLength(1)
     expect(timeline[0]?.field).toBe('series')
+  })
+})
+
+describe('upsertTimelineEntry', () => {
+  it('replaces prior staging for the same field', () => {
+    const initial = [
+      {
+        targetCollection: 'artworks',
+        field: 'series',
+        value: 'gates-of-perception',
+        timestamp: '2026-05-28T10:00:00.000Z',
+      },
+    ]
+    const next = upsertTimelineEntry(initial, {
+      targetCollection: 'artworks',
+      field: 'series',
+      value: 'a-colorful-history',
+      timestamp: '2026-05-28T10:05:00.000Z',
+    })
+    expect(next).toHaveLength(1)
+    expect(next[0]?.value).toBe('a-colorful-history')
+  })
+})
+
+describe('collapseTimelineToLatest', () => {
+  it('repairs duplicate rows on session load', () => {
+    const existing = [
+      {
+        targetCollection: 'artworks',
+        field: 'series',
+        value: 'gates-of-perception',
+        timestamp: '2026-05-28T10:00:00.000Z',
+      },
+      {
+        targetCollection: 'artworks',
+        field: 'series',
+        value: 'a-colorful-history',
+        timestamp: '2026-05-28T10:04:00.000Z',
+      },
+      {
+        targetCollection: 'artworks',
+        field: 'series',
+        value: 'a-colorful-history',
+        timestamp: '2026-05-28T10:05:00.000Z',
+      },
+    ]
+
+    const { timeline, repaired } = reconcileFieldUpdateTimeline([], existing)
+
+    expect(repaired).toBe(true)
+    expect(timeline).toHaveLength(1)
+    expect(timeline[0]?.value).toBe('a-colorful-history')
   })
 })

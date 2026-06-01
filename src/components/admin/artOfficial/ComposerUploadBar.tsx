@@ -7,6 +7,7 @@ import {
 } from '@/lib/artOfficial/artworkUploadCopy'
 
 import { ImageUpload } from './ImageUpload'
+import { MediaLibraryPicker } from './MediaLibraryPicker'
 
 export function ComposerUploadBar({
   onUploaded,
@@ -34,6 +35,7 @@ export function ComposerUploadBar({
         ))}
       </div>
       <ImageUpload onUploaded={onUploaded} disabled={disabled} />
+      <MediaLibraryPicker onSelected={onUploaded} disabled={disabled} />
     </div>
   )
 }

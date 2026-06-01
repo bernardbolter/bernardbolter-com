@@ -6,6 +6,8 @@ export function wrapUpSummary(sessionType: string | null | undefined): string {
       return 'When the triptych dialogue is complete, commit to save staged corpus fields to the Triptychs record. Panel wiring and video files stay in the CMS admin.'
     case 'onboarding':
       return 'When Practice Knowledge sections are staged, commit to write them to the knowledge base. You can re-apply later if you update the session.'
+    case 'sequencing':
+      return 'When order and date anchors are staged, commit to write sortIndex and anchors to Artworks and recompute timelineDate/dateDisplay for the series.'
     case 'biography':
     case 'artist-statement':
       return 'When the text is ready, commit to update your Artist record with the staged biography or statement fields.'
@@ -20,6 +22,8 @@ export function commitButtonHint(sessionType: string | null | undefined): string
       return 'Creates or updates a draft artwork from everything staged in this session (sidebar). Nothing is published until you publish in Artworks.'
     case 'onboarding':
       return 'Writes staged Practice Knowledge sections to the database and marks the session complete.'
+    case 'sequencing':
+      return 'Applies staged sortIndex and date anchors, recomputes timelineDate/dateDisplay, and marks the session complete.'
     default:
       return 'Saves staged fields from this session to the CMS and marks the session complete.'
   }

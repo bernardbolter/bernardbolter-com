@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { uploadMediaFile } from '@/lib/artOfficial/uploadMedia'
 
@@ -17,6 +17,14 @@ export function ImageUpload({
 }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   async function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -27,12 +35,16 @@ export function ImageUpload({
 
     try {
       const id = await uploadMediaFile(file, altLabel)
+      if (!mountedRef.current) return
       onUploaded(id)
     } catch (err) {
+      if (!mountedRef.current) return
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
-      setUploading(false)
-      e.target.value = ''
+      if (mountedRef.current) {
+        setUploading(false)
+        e.target.value = ''
+      }
     }
   }
 

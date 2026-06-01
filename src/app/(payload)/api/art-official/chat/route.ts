@@ -4,6 +4,11 @@ import { ART_OFFICIAL_MODEL, requireAnthropic } from '@/lib/artOfficial/anthropi
 import { ANTHROPIC_TOOL_SCHEMAS } from '@/lib/artOfficial/agentTools'
 import { buildSystemPromptParts } from '@/lib/artOfficial/buildSystemPrompt'
 import {
+  nextPreUploadStepAfterAnswer,
+  sessionHasPrimaryImage,
+} from '@/lib/artOfficial/preUploadGuide'
+import { isSessionKickoffMessage } from '@/lib/artOfficial/sessionKickoff'
+import {
   buildAnthropicMessageHistory,
   type StoredMessage,
 } from '@/lib/artOfficial/chatMessages'
@@ -20,12 +25,8 @@ import {
   buildToolResultBlocks,
   runAnthropicTurn,
 } from '@/lib/artOfficial/runAnthropicTurn'
-import { getMediaSlot } from '@/lib/artOfficial/artworkMediaSlots'
-import { runImageAnalysis } from '@/lib/artOfficial/runImageAnalysis'
-import {
-  stageArtworkMediaUpload,
-  type MediaUploadPayload,
-} from '@/lib/artOfficial/stageArtworkMedia'
+import { applyStagedMediaUpload } from '@/lib/artOfficial/applyStagedMediaUpload'
+import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
 
 const MAX_TOOL_ROUNDS = 5
 
@@ -106,10 +107,40 @@ export async function POST(request: Request) {
     const isRefinement =
       session.status === 'completed' && Boolean(session.dialogueRefinementFlag)
 
+    const hasFirstImpression = Boolean(session.firstImpression?.trim())
+    const hasPrimaryImage = sessionHasPrimaryImage(session)
+    const isKickoff = isSessionKickoffMessage(userMessage.trim())
+
+    const advancedStep = nextPreUploadStepAfterAnswer({
+      sessionType: session.sessionType,
+      preUploadStep: session.preUploadStep,
+      hasFirstImpression,
+      hasPrimaryImage,
+      userMessage: userMessage.trim(),
+      isKickoffMessage: isKickoff,
+    })
+
+    if (advancedStep != null) {
+      await payload.update({
+        collection: 'sessions',
+        id: session.id,
+        data: { preUploadStep: advancedStep },
+        overrideAccess: false,
+        user,
+        context: { skipAgent: true },
+      })
+      session.preUploadStep = advancedStep
+    }
+
     const episodeId =
       typeof session.episodeRecord === 'object'
         ? (session.episodeRecord?.id as number | undefined)
         : (session.episodeRecord as number | undefined)
+
+    const artworkRecordId =
+      typeof session.artworkRecord === 'object'
+        ? (session.artworkRecord?.id as number | undefined)
+        : (session.artworkRecord as number | undefined)
 
     let systemParts
     try {
@@ -119,8 +150,14 @@ export async function POST(request: Request) {
         sessionType: session.sessionType as SessionType,
         artistId,
         episodeId,
+        artworkRecordId,
         weakPhases: session.weakPhases,
         isRefinement,
+        preUpload: {
+          preUploadStep: session.preUploadStep,
+          hasFirstImpression,
+          hasPrimaryImage,
+        },
       })
     } catch (err) {
       console.error('[art-official/chat] buildSystemPromptParts', err)
@@ -153,51 +190,19 @@ export async function POST(request: Request) {
         }
 
         try {
+          if (advancedStep != null) {
+            send('pre-upload-step', { preUploadStep: advancedStep })
+          }
+
           if (mediaUpload && session.sessionType === 'artwork-cataloguing') {
             try {
-              const staged = await stageArtworkMediaUpload({
+              await applyStagedMediaUpload({
                 payload,
                 user,
                 session,
                 upload: mediaUpload,
+                send,
               })
-              if (staged.timeline) {
-                session.fieldUpdateTimeline = staged.timeline as never
-              }
-              session.stagedMedia = staged.stagedMedia
-              send('media-staged', {
-                slotId: mediaUpload.slotId,
-                attachment: staged.attachment,
-              })
-              if (staged.stagedTimelineEntry) {
-                send('tool-staged', {
-                  name: 'update_field',
-                  input: {
-                    ...staged.stagedTimelineEntry,
-                    confidence: 'confirmed',
-                    source: 'conversation',
-                  },
-                })
-              }
-
-              const visionMediaId = mediaUpload.mediaId
-              const slot = getMediaSlot(mediaUpload.slotId)
-              if (visionMediaId != null && slot?.kind === 'image') {
-                try {
-                  const analysis = await runImageAnalysis({
-                    mediaId: visionMediaId,
-                    payload,
-                    user,
-                  })
-                  send('image-analysis', { slotId: mediaUpload.slotId, ...analysis })
-                } catch (analysisErr) {
-                  console.error('[art-official/chat] image analysis', analysisErr)
-                  send('error', {
-                    message: formatChatError(analysisErr),
-                    code: 'IMAGE_ANALYSIS',
-                  })
-                }
-              }
             } catch (mediaErr) {
               console.error('[art-official/chat] media upload', mediaErr)
               send('error', {
@@ -218,7 +223,11 @@ export async function POST(request: Request) {
                 overrideAccess: false,
                 user,
               })
-              imageMediaUrl = media.url ?? null
+              const mimeType = media.mimeType?.toLowerCase() ?? ''
+              imageMediaUrl =
+                mimeType.startsWith('image/') && typeof media.url === 'string'
+                  ? media.url
+                  : null
             } catch {
               imageMediaUrl = null
             }

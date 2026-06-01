@@ -1,5 +1,6 @@
 import { buildArtistPatchFromTimeline } from '@/lib/artOfficial/buildArtistPatch'
 import { buildEpisodePatchFromTimeline } from '@/lib/artOfficial/buildEpisodePatch'
+import { buildSequencingPatchesFromTimeline } from '@/lib/artOfficial/buildSequencingPatch'
 import {
   buildArtworkDraftPatchFromSession,
   buildArtworkPatchFromTimeline,
@@ -14,7 +15,10 @@ import {
 } from '@/lib/artOfficial/applyPracticeKnowledgePatches'
 import { formatPayloadValidationError } from '@/lib/artOfficial/formatPayloadValidationError'
 import { resolveArtworkCommitReferences } from '@/lib/artOfficial/resolveArtworkCommitReferences'
+import { recomputeTimeline } from '@/lib/artOfficial/recomputeTimeline'
 import { commitTarget } from '@/lib/artOfficial/routing'
+import { collapseTimelineToLatest, type TimelineEntry } from '@/lib/artOfficial/sessionTimeline'
+import { findArtworkBySlug, resolveTargetArtworkSlug } from '@/lib/artOfficial/sequencing/resolveArtwork'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 import type { SessionType } from '@/lib/artOfficial/routing'
 
@@ -42,6 +46,12 @@ export async function POST(request: Request, context: RouteContext) {
     return Response.json({ error: 'Session not found' }, { status: 404 })
   }
 
+  const timeline = collapseTimelineToLatest(
+    Array.isArray(session.fieldUpdateTimeline)
+      ? (session.fieldUpdateTimeline as TimelineEntry[])
+      : [],
+  )
+
   const body = await request.json().catch(() => ({}))
   const reapply = body.reapply === true
   const target = commitTarget(session.sessionType as SessionType)
@@ -52,6 +62,8 @@ export async function POST(request: Request, context: RouteContext) {
   let triptychId: number | undefined
   let episodeId: number | undefined
   let practiceKnowledge: Awaited<ReturnType<typeof applyPracticeKnowledgePatches>> | undefined
+  let sequencingApplied = 0
+  let timelineRecompute: Awaited<ReturnType<typeof recomputeTimeline>> | undefined
 
   function slugifyTitle(input: string): string {
     return input
@@ -64,24 +76,21 @@ export async function POST(request: Request, context: RouteContext) {
   switch (target.kind) {
     case 'create-artwork': {
       const serverPatch = mergeStagedMediaIntoArtworkPatch(
-        buildArtworkPatchFromTimeline(session.fieldUpdateTimeline),
+        buildArtworkPatchFromTimeline(timeline),
         session.stagedMedia,
       )
       const clientPatch =
         body.artworkData && typeof body.artworkData === 'object'
           ? (body.artworkData as Record<string, unknown>)
           : {}
-      // `as any` mirrors the original pattern (data was effectively `any` from
-      // `body.artworkData ?? {}`). Required-field validation runs in Payload at
-      // commit time; TypeScript can't infer those fields are present statically.
       const draftPatch = buildArtworkDraftPatchFromSession(session)
-      let merged = sanitizeArtworkCommitPatch(
-        mergeArtworkPatches(
-          mergeArtworkPatches(clientPatch, serverPatch),
-          draftPatch,
-        ),
+      let merged = mergeArtworkPatches(
+        mergeArtworkPatches(clientPatch, serverPatch),
+        draftPatch,
       ) as Record<string, unknown>
 
+      // Resolve references first (converts tag names → IDs, series slugs → IDs, etc.)
+      // BEFORE sanitizeArtworkCommitPatch, which would otherwise strip string tag names.
       try {
         merged = await resolveArtworkCommitReferences(
           { payload, user, session },
@@ -91,6 +100,9 @@ export async function POST(request: Request, context: RouteContext) {
         const message = err instanceof Error ? err.message : 'Invalid artwork commit data'
         return Response.json({ error: message }, { status: 412 })
       }
+
+      // Final defensive sanitization after all references are resolved to IDs.
+      merged = sanitizeArtworkCommitPatch(merged)
 
       const artworkData = {
         ...merged,
@@ -132,7 +144,7 @@ export async function POST(request: Request, context: RouteContext) {
     }
 
     case 'create-triptych': {
-      const serverPatch = buildTriptychPatchFromTimeline(session.fieldUpdateTimeline)
+      const serverPatch = buildTriptychPatchFromTimeline(timeline)
       const clientPatch =
         body.triptychData && typeof body.triptychData === 'object'
           ? (body.triptychData as Record<string, unknown>)
@@ -202,6 +214,60 @@ export async function POST(request: Request, context: RouteContext) {
       break
     }
 
+    case 'apply-sequencing': {
+      const patches = buildSequencingPatchesFromTimeline(timeline)
+      if (patches.size === 0) {
+        return Response.json(
+          {
+            error:
+              'No sequencing fields were staged. Use place_in_sequence and set_date_anchor in chat, then commit again.',
+          },
+          { status: 412 },
+        )
+      }
+
+      const seriesId =
+        typeof session.sequencingSeries === 'object' && session.sequencingSeries
+          ? session.sequencingSeries.id
+          : typeof session.sequencingSeries === 'number'
+            ? session.sequencingSeries
+            : undefined
+
+      for (const [slugKey, patch] of patches) {
+        let slug = slugKey
+        if (slugKey === '_session') {
+          const resolved = await resolveTargetArtworkSlug(payload, user, session, undefined)
+          if (!resolved) {
+            return Response.json(
+              { error: 'Session has no target artwork — pass artworkSlug in tools or link artworkRecord.' },
+              { status: 412 },
+            )
+          }
+          slug = resolved
+        }
+
+        const artwork = await findArtworkBySlug(payload, slug, user)
+        if (!artwork) {
+          return Response.json({ error: `Artwork not found: ${slug}` }, { status: 412 })
+        }
+
+        await payload.update({
+          collection: 'artworks',
+          id: artwork.id,
+          data: patch as never,
+          overrideAccess: false,
+          user,
+        })
+        sequencingApplied += 1
+      }
+
+      timelineRecompute = await recomputeTimeline(payload, {
+        user,
+        seriesId,
+      })
+      break
+    }
+
     case 'update-artist-singleton': {
       const artists = await payload.find({
         collection: 'artists',
@@ -215,9 +281,6 @@ export async function POST(request: Request, context: RouteContext) {
         return Response.json({ error: 'Artist singleton not found' }, { status: 412 })
       }
 
-      const timeline = Array.isArray(session.fieldUpdateTimeline)
-        ? session.fieldUpdateTimeline
-        : []
       const mode =
         session.sessionType === 'biography' ? 'biography' : 'artist-statement'
       const serverPatch = buildArtistPatchFromTimeline(timeline, mode)
@@ -259,9 +322,6 @@ export async function POST(request: Request, context: RouteContext) {
         return Response.json({ error: 'Session is not linked to an episode' }, { status: 412 })
       }
 
-      const timeline = Array.isArray(session.fieldUpdateTimeline)
-        ? session.fieldUpdateTimeline
-        : []
       const episodePatch = buildEpisodePatchFromTimeline(timeline)
 
       if (Object.keys(episodePatch).length === 0) {
@@ -284,7 +344,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     case 'no-record-write': {
       const patches = patchesFromSessionTimeline(
-        session.fieldUpdateTimeline,
+        timeline,
         body.practiceKnowledgePatches,
       )
       practiceKnowledge = await applyPracticeKnowledgePatches(payload, user, patches)
@@ -334,5 +394,7 @@ export async function POST(request: Request, context: RouteContext) {
     episodeId,
     refinementFlagged,
     practiceKnowledge,
+    sequencingApplied,
+    timelineRecompute,
   })
 }

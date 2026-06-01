@@ -5,6 +5,10 @@ import { artworkAchBeforeChange, artworkAchValidateAr } from '@/hooks/artworkAch
 import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
+import { artworkPrimaryMediaFields } from './artworks/artworkPrimaryMediaFields'
+import { dcsTab } from './artworks/dcsTabFields'
+import { fieldNotesTab } from './artworks/fieldNotesTab'
+import { megacitiesTab } from './artworks/megacitiesTabFields'
 
 export const Artworks: CollectionConfig = {
   slug: 'artworks',
@@ -34,91 +38,7 @@ export const Artworks: CollectionConfig = {
     description: 'The complete archive of all artworks.',
   },
   fields: [
-    // ── Always visible: primary media (§1.5) ───────────────────
-    {
-      name: 'primaryImage',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description: 'Canonical high-res image for image-based works.',
-      },
-    },
-    {
-      name: 'primaryMediaType',
-      type: 'select',
-      defaultValue: 'image',
-      options: [
-        { label: 'Image', value: 'image' },
-        { label: 'Video', value: 'video' },
-        { label: 'Image and video', value: 'image-and-video' },
-      ],
-      admin: { position: 'sidebar' },
-    },
-    {
-      name: 'primaryImageAltText',
-      type: 'text',
-      localized: true,
-      admin: {
-        description: 'Alt text for the primary image (accessibility).',
-      },
-    },
-    {
-      name: 'posterImage',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description:
-          'Thumbnail / social / timeline / video poster. Required when primary media type is video.',
-      },
-    },
-    {
-      name: 'posterImageAltText',
-      type: 'text',
-      localized: true,
-    },
-    {
-      name: 'wpImageUrl',
-      type: 'text',
-      admin: {
-        description: 'Temporary WordPress image URL until migrated to R2.',
-        position: 'sidebar',
-      },
-    },
-    {
-      name: 'finalReferenceImage',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description: 'Final studio reference image used for timelapse correction.',
-      },
-    },
-    {
-      name: 'timelapseFile',
-      type: 'upload',
-      relationTo: 'media',
-      admin: {
-        description: 'Generated timelapse output for process documentation.',
-      },
-    },
-    {
-      name: 'processPhotos',
-      type: 'join',
-      collection: 'field-notes',
-      on: 'relatedArtwork',
-      admin: {
-        description:
-          'All linked FieldNotes for this artwork (photos, clips, notes) in reverse relation.',
-      },
-    },
-    {
-      name: 'lines',
-      type: 'relationship',
-      relationTo: 'lines',
-      hasMany: true,
-      admin: {
-        description: 'Active Lines this artwork contributes to.',
-      },
-    },
+    ...artworkPrimaryMediaFields,
 
     {
       type: 'tabs',
@@ -148,19 +68,31 @@ export const Artworks: CollectionConfig = {
               unique: true,
             },
             {
-              name: 'creator',
-              type: 'relationship',
-              relationTo: 'artists',
-              required: true,
-              admin: { position: 'sidebar', description: 'Primary artist for this work.' },
-            },
-            {
-              name: 'series',
-              type: 'relationship',
-              relationTo: 'series',
-              hasMany: false,
-              required: true,
-              admin: { position: 'sidebar' },
+              type: 'row',
+              fields: [
+                {
+                  name: 'creator',
+                  type: 'relationship',
+                  relationTo: 'artists',
+                  required: true,
+                  admin: {
+                    width: '50%',
+                    description: 'Primary artist for this work.',
+                  },
+                },
+                {
+                  name: 'series',
+                  type: 'relationship',
+                  relationTo: 'series',
+                  hasMany: false,
+                  required: true,
+                  admin: {
+                    width: '50%',
+                    description:
+                      'Series drives conditional tabs (A Colorful History, Digital City Series, Megacities). Save after changing — Art/Official Megacities workflow applies when series slug is megacities.',
+                  },
+                },
+              ],
             },
             {
               // auto-populated from series, drives tab visibility
@@ -168,8 +100,8 @@ export const Artworks: CollectionConfig = {
               type: 'text',
               admin: {
                 readOnly: true,
-                position: 'sidebar',
-                description: 'Auto-set from series.',
+                hidden: true,
+                description: 'Auto-set from series — drives series-specific tabs.',
               },
               hooks: {
                 beforeChange: [
@@ -195,76 +127,176 @@ export const Artworks: CollectionConfig = {
               },
             },
             {
-              name: 'status',
-              type: 'select',
-              required: true,
-              defaultValue: 'draft',
-              options: [
-                { label: 'Draft', value: 'draft' },
-                { label: 'Published', value: 'published' },
-                { label: 'Archived', value: 'archived' },
+              type: 'row',
+              fields: [
+                {
+                  name: 'status',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'draft',
+                  options: [
+                    { label: 'Draft', value: 'draft' },
+                    { label: 'Published', value: 'published' },
+                    { label: 'Archived', value: 'archived' },
+                  ],
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'recordOrigin',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'artist-catalogued',
+                  access: {
+                    read: () => true,
+                    update: () => false,
+                  },
+                  options: [
+                    { label: 'Artist catalogued', value: 'artist-catalogued' },
+                    { label: 'Gallery catalogued', value: 'gallery-catalogued' },
+                    { label: 'Collector catalogued', value: 'collector-catalogued' },
+                    { label: 'Migrated', value: 'migrated' },
+                    { label: 'Enrichment agent', value: 'enrichment-agent' },
+                  ],
+                  admin: {
+                    width: '50%',
+                    description:
+                      'Set once at creation; immutable. Provenance of the catalogue record.',
+                  },
+                },
               ],
-              admin: { position: 'sidebar' },
             },
             {
-              name: 'recordOrigin',
-              type: 'select',
-              required: true,
-              defaultValue: 'artist-catalogued',
-              access: {
-                read: () => true,
-                update: () => false,
-              },
-              options: [
-                { label: 'Artist catalogued', value: 'artist-catalogued' },
-                { label: 'Gallery catalogued', value: 'gallery-catalogued' },
-                { label: 'Collector catalogued', value: 'collector-catalogued' },
-                { label: 'Migrated', value: 'migrated' },
-                { label: 'Enrichment agent', value: 'enrichment-agent' },
+              type: 'row',
+              fields: [
+                {
+                  name: 'yearCreated',
+                  type: 'number',
+                  required: true,
+                  admin: {
+                    width: '33%',
+                    description: 'Four-digit year the work was begun.',
+                  },
+                },
+                {
+                  name: 'yearCompleted',
+                  type: 'number',
+                  admin: {
+                    width: '33%',
+                    description: 'Year finished if different from year created.',
+                  },
+                },
+                {
+                  name: 'yearStart',
+                  type: 'number',
+                  admin: {
+                    width: '34%',
+                    readOnly: true,
+                    description: 'Mirrors year created — reserved for future slug generation.',
+                  },
+                },
               ],
-              admin: {
-                position: 'sidebar',
-                description: 'Set once at creation; immutable. Provenance of the catalogue record.',
-              },
             },
             {
-              name: 'yearCreated',
-              type: 'number',
-              required: true,
+              type: 'collapsible',
+              label: 'Timeline & sequencing',
               admin: {
-                position: 'sidebar',
-                description: 'Four-digit year the work was begun.',
+                initCollapsed: false,
+                description:
+                  'Order (sortIndex) drives the proportional timeline. timelineDate and dateDisplay are computed — run recompute after placement or anchor changes.',
               },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'sortIndex',
+                      type: 'number',
+                      admin: {
+                        width: '33%',
+                        description: 'Authoritative display order (float — insert between works via midpoint).',
+                      },
+                    },
+                    {
+                      name: 'datePrecision',
+                      type: 'select',
+                      defaultValue: 'unknown',
+                      options: [
+                        { label: 'Exact', value: 'exact' },
+                        { label: 'Month', value: 'month' },
+                        { label: 'Year', value: 'year' },
+                        { label: 'Circa', value: 'circa' },
+                        { label: 'Decade', value: 'decade' },
+                        { label: 'Unknown', value: 'unknown' },
+                      ],
+                      admin: { width: '33%' },
+                    },
+                    {
+                      name: 'dateKnown',
+                      type: 'date',
+                      admin: {
+                        width: '34%',
+                        description: 'Concrete known date — anchor when precision is exact/month/year.',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'dateEarliest',
+                      type: 'date',
+                      admin: { width: '50%', description: 'Made no earlier than.' },
+                    },
+                    {
+                      name: 'dateLatest',
+                      type: 'date',
+                      admin: { width: '50%', description: 'Made no later than.' },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'timelineDate',
+                      type: 'date',
+                      admin: {
+                        width: '50%',
+                        readOnly: true,
+                        description: 'Computed positioning date — internal layout only, never public.',
+                      },
+                    },
+                    {
+                      name: 'dateDisplay',
+                      type: 'text',
+                      admin: {
+                        width: '50%',
+                        readOnly: true,
+                        description: 'Honest human label for the timeline view.',
+                      },
+                    },
+                  ],
+                },
+              ],
             },
             {
-              name: 'yearCompleted',
-              type: 'number',
-              admin: {
-                position: 'sidebar',
-                description: 'Year finished if different from year created.',
-              },
-            },
-            {
-              name: 'yearStart',
-              type: 'number',
-              admin: {
-                position: 'sidebar',
-                readOnly: true,
-                description: 'Mirrors year created — reserved for future slug generation.',
-              },
-            },
-            {
-              name: 'datePublished',
-              type: 'date',
-              admin: { position: 'sidebar' },
-            },
-            {
-              name: 'wp_id',
-              type: 'number',
-              admin: {
-                position: 'sidebar',
-                description: 'Legacy WordPress ID.',
-              },
+              type: 'row',
+              fields: [
+                {
+                  name: 'datePublished',
+                  type: 'date',
+                  admin: { width: '50%' },
+                },
+                {
+                  name: 'wp_id',
+                  type: 'number',
+                  admin: {
+                    width: '50%',
+                    description: 'Legacy WordPress ID.',
+                  },
+                },
+              ],
             },
             {
               name: 'oldWpUrl',
@@ -1163,6 +1195,8 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
+        fieldNotesTab,
+
         // ── TAB: AR (Quick Look / model-viewer) ─────────────────
         {
           label: 'AR',
@@ -1172,7 +1206,6 @@ export const Artworks: CollectionConfig = {
               name: 'arEnabled',
               type: 'checkbox',
               defaultValue: false,
-              admin: { position: 'sidebar' },
             },
             {
               name: 'arWidthM',
@@ -1203,12 +1236,11 @@ export const Artworks: CollectionConfig = {
               name: 'arAllowScaling',
               type: 'checkbox',
               defaultValue: true,
-              admin: { position: 'sidebar' },
             },
             {
               name: 'arLastGenerated',
               type: 'date',
-              admin: { readOnly: true, position: 'sidebar' },
+              admin: { readOnly: true },
             },
           ],
         },
@@ -1548,7 +1580,6 @@ export const Artworks: CollectionConfig = {
               admin: {
                 hidden: true,
                 description: 'Legacy — use availabilityStatus.',
-                position: 'sidebar',
               },
             },
             {
@@ -1631,8 +1662,23 @@ export const Artworks: CollectionConfig = {
         {
           label: 'SEO',
           fields: [
-            { name: 'metaTitle', type: 'text', localized: true },
-            { name: 'metaDescription', type: 'textarea', localized: true },
+            {
+              name: 'metaTitle',
+              type: 'text',
+              localized: true,
+              admin: {
+                description: 'Optional override. When empty, the public site uses the artwork title.',
+              },
+            },
+            {
+              name: 'metaDescription',
+              type: 'textarea',
+              localized: true,
+              admin: {
+                description:
+                  'Optional override. When empty, the public site uses descriptionShort.',
+              },
+            },
             {
               name: 'sameAs',
               type: 'array',
@@ -1805,6 +1851,39 @@ export const Artworks: CollectionConfig = {
           },
           fields: [
             {
+              type: 'collapsible',
+              label: 'Process media',
+              admin: {
+                initCollapsed: false,
+                description: 'Final reference and timelapse output for this work.',
+              },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'finalReferenceImage',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        width: '50%',
+                        description: 'Final studio reference used for timelapse correction.',
+                      },
+                    },
+                    {
+                      name: 'timelapseFile',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        width: '50%',
+                        description: 'Generated timelapse output.',
+                      },
+                    },
+                  ],
+                },
+              ],
+            },
+            {
               name: 'ach',
               type: 'group',
               admin: {
@@ -1812,6 +1891,15 @@ export const Artworks: CollectionConfig = {
                   'A Colorful History series-specific data. Sub-groups map to spec Groups 1–7.',
               },
               fields: [
+                // ── Internal grouping / sub-series ────────────────
+                {
+                  name: 'internalGroupTitle',
+                  type: 'text',
+                  admin: {
+                    description:
+                      'Optional internal sub-series or thematic group name within ACH (e.g. "Gates of Perception", "Bridges of Europe"). Not displayed publicly — editorial organisation only.',
+                  },
+                },
                 // ── Group 1 — Map & Tour ──────────────────────
                 {
                   name: 'mapAndTour',
@@ -2112,6 +2200,14 @@ export const Artworks: CollectionConfig = {
                           required: true,
                           admin: { description: 'Short description of the event for that year.' },
                         },
+                        {
+                          name: 'wikiLink',
+                          type: 'text',
+                          admin: {
+                            description:
+                              'Wikipedia article URL for this specific event or date (e.g. https://en.wikipedia.org/wiki/Fall_of_the_Berlin_Wall). Agent looks up and proposes; Bernard confirms.',
+                          },
+                        },
                       ],
                       admin: {
                         description:
@@ -2368,124 +2464,8 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
-        // ── TAB 14: Digital City Series ───────────────────────
-        {
-          label: 'Digital City Series',
-          admin: {
-            condition: (data) => data?.seriesSlug === 'digital-city-series',
-          },
-          fields: [
-            { name: 'dcs_photoTitle', type: 'text', label: 'Original Photo Title' },
-            {
-              name: 'dcs_cityData',
-              type: 'group',
-              fields: [
-                { name: 'population', type: 'number' },
-                { name: 'area', type: 'number', admin: { description: 'km²' } },
-                { name: 'density', type: 'number', admin: { description: 'per km²' } },
-                { name: 'elevation', type: 'number', admin: { description: 'metres' } },
-              ],
-            },
-            {
-              name: 'dcs_videos',
-              type: 'array',
-              fields: [
-                {
-                  name: 'videoType',
-                  type: 'select',
-                  required: true,
-                  options: [
-                    { label: 'Upload (R2)', value: 'upload' },
-                    { label: 'YouTube', value: 'youtube' },
-                    { label: 'Vimeo', value: 'vimeo' },
-                    { label: 'Other URL', value: 'url' },
-                  ],
-                },
-                {
-                  name: 'videoFile',
-                  type: 'upload',
-                  relationTo: 'media',
-                  admin: { condition: (_, s) => s?.videoType === 'upload' },
-                },
-                {
-                  name: 'videoUrl',
-                  type: 'text',
-                  admin: { condition: (_, s) => s?.videoType !== 'upload' },
-                },
-                { name: 'posterImage', type: 'upload', relationTo: 'media' },
-                { name: 'title', type: 'text', localized: true },
-                {
-                  name: 'videoRole',
-                  type: 'select',
-                  options: [
-                    { label: 'Making Of', value: 'makingOf' },
-                    { label: 'Documentation', value: 'documentation' },
-                    { label: 'Other', value: 'other' },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-
-        // ── TAB 15: Megacities ────────────────────────────────
-        {
-          label: 'Megacities',
-          admin: {
-            condition: (data) => data?.seriesSlug === 'megacities',
-          },
-          fields: [
-            {
-              name: 'mc_cityData',
-              type: 'group',
-              fields: [
-                { name: 'population', type: 'number' },
-                { name: 'area', type: 'number', admin: { description: 'km²' } },
-                { name: 'density', type: 'number', admin: { description: 'per km²' } },
-                { name: 'elevation', type: 'number', admin: { description: 'metres' } },
-              ],
-            },
-            {
-              name: 'mc_videos',
-              type: 'array',
-              fields: [
-                {
-                  name: 'videoType',
-                  type: 'select',
-                  required: true,
-                  options: [
-                    { label: 'Upload (R2)', value: 'upload' },
-                    { label: 'YouTube', value: 'youtube' },
-                    { label: 'Vimeo', value: 'vimeo' },
-                    { label: 'Other URL', value: 'url' },
-                  ],
-                },
-                {
-                  name: 'videoFile',
-                  type: 'upload',
-                  relationTo: 'media',
-                  admin: { condition: (_, s) => s?.videoType === 'upload' },
-                },
-                {
-                  name: 'videoUrl',
-                  type: 'text',
-                  admin: { condition: (_, s) => s?.videoType !== 'upload' },
-                },
-                { name: 'posterImage', type: 'upload', relationTo: 'media' },
-                { name: 'title', type: 'text', localized: true },
-                {
-                  name: 'videoRole',
-                  type: 'select',
-                  options: [
-                    { label: 'Making Of', value: 'makingOf' },
-                    { label: 'Documentation', value: 'documentation' },
-                    { label: 'Other', value: 'other' },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
+        dcsTab,
+        megacitiesTab,
       ],
     },
   ],

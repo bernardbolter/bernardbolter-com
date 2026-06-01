@@ -9,8 +9,13 @@ import {
   ARTWORK_UPLOAD_WAITING_PLACEHOLDER,
 } from '@/lib/artOfficial/artworkUploadCopy'
 import { messagesForDisplay } from '@/lib/artOfficial/chatMessages'
+import { hasPrimaryImageStaged } from '@/lib/artOfficial/hasPrimaryImageStaged'
 import { formatChatError } from '@/lib/artOfficial/formatChatError'
 import { parseChatHttpError } from '@/lib/artOfficial/parseChatHttpError'
+import {
+  collapseTimelineToLatest,
+  upsertTimelineEntry,
+} from '@/lib/artOfficial/sessionTimeline'
 import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
 import type { StagedMediaAttachment } from '@/lib/artOfficial/stagedMedia'
 
@@ -32,7 +37,7 @@ type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
 function parseTimeline(session: ArtOfficialSession): TimelineEntry[] {
   if (!Array.isArray(session.fieldUpdateTimeline)) return []
-  return session.fieldUpdateTimeline as TimelineEntry[]
+  return collapseTimelineToLatest(session.fieldUpdateTimeline as TimelineEntry[])
 }
 
 function parseDisplayMessages(session: ArtOfficialSession): ChatMessage[] {
@@ -62,13 +67,16 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
   const [chatErrorCode, setChatErrorCode] = useState<string | undefined>()
   const [agentActivity, setAgentActivity] = useState<AgentActivity>('idle')
   const [imageUploaded, setImageUploaded] = useState(() =>
-    parseTimeline(initialSession).some(
-      (e) => e.targetCollection === 'artworks' && e.field === 'primaryImage',
-    ),
+    hasPrimaryImageStaged(parseTimeline(initialSession), initialSession.stagedMedia),
   )
   const errorRef = useRef<HTMLDivElement>(null)
 
   const isArtworkSession = session.sessionType === 'artwork-cataloguing'
+  const isArtworkRefinement =
+    isArtworkSession &&
+    (typeof session.artworkRecord === 'number'
+      ? session.artworkRecord > 0
+      : typeof session.artworkRecord === 'object' && session.artworkRecord !== null)
   const hasFirstImpression = Boolean(session.firstImpression)
   const hasMessages = messages.length > 0 || Boolean(pending)
   const assistantTurns = messages.filter((m) => m.role === 'assistant').length
@@ -174,6 +182,9 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
               setPending(assistantText)
               setAgentActivity('streaming')
             }
+            if (type === 'pre-upload-step' && typeof data.preUploadStep === 'number') {
+              setSession((s) => ({ ...s, preUploadStep: data.preUploadStep as number }))
+            }
             if (type === 'image-analysis') {
               setAgentActivity('analyzing')
             }
@@ -199,10 +210,12 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             }
             if (type === 'tool-staged' && data.name === 'update_field' && data.input) {
               const input = data.input as TimelineEntry
-              setTimeline((t) => [
-                ...t,
-                { ...input, timestamp: new Date().toISOString() },
-              ])
+              setTimeline((t) =>
+                upsertTimelineEntry(t, {
+                  ...input,
+                  timestamp: new Date().toISOString(),
+                }),
+              )
               if (input.field === 'primaryImage') {
                 setImageUploaded(true)
               }
@@ -284,16 +297,12 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
   }
 
   async function onImageUploaded(mediaId: number) {
-    setImageUploaded(true)
     await sendChat('I have uploaded the primary artwork image.', {
       mediaUpload: { slotId: 'primary', mediaId },
     })
   }
 
   async function onMediaAction(upload: MediaUploadPayload, label: string) {
-    if (upload.slotId === 'primary' && upload.mediaId != null) {
-      setImageUploaded(true)
-    }
     const userMessage = upload.skip
       ? `Not applicable: ${label}`
       : upload.url
@@ -324,9 +333,10 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             sessionType={session.sessionType}
             hasMessages={hasMessages}
             disabled={sending}
+            isRefinement={isArtworkRefinement}
             onStart={(message) => void sendChat(message, { showUserInThread: false })}
           />
-          {isArtworkSession ? (
+          {isArtworkSession && !isArtworkRefinement ? (
             <PreUploadPanel
               hasFirstImpression={hasFirstImpression}
               preUploadStep={session.preUploadStep}

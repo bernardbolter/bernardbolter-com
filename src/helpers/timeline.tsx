@@ -15,13 +15,24 @@ const MILLISECONDS_PER_MONTH = MILLISECONDS_PER_YEAR / 12
 const DEFAULT_PIXELS_PER_YEAR = 120
 const PIXELS_PER_MONTH = 10
 
-// Safe date getter - returns date or fallback to 2000-01-01
+// Safe date getter for timeline layout — prefers computed timelineDate, never used as public label.
 export function getArtworkDate(artwork: {
+  sortIndex?: number | null
+  timelineDate?: string | Date | null
   yearCreated?: number | null
   dateCreated?: string | Date | null
   date?: string | Date | null
   createdAt?: string | Date
 }): Date {
+  const timelineValue = artwork.timelineDate
+  if (timelineValue) {
+    try {
+      const d = new Date(timelineValue)
+      if (!Number.isNaN(d.getTime())) return d
+    } catch {
+      // fall through
+    }
+  }
   if (typeof artwork.yearCreated === 'number' && !Number.isNaN(artwork.yearCreated)) {
     return new Date(artwork.yearCreated, 0, 1)
   }
@@ -35,6 +46,33 @@ export function getArtworkDate(artwork: {
   } catch {
     return new Date('2000-01-01')
   }
+}
+
+/** Authoritative sort key: sortIndex, then layout date, then yearCreated. */
+export function getArtworkSortKey(artwork: {
+  sortIndex?: number | null
+  timelineDate?: string | Date | null
+  yearCreated?: number | null
+  dateCreated?: string | Date | null
+  date?: string | Date | null
+  createdAt?: string | Date
+}): number {
+  if (typeof artwork.sortIndex === 'number' && !Number.isNaN(artwork.sortIndex)) {
+    return artwork.sortIndex
+  }
+  return getArtworkDate(artwork).getTime()
+}
+
+/** Human label for the timeline — never expose timelineDate. */
+export function getArtworkDisplayLabel(artwork: {
+  dateDisplay?: string | null
+  yearCreated?: number | null
+}): string {
+  if (artwork.dateDisplay?.trim()) return artwork.dateDisplay.trim()
+  if (typeof artwork.yearCreated === 'number' && !Number.isNaN(artwork.yearCreated)) {
+    return String(artwork.yearCreated)
+  }
+  return ''
 }
 
 // Helper function to shuffle array for random sorting
@@ -84,16 +122,12 @@ export function generateTimeline(config: TimelineConfig): TimelineResult {
   switch (sorting) {
     case 'latest':
       sortedArtworks = [...indexedArtworks].sort((a, b) => {
-        const dateA = getArtworkDate(a)
-        const dateB = getArtworkDate(b)
-        return dateB.getTime() - dateA.getTime() // Newest first
+        return getArtworkSortKey(b) - getArtworkSortKey(a)
       })
       break
     case 'oldest':
       sortedArtworks = [...indexedArtworks].sort((a, b) => {
-        const dateA = getArtworkDate(a)
-        const dateB = getArtworkDate(b)
-        return dateA.getTime() - dateB.getTime() // Oldest first
+        return getArtworkSortKey(a) - getArtworkSortKey(b)
       })
       break
     case 'random':

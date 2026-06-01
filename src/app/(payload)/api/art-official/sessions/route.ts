@@ -8,9 +8,11 @@ const createSessionSchema = z.object({
     'artist-statement',
     'biography',
     'onboarding',
+    'sequencing',
   ]),
   artworkRecord: z.number().int().positive().optional(),
   triptychRecord: z.number().int().positive().optional(),
+  sequencingSeries: z.number().int().positive().optional(),
 })
 
 export async function POST(request: Request) {
@@ -54,9 +56,11 @@ export async function POST(request: Request) {
       artistId: artist.id,
       artworkRecord: parsed.data.artworkRecord,
       triptychRecord: parsed.data.triptychRecord,
+      sequencingSeries: parsed.data.sequencingSeries,
       status: 'in-progress',
       messages: [],
-      ...(parsed.data.sessionType === 'artwork-cataloguing'
+      // Pre-upload questionnaire only runs for new artworks — skip when refining an existing one.
+      ...(parsed.data.sessionType === 'artwork-cataloguing' && !parsed.data.artworkRecord
         ? { preUploadStep: 1 }
         : {}),
     },
@@ -69,6 +73,7 @@ export async function POST(request: Request) {
     sessionId: session.sessionId,
     sessionType: session.sessionType,
     status: session.status,
+    artworkRecord: session.artworkRecord ?? null,
   })
 }
 

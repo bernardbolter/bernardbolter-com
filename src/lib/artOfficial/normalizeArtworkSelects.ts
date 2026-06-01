@@ -24,6 +24,15 @@ export const ARTWORK_FRAMING_VALUES = ['framed', 'unframed', 'artist-framed'] as
 
 export const ARTWORK_MEASUREMENT_TYPE_VALUES = ['physical', 'digital', 'time-based'] as const
 
+export const ARTWORK_AVAILABILITY_STATUS_VALUES = [
+  'available',
+  'sold',
+  'not-for-sale',
+  'on-loan',
+  'reserved',
+  'on-consignment',
+] as const
+
 type SelectOption = { label: string; value: string }
 
 function buildLabelMap(options: SelectOption[]): Record<string, string> {
@@ -74,6 +83,70 @@ const MEASUREMENT_TYPE_LABEL_MAP = buildLabelMap([
   { label: 'Time-based', value: 'time-based' },
 ])
 
+const AVAILABILITY_STATUS_LABEL_MAP = buildLabelMap([
+  { label: 'Available', value: 'available' },
+  { label: 'Sold', value: 'sold' },
+  { label: 'Not for sale', value: 'not-for-sale' },
+  { label: 'On loan', value: 'on-loan' },
+  { label: 'Reserved', value: 'reserved' },
+  { label: 'On consignment', value: 'on-consignment' },
+])
+
+/** Agent / legacy phrasing that does not match Payload option values exactly. */
+const AVAILABILITY_STATUS_ALIASES: Record<string, string> = {
+  'for-sale': 'available',
+  forsale: 'available',
+}
+
+/** Agent phrasing for print substrate / mount — maps to Payload support select. */
+const SUPPORT_ALIASES: Record<string, string> = {
+  aluminum: 'board',
+  aluminium: 'board',
+  'aluminum-mount': 'board',
+  'aluminium-mount': 'board',
+  'aluminum mount': 'board',
+  'aluminium mount': 'board',
+  'metal mount': 'board',
+  'metal panel': 'board',
+  'dibond': 'board',
+}
+
+/** Agent phrasing for DCS and digital prints — maps to Payload medium select. */
+const MEDIUM_ALIASES: Record<string, string> = {
+  'digital composite': 'digital',
+  'digital print': 'digital',
+  'composite city portrait': 'digital',
+  'composite city portraits': 'digital',
+  'digital photography': 'digital',
+  'digital collage': 'digital',
+}
+
+export type NormalizeArtworkContext = {
+  seriesSlug?: string | null
+}
+
+function resolveSupportValue(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const raw = value.trim()
+  if (!raw) return undefined
+
+  const alias = SUPPORT_ALIASES[raw.toLowerCase()] ?? SUPPORT_ALIASES[slugifySelectInput(raw)]
+  if (alias) return alias
+
+  return normalizeSelectValue(raw, ARTWORK_SUPPORT_VALUES, SUPPORT_LABEL_MAP)
+}
+
+function resolveMediumValue(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const raw = value.trim()
+  if (!raw) return undefined
+
+  const alias = MEDIUM_ALIASES[raw.toLowerCase()] ?? MEDIUM_ALIASES[slugifySelectInput(raw)]
+  if (alias) return alias
+
+  return normalizeSelectValue(raw, ARTWORK_MEDIUM_VALUES, MEDIUM_LABEL_MAP)
+}
+
 function slugifySelectInput(input: string): string {
   return input
     .toLowerCase()
@@ -112,6 +185,21 @@ export function normalizeSelectValue(
   return undefined
 }
 
+function normalizeAvailabilityStatus(value: unknown): string | undefined {
+  if (typeof value !== 'string') return undefined
+  const raw = value.trim()
+  if (!raw) return undefined
+
+  const alias = AVAILABILITY_STATUS_ALIASES[raw.toLowerCase()] ?? AVAILABILITY_STATUS_ALIASES[slugifySelectInput(raw)]
+  if (alias) return alias
+
+  return normalizeSelectValue(
+    raw,
+    ARTWORK_AVAILABILITY_STATUS_VALUES,
+    AVAILABILITY_STATUS_LABEL_MAP,
+  )
+}
+
 function normalizeMeasurementType(value: unknown): string[] | undefined {
   const allowed = ARTWORK_MEASUREMENT_TYPE_VALUES as readonly string[]
   if (Array.isArray(value)) {
@@ -127,14 +215,19 @@ function normalizeMeasurementType(value: unknown): string[] | undefined {
 /**
  * Map agent-staged labels to Payload select values; drop invalid optional fields.
  */
-export function normalizeArtworkSelectFields(patch: Record<string, unknown>): Record<string, unknown> {
+export function normalizeArtworkSelectFields(
+  patch: Record<string, unknown>,
+  ctx: NormalizeArtworkContext = {},
+): Record<string, unknown> {
   const out = { ...patch }
+  const seriesSlug =
+    typeof ctx.seriesSlug === 'string' && ctx.seriesSlug.trim()
+      ? ctx.seriesSlug.trim()
+      : typeof out.seriesSlug === 'string' && out.seriesSlug.trim()
+        ? out.seriesSlug.trim()
+        : undefined
 
-  const medium = normalizeSelectValue(
-    out.medium,
-    ARTWORK_MEDIUM_VALUES,
-    MEDIUM_LABEL_MAP,
-  )
+  const medium = resolveMediumValue(out.medium)
   if (medium) out.medium = medium
   else if (out.medium != null && out.medium !== '') {
     delete out.medium
@@ -148,7 +241,7 @@ export function normalizeArtworkSelectFields(patch: Record<string, unknown>): Re
   if (condition) out.condition = condition
   else delete out.condition
 
-  const support = normalizeSelectValue(out.support, ARTWORK_SUPPORT_VALUES, SUPPORT_LABEL_MAP)
+  const support = resolveSupportValue(out.support)
   if (support) out.support = support
   else if (out.support != null && out.support !== '') delete out.support
 
@@ -159,20 +252,33 @@ export function normalizeArtworkSelectFields(patch: Record<string, unknown>): Re
   const measurementType = normalizeMeasurementType(out.measurementType)
   if (measurementType) out.measurementType = measurementType
 
+  const availabilityStatus = normalizeAvailabilityStatus(out.availabilityStatus)
+  if (availabilityStatus) out.availabilityStatus = availabilityStatus
+  else if (out.availabilityStatus != null && out.availabilityStatus !== '') {
+    delete out.availabilityStatus
+  }
+
   // Required on create — sensible defaults when the agent used prose labels we could not map
   if (!out.medium || typeof out.medium !== 'string') {
-    const seriesSlug =
-      typeof out.seriesSlug === 'string'
-        ? out.seriesSlug
-        : undefined
-    out.medium =
-      seriesSlug === 'a-colorful-history'
-        ? 'acrylic-photo-transfer-on-canvas'
-        : 'mixed-media-on-canvas'
+    if (seriesSlug === 'a-colorful-history') {
+      out.medium = 'acrylic-photo-transfer-on-canvas'
+    } else if (seriesSlug === 'digital-city-series') {
+      out.medium = 'digital'
+    } else if (seriesSlug === 'megacities') {
+      out.medium = 'photo-collage'
+    } else {
+      out.medium = 'mixed-media-on-canvas'
+    }
   }
 
   if (!Array.isArray(out.measurementType) || out.measurementType.length === 0) {
-    out.measurementType = ['physical']
+    out.measurementType =
+      seriesSlug === 'digital-city-series' ||
+      seriesSlug === 'megacities' ||
+      out.medium === 'digital' ||
+      out.medium === 'video'
+        ? ['digital']
+        : ['physical']
   }
 
   return out

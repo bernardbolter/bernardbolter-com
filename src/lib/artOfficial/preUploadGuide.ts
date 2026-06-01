@@ -92,19 +92,19 @@ Run four questions in this locked order, one per turn. Do not skip, reorder, or 
 
 The phase should feel like warming up — not "starting the session" or listing phases aloud.
 
-Before each question, call store_session_field with field "preUploadStep" and value "1" through "4" matching the question you are about to ask (same turn, before your conversational message). The admin UI shows only that step to the artist.
+The server tracks which question is current (PRE-UPLOAD STATUS block below). When the artist has answered, acknowledge briefly and ask the NEXT question only — never repeat a question they already answered. Do not call store_session_field for preUploadStep unless advancing forward; the server also advances automatically when they reply.
 
-Question 1 — relationship to time (preUploadStep "1"):
+Question 1 — relationship to time:
 > Before we look at it together — is this a recent work, or something you've been sitting with for a while?
 
-Question 2 — place in the body of work (preUploadStep "2"):
+Question 2 — place in the body of work:
 > Is this part of something ongoing, or does it feel more like a standalone moment?
 (You know the practice from knowledge — ask because the instinctive answer often contains material classification would miss.)
 
-Question 3 — where they were when making (preUploadStep "3"):
+Question 3 — where they were when making:
 > Where were you when you made this one?
 
-Question 4 — blind description (preUploadStep "4"; use this framing verbatim in substance):
+Question 4 — blind description (use this framing verbatim in substance):
 > Before you upload — I'd like you to describe this work to me first, before either of us sees it. I'll ask you again later, once we've talked it through, and we'll look at both together at the end. There's no right way to do this — however it comes is exactly right.
 
 When the artist answers question 4, call store_session_field with field "firstImpression" and value = their full blind description (plain text). Do not paraphrase or edit it.
@@ -116,4 +116,91 @@ Rules:
 - Never write firstImpression to the public Artworks record without explicit artist confirmation.
 - Return to the blind description late in the session when drawing encounterNote: "You described it at the start as [x] — is that still how it feels?"
 - At confirmation, secondDescription is collected separately; both appear for the artist to compare.`
+}
+
+export type PreUploadSessionState = {
+  preUploadStep?: number | null
+  hasFirstImpression: boolean
+  hasPrimaryImage: boolean
+}
+
+/** Dynamic block injected each chat turn — tells the agent exactly which question is live. */
+export function buildPreUploadStateBlock(state: PreUploadSessionState): string | null {
+  if (state.hasPrimaryImage) return null
+  if (state.hasFirstImpression) {
+    return `PRE-UPLOAD STATUS: Blind description saved. Wait for the artist to upload the primary image — do not repeat pre-upload questions or ask catalogue fields yet beyond upload guidance.`
+  }
+
+  const step = clampPreUploadStep(state.preUploadStep ?? 1)
+  const current = PRE_UPLOAD_STEPS[step - 1]
+  if (!current) return null
+
+  return `PRE-UPLOAD STATUS (authoritative — follow exactly)
+
+Current step: ${step} of 4 — "${current.title}"
+Ask ONLY this question next (one short acknowledgement of their last answer if helpful, then the question):
+> ${current.question}
+
+Do NOT repeat questions 1–${step - 1 || 0}. Do NOT set preUploadStep to a number lower than ${step}.`
+}
+
+export function sessionHasPrimaryImage(session: {
+  fieldUpdateTimeline?: unknown
+  stagedMedia?: unknown
+}): boolean {
+  const timeline = session.fieldUpdateTimeline
+  if (Array.isArray(timeline)) {
+    if (
+      timeline.some(
+        (e) =>
+          e &&
+          typeof e === 'object' &&
+          (e as { field?: string }).field === 'primaryImage',
+      )
+    ) {
+      return true
+    }
+  }
+  const staged = session.stagedMedia
+  if (Array.isArray(staged)) {
+    if (
+      staged.some(
+        (r) =>
+          r &&
+          typeof r === 'object' &&
+          (r as { slotId?: string; kind?: string }).slotId === 'primary' &&
+          (r as { kind?: string }).kind !== 'skipped',
+      )
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Advance pre-upload step when the artist answers (not on kickoff or upload messages).
+ * Returns the new step, or null if unchanged.
+ */
+export function nextPreUploadStepAfterAnswer(args: {
+  sessionType?: string | null
+  preUploadStep?: number | null
+  hasFirstImpression: boolean
+  hasPrimaryImage: boolean
+  userMessage: string
+  isKickoffMessage: boolean
+}): number | null {
+  if (args.sessionType !== 'artwork-cataloguing') return null
+  if (args.hasFirstImpression || args.hasPrimaryImage) return null
+  if (args.isKickoffMessage) return null
+
+  const msg = args.userMessage.trim().toLowerCase()
+  if (msg.includes('uploaded the primary artwork') || msg.includes('uploaded the artwork')) {
+    return null
+  }
+
+  const current = clampPreUploadStep(args.preUploadStep ?? 1)
+  if (current >= 4) return null
+
+  return current + 1
 }

@@ -36,6 +36,7 @@ export const Sessions: CollectionConfig = {
         { label: 'Artist statement', value: 'artist-statement' },
         { label: 'Biography', value: 'biography' },
         { label: 'Onboarding', value: 'onboarding' },
+        { label: 'Sequencing', value: 'sequencing' },
         { label: 'Episode storyboard', value: 'episode-storyboard' },
         { label: 'Episode assembly', value: 'episode-assembly' },
       ],
@@ -181,6 +182,22 @@ export const Sessions: CollectionConfig = {
       },
     },
     { name: 'refinementNotes', type: 'textarea' },
+    {
+      name: 'sequencingSeries',
+      type: 'relationship',
+      relationTo: 'series',
+      admin: {
+        description: 'For sequencing sessions — the series being ordered.',
+      },
+    },
+    {
+      name: 'legacyRecordId',
+      type: 'number',
+      admin: {
+        description:
+          'WordPress databaseId cross-checked during cataloguing (legacy lookup). Read-only reference.',
+      },
+    },
   ],
   hooks: {
     beforeChange: [

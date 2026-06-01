@@ -5,17 +5,21 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { getMediaSlot, type MediaSlotPhase } from '@/lib/artOfficial/artworkMediaSlots'
 import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
+import { seriesMediaFlagsFromTimeline } from '@/lib/artOfficial/seriesMediaFlags'
 import {
   resolveMediaSlotStates,
   type MediaSlotState,
 } from '@/lib/artOfficial/stagedMedia'
 
 import { ImageUpload } from './ImageUpload'
+import { MediaLibraryPicker } from './MediaLibraryPicker'
 import type { TimelineEntry } from './types'
 
 const PHASE_HEADINGS: Record<MediaSlotPhase, string> = {
   primary: 'Primary',
   ach: 'A Colorful History',
+  dcs: 'Digital City Series',
+  megacities: 'Megacities',
   secondary: 'More views of the work',
   documentation: 'Documentation',
   video: 'Video',
@@ -24,6 +28,8 @@ const PHASE_HEADINGS: Record<MediaSlotPhase, string> = {
 const PHASE_ORDER: MediaSlotPhase[] = [
   'primary',
   'ach',
+  'dcs',
+  'megacities',
   'secondary',
   'documentation',
   'video',
@@ -106,18 +112,27 @@ function MediaSlotBody({
       <p className="art-official-media__slot-desc">{slot.description}</p>
       <div className="art-official-media__slot-actions">
         {(acceptsImage || acceptsVideo) && (
-          <ImageUpload
-            accept={
-              acceptsVideo && !acceptsImage
-                ? 'video/mp4,video/webm,video/quicktime'
-                : acceptsVideo
-                  ? 'image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime'
-                  : 'image/jpeg,image/png,image/webp'
-            }
-            altLabel={slot.label}
-            disabled={disabled}
-            onUploaded={(id) => onFileUploaded(slot.id, id)}
-          />
+          <>
+            <ImageUpload
+              accept={
+                acceptsVideo && !acceptsImage
+                  ? 'video/mp4,video/webm,video/quicktime'
+                  : acceptsVideo
+                    ? 'image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime'
+                    : 'image/jpeg,image/png,image/webp'
+              }
+              altLabel={slot.label}
+              disabled={disabled}
+              onUploaded={(id) => onFileUploaded(slot.id, id)}
+            />
+            {acceptsImage ? (
+              <MediaLibraryPicker
+                onSelected={(id) => onFileUploaded(slot.id, id)}
+                disabled={disabled}
+                acceptImagesOnly={!acceptsVideo}
+              />
+            ) : null}
+          </>
         )}
         {showUrl ? (
           <VideoUrlForm
@@ -207,6 +222,8 @@ export function MediaUploadPanel({
   disabled?: boolean
   onMediaAction: (upload: MediaUploadPayload, label: string) => void
 }) {
+  const seriesFlags = useMemo(() => seriesMediaFlagsFromTimeline(timeline), [timeline])
+
   const states = useMemo(
     () =>
       resolveMediaSlotStates({
@@ -214,9 +231,11 @@ export function MediaUploadPanel({
         stagedMedia,
         hasPrimary,
         highlightedMediaSlot,
-        isAchWork: true,
+        isAchWork: seriesFlags.isAchWork,
+        isDcsWork: seriesFlags.isDcsWork,
+        isMegacitiesWork: seriesFlags.isMegacitiesWork,
       }),
-    [timeline, stagedMedia, hasPrimary, highlightedMediaSlot],
+    [timeline, stagedMedia, hasPrimary, highlightedMediaSlot, seriesFlags],
   )
 
   const [panelOpen, setPanelOpen] = useState(false)
@@ -261,7 +280,9 @@ export function MediaUploadPanel({
 
         <div className="art-official-media__panel-inner">
           <p className="art-official-media__intro">
-            Expand a section to upload. Images go to R2; stills are visible to Art/Official.
+            Expand a section to upload or link existing Media. Use <strong>Choose from library</strong>{' '}
+            when the file is already in the collection. Images go to R2; stills are visible to
+            Art/Official.
             Use <strong>Not applicable</strong> when a slot does not fit.
           </p>
 

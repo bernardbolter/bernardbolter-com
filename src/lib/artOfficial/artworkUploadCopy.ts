@@ -3,7 +3,7 @@
 export const ARTWORK_UPLOAD_TITLE = 'Next step: upload your artwork'
 
 export const ARTWORK_UPLOAD_INTRO = [
-  'Pre-upload is done. Upload a still image here (JPEG or PNG) — not a video file. Art/Official uses it for visual analysis in this session and stages it on the artwork record.',
+  'Pre-upload is done. Upload a still image here (JPEG or PNG) — or choose one already in the Media collection. Art/Official uses it for visual analysis in this session and stages it on the artwork record.',
   'For paintings, sculptures, and other image-based works: choose a clear photograph of the piece.',
 ]
 
@@ -17,7 +17,7 @@ export const ARTWORK_UPLOAD_VIDEO_SECTION = {
 }
 
 export const ARTWORK_UPLOAD_COMPOSER_HINT =
-  'Upload your artwork image above to continue. The chat resumes automatically after upload (analysis may take a few seconds).'
+  'Upload a new image or choose one from the library above to continue. The chat resumes automatically after selection (analysis may take a few seconds).'
 
 export const ARTWORK_UPLOAD_WAITING_PLACEHOLDER = 'Waiting for artwork image upload…'
 
@@ -31,14 +31,13 @@ export const ARTWORK_UPLOAD_DONE_UPLOADED =
 export function buildArtworkUploadAgentBlock(): string {
   return `ARTWORK IMAGE UPLOAD (after pre-upload, before catalogue dialogue)
 
-The admin upload control accepts still images only (JPEG/PNG/WebP) — never a video file.
+The composer upload bar accepts still images only (JPEG/PNG/WebP) — for vision analysis.
 
-- The uploaded file is staged as primaryImage and sent to vision analysis. Art/Official cannot process video in this session.
-- Paintings, sculptures, and image-based works: the photograph is the primaryImage.
-- Video or performance documented on video: the artist must upload a POSTER STILL (representative frame), not the video. In conversation:
-  - Confirm the work is video-based and what the still represents.
-  - Stage primaryMediaType to "video" (or "image-and-video" if both) when confirmed.
-  - Explain that videoFile / embed URLs are added in the CMS after commit, not in this upload step.
-  - The poster can be changed later in admin if design needs a different still; posterImage may be set later or aligned with primaryImage.
-- Do not ask the artist to upload a video file in Art/Official.`
+- That upload becomes primaryImage and runs vision (colors, orientation, subjectTags seed, etc.).
+- Paintings, sculptures, prints: the photograph is the primaryImage.
+- Performance documented with stills: upload the strongest documentation photo as primary; add more via Media panel → work-view (alternateViewImages).
+- Video artwork: upload a POSTER STILL in the composer (representative frame). Then use Media panel → video-primary-file or video-primary-url for the actual video. Stage medium "video" and measurementType ["time-based"].
+- Art/Official cannot watch or analyse video files — only stills. Ask the artist what the video shows.
+
+Additional photos and video files use the Media uploads panel (not the composer bar).`
 }

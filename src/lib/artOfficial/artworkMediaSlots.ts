@@ -8,6 +8,8 @@ export type MediaSlotKind = 'image' | 'video-file' | 'video-url' | 'video-array'
 export type MediaSlotPhase =
   | 'primary'
   | 'ach'
+  | 'dcs'
+  | 'megacities'
   | 'secondary'
   | 'video'
   | 'documentation'
@@ -23,6 +25,8 @@ export type ArtworkMediaSlot = {
   /** For array slots — append rows to this array field */
   arrayField?: string
   achOnly?: boolean
+  dcsOnly?: boolean
+  megacitiesOnly?: boolean
   /** Dialogue phase when the agent should typically offer this slot */
   suggestAfterPrimary?: boolean
 }
@@ -67,6 +71,74 @@ export const ARTWORK_MEDIA_SLOTS: ArtworkMediaSlot[] = [
     kind: 'image',
     field: 'ach.revealSlider.transferImage',
     achOnly: true,
+    suggestAfterPrimary: true,
+  },
+  // ── DCS slots ───────────────────────────────────────────────────
+  {
+    id: 'dcs-street',
+    label: 'DCS street photo (Micro)',
+    description:
+      'The decisive-moment street photograph selected from the capture set. One per city — the Micro layer in the Smoothist composition.',
+    phase: 'dcs',
+    kind: 'image',
+    field: 'dcs.composition.streetPhotoImage',
+    dcsOnly: true,
+    suggestAfterPrimary: true,
+  },
+  {
+    id: 'dcs-satellite',
+    label: 'DCS satellite / aerial image (Macro)',
+    description:
+      'Satellite or aerial view of the city providing geographic context. The Macro layer in the Smoothist composition.',
+    phase: 'dcs',
+    kind: 'image',
+    field: 'dcs.composition.satelliteViewImage',
+    dcsOnly: true,
+    suggestAfterPrimary: true,
+  },
+  {
+    id: 'dcs-flag',
+    label: 'DCS city / country flag',
+    description:
+      'Transparent PNG of the city or country flag. Used as a decorative layer on the artwork page.',
+    phase: 'dcs',
+    kind: 'image',
+    field: 'dcs.cityContext.cityFlagImage',
+    dcsOnly: true,
+    suggestAfterPrimary: true,
+  },
+  {
+    id: 'dcs-oil-painting',
+    label: 'DCS oil painting (Da Fen collaboration)',
+    description:
+      'Photograph of the finished Da Fen oil painting collaboration. Only relevant when dcs.oilPainting.hasOilPainting is true.',
+    phase: 'dcs',
+    kind: 'image',
+    field: 'dcs.oilPainting.oilPaintingImage',
+    dcsOnly: true,
+    suggestAfterPrimary: true,
+  },
+  // ── Megacities slots ──────────────────────────────────────────────
+  {
+    id: 'megacities-reference',
+    label: 'Megacities small-scale reference',
+    description:
+      'Small-scale working composition or layout reference — the resolved collage before full-size execution.',
+    phase: 'megacities',
+    kind: 'image',
+    field: 'megacities.composition.referenceCollageImage',
+    megacitiesOnly: true,
+    suggestAfterPrimary: true,
+  },
+  {
+    id: 'megacities-flag',
+    label: 'Megacities country / region flag',
+    description:
+      'Transparent PNG of the country or regional flag when used as a layer on megacities.world.',
+    phase: 'megacities',
+    kind: 'image',
+    field: 'megacities.composition.countryFlagImage',
+    megacitiesOnly: true,
     suggestAfterPrimary: true,
   },
   {

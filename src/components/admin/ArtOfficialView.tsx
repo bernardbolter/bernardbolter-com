@@ -111,7 +111,8 @@ export async function ArtOfficialView(props: AdminViewServerProps) {
       <Gutter>
         <h1>Art/Official</h1>
         <p style={{ marginBottom: 16, opacity: 0.75 }}>
-          Conversational cataloguing for the artist archive.
+          Conversational cataloguing for the artist archive.{' '}
+          <Link href="/admin/art-official/audit">Session coverage audit →</Link>
         </p>
         {practiceKnowledgeCount.totalDocs === 0 ? (
           <p

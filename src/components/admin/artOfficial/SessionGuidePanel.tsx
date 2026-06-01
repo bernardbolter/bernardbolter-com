@@ -8,14 +8,16 @@ export function SessionGuidePanel({
   sessionType,
   hasMessages,
   disabled,
+  isRefinement,
   onStart,
 }: {
   sessionType: string | null | undefined
   hasMessages: boolean
   disabled?: boolean
+  isRefinement?: boolean
   onStart: (message: string) => void
 }) {
-  const kickoff = getSessionKickoff(sessionType)
+  const kickoff = getSessionKickoff(sessionType, isRefinement)
   if (!kickoff) return null
 
   if (!hasMessages) {

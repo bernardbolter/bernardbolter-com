@@ -1,0 +1,6825 @@
+[
+  {
+    "databaseId": 334,
+    "slug": "berlin-wall-1961",
+    "title": "Berlin Wall . 1961",
+    "date": "2024-11-25T12:09:55",
+    "uri": "/artwork/berlin-wall-1961/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2024",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": "52.516266",
+      "lng": "13.377775",
+      "location": "studio in CANK, Neukölln, \r\nBerlin, Oct 2025",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50",
+      "height": "75",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": "<ul>\n<li>FKKB Gallery, Hotel Berlin, Berlin &#8211; Holiday Group Show 2024</li>\n<li>24 hours Neukölln, CANK, Berlin 2025</li>\n</ul>\n",
+      "provenance": "<ul>\n<li>Bernard Bolter&#8217;s collection</li>\n</ul>\n",
+      "printEditions": "<ul>\n<li>50 | a3 prints on matte paper</li>\n</ul>\n",
+      "forsale": true,
+      "price": "500",
+      "proportion": 0.896560731,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2024/11/BerlinWall1961_web.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 320,
+    "slug": "brandenburg-gate-1857-1984",
+    "title": "Brandenburg Gate 1857-1984",
+    "date": "2024-07-22T16:51:47",
+    "uri": "/artwork/brandenburg-gate-1857-1984/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2024",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": "52.516266",
+      "lng": "13.377775",
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2024/07/BrandenburgGate1857-1984_web.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 207,
+    "slug": "misto-ukrayina",
+    "title": "Misto Ukrayina",
+    "date": "2023-08-17T20:01:00",
+    "uri": "/artwork/misto-ukrayina/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Megacities",
+          "slug": "megacities"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2023",
+      "city": null,
+      "country": "Ukraine",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "1.5m",
+      "height": "2m",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "megacities"
+      ],
+      "style": "composite country portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2023/08/misto-ukrayina_xl.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 305,
+    "slug": "bulowstrasse-1912-2022",
+    "title": "Bulowstrasse 1912-2022",
+    "date": "2022-10-02T18:10:00",
+    "uri": "/artwork/bulowstrasse-1912-2022/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": "52.49773707954951",
+      "lng": "13.36217349007922",
+      "location": "unknown",
+      "medium": "acrylic transfers and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2022/10/BulowStrasse1905-2022_web.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 300,
+    "slug": "brandenburg-gate-1961-2020",
+    "title": "Brandenburg Gate 1961-2020",
+    "date": "2022-09-02T18:05:00",
+    "uri": "/artwork/brandenburg-gate-1961-2020/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": "52.516266",
+      "lng": "13.377775",
+      "location": "unknown",
+      "medium": "acrylic transfers and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2024/11/BrandenburgGate_1961-2020_web.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 304,
+    "slug": "dennewitzstrasse-1905-2022",
+    "title": "Dennewitzstrasse 1905-2022",
+    "date": "2022-08-02T18:09:00",
+    "uri": "/artwork/dennewitzstrasse-1905-2022/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": "Germany",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfers and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 303,
+    "slug": "friedrichstrasse-1912-2022",
+    "title": "Friedrichstrasse 1912-2022",
+    "date": "2022-06-02T18:08:00",
+    "uri": "/artwork/friedrichstrasse-1912-2022/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfers and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 302,
+    "slug": "potsdammer-platz-1912-2022",
+    "title": "Potsdammer Platz 1912-2022",
+    "date": "2022-06-02T18:07:00",
+    "uri": "/artwork/potsdammer-platz-1912-2022/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 301,
+    "slug": "new-york-1912-2012",
+    "title": "New York 1912-2012",
+    "date": "2022-05-02T18:06:00",
+    "uri": "/artwork/new-york-1912-2012/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 299,
+    "slug": "berlin-1911-2011",
+    "title": "Berlin 1911-2011",
+    "date": "2022-05-02T18:03:00",
+    "uri": "/artwork/berlin-1911-2011/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfers and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 2,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 291,
+    "slug": "world-war-two",
+    "title": "World War Two",
+    "date": "2022-02-03T11:05:00",
+    "uri": "/artwork/world-war-two/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": null,
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 290,
+    "slug": "world-war-one",
+    "title": "World War One",
+    "date": "2022-02-02T11:04:00",
+    "uri": "/artwork/world-war-one/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2022",
+      "city": null,
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 206,
+    "slug": "yugograd",
+    "title": "Yugograd",
+    "date": "2021-08-31T19:58:00",
+    "uri": "/artwork/yugograd/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Megacities",
+          "slug": "megacities"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2021",
+      "city": null,
+      "country": "Yugolslavia",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "1.5m",
+      "height": "2m",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "megacities"
+      ],
+      "style": "composite country portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2021/08/yugograd_xl.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 202,
+    "slug": "almadinat-alearabia",
+    "title": "Almadinat Alearabia",
+    "date": "2021-04-14T19:48:00",
+    "uri": "/artwork/almadinat-alearabia/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Megacities",
+          "slug": "megacities"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2021",
+      "city": null,
+      "country": "Arab League",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "composite country portrait",
+      "units": [
+        "metric"
+      ],
+      "width": "1.5m",
+      "height": "2m",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "megacities"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 205,
+    "slug": "skate-city",
+    "title": "Skate City",
+    "date": "2020-09-14T19:53:00",
+    "uri": "/artwork/skate-city/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Megacities",
+          "slug": "megacities"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2020",
+      "city": null,
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "1.5m",
+      "height": "2m",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "megacities"
+      ],
+      "style": "composite skateboarding portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 298,
+    "slug": "berliner-dom-1902-2020",
+    "title": "Berliner Dom 1902-2020",
+    "date": "2020-09-02T12:06:00",
+    "uri": "/artwork/berliner-dom-1902-2020/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2020",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 204,
+    "slug": "zhongguo-shi",
+    "title": "Zhongguo Shi",
+    "date": "2020-08-31T19:52:00",
+    "uri": "/artwork/zhongguo-shi/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Megacities",
+          "slug": "megacities"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2020",
+      "city": null,
+      "country": "China",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "1.5m",
+      "height": "2m",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "megacities"
+      ],
+      "style": "composite country portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 203,
+    "slug": "america-city",
+    "title": "America City",
+    "date": "2020-07-31T19:50:00",
+    "uri": "/artwork/america-city/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Megacities",
+          "slug": "megacities"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2020",
+      "city": null,
+      "country": "America",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "1.5m",
+      "height": "2m",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "megacities"
+      ],
+      "style": "composite country portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2020/07/america-city_xl.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 297,
+    "slug": "reichstag-2020",
+    "title": "Reichstag 2020",
+    "date": "2020-05-02T12:06:00",
+    "uri": "/artwork/reichstag-2020/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2020",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": "52.518942293816494",
+      "lng": "13.375253685735897",
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2024/11/reichstag2020_web.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 296,
+    "slug": "reichstag-1894",
+    "title": "Reichstag 1894",
+    "date": "2020-04-02T12:04:00",
+    "uri": "/artwork/reichstag-1894/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2020",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": "52.518942293816494",
+      "lng": "13.375253685735897",
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2024/11/reichstag1894_web.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 118,
+    "slug": "deutsche-stadt",
+    "title": "Deutsche Stadt",
+    "date": "2020-02-27T15:18:00",
+    "uri": "/artwork/deutsche-stadt/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Megacities",
+          "slug": "megacities"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2020",
+      "city": "none",
+      "country": "germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital photography",
+      "units": [
+        "metric"
+      ],
+      "width": "1.4m",
+      "height": "2m",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "megacities"
+      ],
+      "style": "composite country portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 295,
+    "slug": "elbphilharmonie-2019",
+    "title": "Elbphilharmonie 2019",
+    "date": "2019-12-02T12:03:00",
+    "uri": "/artwork/elbphilharmonie-2019/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2019",
+      "city": "Hamburg",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 294,
+    "slug": "kaiserspeicher-a-1875",
+    "title": "Kaiserspeicher A 1875",
+    "date": "2019-11-02T11:59:00",
+    "uri": "/artwork/kaiserspeicher-a-1875/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2019",
+      "city": "Hamburg",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 293,
+    "slug": "jungfernstieg-1890",
+    "title": "Jungfernstieg 1890",
+    "date": "2019-10-02T11:42:00",
+    "uri": "/artwork/jungfernstieg-1890/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2019",
+      "city": "Hamburg",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 292,
+    "slug": "hamburg-hafen-1890",
+    "title": "Hamburg Hafen 1890",
+    "date": "2019-10-02T11:40:00",
+    "uri": "/artwork/hamburg-hafen-1890/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2019",
+      "city": "Hamburg",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 289,
+    "slug": "berliner-schloss-2019",
+    "title": "Berliner Schloss 2019",
+    "date": "2019-05-02T11:03:00",
+    "uri": "/artwork/berliner-schloss-2019/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2019",
+      "city": "Berlin",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 288,
+    "slug": "berliner-schloss-1900",
+    "title": "Berliner Schloss 1900",
+    "date": "2019-04-02T11:02:00",
+    "uri": "/artwork/berliner-schloss-1900/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2019",
+      "city": "Berlin",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 138,
+    "slug": "powell-street-1895",
+    "title": "Powell Street 1895",
+    "date": "2018-12-13T10:44:00",
+    "uri": "/artwork/powell-street-1895/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "san francisco",
+      "country": null,
+      "lat": "37.78937826500865",
+      "lng": "-122.40865748935344",
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2024/11/PowellSTreet1895_web.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 201,
+    "slug": "snake-oil-salesman",
+    "title": "Snake Oil Salesman",
+    "date": "2018-07-19T19:45:00",
+    "uri": "/artwork/snake-oil-salesman/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Installations",
+          "slug": "installations"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Oranienberg",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "wood, flooring, nails, Qr code, Vodka Bottle",
+      "units": [
+        "metric"
+      ],
+      "width": "2m",
+      "height": "3m",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "installations"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 287,
+    "slug": "kotbusser-tor-2018",
+    "title": "Kotbusser Tor 2018",
+    "date": "2018-07-02T10:19:00",
+    "uri": "/artwork/kotbusser-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 286,
+    "slug": "prenzlauer-tor-2018",
+    "title": "Prenzlauer Tor 2018",
+    "date": "2018-05-02T10:18:00",
+    "uri": "/artwork/prenzlauer-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 285,
+    "slug": "gorlitzer-tor-2018",
+    "title": "Gorlitzer Tor 2018",
+    "date": "2018-04-02T10:17:00",
+    "uri": "/artwork/gorlitzer-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 284,
+    "slug": "schonhauser-tor-2018",
+    "title": "Schonhauser Tor 2018",
+    "date": "2018-03-02T10:16:00",
+    "uri": "/artwork/schonhauser-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 283,
+    "slug": "frankfurtor-tor-2018",
+    "title": "Frankfurtor Tor 2018",
+    "date": "2018-02-02T10:15:00",
+    "uri": "/artwork/frankfurtor-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 282,
+    "slug": "landsberger-tor-2018",
+    "title": "Landsberger Tor 2018",
+    "date": "2018-02-02T10:14:00",
+    "uri": "/artwork/landsberger-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 281,
+    "slug": "anhalters-tor-2018",
+    "title": "Anhalters Tor 2018",
+    "date": "2018-02-02T10:04:00",
+    "uri": "/artwork/anhalters-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 280,
+    "slug": "potsdammer-tor-2018",
+    "title": "Potsdammer Tor 2018",
+    "date": "2018-02-01T10:03:00",
+    "uri": "/artwork/potsdammer-tor-2018/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2018",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 279,
+    "slug": "russian-hill-1875",
+    "title": "Russian Hill 1875",
+    "date": "2017-12-02T09:45:00",
+    "uri": "/artwork/russian-hill-1875/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 278,
+    "slug": "clay-street-1875",
+    "title": "Clay Street 1875",
+    "date": "2017-11-02T09:44:00",
+    "uri": "/artwork/clay-street-1875/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 604,
+    "slug": "how-to-art-school-episode-1",
+    "title": "How to Art School, ep. 1",
+    "date": "2017-10-18T12:39:59",
+    "uri": "/artwork/how-to-art-school-episode-1/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Videos",
+          "slug": "videos"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "video",
+      "units": [
+        "metric"
+      ],
+      "width": "960 ",
+      "height": "540",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "videos"
+      ],
+      "style": "documentary",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1.777777777,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 277,
+    "slug": "telegraph-hill-1920",
+    "title": "Telegraph Hill 1920",
+    "date": "2017-10-02T08:40:00",
+    "uri": "/artwork/telegraph-hill-1920/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 200,
+    "slug": "business-is-business",
+    "title": "Business is Business",
+    "date": "2017-07-11T19:43:00",
+    "uri": "/artwork/business-is-business/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Installations",
+          "slug": "installations"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Oranienburg",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "wood, flooring, nails, carpet, lino print",
+      "units": [
+        "metric"
+      ],
+      "width": "2m",
+      "height": "3m",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "installations"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 137,
+    "slug": "oranienburger-tor-1867",
+    "title": "Oranienburger Tor . 1867",
+    "date": "2017-03-13T10:43:00",
+    "uri": "/artwork/oranienburger-tor-1867/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 276,
+    "slug": "rosenthaler-tor-1860",
+    "title": "Rosenthaler Tor 1860",
+    "date": "2017-02-02T08:25:00",
+    "uri": "/artwork/rosenthaler-tor-1860/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 275,
+    "slug": "schlesisches-tor-1910",
+    "title": "Schlesisches Tor 1910",
+    "date": "2017-02-02T08:24:00",
+    "uri": "/artwork/schlesisches-tor-1910/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 274,
+    "slug": "stralauer-tor-1902",
+    "title": "Stralauer Tor 1902",
+    "date": "2017-02-02T08:23:00",
+    "uri": "/artwork/stralauer-tor-1902/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 273,
+    "slug": "wasser-tor-1865",
+    "title": "Wasser Tor 1865",
+    "date": "2017-02-02T08:22:00",
+    "uri": "/artwork/wasser-tor-1865/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 272,
+    "slug": "hallesches-tor-1901",
+    "title": "Hallesches Tor 1901",
+    "date": "2017-02-02T08:21:00",
+    "uri": "/artwork/hallesches-tor-1901/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 271,
+    "slug": "charlottenburger-tor-1910",
+    "title": "Charlottenburger Tor 1910",
+    "date": "2017-02-02T08:14:00",
+    "uri": "/artwork/charlottenburger-tor-1910/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 20,
+    "slug": "brandenburger-tor-1899",
+    "title": "Brandenburger Tor . 1899",
+    "date": "2017-01-30T18:28:00",
+    "uri": "/artwork/brandenburger-tor-1899/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "berlin",
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "80cm",
+      "height": "80cm",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 588,
+    "slug": "how-to-art-episode-1",
+    "title": "How to Art, Episode 1",
+    "date": "2016-04-15T09:35:15",
+    "uri": "/artwork/how-to-art-episode-1/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": []
+    },
+    "artworkFields": {
+      "year": null,
+      "city": null,
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": null,
+      "height": null,
+      "size": [
+        "sm"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": null,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 270,
+    "slug": "emperor-norton-1818-1880",
+    "title": "Emperor Norton 1818-1880",
+    "date": "2016-04-08T22:17:00",
+    "uri": "/artwork/emperor-norton-1818-1880/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2016",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "22\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.75642965,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 269,
+    "slug": "adolf-sutro-1830-1898",
+    "title": "Adolf Sutro 1830-1898",
+    "date": "2016-04-01T22:15:00",
+    "uri": "/artwork/adolf-sutro-1830-1898/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2016",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "20\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.75642965,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 136,
+    "slug": "lombard-street-1922",
+    "title": "Lombard Street . 1922",
+    "date": "2016-03-13T10:42:00",
+    "uri": "/artwork/lombard-street-1922/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2016",
+      "city": "san francisco",
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 268,
+    "slug": "baker-beach-1935",
+    "title": "Baker Beach 1935",
+    "date": "2016-03-01T22:08:00",
+    "uri": "/artwork/baker-beach-1935/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2016",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 267,
+    "slug": "cliff-house-1899",
+    "title": "Cliff House 1899",
+    "date": "2016-02-01T22:08:00",
+    "uri": "/artwork/cliff-house-1899/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2016",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 266,
+    "slug": "alcatraz-1938",
+    "title": "Alcatraz 1938",
+    "date": "2016-02-01T22:07:00",
+    "uri": "/artwork/alcatraz-1938/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2016",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 265,
+    "slug": "san-francisco-city-1906",
+    "title": "San Francisco City 1906",
+    "date": "2015-11-01T21:56:00",
+    "uri": "/artwork/san-francisco-city-1906/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 264,
+    "slug": "north-beach-1856",
+    "title": "North Beach 1856",
+    "date": "2015-10-22T21:55:00",
+    "uri": "/artwork/north-beach-1856/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francsico",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 263,
+    "slug": "cliff-house-1901",
+    "title": "Cliff House 1901",
+    "date": "2015-10-01T21:54:00",
+    "uri": "/artwork/cliff-house-1901/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "28\"",
+      "height": "28\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 262,
+    "slug": "candlestick-1959",
+    "title": "Candlestick 1959",
+    "date": "2015-10-01T21:42:00",
+    "uri": "/artwork/candlestick-1959/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "28\"",
+      "height": "28\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 261,
+    "slug": "dennewitz-strasse-1905",
+    "title": "Dennewitz Strasse 1905",
+    "date": "2015-09-01T21:38:00",
+    "uri": "/artwork/dennewitz-strasse-1905/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "Berlin",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 130,
+    "slug": "alexander-platz-1903",
+    "title": "Alexanderplatz 1903",
+    "date": "2015-08-13T09:28:00",
+    "uri": "/artwork/alexander-platz-1903/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "berlin",
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 260,
+    "slug": "spittel-markt-1909",
+    "title": "Spittel Markt 1909",
+    "date": "2015-08-01T21:30:00",
+    "uri": "/artwork/spittel-markt-1909/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 259,
+    "slug": "hallesches-tor-1894",
+    "title": "Hallesches Tor 1894",
+    "date": "2015-07-01T21:12:00",
+    "uri": "/artwork/hallesches-tor-1894/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "50cm",
+      "height": "50cm",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 258,
+    "slug": "judah-street-1903",
+    "title": "Judah Street 1903",
+    "date": "2015-06-01T21:08:00",
+    "uri": "/artwork/judah-street-1903/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 257,
+    "slug": "cliff-house-1902",
+    "title": "Cliff House 1902",
+    "date": "2015-04-01T20:59:00",
+    "uri": "/artwork/cliff-house-1902/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "28\"",
+      "height": "28\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 134,
+    "slug": "golden-gate-bridge-1935",
+    "title": "Golden Gate Bridge 1935",
+    "date": "2015-03-13T10:22:00",
+    "uri": "/artwork/golden-gate-bridge-1935/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "san francisco",
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "28\"",
+      "height": "28\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 133,
+    "slug": "city-hall-1906",
+    "title": "City Hall . 1906",
+    "date": "2015-03-13T10:20:00",
+    "uri": "/artwork/city-hall-1906/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2017",
+      "city": "san francisco",
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "30\"",
+      "height": "30\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 256,
+    "slug": "yerba-buena-island-1936",
+    "title": "Yerba Buena Island 1936",
+    "date": "2015-02-01T20:56:00",
+    "uri": "/artwork/yerba-buena-island-1936/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "28\"",
+      "height": "28\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 255,
+    "slug": "waterfront-1850",
+    "title": "Waterfront 1850",
+    "date": "2015-01-01T20:54:00",
+    "uri": "/artwork/waterfront-1850/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2015",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "28\"",
+      "height": "28\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 254,
+    "slug": "cliff-house-1903",
+    "title": "Cliff House 1903",
+    "date": "2014-10-01T20:52:00",
+    "uri": "/artwork/cliff-house-1903/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": []
+    },
+    "artworkFields": {
+      "year": "2014",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 253,
+    "slug": "twin-peaks-1882",
+    "title": "Twin Peaks 1882",
+    "date": "2014-09-01T20:45:00",
+    "uri": "/artwork/twin-peaks-1882/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2014",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 251,
+    "slug": "west-portal-1920",
+    "title": "West Portal 1920",
+    "date": "2014-08-01T19:26:00",
+    "uri": "/artwork/west-portal-1920/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2014",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 252,
+    "slug": "ferry-building-1875",
+    "title": "Ferry Building 1875",
+    "date": "2014-07-01T20:16:00",
+    "uri": "/artwork/ferry-building-1875/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2014",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 250,
+    "slug": "portsmouth-square-1851",
+    "title": "Portsmouth Square 1851",
+    "date": "2014-06-01T17:53:00",
+    "uri": "/artwork/portsmouth-square-1851/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2014",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 249,
+    "slug": "south-park-1865",
+    "title": "South Park 1865",
+    "date": "2014-05-01T17:50:00",
+    "uri": "/artwork/south-park-1865/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2014",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 248,
+    "slug": "market-street-1906",
+    "title": "Market Street 1906",
+    "date": "2014-02-01T17:20:00",
+    "uri": "/artwork/market-street-1906/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2014",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 247,
+    "slug": "grant-street-1906",
+    "title": "Grant Street 1906",
+    "date": "2013-12-01T16:48:00",
+    "uri": "/artwork/grant-street-1906/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2013",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 246,
+    "slug": "golden-gate-bridge-1936",
+    "title": "Golden Gate Bridge 1936",
+    "date": "2013-11-01T16:47:00",
+    "uri": "/artwork/golden-gate-bridge-1936/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2013",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 245,
+    "slug": "telegraph-hill-1868",
+    "title": "Telegraph Hill 1868",
+    "date": "2013-08-01T16:46:00",
+    "uri": "/artwork/telegraph-hill-1868/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2013",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 244,
+    "slug": "cliff-house-1863",
+    "title": "Cliff House 1863",
+    "date": "2013-05-01T16:44:00",
+    "uri": "/artwork/cliff-house-1863/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "A Colorful History",
+          "slug": "a-colorful-history"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2013",
+      "city": "San Francisco",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "16\"",
+      "height": "16\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "a-colorful-history"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 233,
+    "slug": "madrid-spain",
+    "title": "MADRID spain",
+    "date": "2013-02-01T13:32:00",
+    "uri": "/artwork/madrid-spain/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2013",
+      "city": "Madrid",
+      "country": "Spain",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": "604.31 km2 (233.33 sq mi)",
+      "coordinates": "40°25′01″N 03°42′12″W",
+      "density": "5,500/km2 (14,000/sq mi)",
+      "elevation": "650 m (2,130 ft)",
+      "population": "3,322,416",
+      "dcsPhotoTitle": "Agua Super",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2013/02/madrid_lg.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 232,
+    "slug": "bangkok-thailand",
+    "title": "BANGKOK thailand",
+    "date": "2012-12-01T13:31:00",
+    "uri": "/artwork/bangkok-thailand/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2012",
+      "city": "Bangkok",
+      "country": "Thailand",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": true,
+      "price": null,
+      "proportion": 1,
+      "area": "7,761.6 km2 (2,996.8 sq mi)",
+      "coordinates": "13°45′09″N 100°29′39″E",
+      "density": "5,300/km2 (14,000/sq mi)",
+      "elevation": "1.5 m (4.9 ft)",
+      "population": "8,305,218",
+      "dcsPhotoTitle": "Wat Saket",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2012/12/bangkok-thailand-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 231,
+    "slug": "beijing-china",
+    "title": "BEIJING china",
+    "date": "2012-11-01T13:30:00",
+    "uri": "/artwork/beijing-china/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2012",
+      "city": "Beijing",
+      "country": "China",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "16,410.54 km2 (6,336.14 sq mi)",
+      "coordinates": "39°54′24″N 116°23′51″E",
+      "density": "1,300/km2 (3,500/sq mi)",
+      "elevation": "43.5 m (142.7 ft)",
+      "population": "21,893,095",
+      "dcsPhotoTitle": "Forbidden City",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2012/11/beijing-china-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 230,
+    "slug": "denver-colorado",
+    "title": "DENVER colorado",
+    "date": "2012-05-01T13:25:00",
+    "uri": "/artwork/denver-colorado/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2011",
+      "city": "Denver",
+      "country": "Colorado",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "154.726 sq mi (400.739 km2)",
+      "coordinates": "39.7392°N 104.9849°W",
+      "density": "4,674/sq mi (1,805/km2)",
+      "elevation": "5,280 ft (1,610 m)",
+      "population": "715,522",
+      "dcsPhotoTitle": "Fill Up On Diesel",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2012/05/denver-colorado-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 229,
+    "slug": "merida-mexico",
+    "title": "MERIDA mexico",
+    "date": "2012-02-01T13:12:00",
+    "uri": "/artwork/merida-mexico/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2012",
+      "city": "Merida",
+      "country": "Mexico",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "833 km2 (322 sq mi)",
+      "coordinates": "20°58′N 89°37′W",
+      "density": "1,100/km2 (3,000/sq mi)",
+      "elevation": "10 m (30 ft)",
+      "population": "921,771",
+      "dcsPhotoTitle": "Solo",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2012/02/merida-mexico-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 228,
+    "slug": "salt-lake-city-utah",
+    "title": "SALT LAKE CITY utah",
+    "date": "2011-11-01T13:10:00",
+    "uri": "/artwork/salt-lake-city-utah/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2011",
+      "city": "Salt Lake City",
+      "country": "Utah",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "110.81 sq mi (286.99 km2)",
+      "coordinates": "40°45′39″N 111°53′28″W",
+      "density": "1,797.52/sq mi (701.84/km2)",
+      "elevation": "4,265 ft (1,300 m)",
+      "population": "215,548",
+      "dcsPhotoTitle": "Buffalo Roadman ",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2011/11/salt-lake-city-utah-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 227,
+    "slug": "manhattan-new-york",
+    "title": "MANHATTAN new york",
+    "date": "2011-07-01T13:09:00",
+    "uri": "/artwork/manhattan-new-york/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2011",
+      "city": "Manhattan",
+      "country": "New York",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "33.59 sq mi (87.0 km2)",
+      "coordinates": "40.7127°N 74.0059°W",
+      "density": "74,781.6/sq mi (28,873.3/km2)",
+      "elevation": "265.05 ft (80.79 m)",
+      "population": "1,694,250",
+      "dcsPhotoTitle": "Uptown",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2011/07/manhattan-new-york-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 226,
+    "slug": "san-francisco-california",
+    "title": "San FRANCISCO california",
+    "date": "2011-03-01T13:02:00",
+    "uri": "/artwork/san-francisco-california/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2011",
+      "city": "San Francisco",
+      "country": "California",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "231.91 sq mi (600.65 km2)",
+      "coordinates": "37°47′N 122°25′W",
+      "density": "18,634.65/sq mi (7,194.88/km2)",
+      "elevation": "52 ft (16 m)",
+      "population": "873,965",
+      "dcsPhotoTitle": "Golden Gate",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/san-francisco-california-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 225,
+    "slug": "minneapolis-minnesota",
+    "title": "MINNEAPOLIS minnesota",
+    "date": "2011-02-01T12:53:00",
+    "uri": "/artwork/minneapolis-minnesota/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2010",
+      "city": "Minneapolis",
+      "country": "Minnesota",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "57.51 sq mi (148.94 km2)",
+      "coordinates": "44°58′55″N 93°16′09″W",
+      "density": "7,962.11/sq mi (3,074.21/km2)",
+      "elevation": "830 ft (250 m)",
+      "population": "429,954",
+      "dcsPhotoTitle": "1987",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2011/02/minneapolis-minnestota-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 224,
+    "slug": "istanbul-turkey",
+    "title": "ISTANBUL turkey",
+    "date": "2010-12-01T12:43:00",
+    "uri": "/artwork/istanbul-turkey/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2010",
+      "city": "Istanbul",
+      "country": "Turkey",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "imperial"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "2,576.85 km2 (994.93 sq mi)",
+      "coordinates": "41°00′49″N 28°57′18″E",
+      "density": "5,953/km2 (15,420/sq mi)",
+      "elevation": "537 m (1,762 ft)",
+      "population": "15,701,602",
+      "dcsPhotoTitle": "All Time",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2010/12/istanbul-turkey-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 223,
+    "slug": "guangzhou-china",
+    "title": "GUANGZHOU china",
+    "date": "2010-10-01T12:42:00",
+    "uri": "/artwork/guangzhou-china/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2010",
+      "city": "Guangzhou",
+      "country": "China",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "compsite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "7,434.4 km2 (2,870.4 sq mi)",
+      "coordinates": "23°07′48″N 113°15′36″E",
+      "density": "2,500/km2 (6,500/sq mi)",
+      "elevation": "21 m (69 ft)",
+      "population": "18,676,605",
+      "dcsPhotoTitle": "Transport",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/guangzhou-china-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 222,
+    "slug": "shenzhen-china",
+    "title": "SHENZHEN china",
+    "date": "2010-10-01T12:41:00",
+    "uri": "/artwork/shenzhen-china/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2010",
+      "city": "Shenzhen",
+      "country": "China",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "1,997 km2 (771 sq mi)",
+      "coordinates": "22°32′29″N 114°03′35″E",
+      "density": "8,800/km2 (23,000/sq mi)",
+      "elevation": "0–943.7 m (0–3,145.7 ft)",
+      "population": "17,560,000",
+      "dcsPhotoTitle": "Levels",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/shenzhen-china-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 221,
+    "slug": "zagreb-croatia",
+    "title": "ZAGREB croatia",
+    "date": "2010-09-01T12:40:00",
+    "uri": "/artwork/zagreb-croatia/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2010",
+      "city": "Zagreb",
+      "country": "Croatia",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "compoaite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "641.2 km2 (247.6 sq mi)",
+      "coordinates": "45°48′47″N 15°58′39″E",
+      "density": "1,200/km2 (3,100/sq mi)",
+      "elevation": "158 m (518 ft)",
+      "population": "767,131",
+      "dcsPhotoTitle": "Chillin",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/zagreb-croatia-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 208,
+    "slug": "antalya-turkey",
+    "title": "ANTALYA turkey",
+    "date": "2010-05-30T21:18:00",
+    "uri": "/artwork/antalya-turkey/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2011",
+      "city": "Antalya",
+      "country": "turkey",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": "Lookout",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/antalya-turkey-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 220,
+    "slug": "hamburg-germany",
+    "title": "HAMBURG germany",
+    "date": "2010-04-01T12:38:00",
+    "uri": "/artwork/hamburg-germany/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2010",
+      "city": "Hamburg",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "755.09 km2 (291.54 sq mi)",
+      "coordinates": "53°33′N 10°00′E",
+      "density": "2,600/km2 (6,700/sq mi)",
+      "elevation": "0ft (0m)",
+      "population": "1,964,021",
+      "dcsPhotoTitle": "Rebuild",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/hamburg-germany-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 219,
+    "slug": "riga-latvia",
+    "title": "RIGA latvia",
+    "date": "2010-02-01T12:37:00",
+    "uri": "/artwork/riga-latvia/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2010",
+      "city": "Riga",
+      "country": "Latvia",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composiet city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "304 km2 (117 sq mi)",
+      "coordinates": "56°56′56″N 24°6′23″E",
+      "density": "1,900/km2 (5,000/sq mi)",
+      "elevation": null,
+      "population": "591,882",
+      "dcsPhotoTitle": "Old Town",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/riga-latvia-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 218,
+    "slug": "copenhagen-denmark",
+    "title": "COPENHAGEN denmark",
+    "date": "2009-09-01T12:34:00",
+    "uri": "/artwork/copenhagen-denmark/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2009",
+      "city": "Copenhagen",
+      "country": "Denmark",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "525.50 km2 (202.90 sq mi)",
+      "coordinates": "55°40′34″N 12°34′06″E",
+      "density": "2,560.54/km2 (6,631.8/sq mi)",
+      "elevation": "1 m (3 ft)",
+      "population": "1,396,508",
+      "dcsPhotoTitle": "Bricks",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/copenhagen-denmark-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 217,
+    "slug": "berlin-germany",
+    "title": "BERLIN germany",
+    "date": "2009-04-01T12:33:00",
+    "uri": "/artwork/berlin-germany/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2009",
+      "city": "Berlin",
+      "country": "Germany",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "891.7 km2 (344.3 sq mi)",
+      "coordinates": "52°30′26″N 13°8′45″E",
+      "density": "4,100/km2 (11,000/sq mi)",
+      "elevation": "34 m (112 ft)",
+      "population": "3,671,000",
+      "dcsPhotoTitle": "Frau vor Albrecht",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/BERLINgermany_composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 216,
+    "slug": "paris-france",
+    "title": "PARIS france",
+    "date": "2009-02-01T12:32:00",
+    "uri": "/artwork/paris-france/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2009",
+      "city": "Paris",
+      "country": "France",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "105.4 km2 (40.7 sq mi)",
+      "coordinates": "48°51′24″N 2°21′03″E",
+      "density": "21,000/km2 (55,000/sq mi)",
+      "elevation": "35 m (115 ft)",
+      "population": "2,229,621",
+      "dcsPhotoTitle": "One Foot",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2009/04/paris-france-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 215,
+    "slug": "lisbon-portugal",
+    "title": "LISBON portugal",
+    "date": "2008-11-01T12:31:00",
+    "uri": "/artwork/lisbon-portugal/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "Lisbon",
+      "country": "Portugal",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "100.05 km2 (39 sq mi)",
+      "coordinates": "38°42′50″N 9°8′22″W\"",
+      "density": "6,458/km2 (16,726/sq mi)",
+      "elevation": "2 m (7 ft)",
+      "population": "545,245",
+      "dcsPhotoTitle": "Pink Shirt Game",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2008/11/lisbon-portugal-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 214,
+    "slug": "stockholm-sweden",
+    "title": "STOCKHOLM sweden",
+    "date": "2008-10-01T12:30:00",
+    "uri": "/artwork/stockholm-sweden/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "Stockholm",
+      "country": "Sweden",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "188 km2 (73 sq mi)",
+      "coordinates": "59°19′46″N 18°4′7″E",
+      "density": "5,000/km2 (13,000/sq mi)",
+      "elevation": "0 m (0 ft)",
+      "population": "935,619",
+      "dcsPhotoTitle": "Royal Gift Shop",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2008/10/stockholm-sweden-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 213,
+    "slug": "hong-kong",
+    "title": "HONG KONG",
+    "date": "2008-08-01T12:29:00",
+    "uri": "/artwork/hong-kong/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "Hong Kong",
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "2,755 km2 (1,064 sq mi)",
+      "coordinates": "22°17′07″ N , 114°09′27″ E",
+      "density": "6,544/km2 (16,948.9/sq mi)",
+      "elevation": "22 ft (7 m)",
+      "population": "7,374,900",
+      "dcsPhotoTitle": "Flats",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2008/08/hong-kong-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 212,
+    "slug": "marseille-france",
+    "title": "MARSEILLE france",
+    "date": "2008-06-01T12:28:00",
+    "uri": "/artwork/marseille-france/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "Marseille",
+      "country": "France",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "240.62 km2 (92.90 sq mi)",
+      "coordinates": "43°17′47″N 5°22′12″E",
+      "density": "3,600/km2 (9,200/sq mi)",
+      "elevation": "33 ft (11 m)",
+      "population": "855,393",
+      "dcsPhotoTitle": "Perched",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2008/06/marseille-france-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 211,
+    "slug": "las-vegas-nevada",
+    "title": "Las VEGAS nevada",
+    "date": "2008-03-01T12:26:00",
+    "uri": "/artwork/las-vegas-nevada/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "Las Vegas",
+      "country": "Nevada",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "135.8 sq mi (352 km2)",
+      "coordinates": "36°10′30″N 115°08′11″W",
+      "density": "4,300/sq mi (1,700/km2)",
+      "elevation": "2,001 ft (610 m)",
+      "population": "632,912",
+      "dcsPhotoTitle": "Strech",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2008/03/las-vegas-nevada-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 210,
+    "slug": "los-angeles-california",
+    "title": "Los ANGELES california",
+    "date": "2008-02-01T12:25:00",
+    "uri": "/artwork/los-angeles-california/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "Los Angeles",
+      "country": "California",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "502.76 sq mi (1,302.15 km2)",
+      "coordinates": "34°03′N 118°15′W",
+      "density": "8,483.02/sq mi (3,275.32/km2)",
+      "elevation": "305 ft (93 m)",
+      "population": "12,150,996",
+      "dcsPhotoTitle": "Sunset Traffic",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2008/02/los-angeles-california-composite-1.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 191,
+    "slug": "venice-biennale-2007",
+    "title": "Venice Biennale 2007",
+    "date": "2007-10-12T15:30:00",
+    "uri": "/artwork/venice-biennale-2007/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Breaking Down Art",
+          "slug": "breaking-down-art"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": null,
+      "city": "none",
+      "country": "italy",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "180cm",
+      "height": "120cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "breaking-down-art"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1.428571,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 209,
+    "slug": "venice-italy",
+    "title": "VENICE italy",
+    "date": "2007-04-01T12:24:00",
+    "uri": "/artwork/venice-italy/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2007",
+      "city": "Venice",
+      "country": "Italy",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "414.57 km2 (160.07 sq mi)",
+      "coordinates": "45°26′15″N 12°20′9″E",
+      "density": "640/km2 (1,700/sq mi)",
+      "elevation": "1 m (3 ft)",
+      "population": "264,579",
+      "dcsPhotoTitle": "Happy Birds",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2007/04/venice-italy-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 169,
+    "slug": "london-england",
+    "title": "LONDON England",
+    "date": "2007-03-14T14:45:00",
+    "uri": "/artwork/london-england/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "London",
+      "country": "England",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital photography",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "1,572 km2 (607 sq mi)",
+      "coordinates": "51°30′26″N 0°7′39″W",
+      "density": "5,590/km2 (14,500/sq mi)",
+      "elevation": "35 m (115 ft)",
+      "population": "8,787,892",
+      "dcsPhotoTitle": "Running",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2007/03/london-england-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 117,
+    "slug": "munster-sculpture-project-2007",
+    "title": "Munster Sculpture Project 2007",
+    "date": "2007-02-27T15:11:00",
+    "uri": "/artwork/munster-sculpture-project-2007/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Breaking Down Art",
+          "slug": "breaking-down-art"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": null,
+      "city": "none",
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfers and acrylic paint canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "100cm",
+      "height": "70cm",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "breaking-down-art"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1.428571,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 50,
+    "slug": "basel-switzerland",
+    "title": "BASEL switzerland",
+    "date": "2007-01-31T12:19:00",
+    "uri": "/artwork/basel-switzerland/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Digital City Series",
+          "slug": "digital-city-series"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2008",
+      "city": "Basel",
+      "country": "Switzerland",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital photography",
+      "units": [
+        "metric"
+      ],
+      "width": "48\"",
+      "height": "48\"",
+      "size": [
+        "xl"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "digital-city-series"
+      ],
+      "style": "composite city portrait",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": "23.91 km2 (9.23 sq mi)",
+      "coordinates": "47°34′N 7°36′E",
+      "density": "7,400/km2 (19,000/sq mi)",
+      "elevation": "254 m (833 ft)",
+      "population": "176,117",
+      "dcsPhotoTitle": "Trekking",
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2024/12/basel-switzerland-composite.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 243,
+    "slug": "amsterdam",
+    "title": "Amsterdam",
+    "date": "2006-04-01T16:31:00",
+    "uri": "/artwork/amsterdam/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2006",
+      "city": "Amsterdam",
+      "country": "The Netherlands",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "24\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.666666666,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 242,
+    "slug": "new-york",
+    "title": "New York",
+    "date": "2006-02-01T16:29:00",
+    "uri": "/artwork/new-york/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": []
+    },
+    "artworkFields": {
+      "year": "2006",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital collage",
+      "units": [
+        "metric"
+      ],
+      "width": "24\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.66666666,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 197,
+    "slug": "fulton-and-lafayette",
+    "title": "Fulton and Lafayette",
+    "date": "2004-06-17T19:30:00",
+    "uri": "/artwork/fulton-and-lafayette/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Vanishing Landscapes",
+          "slug": "vanishing-landscapes"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2004",
+      "city": "Brooklyn",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "20\"",
+      "height": "28\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "vanishing-landscapes"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.71428571,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 196,
+    "slug": "fort-greene-place",
+    "title": "Fort Greene Place",
+    "date": "2004-04-15T19:27:00",
+    "uri": "/artwork/fort-greene-place/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Vanishing Landscapes",
+          "slug": "vanishing-landscapes"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2004",
+      "city": "Brooklyn",
+      "country": "US",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "acrylic transfer and acrylic paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "20\"",
+      "height": "28\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "vanishing-landscapes"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.71428571,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 241,
+    "slug": "end",
+    "title": "End",
+    "date": "2003-09-01T16:28:00",
+    "uri": "/artwork/end/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2003",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 240,
+    "slug": "in-between",
+    "title": "In Between",
+    "date": "2003-05-01T16:27:00",
+    "uri": "/artwork/in-between/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2003",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 239,
+    "slug": "height",
+    "title": "Height",
+    "date": "2003-04-01T16:26:00",
+    "uri": "/artwork/height/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2003",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 238,
+    "slug": "growth",
+    "title": "Growth",
+    "date": "2003-02-01T16:25:00",
+    "uri": "/artwork/growth/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2003",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 237,
+    "slug": "four-corners",
+    "title": "Four Corners",
+    "date": "2002-06-01T16:23:00",
+    "uri": "/artwork/four-corners/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2002",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "lg"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 236,
+    "slug": "four-nations",
+    "title": "Four Nations",
+    "date": "2002-05-01T16:22:00",
+    "uri": "/artwork/four-nations/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2002",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 235,
+    "slug": "transition",
+    "title": "Transition",
+    "date": "2002-03-01T16:20:00",
+    "uri": "/artwork/transition/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2002",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 234,
+    "slug": "prophecy",
+    "title": "Prophecy",
+    "date": "2002-02-01T14:01:00",
+    "uri": "/artwork/prophecy/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Art Collision",
+          "slug": "art-collision"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "2002",
+      "city": "New York",
+      "country": "USA",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "digital print and acrylic on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "36\"",
+      "height": "36\"",
+      "size": [
+        "md"
+      ],
+      "orientation": [
+        "square"
+      ],
+      "series": [
+        "art-collision"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": null
+    }
+  },
+  {
+    "databaseId": 599,
+    "slug": "3d-to-2d",
+    "title": "3d-to-2d",
+    "date": "1999-12-09T12:27:25",
+    "uri": "/artwork/3d-to-2d/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "Installations",
+          "slug": "installations"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "1999",
+      "city": "Utrecht",
+      "country": "the Netherlands",
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "photographs, cardboard",
+      "units": [
+        "metric"
+      ],
+      "width": "14.8cm",
+      "height": "21cm",
+      "size": [
+        "sm"
+      ],
+      "orientation": [
+        "landscape"
+      ],
+      "series": [
+        "installations"
+      ],
+      "style": "perfomance",
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 1.48,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/2025/10/2D-to-3D-photo-1.jpg"
+        }
+      }
+    }
+  },
+  {
+    "databaseId": 195,
+    "slug": "nietzches-dream",
+    "title": "Nietzches Dream",
+    "date": "1997-05-30T15:39:00",
+    "uri": "/artwork/nietzches-dream/",
+    "featuredImage": null,
+    "categories": {
+      "nodes": [
+        {
+          "name": "OG Oil Painting",
+          "slug": "og-oil-painting"
+        }
+      ]
+    },
+    "artworkFields": {
+      "year": "1997",
+      "city": null,
+      "country": null,
+      "lat": null,
+      "lng": null,
+      "location": "unknown",
+      "medium": "oil paint on canvas",
+      "units": [
+        "metric"
+      ],
+      "width": "14\"",
+      "height": "20\"",
+      "size": [
+        "sm"
+      ],
+      "orientation": [
+        "portrait"
+      ],
+      "series": [
+        "og-oil-paintings"
+      ],
+      "style": null,
+      "exhibitionHistory": null,
+      "provenance": null,
+      "printEditions": null,
+      "forsale": false,
+      "price": null,
+      "proportion": 0.7,
+      "area": null,
+      "coordinates": null,
+      "density": null,
+      "elevation": null,
+      "population": null,
+      "dcsPhotoTitle": null,
+      "artworkImage": {
+        "node": {
+          "sourceUrl": "https://artism.org/bolter/wp-content/uploads/1997/05/nietzsches-dream.jpg"
+        }
+      }
+    }
+  }
+]

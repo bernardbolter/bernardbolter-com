@@ -62,6 +62,22 @@ export async function createPresignedPutUrl(
   return getSignedUrl(getS3Client(), command, { expiresIn: PRESIGN_EXPIRES_SECONDS })
 }
 
+/** Server-side PUT — avoids browser CORS on presigned URLs. */
+export async function putBufferToR2(
+  objectKey: string,
+  body: Buffer | Uint8Array,
+  contentType: string,
+): Promise<void> {
+  await getS3Client().send(
+    new PutObjectCommand({
+      Bucket: getR2Bucket(),
+      Key: objectKey,
+      Body: body,
+      ContentType: contentType,
+    }),
+  )
+}
+
 export function mediaAltFromObjectKey(objectKey: string): string {
   const basename = objectKey.split('/').pop() ?? 'Field note'
   const withoutUuid = basename.replace(/^[0-9a-f-]{36}-/i, '')

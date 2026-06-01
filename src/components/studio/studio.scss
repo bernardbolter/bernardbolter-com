@@ -18,6 +18,29 @@
   font-size: 1.25rem;
 }
 
+.studio-shell__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.studio-shell__admin-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+
+  a {
+    color: #1a3a52;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
 .studio-shell__logout {
   border: 1px solid #d9e1ea;
   border-radius: 8px;

@@ -108,6 +108,41 @@ export function sanitizeArtworkCommitPatch(
     if (keywords) out.conceptualKeywords = keywords
     else delete out.conceptualKeywords
   }
+
+  // Relationship hasMany fields must be arrays of numbers — strip any text values
+  // that the agent may have accidentally staged (e.g. artHistoricalReferences prose).
+  const RELATIONSHIP_MANY_FIELDS = [
+    'artHistoricalReferences',
+    'movementTags',
+    'styleTags',
+    'subjectTags',
+    'genreTags',
+    'periodTags',
+    'events',
+  ]
+  for (const field of RELATIONSHIP_MANY_FIELDS) {
+    if (!(field in out)) continue
+    const val = out[field]
+    if (typeof val === 'string') {
+      // Text string staged to a relationship field — discard silently
+      delete out[field]
+    } else if (Array.isArray(val)) {
+      const ids: number[] = []
+      for (const item of val) {
+        if (typeof item === 'number' && Number.isFinite(item)) {
+          ids.push(item)
+          continue
+        }
+        if (item && typeof item === 'object' && 'id' in item) {
+          const id = (item as { id: unknown }).id
+          if (typeof id === 'number' && Number.isFinite(id)) ids.push(id)
+        }
+      }
+      if (ids.length > 0) out[field] = ids
+      else delete out[field]
+    }
+  }
+
   return out
 }
 

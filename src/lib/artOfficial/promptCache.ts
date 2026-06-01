@@ -18,9 +18,9 @@ export function cacheControl(): CacheControlEphemeral {
 }
 
 export type SystemPromptParts = {
-  /** Stable prefix: identity, practice knowledge, dialogue rules, field roadmap. */
+  /** Stable prefix: identity, knowledge, dialogue rules, roadmap, and session-type blocks. */
   cachedPrefix: string
-  /** Per-session tail: session type override, refinement preamble. */
+  /** Per-turn tail: session override, live pre-upload state, refinement preamble. */
   dynamicSuffix: string
 }
 

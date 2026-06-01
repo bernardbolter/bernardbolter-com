@@ -16,6 +16,11 @@ export const TOOL_GET_WIKIDATA_ENTITY = 'get_wikidata_entity'
 export const TOOL_FETCH_WIKIPEDIA_ARTICLE = 'fetch_wikipedia_article'
 export const TOOL_SEARCH_GETTY_TGN = 'search_getty_tgn'
 export const TOOL_GET_MEDIA_UPLOAD_STATUS = 'get_media_upload_status'
+export const TOOL_LOOKUP_LEGACY_RECORD = 'lookup_legacy_record'
+export const TOOL_LIST_LEGACY_RECORDS = 'list_legacy_records'
+export const TOOL_PLACE_IN_SEQUENCE = 'place_in_sequence'
+export const TOOL_SET_DATE_ANCHOR = 'set_date_anchor'
+export const TOOL_LINK_MEDIA_TO_SLOT = 'link_media_to_slot'
 
 const targetCollectionSchema = z.enum([
   'artworks',
@@ -141,6 +146,33 @@ export const searchGettyTgnSchema = z.object({
 
 export const getMediaUploadStatusSchema = z.object({})
 
+export const lookupLegacyRecordSchema = z.object({
+  query: z.string().min(1),
+  series: z.string().optional(),
+  storeOnSession: z.boolean().optional(),
+})
+
+export const listLegacyRecordsSchema = z.object({
+  series: z.string().optional(),
+})
+
+export const placeInSequenceSchema = z.object({
+  beforeSlug: z.string().min(1).optional(),
+  afterSlug: z.string().min(1).optional(),
+  artworkSlug: z.string().min(1).optional(),
+})
+
+export const setDateAnchorSchema = z.object({
+  date: z.string().min(1),
+  precision: z.enum(['exact', 'month', 'year', 'circa', 'decade', 'unknown']),
+  artworkSlug: z.string().min(1).optional(),
+})
+
+export const linkMediaToSlotSchema = z.object({
+  slotId: z.string().min(1),
+  mediaId: z.number().int().positive(),
+})
+
 const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_UPDATE_FIELD]: updateFieldSchema,
   [TOOL_STORE_SESSION_FIELD]: storeSessionFieldSchema,
@@ -154,6 +186,11 @@ const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_FETCH_WIKIPEDIA_ARTICLE]: fetchWikipediaArticleSchema,
   [TOOL_SEARCH_GETTY_TGN]: searchGettyTgnSchema,
   [TOOL_GET_MEDIA_UPLOAD_STATUS]: getMediaUploadStatusSchema,
+  [TOOL_LOOKUP_LEGACY_RECORD]: lookupLegacyRecordSchema,
+  [TOOL_LIST_LEGACY_RECORDS]: listLegacyRecordsSchema,
+  [TOOL_PLACE_IN_SEQUENCE]: placeInSequenceSchema,
+  [TOOL_SET_DATE_ANCHOR]: setDateAnchorSchema,
+  [TOOL_LINK_MEDIA_TO_SLOT]: linkMediaToSlotSchema,
 }
 
 export type ParseToolResult<T> =
@@ -214,7 +251,7 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
   {
     name: TOOL_STORE_SESSION_FIELD,
     description:
-      'Store a value on the session record only (not on Artworks). Use preUploadStep ("1"–"4") before each pre-upload question. Use firstImpression for the blind description. Use highlightedMediaSlot with a media slot id (e.g. ach-source) to highlight a row in the Media uploads panel.',
+      'Store a value on the session record only (not on Artworks). preUploadStep is tracked by the server — only set it when moving forward. Use firstImpression for the blind description. Use highlightedMediaSlot with a media slot id (e.g. ach-source) to highlight a row in the Media uploads panel.',
     input_schema: {
       type: 'object',
       properties: {
@@ -363,6 +400,81 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
     input_schema: {
       type: 'object',
       properties: {},
+    },
+  },
+  {
+    name: TOOL_LOOKUP_LEGACY_RECORD,
+    description:
+      'Read-only lookup against the frozen WordPress legacy dump (data/legacy/wp-artworks.json). Match by databaseId, slug, or title. Returns normalised facts to cross-check with the artist — never auto-writes to Artworks. Lead with conflicts. Set storeOnSession true after the artist confirms the match.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'databaseId, slug fragment, or title fragment' },
+        series: { type: 'string', description: 'Optional series slug filter' },
+        storeOnSession: {
+          type: 'boolean',
+          description: 'When true and a single match is confirmed, store legacyRecordId on this session.',
+        },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: TOOL_LIST_LEGACY_RECORDS,
+    description:
+      'Browse legacy WordPress records from the local dump when title/slug search is ambiguous. Read-only.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        series: { type: 'string', description: 'Optional series slug filter' },
+      },
+    },
+  },
+  {
+    name: TOOL_PLACE_IN_SEQUENCE,
+    description:
+      'Stage sortIndex for an artwork by inserting between neighbours. afterSlug = place after that work; beforeSlug = place before that work. Provide one or both. Does not renumber other works — uses float midpoint.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        afterSlug: { type: 'string', description: 'Slug of the work that should come before the target' },
+        beforeSlug: { type: 'string', description: 'Slug of the work that should come after the target' },
+        artworkSlug: { type: 'string', description: 'Target artwork slug (required in multi-work sequencing sessions)' },
+      },
+    },
+  },
+  {
+    name: TOOL_SET_DATE_ANCHOR,
+    description:
+      'Stage a known date anchor (dateKnown + datePrecision) for timeline interpolation. Never invent dates — only after artist confirmation.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        date: { type: 'string', description: 'ISO date YYYY-MM-DD' },
+        precision: {
+          type: 'string',
+          enum: ['exact', 'month', 'year', 'circa', 'decade', 'unknown'],
+        },
+        artworkSlug: { type: 'string', description: 'Target artwork slug when sequencing multiple works' },
+      },
+      required: ['date', 'precision'],
+    },
+  },
+  {
+    name: TOOL_LINK_MEDIA_TO_SLOT,
+    description:
+      'Link an existing Payload media record to an artwork media slot (no re-upload). Use when the artist says the file is already in the Media library — ask for the media id if needed, or use the id from list context. Runs vision analysis for image slots.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        slotId: {
+          type: 'string',
+          description:
+            'Media slot id, e.g. ach-source, ach-transfer, detail, work-view, poster',
+        },
+        mediaId: { type: 'number', description: 'Numeric id from the Media collection' },
+      },
+      required: ['slotId', 'mediaId'],
     },
   },
 ]

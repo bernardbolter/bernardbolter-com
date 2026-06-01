@@ -26,6 +26,7 @@ import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
 import { ImageCaptureTechnologies } from './collections/ImageCaptureTechnologies'
 import { Artworks } from './collections/Artworks'
+import { DCSCapturePhotos } from './collections/DCSCapturePhotos'
 import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
 import { Sessions } from './collections/Sessions'
@@ -54,12 +55,23 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     components: {
-      beforeNavLinks: ['/components/admin/ArtOfficialNavLink#ArtOfficialNavLink'],
-      beforeDashboard: ['/components/admin/ArtOfficialDashboardLink#ArtOfficialDashboardLink'],
+      beforeNavLinks: [
+        '/components/admin/ArtOfficialNavLink#ArtOfficialNavLink',
+        '/components/admin/StudioNavLink#StudioNavLink',
+      ],
+      beforeDashboard: [
+        '/components/admin/ArtOfficialDashboardLink#ArtOfficialDashboardLink',
+        '/components/admin/StudioDashboardLink#StudioDashboardLink',
+      ],
       views: {
         artOfficial: {
           Component: '/components/admin/ArtOfficialView#ArtOfficialView',
           path: '/art-official',
+          exact: true,
+        },
+        artOfficialAudit: {
+          Component: '/components/admin/artOfficial/AuditView#AuditView',
+          path: '/art-official/audit',
           exact: true,
         },
         artOfficialSession: {
@@ -94,6 +106,7 @@ export default buildConfig({
     Events,
     ImageCaptureTechnologies,
     Artworks,
+    DCSCapturePhotos,
     Triptychs,
     SmallPrints,
     Sessions,

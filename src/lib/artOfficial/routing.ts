@@ -4,6 +4,7 @@ export type SessionType =
   | 'artist-statement'
   | 'biography'
   | 'onboarding'
+  | 'sequencing'
   | 'episode-storyboard'
   | 'episode-assembly'
 
@@ -13,6 +14,7 @@ export const SESSION_TYPES: SessionType[] = [
   'artist-statement',
   'biography',
   'onboarding',
+  'sequencing',
   'episode-storyboard',
   'episode-assembly',
 ]
@@ -32,6 +34,7 @@ export function requiresEpisode(t: SessionType): boolean {
 export type CommitTarget =
   | { kind: 'create-artwork' }
   | { kind: 'create-triptych' }
+  | { kind: 'apply-sequencing' }
   | { kind: 'update-artist-singleton' }
   | { kind: 'update-episode' }
   | { kind: 'no-record-write' }
@@ -42,6 +45,8 @@ export function commitTarget(t: SessionType): CommitTarget {
       return { kind: 'create-artwork' }
     case 'triptych-cataloguing':
       return { kind: 'create-triptych' }
+    case 'sequencing':
+      return { kind: 'apply-sequencing' }
     case 'artist-statement':
     case 'biography':
       return { kind: 'update-artist-singleton' }

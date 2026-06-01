@@ -290,13 +290,11 @@ async function migrate() {
           })
         }
 
-        // If artwork exists, UPDATE it with WP image url only
+        // If artwork exists, refresh legacy WP id only (images must be in Payload media)
         if (existing.docs.length > 0) {
           const existingId = existing.docs[0].id
-          const wpImageUrl = f.artworkImage?.node?.sourceUrl ?? null
 
           const updateData: Record<string, unknown> = {
-            wpImageUrl,
             wp_id: wpId,
           }
 
@@ -310,7 +308,7 @@ async function migrate() {
             })
           }
 
-          console.log(`↻ Updated: ${wp.slug} with wpImageUrl`)
+          console.log(`↻ Updated: ${wp.slug} with wp_id`)
           created++
           continue
         }
@@ -349,7 +347,6 @@ async function migrate() {
           isForSale: f.forsale ?? false,
           provenanceNotes: f.provenance ?? null,
           oldWpUrl: f.artworklink?.url ?? null,
-          wpImageUrl: f.artworkImage?.node?.sourceUrl ?? null,
         }
 
         const data: Record<string, unknown> = {

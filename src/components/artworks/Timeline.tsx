@@ -12,9 +12,8 @@ type ArtworkWithImage = Artwork & {
 
 function getImageUrl(artwork: {
   primaryImage?: { url?: string | null } | null | number
-  wpImageUrl?: string | null
+  posterImage?: { url?: string | null } | null | number
 }): string | null {
-  // Check R2/Payload media
   if (
     artwork.primaryImage &&
     typeof artwork.primaryImage === 'object' &&
@@ -22,9 +21,12 @@ function getImageUrl(artwork: {
   ) {
     return artwork.primaryImage.url
   }
-  // Check WordPress fallback URL
-  if (artwork.wpImageUrl) {
-    return artwork.wpImageUrl
+  if (
+    artwork.posterImage &&
+    typeof artwork.posterImage === 'object' &&
+    artwork.posterImage.url
+  ) {
+    return artwork.posterImage.url
   }
   return null
 }

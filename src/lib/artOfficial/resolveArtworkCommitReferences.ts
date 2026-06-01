@@ -2,12 +2,108 @@ import type { Payload } from 'payload'
 
 import type { Session, User } from '@/payload-types'
 
+import { normalizeSizeTier } from './inferSizeTier'
 import { normalizeArtworkSelectFields } from './normalizeArtworkSelects'
+import { findSeriesIdBySlug, seriesNotFoundMessage } from './seriesSlugs'
 
 type CommitContext = {
   payload: Payload
   user: User
   session: Session
+}
+
+const TAG_FIELDS = {
+  movementTags: 'movement',
+  styleTags: 'style',
+  subjectTags: 'subject',
+  genreTags: 'genre',
+  periodTags: 'period',
+} as const
+
+type TagType = (typeof TAG_FIELDS)[keyof typeof TAG_FIELDS]
+
+async function resolveTagLabel(
+  ctx: CommitContext,
+  label: string,
+  type: TagType,
+): Promise<number | null> {
+  const trimmed = label.trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) return Number(trimmed)
+
+  const res = await ctx.payload.find({
+    collection: 'tags',
+    where: {
+      and: [
+        { label: { equals: trimmed } },
+        { type: { equals: type } },
+      ],
+    },
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user: ctx.user,
+  })
+  return typeof res.docs[0]?.id === 'number' ? res.docs[0].id : null
+}
+
+/** Find tag by label or create a controlled-vocabulary row so staged labels survive commit. */
+async function resolveOrCreateTagLabel(
+  ctx: CommitContext,
+  label: string,
+  type: TagType,
+): Promise<number | null> {
+  const existing = await resolveTagLabel(ctx, label, type)
+  if (existing != null) return existing
+
+  const trimmed = label.trim()
+  if (!trimmed || /^\d+$/.test(trimmed)) return null
+
+  try {
+    const created = await ctx.payload.create({
+      collection: 'tags',
+      data: { label: trimmed, type },
+      overrideAccess: false,
+      user: ctx.user,
+    })
+    return typeof created.id === 'number' ? created.id : null
+  } catch {
+    return resolveTagLabel(ctx, label, type)
+  }
+}
+
+/** Resolve tag label strings → IDs for all tag relationship fields. Unknown labels are silently dropped. */
+async function resolveTagFields(
+  ctx: CommitContext,
+  patch: Record<string, unknown>,
+): Promise<void> {
+  for (const [field, tagType] of Object.entries(TAG_FIELDS)) {
+    const raw = patch[field]
+    if (raw == null) continue
+
+    // Already an array of IDs → pass through
+    if (Array.isArray(raw) && raw.every((v) => typeof v === 'number')) continue
+
+    const items = Array.isArray(raw) ? raw : [raw]
+    const ids: number[] = []
+
+    for (const item of items) {
+      if (typeof item === 'number') {
+        ids.push(item)
+        continue
+      }
+      if (typeof item === 'string') {
+        const id = await resolveOrCreateTagLabel(ctx, item, tagType)
+        if (id != null) ids.push(id)
+      }
+    }
+
+    if (ids.length > 0) {
+      patch[field] = ids
+    } else {
+      delete patch[field]
+    }
+  }
 }
 
 function slugifyTitle(input: string): string {
@@ -18,20 +114,47 @@ function slugifyTitle(input: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-async function findSeriesIdBySlug(
+async function findSeriesIdBySlugForCommit(
   ctx: CommitContext,
   slug: string,
 ): Promise<number | null> {
-  const res = await ctx.payload.find({
-    collection: 'series',
-    where: { slug: { equals: slug.trim() } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: false,
-    user: ctx.user,
-  })
-  const id = res.docs[0]?.id
-  return typeof id === 'number' ? id : null
+  return findSeriesIdBySlug(ctx, slug)
+}
+
+async function resolveSeriesSlugForNormalize(
+  ctx: CommitContext,
+  patch: Record<string, unknown>,
+): Promise<string | undefined> {
+  if (typeof patch.seriesSlug === 'string' && patch.seriesSlug.trim()) {
+    return patch.seriesSlug.trim()
+  }
+
+  const raw = patch.series
+  if (typeof raw === 'string' && !/^\d+$/.test(raw.trim())) {
+    return raw.trim()
+  }
+
+  const seriesId =
+    typeof raw === 'number'
+      ? raw
+      : typeof raw === 'string' && /^\d+$/.test(raw.trim())
+        ? Number(raw.trim())
+        : null
+
+  if (seriesId == null) return undefined
+
+  try {
+    const doc = await ctx.payload.findByID({
+      collection: 'series',
+      id: seriesId,
+      depth: 0,
+      overrideAccess: false,
+      user: ctx.user,
+    })
+    return typeof doc.slug === 'string' && doc.slug.trim() ? doc.slug.trim() : undefined
+  } catch {
+    return undefined
+  }
 }
 
 async function resolveSeriesField(ctx: CommitContext, patch: Record<string, unknown>): Promise<void> {
@@ -63,11 +186,9 @@ async function resolveSeriesField(ctx: CommitContext, patch: Record<string, unkn
   }
 
   if (slug) {
-    const id = await findSeriesIdBySlug(ctx, slug)
+    const id = await findSeriesIdBySlugForCommit(ctx, slug)
     if (id == null) {
-      throw new Error(
-        `Series "${slug}" was not found. Create it in Series admin or stage series with a valid slug.`,
-      )
+      throw new Error(await seriesNotFoundMessage(ctx, slug))
     }
     patch.series = id
     delete patch.seriesSlug
@@ -155,8 +276,16 @@ export async function resolveArtworkCommitReferences(
   ensureCreator(out, ctx.session)
   ensureSlug(out)
   await resolveSeriesField(ctx, out)
+  await resolveTagFields(ctx, out)
   if (out.ach) {
     await resolveNestedImageCaptureTypes(ctx, out.ach, 'ach')
   }
-  return normalizeArtworkSelectFields(out)
+
+  const seriesSlug = await resolveSeriesSlugForNormalize(ctx, out)
+
+  const stagedTier = normalizeSizeTier(out.sizeTier)
+  if (stagedTier) out.sizeTier = stagedTier
+  else delete out.sizeTier
+
+  return normalizeArtworkSelectFields(out, { seriesSlug })
 }

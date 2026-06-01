@@ -4,6 +4,8 @@ import { Button } from '@payloadcms/ui'
 import { useState } from 'react'
 
 import { buildPracticeKnowledgePatches } from '@/lib/artOfficial/buildPracticeKnowledgePatches'
+import { buildArtworkPatchFromTimeline } from '@/lib/artOfficial/buildArtworkPatch'
+import { collapseTimelineToLatest } from '@/lib/artOfficial/sessionTimeline'
 import { commitButtonHint, wrapUpSummary } from '@/lib/artOfficial/confirmationCopy'
 
 import type { ArtOfficialSession, TimelineEntry } from './types'
@@ -11,13 +13,10 @@ import type { ArtOfficialSession, TimelineEntry } from './types'
 import './artOfficialChat.scss'
 
 function buildArtworkDataFromTimeline(timeline: TimelineEntry[]): Record<string, unknown> {
-  const data: Record<string, unknown> = { status: 'draft' }
-  for (const entry of timeline) {
-    if (entry.targetCollection === 'artworks' && entry.field) {
-      data[entry.field] = entry.value
-    }
+  return {
+    status: 'draft',
+    ...buildArtworkPatchFromTimeline(collapseTimelineToLatest(timeline)),
   }
-  return data
 }
 
 export function ConfirmationPanel({
@@ -132,10 +131,17 @@ export function ConfirmationPanel({
   const practicePatches =
     sessionType === 'onboarding' ? buildPracticeKnowledgePatches(timeline) : []
 
+  const isRefinement =
+    typeof session.artworkRecord === 'number'
+      ? session.artworkRecord > 0
+      : typeof session.artworkRecord === 'object' && session.artworkRecord !== null
+
   const canCommitArtwork =
     sessionType !== 'artwork-cataloguing' ||
-    (timeline.some((e) => e.field === 'title') &&
-      timeline.some((e) => e.field === 'yearCreated'))
+    // Refinement: existing record already has required fields — allow commit with any staged fields
+    (isRefinement && (timeline.length > 0 || Boolean(session.artworkRecord))) ||
+    // New artwork: require title + yearCreated to be staged
+    (timeline.some((e) => e.field === 'title') && timeline.some((e) => e.field === 'yearCreated'))
 
   const canCommitTriptych =
     sessionType !== 'triptych-cataloguing' ||
@@ -178,6 +184,34 @@ export function ConfirmationPanel({
               No Practice Knowledge sections are staged yet. Ask Art/Official to summarize and
               stage sections, or commit to close the session without writing PK rows.
             </p>
+          ) : null}
+
+          {sessionType === 'artwork-cataloguing' && timeline.length > 0 ? (
+            <>
+              <h4 className="art-official-confirm__subheading">Staged fields ({timeline.length})</h4>
+              <ul className="art-official-confirm__list art-official-confirm__list--fields">
+                {collapseTimelineToLatest(timeline).map((entry, i) => {
+                  const valStr =
+                    entry.value == null
+                      ? '—'
+                      : typeof entry.value === 'string'
+                        ? entry.value.length > 80
+                          ? `${entry.value.slice(0, 80)}…`
+                          : entry.value
+                        : Array.isArray(entry.value)
+                          ? `[${(entry.value as unknown[]).length} items]`
+                          : typeof entry.value === 'object'
+                            ? '{…}'
+                            : String(entry.value)
+                  return (
+                    <li key={`${entry.field}-${i}`} className="art-official-confirm__field-row">
+                      <span className="art-official-confirm__field-name">{entry.field}</span>
+                      <span className="art-official-confirm__field-value">{valStr}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </>
           ) : null}
 
           {hasDrafts ? (
@@ -243,7 +277,7 @@ export function ConfirmationPanel({
           </div>
           <p className="art-official-confirm__commit-hint">{commitHint}</p>
 
-          {sessionType === 'artwork-cataloguing' && !canCommitArtwork ? (
+          {sessionType === 'artwork-cataloguing' && !canCommitArtwork && !isRefinement ? (
             <p className="art-official-confirm__warning">
               Stage at least title and yearCreated in chat before committing.
             </p>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistRecord, getPublishedArtworkBySlug } from '@/lib/payload/siteDocuments'
@@ -15,9 +16,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Artwork' }
   }
   const base = getSiteBaseUrl()
+  const seo = resolveArtworkSeo(artwork)
   return {
-    title: artwork.title,
-    description: artwork.descriptionShort ?? undefined,
+    title: seo.title,
+    description: seo.description,
     alternates: { canonical: `${base}/artworks/${slug}` },
   }
 }

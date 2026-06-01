@@ -8,7 +8,7 @@ export type SessionKickoff = {
   message: string
 }
 
-const KICKOFFS: Record<SessionType, SessionKickoff | null> = {
+const KICKOFFS: Record<SessionType | 'artwork-cataloguing-refinement', SessionKickoff | null> = {
   onboarding: {
     title: 'Onboarding',
     intro:
@@ -54,6 +54,14 @@ const KICKOFFS: Record<SessionType, SessionKickoff | null> = {
     message:
       "I'd like to catalogue an artwork. Please open with your briefing on my practice (brief, no generic welcome), then ask your first pre-upload question.",
   },
+  'artwork-cataloguing-refinement': {
+    title: 'Artwork update',
+    intro:
+      'Continuing cataloguing on an existing artwork. The agent knows what is already filled and will focus the conversation on the gaps — missing context, provenance, reflective fields, and series data.',
+    buttonLabel: 'Begin refinement',
+    message:
+      "I'd like to add to and refine the cataloguing for this existing artwork. Please review what's already captured, summarise the gaps briefly, and ask about the most important missing conceptual field first.",
+  },
   'triptych-cataloguing': {
     title: 'Triptych cataloguing',
     intro:
@@ -67,6 +75,19 @@ const KICKOFFS: Record<SessionType, SessionKickoff | null> = {
     buttonLabel: 'Begin triptych session',
     message:
       "I'd like to catalogue a triptych. Please welcome me briefly, confirm we're documenting one MoP set (not a single panel), and ask your first question.",
+  },
+  sequencing: {
+    title: 'Sequencing',
+    intro:
+      'Order works on the timeline and set date anchors. The agent stages sortIndex and known dates; commit runs batch recompute for timelineDate and dateDisplay.',
+    topics: [
+      'Which work needs repositioning',
+      'Neighbouring works (before/after)',
+      'Confirmed creation dates or circa ranges',
+    ],
+    buttonLabel: 'Begin sequencing',
+    message:
+      "I'd like to sequence artworks on the timeline. Please confirm which series we're ordering and ask which work we should place first.",
   },
   'episode-storyboard': {
     title: 'Episode storyboard',
@@ -86,9 +107,16 @@ const KICKOFFS: Record<SessionType, SessionKickoff | null> = {
   },
 }
 
-export function getSessionKickoff(sessionType: string | null | undefined): SessionKickoff | null {
-  if (!sessionType || !(sessionType in KICKOFFS)) return null
-  return KICKOFFS[sessionType as SessionType]
+export function getSessionKickoff(
+  sessionType: string | null | undefined,
+  isRefinement?: boolean,
+): SessionKickoff | null {
+  if (!sessionType) return null
+  if (sessionType === 'artwork-cataloguing' && isRefinement) {
+    return KICKOFFS['artwork-cataloguing-refinement'] ?? null
+  }
+  if (!(sessionType in KICKOFFS)) return null
+  return KICKOFFS[sessionType as SessionType | 'artwork-cataloguing-refinement']
 }
 
 const KICKOFF_MESSAGES = new Set(

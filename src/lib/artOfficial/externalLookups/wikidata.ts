@@ -13,6 +13,52 @@ export type WikidataEntitySummary = {
   wikipediaUrl?: string
   inception?: string
   coordinates?: { lat: number; lng: number }
+  /** P1082 — population (amount only; unit not normalized). */
+  population?: number
+  /** Year from P585 qualifier on population, when present. */
+  populationYear?: string
+  /** P2046 — area in km² when available. */
+  areaKm2?: number
+}
+
+type WikidataClaims = Record<
+  string,
+  Array<{
+    mainsnak?: { datavalue?: { value?: unknown } }
+    qualifiers?: Record<
+      string,
+      Array<{ mainsnak?: { datavalue?: { value?: unknown } } }>
+    >
+  }>
+>
+
+function parseQuantityAmount(value: unknown): number | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const amount = (value as { amount?: string }).amount
+  if (amount == null) return undefined
+  const n = Number.parseFloat(String(amount).replace(/^\+/, ''))
+  return Number.isFinite(n) ? n : undefined
+}
+
+function parseWikidataTimeYear(value: unknown): string | undefined {
+  if (!value || typeof value !== 'object') return undefined
+  const time = (value as { time?: string }).time
+  if (!time) return undefined
+  const match = time.match(/([0-9]{4})/)
+  return match?.[1]
+}
+
+function extractPopulationFacts(claims: WikidataClaims | undefined): {
+  population?: number
+  populationYear?: string
+} {
+  const row = claims?.P1082?.[0]
+  if (!row) return {}
+  const population = parseQuantityAmount(row.mainsnak?.datavalue?.value)
+  const populationYear = parseWikidataTimeYear(
+    row.qualifiers?.P585?.[0]?.mainsnak?.datavalue?.value,
+  )
+  return { population, populationYear }
 }
 
 export async function searchWikidata(
@@ -102,6 +148,11 @@ export async function getWikidataEntity(
     if (time.time) inception = time.time.replace(/^\+/, '').slice(0, 4)
   }
 
+  const populationFacts = extractPopulationFacts(entity.claims as WikidataClaims | undefined)
+  const areaKm2 = parseQuantityAmount(
+    entity.claims?.P2046?.[0]?.mainsnak?.datavalue?.value,
+  )
+
   return {
     id,
     uri: `https://www.wikidata.org/wiki/${id}`,
@@ -115,5 +166,8 @@ export async function getWikidataEntity(
       typeof coordClaim?.latitude === 'number' && typeof coordClaim?.longitude === 'number'
         ? { lat: coordClaim.latitude, lng: coordClaim.longitude }
         : undefined,
+    population: populationFacts.population,
+    populationYear: populationFacts.populationYear,
+    areaKm2,
   }
 }

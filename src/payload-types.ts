@@ -82,6 +82,7 @@ export interface Config {
     events: Event;
     'image-capture-technologies': ImageCaptureTechnology;
     artworks: Artwork;
+    'dcs-capture-photos': DcsCapturePhoto;
     triptychs: Triptych;
     'small-prints': SmallPrint;
     sessions: Session;
@@ -92,8 +93,9 @@ export interface Config {
   };
   collectionsJoins: {
     artworks: {
-      processPhotos: 'field-notes';
       events: 'events';
+      processPhotos: 'field-notes';
+      'dcs.captureJourney.capturePhotos': 'dcs-capture-photos';
     };
   };
   collectionsSelect: {
@@ -112,6 +114,7 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     'image-capture-technologies': ImageCaptureTechnologiesSelect<false> | ImageCaptureTechnologiesSelect<true>;
     artworks: ArtworksSelect<false> | ArtworksSelect<true>;
+    'dcs-capture-photos': DcsCapturePhotosSelect<false> | DcsCapturePhotosSelect<true>;
     triptychs: TriptychsSelect<false> | TriptychsSelect<true>;
     'small-prints': SmallPrintsSelect<false> | SmallPrintsSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
@@ -419,43 +422,21 @@ export interface Artist {
 export interface Artwork {
   id: number;
   /**
-   * Canonical high-res image for image-based works.
+   * Canonical high-res image for this work.
    */
   primaryImage?: (number | null) | Media;
-  primaryMediaType?: ('image' | 'video' | 'image-and-video') | null;
   /**
-   * Alt text for the primary image (accessibility).
+   * Alt text for the primary image.
    */
   primaryImageAltText?: string | null;
   /**
-   * Thumbnail / social / timeline / video poster. Required when primary media type is video.
+   * Thumbnail / social / timeline / video poster still.
    */
   posterImage?: (number | null) | Media;
+  /**
+   * Alt text for the poster image.
+   */
   posterImageAltText?: string | null;
-  /**
-   * Temporary WordPress image URL until migrated to R2.
-   */
-  wpImageUrl?: string | null;
-  /**
-   * Final studio reference image used for timelapse correction.
-   */
-  finalReferenceImage?: (number | null) | Media;
-  /**
-   * Generated timelapse output for process documentation.
-   */
-  timelapseFile?: (number | null) | Media;
-  /**
-   * All linked FieldNotes for this artwork (photos, clips, notes) in reverse relation.
-   */
-  processPhotos?: {
-    docs?: (number | FieldNote)[];
-    hasNextPage?: boolean;
-    totalDocs?: number;
-  };
-  /**
-   * Active Lines this artwork contributes to.
-   */
-  lines?: (number | Line)[] | null;
   title: string;
   /**
    * Alternate title — also known as (other language or market).
@@ -466,9 +447,12 @@ export interface Artwork {
    * Primary artist for this work.
    */
   creator: number | Artist;
+  /**
+   * Series drives conditional tabs (A Colorful History, Digital City Series, Megacities). Save after changing — Art/Official Megacities workflow applies when series slug is megacities.
+   */
   series: number | Series;
   /**
-   * Auto-set from series.
+   * Auto-set from series — drives series-specific tabs.
    */
   seriesSlug?: string | null;
   status: 'draft' | 'published' | 'archived';
@@ -488,6 +472,31 @@ export interface Artwork {
    * Mirrors year created — reserved for future slug generation.
    */
   yearStart?: number | null;
+  /**
+   * Authoritative display order (float — insert between works via midpoint).
+   */
+  sortIndex?: number | null;
+  datePrecision?: ('exact' | 'month' | 'year' | 'circa' | 'decade' | 'unknown') | null;
+  /**
+   * Concrete known date — anchor when precision is exact/month/year.
+   */
+  dateKnown?: string | null;
+  /**
+   * Made no earlier than.
+   */
+  dateEarliest?: string | null;
+  /**
+   * Made no later than.
+   */
+  dateLatest?: string | null;
+  /**
+   * Computed positioning date — internal layout only, never public.
+   */
+  timelineDate?: string | null;
+  /**
+   * Honest human label for the timeline view.
+   */
+  dateDisplay?: string | null;
   datePublished?: string | null;
   /**
    * Legacy WordPress ID.
@@ -909,6 +918,18 @@ export interface Artwork {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Field notes linked to this artwork — process photos, clips, voice memos, and written notes.
+   */
+  processPhotos?: {
+    docs?: (number | FieldNote)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
+  /**
+   * Active Lines this artwork contributes to.
+   */
+  lines?: (number | Line)[] | null;
   arEnabled?: boolean | null;
   /**
    * Metres; defaults from width mm ÷ 1000 on save.
@@ -1115,7 +1136,13 @@ export interface Artwork {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Optional override. When empty, the public site uses the artwork title.
+   */
   metaTitle?: string | null;
+  /**
+   * Optional override. When empty, the public site uses descriptionShort.
+   */
   metaDescription?: string | null;
   /**
    * Labeled external links for SEO. For schema.org URI list see Schema.org tab.
@@ -1234,9 +1261,21 @@ export interface Artwork {
   mop_lat?: number | null;
   mop_lng?: number | null;
   /**
+   * Final studio reference used for timelapse correction.
+   */
+  finalReferenceImage?: (number | null) | Media;
+  /**
+   * Generated timelapse output.
+   */
+  timelapseFile?: (number | null) | Media;
+  /**
    * A Colorful History series-specific data. Sub-groups map to spec Groups 1–7.
    */
   ach?: {
+    /**
+     * Optional internal sub-series or thematic group name within ACH (e.g. "Gates of Perception", "Bridges of Europe"). Not displayed publicly — editorial organisation only.
+     */
+    internalGroupTitle?: string | null;
     mapAndTour?: {
       /**
        * Whether this artwork appears on the ACH map. Default false; false for all MoW works.
@@ -1428,6 +1467,10 @@ export interface Artwork {
              * Short description of the event for that year.
              */
             event: string;
+            /**
+             * Wikipedia article URL for this specific event or date (e.g. https://en.wikipedia.org/wiki/Fall_of_the_Berlin_Wall). Agent looks up and proposes; Bernard confirms.
+             */
+            wikiLink?: string | null;
             id?: string | null;
           }[]
         | null;
@@ -1575,206 +1618,532 @@ export interface Artwork {
       relatedTriptychs?: (number | Triptych)[] | null;
     };
   };
-  dcs_photoTitle?: string | null;
-  dcs_cityData?: {
-    population?: number | null;
-    /**
-     * km²
-     */
-    area?: number | null;
-    /**
-     * per km²
-     */
-    density?: number | null;
-    /**
-     * metres
-     */
-    elevation?: number | null;
-  };
-  dcs_videos?:
-    | {
-        videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
-        videoFile?: (number | null) | Media;
-        videoUrl?: string | null;
-        posterImage?: (number | null) | Media;
-        title?: string | null;
-        videoRole?: ('makingOf' | 'documentation' | 'other') | null;
-        id?: string | null;
-      }[]
-    | null;
-  mc_cityData?: {
-    population?: number | null;
-    /**
-     * km²
-     */
-    area?: number | null;
-    /**
-     * per km²
-     */
-    density?: number | null;
-    /**
-     * metres
-     */
-    elevation?: number | null;
-  };
-  mc_videos?:
-    | {
-        videoType: 'upload' | 'youtube' | 'vimeo' | 'url';
-        videoFile?: (number | null) | Media;
-        videoUrl?: string | null;
-        posterImage?: (number | null) | Media;
-        title?: string | null;
-        videoRole?: ('makingOf' | 'documentation' | 'other') | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Unified capture records for text, photos, video clips, and voice memos.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "field-notes".
- */
-export interface FieldNote {
-  id: number;
-  mediaType:
-    | 'text'
-    | 'photo'
-    | 'video-broll'
-    | 'video-observation'
-    | 'video-performance'
-    | 'video-process'
-    | 'voice-memo';
-  capturedAt?: string | null;
-  city?: string | null;
-  location?: {
-    lat?: number | null;
-    lng?: number | null;
-  };
-  locationName?: string | null;
-  mediaFile?: (number | null) | Media;
-  writtenNote?: string | null;
-  relatedArtwork?: (number | null) | Artwork;
-  relatedEpisode?: (number | null) | Episode;
-  processingStatus: 'pending' | 'processing' | 'complete' | 'failed';
-  register?: ('exploratory' | 'resolved' | 'frustrated' | 'excited' | 'observational') | null;
-  processStage?: ('early' | 'mid' | 'late' | 'completed') | null;
-  conceptualThread?:
-    | ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle')
-    | null;
-  lines?: (number | Line)[] | null;
   /**
-   * Candidate Line connections from embedding jobs — confirm or dismiss in the studio Notes detail view.
+   * Digital City Series extension. Base city and yearCreated live on the Core tab; primaryImage is the Meso composition.
    */
-  suggestedLines?:
-    | {
-        lineId: number;
-        lineName?: string | null;
-        score?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  audioTranscript?: string | null;
-  transcriptType?: ('shooter-description' | 'speech' | 'none') | null;
-  keyframes?:
-    | {
-        timestamp: number;
-        imageUrl: string;
-        tags?:
+  dcs?: {
+    /**
+     * Physical skate mission that generated source material. City and yearCreated are on Core.
+     */
+    captureJourney?: {
+      /**
+       * Total distance skated during the capture mission (km).
+       */
+      captureDistanceKm?: number | null;
+      /**
+       * Days spent on the ground capturing.
+       */
+      captureDays?: number | null;
+      /**
+       * Total raw photographs taken.
+       */
+      captureImageCount?: number | null;
+      /**
+       * Raw GPX file from GPS tracker.
+       */
+      captureRouteGpx?: (number | null) | Media;
+      /**
+       * Fallback embed URL if GPX unavailable.
+       */
+      captureRouteMapUrl?: string | null;
+      /**
+       * Link to ambient audio from the mission.
+       */
+      captureAmbientAudioUrl?: string | null;
+      /**
+       * Link to street B-roll footage.
+       */
+      captureBRollVideoUrl?: string | null;
+      /**
+       * Artist account of the mission — first-person, informal.
+       */
+      captureJourneyNote?: string | null;
+      /**
+       * Individual street photographs from this mission (via DCSCapturePhotos).
+       */
+      capturePhotos?: {
+        docs?: (number | DcsCapturePhoto)[];
+        hasNextPage?: boolean;
+        totalDocs?: number;
+      };
+    };
+    /**
+     * Smoothist composition process. primaryImage on Core is the Meso; streetPhotoImage is the Micro.
+     */
+    composition?: {
+      /**
+       * Selected decisive-moment street photograph (Micro).
+       */
+      streetPhotoImage?: (number | null) | Media;
+      /**
+       * Where/when captured and why selected.
+       */
+      streetPhotoCaption?: string | null;
+      /**
+       * Satellite or aerial image (Macro).
+       */
+      satelliteViewImage?: (number | null) | Media;
+      /**
+       * Alt text for satellite image. Agent drafts; artist confirms.
+       */
+      satelliteViewAltText?: string | null;
+      /**
+       * Panoramic scenes blended (2–4).
+       */
+      sceneCount?: number | null;
+      /**
+       * Curatorial reasoning behind scene choices.
+       */
+      compositionNarrative?: string | null;
+      homieAIPhaseUsed?: ('manual-only' | 'phase-1-sorting' | 'phase-2-curation' | 'phase-3-blending') | null;
+      /**
+       * Screen recording or timelapse of composition session.
+       */
+      compositionProcessVideoUrl?: string | null;
+      /**
+       * Narrated audio of composition decisions.
+       */
+      compositionAudioCommentaryUrl?: string | null;
+    };
+    cityContext?: {
+      /**
+       * Country or city flag as a transparent PNG. Used as a decorative layer on the artwork page.
+       */
+      cityFlagImage?: (number | null) | Media;
+      /**
+       * Short writing about this city — English.
+       */
+      cityPortraitEN?: string | null;
+      /**
+       * German translation of city portrait.
+       */
+      cityPortraitDE?: string | null;
+      /**
+       * Wikidata entity URI for the city.
+       */
+      cityWikidataUri?: string | null;
+      /**
+       * Population at time of capture.
+       */
+      cityPopulation?: number | null;
+      /**
+       * City area in km².
+       */
+      cityAreaKm2?: number | null;
+      /**
+       * Population density per km² at time of capture.
+       */
+      cityPopulationDensity?: number | null;
+      /**
+       * Mean elevation of the city in metres above sea level.
+       */
+      cityElevationM?: number | null;
+      capturedNeighborhoods?:
+        | {
+            name: string;
+            id?: string | null;
+          }[]
+        | null;
+    };
+    /**
+     * Archival record of edition tiers. Vendure is source of truth for pricing; webhook maintains remaining counts.
+     */
+    editionTiers?:
+      | {
+          tierName: 'small-print' | 'collectors-print' | 'monumental' | 'oil-painting';
+          /**
+           * Fixed edition size — never changes after publication.
+           */
+          totalEditionSize: number;
+          printSubstrate?: ('paper' | 'aluminum-mount' | 'canvas' | 'oil-on-canvas') | null;
+          /**
+           * Ships with street photo + satellite supporting prints.
+           */
+          includesSupportingPrints?: boolean | null;
+          /**
+           * Vendure product ID — immutable once set.
+           */
+          vendureProductId?: string | null;
+          /**
+           * Webhook-maintained remaining stock.
+           */
+          editionsRemaining?: number | null;
+          /**
+           * Last successful webhook sync.
+           */
+          editionsRemainingUpdatedAt?: string | null;
+          tierAvailabilityStatus?: ('available' | 'sold-out' | 'not-yet-listed' | 'not-for-sale') | null;
+          id?: string | null;
+        }[]
+      | null;
+    oilPainting?: {
+      /**
+       * Whether a Da Fen oil painting collaboration exists.
+       */
+      hasOilPainting?: boolean | null;
+      oilPaintingArtistName?: string | null;
+      oilPaintingArtistBio?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
+        [k: string]: unknown;
+      } | null;
+      oilPaintingArtistUrl?: string | null;
+      oilPaintingImage?: (number | null) | Media;
+      /**
+       * E.g. '100 × 100 cm'.
+       */
+      oilPaintingDimensionsCm?: string | null;
+      oilPaintingCollaborationStory?: string | null;
+      oilPaintingVendureProductId?: string | null;
+      oilPaintingAvailabilityStatus?: ('available' | 'sold' | 'in-progress' | 'not-for-sale') | null;
+    };
+    dcs100?: {
+      /**
+       * Monthly drop format YYYY-MM, e.g. '2025-03'.
+       */
+      dcs100MonthYear?: string | null;
+      dcs100IsDelivered?: boolean | null;
+      dcs100TierAvailability?: ('cornerstone' | 'arch-stone' | 'capstone')[] | null;
+      zineEditionSize?: number | null;
+      zineAvailable?: boolean | null;
+      zineVendureProductId?: string | null;
+    };
+    certificate?: {
+      /**
+       * Auto-generated on first publication. E.g. DCS-BER-SP-042.
+       */
+      certificateId?: string | null;
+      certificateRegistryUrl?: string | null;
+      daaahListingStatus?: ('not-listed' | 'active-listing' | 'sold-on-daaah' | 'reserved') | null;
+      /**
+       * Asking price in EUR when listed on DAAAH.
+       */
+      daaahListingPriceEur?: number | null;
+      daaahSaleHistory?:
+        | {
+            date: string;
+            salePriceEur: number;
+            buyerCity?: string | null;
+            id?: string | null;
+          }[]
+        | null;
+    };
+  };
+  /**
+   * Megacities series-specific data for composite country and Skate City works.
+   */
+  megacities?: {
+    series?: {
+      /**
+       * Required when the artwork series is Megacities.
+       */
+      seriesType?: ('composite_country' | 'skate_city' | 'cultural_composite' | 'exhibition_origin') | null;
+      /**
+       * Free text explaining classification criteria.
+       */
+      classificationNote?: string | null;
+      seriesStatus?: ('full_series' | 'exhibition_artifact' | 'undecided') | null;
+      completionStatus?: ('completed_full_size' | 'small_scale_done' | 'in_progress') | null;
+      /**
+       * Position in main series order (e.g. Deutsche Stadt = 1).
+       */
+      compositeNumber?: number | null;
+      /**
+       * When cities/spots were selected.
+       */
+      yearResearched?: string | null;
+      /**
+       * When full-size execution finished.
+       */
+      yearCompleted?: string | null;
+    };
+    composition?: {
+      locationCount?: number | null;
+      compositionRationale?: string | null;
+      citySelectionCriteria?:
+        | (
+            | 'largest_by_population'
+            | 'capital_cities'
+            | 'cultural_centres'
+            | 'political_body_members'
+            | 'geographic_anchors'
+            | 'mixed'
+          )
+        | null;
+      selectionNote?: string | null;
+      dominantPalette?:
+        | {
+            hex: string;
+            id?: string | null;
+          }[]
+        | null;
+      coverageArea?: string | null;
+      /**
+       * Small-scale working composition or layout reference (before full-size execution).
+       */
+      referenceCollageImage?: (number | null) | Media;
+      /**
+       * Optional country or regional flag layer (transparent PNG) used on megacities.world.
+       */
+      countryFlagImage?: (number | null) | Media;
+      /**
+       * Per-city or per-spot data.
+       */
+      locations?:
+        | {
+            name: string;
+            slug?: string | null;
+            /**
+             * Wikidata entity URI for the city or spot (e.g. https://www.wikidata.org/entity/Q64).
+             */
+            wikidataUri?: string | null;
+            country?: string | null;
+            region?: string | null;
+            population?: number | null;
+            populationYear?: string | null;
+            coordinates?: {
+              lat?: number | null;
+              lng?: number | null;
+            };
+            /**
+             * When satellite image was captured.
+             */
+            imageryDate?: string | null;
+            imagerySource?: string | null;
+            positionInCollage: {
+              /**
+               * % from left
+               */
+              x: number;
+              /**
+               * % from top
+               */
+              y: number;
+              id?: string | null;
+            };
+            /**
+             * Optional — for seam reveal.
+             */
+            boundaryPolygon?:
+              | {
+                  /**
+                   * % from left
+                   */
+                  x: number;
+                  /**
+                   * % from top
+                   */
+                  y: number;
+                  id?: string | null;
+                }[]
+              | null;
+            spotType?:
+              | (
+                  | 'bowl'
+                  | 'street_plaza'
+                  | 'skate_park'
+                  | 'diy'
+                  | 'mega_ramp'
+                  | 'pool'
+                  | 'transition'
+                  | 'ledges'
+                  | 'other'
+                )
+              | null;
+            spotName?: string | null;
+            spotLegacyNote?: string | null;
+            videoUrl?: string | null;
+            videoType?: ('rap' | 'skate' | 'documentary' | 'none') | null;
+            videoNote?: string | null;
+            citySelectionNote?: string | null;
+            contextNote?: string | null;
+            actualGeoPosition?: {
+              /**
+               * % from left
+               */
+              x: number;
+              /**
+               * % from top
+               */
+              y: number;
+              id?: string | null;
+            };
+            id?: string | null;
+          }[]
+        | null;
+    };
+    waterway?: {
+      hasWaterway?: boolean | null;
+      waterwayName?: string | null;
+      thread?:
+        | {
+            /**
+             * % from left
+             */
+            x: number;
+            /**
+             * % from top
+             */
+            y: number;
+            label?: string | null;
+            citySlug?: string | null;
+            id?: string | null;
+          }[]
+        | null;
+      junctions?:
+        | {
+            name: string;
+            x: number;
+            y: number;
+            note?: string | null;
+            id?: string | null;
+          }[]
+        | null;
+      waterwayNote?: string | null;
+    };
+    interaction?: {
+      overlaySystem?: {
+        type?: ('city_boundary' | 'spot_zoom') | null;
+        defaultZoomLevel?: number | null;
+        zoomTransitionMs?: number | null;
+      };
+      spotFilters?: {
+        byType?: boolean | null;
+        byRegion?: boolean | null;
+        regions?:
           | {
-              tag: string;
+              name: string;
               id?: string | null;
             }[]
           | null;
-        id?: string | null;
-      }[]
-    | null;
-  detectedLanguage?: string | null;
-  duration?: number | null;
-  /**
-   * JSON number array until vector columns are introduced.
-   */
-  transcriptEmbedding?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  recordOrigin: 'user' | 'pipeline' | 'small-model';
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * MoP episode records with storyboard and clip assembly notes.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "episodes".
- */
-export interface Episode {
-  id: number;
-  title: string;
-  series: 'outsider-art-review' | 'rap-critic' | 'studio-fails' | 'studio-series';
-  status: 'concept' | 'storyboard' | 'shot' | 'uploaded' | 'edited' | 'posted';
-  concept?: string | null;
-  shotList?: string | null;
-  storyboard?:
-    | {
-        name: string;
-        mediaType?: string | null;
-        notes?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  assembly?:
-    | {
-        beatName?: string | null;
-        /**
-         * Temporary FieldNote id linkage until field-notes collection is registered.
-         */
-        clipFieldNoteId?: number | null;
-        notes?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  captionDrafts?:
-    | {
-        text: string;
-        channel?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  lines?: (number | Line)[] | null;
-  /**
-   * Temporary join substitute until field-notes collection is registered.
-   */
-  clipFieldNoteIds?:
-    | {
-        id: number;
-      }[]
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Active investigations that connect FieldNotes, Episodes, Artworks, and conversations.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "lines".
- */
-export interface Line {
-  id: number;
-  name: string;
-  description?: string | null;
-  status: 'active' | 'dormant' | 'closed';
-  /**
-   * Who introduced this line (manual or model suggestion).
-   */
-  recordOrigin: 'user' | 'small-model';
+      };
+      ghostMap?: {
+        available?: boolean | null;
+        countryOutlineSvg?: string | null;
+        transitionMs?: number | null;
+        note?: string | null;
+      };
+      seamReveal?: {
+        available?: boolean | null;
+      };
+      coordinateGrid?: {
+        available?: boolean | null;
+      };
+    };
+    ar?: {
+      arEnabled?: boolean | null;
+      /**
+       * Path to AR recognition image.
+       */
+      mindJsTargetImage?: string | null;
+      /**
+       * Stable slug-based AR experience URL.
+       */
+      arExperienceUrl?: string | null;
+      supportedPrintSizes?:
+        | {
+            size: string;
+            id?: string | null;
+          }[]
+        | null;
+      arNotes?: string | null;
+      buyerDelivery?: ('qr_on_print' | 'qr_on_insert' | 'email_post_purchase' | 'url_in_packaging' | 'multiple') | null;
+      buyerDeliveryNote?: string | null;
+    };
+    video?: {
+      /**
+       * Curatorial framing for the video layer.
+       */
+      layerConcept?: string | null;
+      ambientAudio?: {
+        available?: boolean | null;
+        audioUrl?: string | null;
+        note?: string | null;
+      };
+      videoFraming?: ('rap_per_city' | 'skate_per_spot' | 'street_level_contrast' | 'audio_only' | 'mixed') | null;
+    };
+    print?: {
+      printAvailable?: boolean | null;
+      editions?:
+        | {
+            tier?: ('full_size' | 'a0' | 'a1') | null;
+            dimensions?: string | null;
+            editionSize?: number | null;
+            vendureProductId?: string | null;
+            arEnabled?: boolean | null;
+            available?: boolean | null;
+            notes?: string | null;
+            id?: string | null;
+          }[]
+        | null;
+      certificateOfAuthenticity?:
+        | ('physical' | 'digital_pdf' | 'blockchain' | 'physical_and_digital' | 'none' | 'tbd')
+        | null;
+      fulfilmentPartner?: string | null;
+      fulfilmentNotes?: string | null;
+      printNotes?: string | null;
+    };
+    /**
+     * Every activation register — past and potential.
+     */
+    framings?:
+      | {
+          framingType?:
+            | (
+                | 'overview_effect'
+                | 'community_representation'
+                | 'historical_document'
+                | 'political_reframe'
+                | 'cultural_celebration'
+                | 'commission_response'
+              )
+            | null;
+          title: string;
+          description?: string | null;
+          activatedBy?: string | null;
+          status?: ('active' | 'historical' | 'latent') | null;
+          exhibitions?:
+            | {
+                name: string;
+                venue?: string | null;
+                venueNote?: string | null;
+                city?: string | null;
+                year?: string | null;
+                type?: ('solo' | 'group' | 'commission' | 'residency' | 'performance') | null;
+                notes?: string | null;
+                id?: string | null;
+              }[]
+            | null;
+          performances?:
+            | {
+                type?: string | null;
+                venue?: string | null;
+                year?: string | null;
+                description?: string | null;
+                id?: string | null;
+              }[]
+            | null;
+          potentialActivations?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    curatorial?: {
+      artistStatement?: string | null;
+      seriesPositionNote?: string | null;
+      processNote?: string | null;
+      openQuestions?: string | null;
+    };
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -1788,6 +2157,10 @@ export interface Series {
   id: number;
   name: string;
   slug: string;
+  /**
+   * Set when this is a sub-series (e.g. Gates of Perception → A Colorful History).
+   */
+  parentSeries?: (number | null) | Series;
   description?: {
     root: {
       type: string;
@@ -2058,6 +2431,153 @@ export interface ArtHistoricalReference {
   createdAt: string;
 }
 /**
+ * Unified capture records for text, photos, video clips, and voice memos.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "field-notes".
+ */
+export interface FieldNote {
+  id: number;
+  mediaType:
+    | 'text'
+    | 'photo'
+    | 'video-broll'
+    | 'video-observation'
+    | 'video-performance'
+    | 'video-process'
+    | 'voice-memo';
+  capturedAt?: string | null;
+  city?: string | null;
+  location?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  locationName?: string | null;
+  mediaFile?: (number | null) | Media;
+  writtenNote?: string | null;
+  relatedArtwork?: (number | null) | Artwork;
+  relatedEpisode?: (number | null) | Episode;
+  processingStatus: 'pending' | 'processing' | 'complete' | 'failed';
+  register?: ('exploratory' | 'resolved' | 'frustrated' | 'excited' | 'observational') | null;
+  processStage?: ('early' | 'mid' | 'late' | 'completed') | null;
+  conceptualThread?:
+    | ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle')
+    | null;
+  lines?: (number | Line)[] | null;
+  /**
+   * Candidate Line connections from embedding jobs — confirm or dismiss in the studio Notes detail view.
+   */
+  suggestedLines?:
+    | {
+        lineId: number;
+        lineName?: string | null;
+        score?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  audioTranscript?: string | null;
+  transcriptType?: ('shooter-description' | 'speech' | 'none') | null;
+  keyframes?:
+    | {
+        timestamp: number;
+        imageUrl: string;
+        tags?:
+          | {
+              tag: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  detectedLanguage?: string | null;
+  duration?: number | null;
+  /**
+   * JSON number array until vector columns are introduced.
+   */
+  transcriptEmbedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  recordOrigin: 'user' | 'pipeline' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * MoP episode records with storyboard and clip assembly notes.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "episodes".
+ */
+export interface Episode {
+  id: number;
+  title: string;
+  series: 'outsider-art-review' | 'rap-critic' | 'studio-fails' | 'studio-series';
+  status: 'concept' | 'storyboard' | 'shot' | 'uploaded' | 'edited' | 'posted';
+  concept?: string | null;
+  shotList?: string | null;
+  storyboard?:
+    | {
+        name: string;
+        mediaType?: string | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  assembly?:
+    | {
+        beatName?: string | null;
+        /**
+         * Temporary FieldNote id linkage until field-notes collection is registered.
+         */
+        clipFieldNoteId?: number | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  captionDrafts?:
+    | {
+        text: string;
+        channel?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  lines?: (number | Line)[] | null;
+  /**
+   * Temporary join substitute until field-notes collection is registered.
+   */
+  clipFieldNoteIds?:
+    | {
+        id: number;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Active investigations that connect FieldNotes, Episodes, Artworks, and conversations.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lines".
+ */
+export interface Line {
+  id: number;
+  name: string;
+  description?: string | null;
+  status: 'active' | 'dormant' | 'closed';
+  /**
+   * Who introduced this line (manual or model suggestion).
+   */
+  recordOrigin: 'user' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Photographic and image-making technologies referenced by ACH source photographs.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2253,6 +2773,62 @@ export interface Triptych {
   createdAt: string;
 }
 /**
+ * Individual street photographs from a DCS skate mission. One photo per parent artwork may be flagged as the Micro selection.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dcs-capture-photos".
+ */
+export interface DcsCapturePhoto {
+  id: number;
+  /**
+   * The DCS city composition this photo belongs to.
+   */
+  parentArtwork: number | Artwork;
+  /**
+   * High-res archival photograph.
+   */
+  image?: (number | null) | Media;
+  /**
+   * Position in the journey sequence, 1–40.
+   */
+  captureSequenceNumber?: number | null;
+  /**
+   * The decisive-moment street photo selected as the Micro for the final composition. Only one per parent artwork.
+   */
+  isMicroSelection?: boolean | null;
+  status?: ('draft' | 'published') | null;
+  /**
+   * Exact date and time the photo was taken.
+   */
+  captureTimestamp?: string | null;
+  /**
+   * Neighbourhood or district.
+   */
+  neighborhood?: string | null;
+  /**
+   * Latitude from EXIF or GPS log.
+   */
+  gpsLat?: number | null;
+  /**
+   * Longitude from EXIF or GPS log.
+   */
+  gpsLng?: number | null;
+  /**
+   * Artist note on this moment — short, informal.
+   */
+  captureNote?: string | null;
+  /**
+   * Accessible alt text. Agent drafts; artist confirms.
+   */
+  altText?: string | null;
+  arReconstructionBefore?: (number | null) | Media;
+  arReconstructionAfter?: (number | null) | Media;
+  arReconstructionVideoUrl?: string | null;
+  arReconstructionStatus?: ('pending' | 'in-progress' | 'complete') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Documents that brief the Art/Official agent at session start.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2390,6 +2966,7 @@ export interface Session {
     | 'artist-statement'
     | 'biography'
     | 'onboarding'
+    | 'sequencing'
     | 'episode-storyboard'
     | 'episode-assembly';
   status: 'in-progress' | 'completed' | 'abandoned';
@@ -2472,6 +3049,14 @@ export interface Session {
    */
   dialogueRefinementFlag?: boolean | null;
   refinementNotes?: string | null;
+  /**
+   * For sequencing sessions — the series being ordered.
+   */
+  sequencingSeries?: (number | null) | Series;
+  /**
+   * WordPress databaseId cross-checked during cataloguing (legacy lookup). Read-only reference.
+   */
+  legacyRecordId?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2558,6 +3143,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'artworks';
         value: number | Artwork;
+      } | null)
+    | ({
+        relationTo: 'dcs-capture-photos';
+        value: number | DcsCapturePhoto;
       } | null)
     | ({
         relationTo: 'triptychs';
@@ -2768,6 +3357,7 @@ export interface PracticeKnowledgeSelect<T extends boolean = true> {
 export interface SeriesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  parentSeries?: T;
   description?: T;
   yearStart?: T;
   yearEnd?: T;
@@ -3078,15 +3668,9 @@ export interface ImageCaptureTechnologiesSelect<T extends boolean = true> {
  */
 export interface ArtworksSelect<T extends boolean = true> {
   primaryImage?: T;
-  primaryMediaType?: T;
   primaryImageAltText?: T;
   posterImage?: T;
   posterImageAltText?: T;
-  wpImageUrl?: T;
-  finalReferenceImage?: T;
-  timelapseFile?: T;
-  processPhotos?: T;
-  lines?: T;
   title?: T;
   altTitle?: T;
   slug?: T;
@@ -3098,6 +3682,13 @@ export interface ArtworksSelect<T extends boolean = true> {
   yearCreated?: T;
   yearCompleted?: T;
   yearStart?: T;
+  sortIndex?: T;
+  datePrecision?: T;
+  dateKnown?: T;
+  dateEarliest?: T;
+  dateLatest?: T;
+  timelineDate?: T;
+  dateDisplay?: T;
   datePublished?: T;
   wp_id?: T;
   oldWpUrl?: T;
@@ -3259,6 +3850,8 @@ export interface ArtworksSelect<T extends boolean = true> {
         imageRole?: T;
         id?: T;
       };
+  processPhotos?: T;
+  lines?: T;
   arEnabled?: T;
   arWidthM?: T;
   arHeightM?: T;
@@ -3385,9 +3978,12 @@ export interface ArtworksSelect<T extends boolean = true> {
   mop_arRapScript?: T;
   mop_lat?: T;
   mop_lng?: T;
+  finalReferenceImage?: T;
+  timelapseFile?: T;
   ach?:
     | T
     | {
+        internalGroupTitle?: T;
         mapAndTour?:
           | T
           | {
@@ -3452,6 +4048,7 @@ export interface ArtworksSelect<T extends boolean = true> {
                 | {
                     year?: T;
                     event?: T;
+                    wikiLink?: T;
                     id?: T;
                   };
               conceptCopy?: T;
@@ -3499,45 +4096,366 @@ export interface ArtworksSelect<T extends boolean = true> {
               relatedTriptychs?: T;
             };
       };
-  dcs_photoTitle?: T;
-  dcs_cityData?:
+  dcs?:
     | T
     | {
-        population?: T;
-        area?: T;
-        density?: T;
-        elevation?: T;
+        captureJourney?:
+          | T
+          | {
+              captureDistanceKm?: T;
+              captureDays?: T;
+              captureImageCount?: T;
+              captureRouteGpx?: T;
+              captureRouteMapUrl?: T;
+              captureAmbientAudioUrl?: T;
+              captureBRollVideoUrl?: T;
+              captureJourneyNote?: T;
+              capturePhotos?: T;
+            };
+        composition?:
+          | T
+          | {
+              streetPhotoImage?: T;
+              streetPhotoCaption?: T;
+              satelliteViewImage?: T;
+              satelliteViewAltText?: T;
+              sceneCount?: T;
+              compositionNarrative?: T;
+              homieAIPhaseUsed?: T;
+              compositionProcessVideoUrl?: T;
+              compositionAudioCommentaryUrl?: T;
+            };
+        cityContext?:
+          | T
+          | {
+              cityFlagImage?: T;
+              cityPortraitEN?: T;
+              cityPortraitDE?: T;
+              cityWikidataUri?: T;
+              cityPopulation?: T;
+              cityAreaKm2?: T;
+              cityPopulationDensity?: T;
+              cityElevationM?: T;
+              capturedNeighborhoods?:
+                | T
+                | {
+                    name?: T;
+                    id?: T;
+                  };
+            };
+        editionTiers?:
+          | T
+          | {
+              tierName?: T;
+              totalEditionSize?: T;
+              printSubstrate?: T;
+              includesSupportingPrints?: T;
+              vendureProductId?: T;
+              editionsRemaining?: T;
+              editionsRemainingUpdatedAt?: T;
+              tierAvailabilityStatus?: T;
+              id?: T;
+            };
+        oilPainting?:
+          | T
+          | {
+              hasOilPainting?: T;
+              oilPaintingArtistName?: T;
+              oilPaintingArtistBio?: T;
+              oilPaintingArtistUrl?: T;
+              oilPaintingImage?: T;
+              oilPaintingDimensionsCm?: T;
+              oilPaintingCollaborationStory?: T;
+              oilPaintingVendureProductId?: T;
+              oilPaintingAvailabilityStatus?: T;
+            };
+        dcs100?:
+          | T
+          | {
+              dcs100MonthYear?: T;
+              dcs100IsDelivered?: T;
+              dcs100TierAvailability?: T;
+              zineEditionSize?: T;
+              zineAvailable?: T;
+              zineVendureProductId?: T;
+            };
+        certificate?:
+          | T
+          | {
+              certificateId?: T;
+              certificateRegistryUrl?: T;
+              daaahListingStatus?: T;
+              daaahListingPriceEur?: T;
+              daaahSaleHistory?:
+                | T
+                | {
+                    date?: T;
+                    salePriceEur?: T;
+                    buyerCity?: T;
+                    id?: T;
+                  };
+            };
       };
-  dcs_videos?:
+  megacities?:
     | T
     | {
-        videoType?: T;
-        videoFile?: T;
-        videoUrl?: T;
-        posterImage?: T;
-        title?: T;
-        videoRole?: T;
-        id?: T;
+        series?:
+          | T
+          | {
+              seriesType?: T;
+              classificationNote?: T;
+              seriesStatus?: T;
+              completionStatus?: T;
+              compositeNumber?: T;
+              yearResearched?: T;
+              yearCompleted?: T;
+            };
+        composition?:
+          | T
+          | {
+              locationCount?: T;
+              compositionRationale?: T;
+              citySelectionCriteria?: T;
+              selectionNote?: T;
+              dominantPalette?:
+                | T
+                | {
+                    hex?: T;
+                    id?: T;
+                  };
+              coverageArea?: T;
+              referenceCollageImage?: T;
+              countryFlagImage?: T;
+              locations?:
+                | T
+                | {
+                    name?: T;
+                    slug?: T;
+                    wikidataUri?: T;
+                    country?: T;
+                    region?: T;
+                    population?: T;
+                    populationYear?: T;
+                    coordinates?:
+                      | T
+                      | {
+                          lat?: T;
+                          lng?: T;
+                        };
+                    imageryDate?: T;
+                    imagerySource?: T;
+                    positionInCollage?:
+                      | T
+                      | {
+                          x?: T;
+                          y?: T;
+                          id?: T;
+                        };
+                    boundaryPolygon?:
+                      | T
+                      | {
+                          x?: T;
+                          y?: T;
+                          id?: T;
+                        };
+                    spotType?: T;
+                    spotName?: T;
+                    spotLegacyNote?: T;
+                    videoUrl?: T;
+                    videoType?: T;
+                    videoNote?: T;
+                    citySelectionNote?: T;
+                    contextNote?: T;
+                    actualGeoPosition?:
+                      | T
+                      | {
+                          x?: T;
+                          y?: T;
+                          id?: T;
+                        };
+                    id?: T;
+                  };
+            };
+        waterway?:
+          | T
+          | {
+              hasWaterway?: T;
+              waterwayName?: T;
+              thread?:
+                | T
+                | {
+                    x?: T;
+                    y?: T;
+                    label?: T;
+                    citySlug?: T;
+                    id?: T;
+                  };
+              junctions?:
+                | T
+                | {
+                    name?: T;
+                    x?: T;
+                    y?: T;
+                    note?: T;
+                    id?: T;
+                  };
+              waterwayNote?: T;
+            };
+        interaction?:
+          | T
+          | {
+              overlaySystem?:
+                | T
+                | {
+                    type?: T;
+                    defaultZoomLevel?: T;
+                    zoomTransitionMs?: T;
+                  };
+              spotFilters?:
+                | T
+                | {
+                    byType?: T;
+                    byRegion?: T;
+                    regions?:
+                      | T
+                      | {
+                          name?: T;
+                          id?: T;
+                        };
+                  };
+              ghostMap?:
+                | T
+                | {
+                    available?: T;
+                    countryOutlineSvg?: T;
+                    transitionMs?: T;
+                    note?: T;
+                  };
+              seamReveal?:
+                | T
+                | {
+                    available?: T;
+                  };
+              coordinateGrid?:
+                | T
+                | {
+                    available?: T;
+                  };
+            };
+        ar?:
+          | T
+          | {
+              arEnabled?: T;
+              mindJsTargetImage?: T;
+              arExperienceUrl?: T;
+              supportedPrintSizes?:
+                | T
+                | {
+                    size?: T;
+                    id?: T;
+                  };
+              arNotes?: T;
+              buyerDelivery?: T;
+              buyerDeliveryNote?: T;
+            };
+        video?:
+          | T
+          | {
+              layerConcept?: T;
+              ambientAudio?:
+                | T
+                | {
+                    available?: T;
+                    audioUrl?: T;
+                    note?: T;
+                  };
+              videoFraming?: T;
+            };
+        print?:
+          | T
+          | {
+              printAvailable?: T;
+              editions?:
+                | T
+                | {
+                    tier?: T;
+                    dimensions?: T;
+                    editionSize?: T;
+                    vendureProductId?: T;
+                    arEnabled?: T;
+                    available?: T;
+                    notes?: T;
+                    id?: T;
+                  };
+              certificateOfAuthenticity?: T;
+              fulfilmentPartner?: T;
+              fulfilmentNotes?: T;
+              printNotes?: T;
+            };
+        framings?:
+          | T
+          | {
+              framingType?: T;
+              title?: T;
+              description?: T;
+              activatedBy?: T;
+              status?: T;
+              exhibitions?:
+                | T
+                | {
+                    name?: T;
+                    venue?: T;
+                    venueNote?: T;
+                    city?: T;
+                    year?: T;
+                    type?: T;
+                    notes?: T;
+                    id?: T;
+                  };
+              performances?:
+                | T
+                | {
+                    type?: T;
+                    venue?: T;
+                    year?: T;
+                    description?: T;
+                    id?: T;
+                  };
+              potentialActivations?: T;
+              id?: T;
+            };
+        curatorial?:
+          | T
+          | {
+              artistStatement?: T;
+              seriesPositionNote?: T;
+              processNote?: T;
+              openQuestions?: T;
+            };
       };
-  mc_cityData?:
-    | T
-    | {
-        population?: T;
-        area?: T;
-        density?: T;
-        elevation?: T;
-      };
-  mc_videos?:
-    | T
-    | {
-        videoType?: T;
-        videoFile?: T;
-        videoUrl?: T;
-        posterImage?: T;
-        title?: T;
-        videoRole?: T;
-        id?: T;
-      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dcs-capture-photos_select".
+ */
+export interface DcsCapturePhotosSelect<T extends boolean = true> {
+  parentArtwork?: T;
+  image?: T;
+  captureSequenceNumber?: T;
+  isMicroSelection?: T;
+  status?: T;
+  captureTimestamp?: T;
+  neighborhood?: T;
+  gpsLat?: T;
+  gpsLng?: T;
+  captureNote?: T;
+  altText?: T;
+  arReconstructionBefore?: T;
+  arReconstructionAfter?: T;
+  arReconstructionVideoUrl?: T;
+  arReconstructionStatus?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3638,6 +4556,8 @@ export interface SessionsSelect<T extends boolean = true> {
   formalContributionAccuracy?: T;
   dialogueRefinementFlag?: T;
   refinementNotes?: T;
+  sequencingSeries?: T;
+  legacyRecordId?: T;
   updatedAt?: T;
   createdAt?: T;
 }

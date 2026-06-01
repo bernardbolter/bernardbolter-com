@@ -1,6 +1,8 @@
 import { isPracticeKnowledgeSlug } from './practiceKnowledgeSlugs'
 
 const FORBIDDEN = new Set([
+  'artworks.timelineDate',
+  'artworks.dateDisplay',
   'artworks.askingPrice',
   'artworks.listingCurrency',
   'artworks.salesRecord',
@@ -15,6 +17,8 @@ const FORBIDDEN = new Set([
   'artworks.recordOrigin',
   'artworks.status',
   'artworks._status',
+  // Curated relationship collections — managed in admin, not stageable as text
+  'artworks.artHistoricalReferences',
   'sessions.messages',
   'sessions.sessionId',
   'sessions.createdAt',
@@ -61,6 +65,22 @@ const EPISODE_AGENT_FIELDS = new Set([
   'assembly',
   'captionDrafts',
 ])
+
+/** Flat top-level artwork fields that must stage and commit (regression guard). */
+export const ARTWORK_COMMIT_ROOT_FIELDS = [
+  'movementTags',
+  'styleTags',
+  'subjectTags',
+  'genreTags',
+  'periodTags',
+  'support',
+  'medium',
+  'measurementType',
+] as const
+
+export function isArtworkCommitRootField(field: string): boolean {
+  return (ARTWORK_COMMIT_ROOT_FIELDS as readonly string[]).includes(field)
+}
 
 export function isFieldAllowedForAgent(collection: string, field: string): boolean {
   if (collection === 'practice-knowledge') {

@@ -21,6 +21,69 @@ describe('resolveArtworkCommitReferences', () => {
     expect(out.seriesSlug).toBeUndefined()
   })
 
+  it('creates tag records for staged label strings', async () => {
+    const find = vi
+      .fn()
+      .mockResolvedValueOnce({ docs: [{ id: 7, slug: 'digital-city-series' }] })
+      .mockResolvedValueOnce({ docs: [] })
+    const findByID = vi.fn().mockResolvedValue({ id: 7, slug: 'digital-city-series' })
+    const create = vi.fn().mockResolvedValue({ id: 99 })
+    const payload = { find, findByID, create } as never
+    const user = { id: 1 } as never
+    const session = { artistId: 2 } as never
+
+    const out = await resolveArtworkCommitReferences(
+      { payload, user, session },
+      {
+        title: 'Basel',
+        series: 'digital-city-series',
+        movementTags: ['Photomontage'],
+      },
+    )
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'tags',
+        data: { label: 'Photomontage', type: 'movement' },
+      }),
+    )
+    expect(out.movementTags).toEqual([99])
+  })
+
+  it('does not infer sizeTier at commit when not staged in session', async () => {
+    const find = vi.fn().mockResolvedValue({ docs: [{ id: 7, slug: 'digital-city-series' }] })
+    const findByID = vi.fn().mockResolvedValue({ id: 7, slug: 'digital-city-series' })
+    const payload = { find, findByID, create: vi.fn() } as never
+
+    const out = await resolveArtworkCommitReferences(
+      { payload, user: {} as never, session: {} as never },
+      {
+        series: 'digital-city-series',
+        widthWhole: 48,
+        heightWhole: 48,
+        dimensionUnit: 'in',
+      },
+    )
+
+    expect(out.sizeTier).toBeUndefined()
+  })
+
+  it('normalizes staged sizeTier from session', async () => {
+    const find = vi.fn().mockResolvedValue({ docs: [{ id: 7, slug: 'digital-city-series' }] })
+    const findByID = vi.fn().mockResolvedValue({ id: 7, slug: 'digital-city-series' })
+    const payload = { find, findByID, create: vi.fn() } as never
+
+    const out = await resolveArtworkCommitReferences(
+      { payload, user: {} as never, session: {} as never },
+      {
+        series: 'digital-city-series',
+        sizeTier: 'LG',
+      },
+    )
+
+    expect(out.sizeTier).toBe('lg')
+  })
+
   it('throws when series slug is unknown', async () => {
     const find = vi.fn().mockResolvedValue({ docs: [] })
     const payload = { find, findByID: vi.fn() } as never

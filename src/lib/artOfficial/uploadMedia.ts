@@ -1,14 +1,12 @@
 /** Default alt text for Art/Official media uploads (Media.alt is required). */
+import { isVideoMediaFile } from './mediaMime'
+
 export function defaultMediaAlt(file: File, label?: string): string {
   const base = file.name.replace(/\.[^.]+$/, '').trim()
-  return base || label || 'Artwork media'
+  return base || label || (isVideoMediaFile(file) ? 'Artwork video' : 'Artwork image')
 }
 
-/**
- * Upload a file to the Payload `media` collection from the admin panel.
- * Uses multipart `_payload` per Payload 3 REST upload docs.
- */
-export async function uploadMediaFile(file: File, altLabel?: string): Promise<number> {
+async function uploadImageViaPayloadApi(file: File, altLabel?: string): Promise<number> {
   const form = new FormData()
   form.append('file', file)
   form.append(
@@ -45,4 +43,47 @@ export async function uploadMediaFile(file: File, altLabel?: string): Promise<nu
   }
 
   return Number(id)
+}
+
+/**
+ * Video files bypass Payload REST upload (Sharp/imageSizes).
+ * Upload goes to our API then R2 server-side — avoids browser CORS on presigned PUT.
+ */
+async function uploadVideoViaServer(file: File, altLabel?: string): Promise<number> {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('alt', defaultMediaAlt(file, altLabel))
+
+  let res: Response
+  try {
+    res = await fetch('/api/art-official/media-upload/direct', {
+      method: 'POST',
+      credentials: 'include',
+      body: form,
+    })
+  } catch {
+    throw new Error('Video upload failed: could not reach the server. Check your connection and try again.')
+  }
+
+  const data = (await res.json().catch(() => ({}))) as {
+    id?: number | string
+    error?: string
+  }
+
+  if (!res.ok || data.id == null) {
+    throw new Error(data.error || `Video upload failed (${res.status}).`)
+  }
+
+  return Number(data.id)
+}
+
+/**
+ * Upload a file to the Payload `media` collection from the admin panel.
+ * Images use multipart `/api/media`; videos use presigned R2 (Payload Sharp cannot process MP4).
+ */
+export async function uploadMediaFile(file: File, altLabel?: string): Promise<number> {
+  if (isVideoMediaFile(file)) {
+    return uploadVideoViaServer(file, altLabel)
+  }
+  return uploadImageViaPayloadApi(file, altLabel)
 }

@@ -7,6 +7,10 @@ describe('routing', () => {
     expect(commitTarget('triptych-cataloguing')).toEqual({ kind: 'create-triptych' })
   })
 
+  it('maps sequencing to apply-sequencing commit', () => {
+    expect(commitTarget('sequencing')).toEqual({ kind: 'apply-sequencing' })
+  })
+
   it('requiresTriptych only for triptych sessions', () => {
     expect(requiresTriptych('triptych-cataloguing')).toBe(true)
     expect(requiresTriptych('artwork-cataloguing')).toBe(false)

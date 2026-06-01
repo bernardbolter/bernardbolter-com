@@ -8,10 +8,15 @@ import {
   flagWeakPhaseSchema,
   generateConfirmationDraftSchema,
   getWikidataEntitySchema,
+  listLegacyRecordsSchema,
+  linkMediaToSlotSchema,
   lookupCommonsFileSchema,
+  lookupLegacyRecordSchema,
   parseToolArgs,
+  placeInSequenceSchema,
   searchGettyTgnSchema,
   searchWikidataSchema,
+  setDateAnchorSchema,
   storeSessionFieldSchema,
   TOOL_ASSESS_FORMAL_CONTRIBUTION,
   TOOL_FETCH_WIKIPEDIA_ARTICLE,
@@ -19,15 +24,23 @@ import {
   TOOL_GENERATE_CONFIRMATION_DRAFT,
   TOOL_GET_MEDIA_UPLOAD_STATUS,
   TOOL_GET_WIKIDATA_ENTITY,
+  TOOL_LINK_MEDIA_TO_SLOT,
+  TOOL_LIST_LEGACY_RECORDS,
   TOOL_LOOKUP_COMMONS_FILE,
+  TOOL_LOOKUP_LEGACY_RECORD,
+  TOOL_PLACE_IN_SEQUENCE,
   TOOL_SEARCH_GETTY_TGN,
   TOOL_SEARCH_WIKIDATA,
+  TOOL_SET_DATE_ANCHOR,
   TOOL_STORE_SESSION_FIELD,
   TOOL_TRIGGER_IMAGE_ANALYSIS,
   TOOL_UPDATE_FIELD,
   triggerImageAnalysisSchema,
   updateFieldSchema,
 } from './agentTools'
+import { applyStagedMediaUpload } from './applyStagedMediaUpload'
+import { getMediaSlot } from './artworkMediaSlots'
+import { computeMidpointSortIndex } from './computeTimelineDates'
 import {
   fetchCommonsFileMetadata,
   fetchWikipediaArticle,
@@ -36,11 +49,18 @@ import {
   searchWikidata,
 } from './externalLookups'
 import { isFieldAllowedForAgent } from './fieldAllowlist'
+import { assertArtworkSeriesSlugExists } from './seriesSlugs'
+import { seriesMediaFlagsFromTimeline } from './seriesMediaFlags'
 import {
   formatMediaStatusForAgent,
   resolveMediaSlotStates,
 } from './stagedMedia'
 import { runImageAnalysis } from './runImageAnalysis'
+import { listLegacyRecords, lookupLegacyRecord } from './legacyLookup'
+import { clampPreUploadStep } from './preUploadGuide'
+import { upsertTimelineEntry } from './sessionTimeline'
+import { estimateTimelineDateForWork } from './sequencing/estimateTimelineDate'
+import { findArtworkBySlug, resolveTargetArtworkSlug } from './sequencing/resolveArtwork'
 
 const BIOGRAPHY_ARTIST_FIELDS = new Set(['bioFull', 'bioMedium', 'bioShort'])
 const STATEMENT_ARTIST_FIELDS = new Set([
@@ -121,13 +141,22 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
             return failTool(tool.name, message)
           }
         }
+        if (session.sessionType === 'sequencing') {
+          const message =
+            'Sequencing sessions use place_in_sequence and set_date_anchor — not update_field.'
+          return failTool(tool.name, message)
+        }
         if (!isFieldAllowedForAgent(args.targetCollection, args.field)) {
           const message = `Field ${args.targetCollection}.${args.field} is not writable by the agent.`
           return failTool(tool.name, message)
         }
-        const timeline = Array.isArray(session.fieldUpdateTimeline)
-          ? [...(session.fieldUpdateTimeline as Array<Record<string, unknown>>)]
-          : []
+        if (args.targetCollection === 'artworks' && args.field === 'series') {
+          try {
+            await assertArtworkSeriesSlugExists({ payload, user }, args.value)
+          } catch (err) {
+            return failTool(tool.name, err instanceof Error ? err.message : String(err))
+          }
+        }
         const entry = {
           targetCollection: args.targetCollection,
           field: args.field,
@@ -136,7 +165,12 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           source: args.source,
           timestamp: new Date().toISOString(),
         }
-        timeline.push(entry)
+        const timeline = upsertTimelineEntry(
+          Array.isArray(session.fieldUpdateTimeline)
+            ? [...(session.fieldUpdateTimeline as Array<Record<string, unknown>>)]
+            : [],
+          entry,
+        )
         // Keep in-memory session in sync when several tools run in one turn.
         session.fieldUpdateTimeline = timeline
         await payload.update({
@@ -162,12 +196,27 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           return failTool(tool.name, parsed.error)
         }
         const args = storeSessionFieldSchema.parse(parsed.data)
+        if (args.field === 'preUploadStep') {
+          const requested = Number(args.value)
+          const current = clampPreUploadStep(session.preUploadStep ?? 1)
+          if (requested < current) {
+            return toolResult({
+              ok: true,
+              field: args.field,
+              note: `preUploadStep stays at ${current} — do not repeat earlier questions.`,
+            })
+          }
+        }
         const sessionData: Record<string, unknown> =
           args.field === 'preUploadStep'
             ? { preUploadStep: Number(args.value) }
             : { [args.field]: args.value }
         if (args.field === 'preUploadStep') {
-          session.preUploadStep = Number(args.value)
+          const requested = Number(args.value)
+          const current = clampPreUploadStep(session.preUploadStep ?? 1)
+          if (requested >= current) {
+            session.preUploadStep = requested
+          }
         } else if (args.field === 'firstImpression') {
           session.firstImpression = args.value
         } else if (args.field === 'highlightedMediaSlot') {
@@ -347,22 +396,337 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           ? (session.fieldUpdateTimeline as Array<{ targetCollection?: string; field?: string; value?: unknown }>)
           : []
         const hasPrimary = timeline.some((e) => e.field === 'primaryImage')
-        const seriesSlug = timeline.find((e) => e.field === 'seriesSlug')?.value
-        const isAch =
-          seriesSlug === 'a-colorful-history' ||
-          timeline.some((e) => String(e.field ?? '').startsWith('ach.'))
+        const { isAchWork, isDcsWork, isMegacitiesWork } = seriesMediaFlagsFromTimeline(
+          timeline as never,
+        )
         const states = resolveMediaSlotStates({
           timeline: timeline as never,
           stagedMedia: session.stagedMedia,
           hasPrimary,
           highlightedMediaSlot: session.highlightedMediaSlot,
-          isAchWork: isAch,
+          isAchWork,
+          isDcsWork,
+          isMegacitiesWork,
         })
         return toolResult({
           ok: true,
           slots: formatMediaStatusForAgent(states),
           highlightedMediaSlot: session.highlightedMediaSlot ?? null,
         })
+      }
+
+      case TOOL_LOOKUP_LEGACY_RECORD: {
+        if (session.sessionType !== 'artwork-cataloguing') {
+          return toolResult({
+            ok: false,
+            error: 'Legacy lookup is only for artwork-cataloguing sessions.',
+          })
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          return failTool(tool.name, parsed.error)
+        }
+        const args = lookupLegacyRecordSchema.parse(parsed.data)
+        const result = lookupLegacyRecord({
+          query: args.query,
+          series: args.series,
+        })
+
+        if (result.status === 'no-dump') {
+          return toolResult({
+            ok: false,
+            error:
+              'Legacy dump not found. Run: npx tsx src/scripts/export-wp-legacy-artworks.ts',
+          })
+        }
+
+        if (args.storeOnSession && result.status === 'match') {
+          await payload.update({
+            collection: 'sessions',
+            id: session.id,
+            data: { legacyRecordId: result.record.legacyRecordId },
+            overrideAccess: false,
+            user,
+            context: { skipAgent: true },
+          })
+        }
+
+        if (result.status === 'match') {
+          return toolResult({
+            ok: true,
+            status: result.status,
+            record: result.record,
+            candidates: result.candidates,
+            storedLegacyRecordId: args.storeOnSession
+              ? result.record.legacyRecordId
+              : undefined,
+          })
+        }
+
+        return toolResult({
+          ok: true,
+          status: result.status,
+          candidates: result.candidates,
+        })
+      }
+
+      case TOOL_LIST_LEGACY_RECORDS: {
+        if (session.sessionType !== 'artwork-cataloguing') {
+          return toolResult({
+            ok: false,
+            error: 'Legacy lookup is only for artwork-cataloguing sessions.',
+          })
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          return failTool(tool.name, parsed.error)
+        }
+        const args = listLegacyRecordsSchema.parse(parsed.data)
+        const records = listLegacyRecords({ series: args.series })
+        if (records.length === 0) {
+          return toolResult({
+            ok: false,
+            error:
+              'No legacy records in dump. Run: npx tsx src/scripts/export-wp-legacy-artworks.ts',
+          })
+        }
+        return toolResult({ ok: true, records })
+      }
+
+      case TOOL_PLACE_IN_SEQUENCE: {
+        if (session.sessionType !== 'sequencing') {
+          return toolResult({
+            ok: false,
+            error: 'place_in_sequence is only for sequencing sessions.',
+          })
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          return failTool(tool.name, parsed.error)
+        }
+        const args = placeInSequenceSchema.parse(parsed.data)
+        if (!args.beforeSlug && !args.afterSlug) {
+          return failTool(tool.name, 'Provide beforeSlug and/or afterSlug.')
+        }
+
+        const slug = await resolveTargetArtworkSlug(
+          payload,
+          user,
+          session,
+          args.artworkSlug,
+        )
+        if (!slug) {
+          return failTool(
+            tool.name,
+            'Target artwork not found — pass artworkSlug or link artworkRecord on the session.',
+          )
+        }
+
+        const target = await findArtworkBySlug(payload, slug, user)
+        if (!target) {
+          return failTool(tool.name, `Artwork not found: ${slug}`)
+        }
+
+        let lower: number | null = null
+        let upper: number | null = null
+
+        if (args.afterSlug) {
+          const after = await findArtworkBySlug(payload, args.afterSlug, user)
+          if (!after || after.sortIndex == null) {
+            return failTool(tool.name, `afterSlug not found or missing sortIndex: ${args.afterSlug}`)
+          }
+          lower = after.sortIndex
+        }
+        if (args.beforeSlug) {
+          const before = await findArtworkBySlug(payload, args.beforeSlug, user)
+          if (!before || before.sortIndex == null) {
+            return failTool(
+              tool.name,
+              `beforeSlug not found or missing sortIndex: ${args.beforeSlug}`,
+            )
+          }
+          upper = before.sortIndex
+        }
+
+        const sortIndex = computeMidpointSortIndex(lower, upper)
+        const entry = {
+          targetCollection: 'artworks',
+          field: 'sortIndex',
+          value: sortIndex,
+          confidence: 'confirmed' as const,
+          source: 'conversation' as const,
+          artworkSlug: slug,
+          timestamp: new Date().toISOString(),
+        }
+        const timeline = upsertTimelineEntry(
+          Array.isArray(session.fieldUpdateTimeline)
+            ? [...(session.fieldUpdateTimeline as Array<Record<string, unknown>>)]
+            : [],
+          entry,
+        )
+        session.fieldUpdateTimeline = timeline
+        await payload.update({
+          collection: 'sessions',
+          id: session.id,
+          data: { fieldUpdateTimeline: timeline },
+          overrideAccess: false,
+          user,
+          context: { skipAgent: true },
+        })
+
+        const seriesId =
+          typeof session.sequencingSeries === 'object' && session.sequencingSeries
+            ? session.sequencingSeries.id
+            : typeof session.sequencingSeries === 'number'
+              ? session.sequencingSeries
+              : null
+
+        const estimatedTimelineDate = await estimateTimelineDateForWork(payload, user, {
+          artworkId: target.id,
+          proposedSortIndex: sortIndex,
+          seriesId,
+        })
+
+        send('tool-staged', { name: tool.name, input: args })
+        return toolResult({
+          ok: true,
+          staged: true,
+          artworkSlug: slug,
+          sortIndex,
+          estimatedTimelineDate,
+        })
+      }
+
+      case TOOL_SET_DATE_ANCHOR: {
+        if (session.sessionType !== 'sequencing') {
+          return toolResult({
+            ok: false,
+            error: 'set_date_anchor is only for sequencing sessions.',
+          })
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          return failTool(tool.name, parsed.error)
+        }
+        const args = setDateAnchorSchema.parse(parsed.data)
+
+        const slug = await resolveTargetArtworkSlug(
+          payload,
+          user,
+          session,
+          args.artworkSlug,
+        )
+        if (!slug) {
+          return failTool(
+            tool.name,
+            'Target artwork not found — pass artworkSlug or link artworkRecord on the session.',
+          )
+        }
+
+        const target = await findArtworkBySlug(payload, slug, user)
+        if (!target) {
+          return failTool(tool.name, `Artwork not found: ${slug}`)
+        }
+
+        const timeline = Array.isArray(session.fieldUpdateTimeline)
+          ? [...(session.fieldUpdateTimeline as Array<Record<string, unknown>>)]
+          : []
+        const timestamp = new Date().toISOString()
+        let nextTimeline = timeline
+        nextTimeline = upsertTimelineEntry(nextTimeline, {
+          targetCollection: 'artworks',
+          field: 'dateKnown',
+          value: args.date,
+          confidence: 'confirmed',
+          source: 'conversation',
+          artworkSlug: slug,
+          timestamp,
+        })
+        nextTimeline = upsertTimelineEntry(nextTimeline, {
+          targetCollection: 'artworks',
+          field: 'datePrecision',
+          value: args.precision,
+          confidence: 'confirmed',
+          source: 'conversation',
+          artworkSlug: slug,
+          timestamp,
+        })
+        session.fieldUpdateTimeline = nextTimeline
+        await payload.update({
+          collection: 'sessions',
+          id: session.id,
+          data: { fieldUpdateTimeline: nextTimeline },
+          overrideAccess: false,
+          user,
+          context: { skipAgent: true },
+        })
+
+        send('tool-staged', { name: tool.name, input: args })
+        return toolResult({
+          ok: true,
+          staged: true,
+          artworkSlug: slug,
+          dateKnown: args.date,
+          datePrecision: args.precision,
+        })
+      }
+
+      case TOOL_LINK_MEDIA_TO_SLOT: {
+        if (session.sessionType !== 'artwork-cataloguing') {
+          return toolResult({
+            ok: false,
+            error: 'link_media_to_slot is only for artwork-cataloguing sessions.',
+          })
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          return failTool(tool.name, parsed.error)
+        }
+        const args = linkMediaToSlotSchema.parse(parsed.data)
+        const slot = getMediaSlot(args.slotId)
+        if (!slot) {
+          return failTool(tool.name, `Unknown media slot: ${args.slotId}`)
+        }
+        if (slot.kind !== 'image' && slot.kind !== 'video-file') {
+          return failTool(
+            tool.name,
+            `Slot ${args.slotId} expects a file upload or URL — use the Media panel for links.`,
+          )
+        }
+
+        try {
+          await payload.findByID({
+            collection: 'media',
+            id: args.mediaId,
+            depth: 0,
+            overrideAccess: false,
+            user,
+          })
+        } catch {
+          return failTool(tool.name, `Media #${args.mediaId} not found.`)
+        }
+
+        try {
+          const result = await applyStagedMediaUpload({
+            payload,
+            user,
+            session,
+            upload: { slotId: args.slotId, mediaId: args.mediaId },
+            send,
+          })
+          send('tool-staged', { name: tool.name, input: args })
+          return toolResult({
+            ok: true,
+            linked: true,
+            slotId: args.slotId,
+            mediaId: args.mediaId,
+            field: slot.field,
+            hasAnalysis: Boolean(result.analysis),
+          })
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Could not link media to slot'
+          return failTool(tool.name, message)
+        }
       }
 
       default: {
