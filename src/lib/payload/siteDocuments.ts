@@ -52,3 +52,26 @@ export async function getPublishedEventBySlug(slug: string): Promise<Event | nul
   })
   return result.docs[0] ?? null
 }
+
+/** One random published artwork for 404 / discovery surfaces. */
+export async function getRandomPublishedArtwork(): Promise<Artwork | null> {
+  const payload = await getPayload({ config })
+  const { totalDocs } = await payload.count({
+    collection: 'artworks',
+    where: { status: { equals: 'published' } },
+    overrideAccess: false,
+  })
+  if (totalDocs === 0) return null
+
+  const page = Math.floor(Math.random() * totalDocs) + 1
+  const result = await payload.find({
+    collection: 'artworks',
+    locale: defaultLocale,
+    where: { status: { equals: 'published' } },
+    limit: 1,
+    page,
+    depth: 2,
+    overrideAccess: false,
+  })
+  return result.docs[0] ?? null
+}
