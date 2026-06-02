@@ -83,3 +83,92 @@ h5,
 h6 {
   font-family: var(--font-barlow-condensed), sans-serif;
 }
+
+@keyframes colorChange {
+  0% {
+    color: #d8d8d8;
+  }
+  33% {
+    color: #e2e2e2;
+  }
+  66% {
+    color: #ececec;
+  }
+  100% {
+    color: #d8d8d8;
+  }
+}
+
+.menu-lines {
+  transition: all 0.2s ease 0.4s;
+}
+
+.menu-lines::before,
+.menu-lines::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: var(--ui-icon);
+  transform-origin: 0 50%;
+  transition:
+    all 0.2s ease 0s,
+    width 0.2s ease 0.2s,
+    top 0.2s ease 0.4s;
+}
+
+.menu-lines::before {
+  top: -12px;
+}
+
+.menu-lines::after {
+  top: 11px;
+  width: 53%;
+}
+
+.menu-plus::before,
+.menu-plus::after {
+  content: '';
+  position: absolute;
+  background-color: var(--ui-icon);
+}
+
+.menu-plus::before {
+  left: 50%;
+  top: -50%;
+  width: 2px;
+  height: 14px;
+  transform: translateX(-50%);
+}
+
+.menu-plus::after {
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.menu-trigger-open .menu-lines::before,
+.menu-trigger-open .menu-lines::after {
+  top: 0;
+  width: 40%;
+  transition:
+    top 0.2s ease 0s,
+    width 0.2s ease 0.2s,
+    transform 0.2s ease 0.4s;
+}
+
+.menu-trigger-open .menu-lines::before {
+  transform: rotate(45deg);
+}
+
+.menu-trigger-open .menu-lines::after {
+  transform: rotate(-45deg);
+}
+
+.menu-trigger-open .menu-plus {
+  opacity: 0;
+}
