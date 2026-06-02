@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { useArtworks } from '@/providers/ArtworkProvider'
 import ArtworksGrid from './ArtworksGrid'
 import ArtworkSwitcher from './ArtworkSwitcher'
+import ArtworkTitle from './ArtworkTitle'
 import Timeline from './Timeline'
 
 export default function Artworks() {
@@ -53,6 +54,8 @@ export default function Artworks() {
           {state.totalCount - state.withImagesCount} items hidden (no image)
         </div>
       )}
+
+      <ArtworkTitle />
     </section>
   )
 }
