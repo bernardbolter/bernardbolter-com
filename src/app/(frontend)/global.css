@@ -13,21 +13,73 @@
 }
 
 :root {
-  --background: #FDFEFF;
-  --dark: #393B3E;
-  --medium: #464646;
-  --light: #696969;
+  /* Surfaces */
+  --surface-page: #fdfeff;
+  --surface-nav: rgba(255, 255, 255, 0.8);
+  --surface-nav-light: rgba(255, 255, 255, 0.3);
+  --surface-title: #efefef;
+  --surface-side-light: #ddd;
+  --surface-side-dark: #ccc;
+  --surface-panel: #f4f4f4;
+  --surface-panel-heading: #ddd;
+  --surface-panel-odd: #eee;
+  --surface-panel-even: #dedede;
+
+  /* Text */
+  --text-dark: #393b3e;
+  --text-medium: #464646;
+  --text-light: #696969;
+  --text-primary: #444;
+  --text-secondary: #666;
+  --text-strong: #222;
+  --text-muted: #999;
+
+  /* UI chrome */
+  --ui-icon: #666;
+  --ui-icon-light: #efefef;
+  --ui-face: #eee;
+  --ui-line: #999;
+  --ui-highlight: #b9b9b9;
+  --ui-timeline: #878585;
+  --ui-filter-text: #454565;
+
+  /* Status */
+  --status-success: #56ba5a;
+  --status-warning: #f0ad4e;
+  --status-error: #d9534f;
+
+  /* Title box (read via getComputedStyle in ported components) */
+  --title-space: 15px;
+  --title-light: var(--surface-title);
+  --title-shadow: var(--surface-side-light);
+  --title-dark: var(--text-primary);
+
+  /* Legacy aliases — do not remove until ports stop reading these */
+  --background: var(--surface-page);
+  --page-background-color: var(--surface-page);
+  --dark: var(--text-dark);
+  --medium: var(--text-medium);
+  --light: var(--text-light);
+  --dark-color: var(--text-dark);
+  --light-color: var(--text-light);
+  --medium-color: var(--text-medium);
+  --status-success-color: var(--status-success);
+  --status-warning-color: var(--status-warning);
+  --status-error-color: var(--status-error);
 }
 
 body {
-  /* Use the variables directly here to avoid the @apply bug */
-  background-color: var(--background);
-  color: var(--dark);
+  background-color: var(--surface-page);
+  color: var(--text-dark);
   font-family: var(--font-barlow), sans-serif;
   @apply antialiased;
 }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-staatliches), sans-serif;
-  @apply uppercase tracking-wider;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-barlow-condensed), sans-serif;
 }
