@@ -172,3 +172,42 @@ h6 {
 .menu-trigger-open .menu-plus {
   opacity: 0;
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 20mm 15mm;
+  }
+
+  .cv-page {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .cv-page__chrome {
+    display: none !important;
+  }
+
+  .cv-page__content {
+    width: 80% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .cv-page__content h2 {
+    font-size: 14pt !important;
+    margin-top: 10pt !important;
+    padding-bottom: 2pt !important;
+  }
+
+  .cv-page__entry {
+    margin-bottom: 1pt !important;
+    page-break-inside: avoid !important;
+  }
+
+  .cv-page__entry span {
+    font-size: 9pt !important;
+  }
+}
