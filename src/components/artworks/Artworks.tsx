@@ -6,6 +6,8 @@ import ArtworksGrid from './ArtworksGrid'
 import ArtworksSlideshow from './ArtworksSlideshow'
 import ArtworkSwitcher from './ArtworkSwitcher'
 import ArtworkTitle from './ArtworkTitle'
+import Loading from './Loading'
+import NoArtworks from './NoArtworks'
 import Timeline from './Timeline'
 
 export default function Artworks() {
@@ -17,12 +19,22 @@ export default function Artworks() {
     return `${state.filtered.length} artworks`
   }, [state.filtered.length])
 
-  if (state.filtered.length === 0) {
+  const isTimelineLoading =
+    state.artworkViewTimeline &&
+    !state.showSlideshow &&
+    state.filtered.length > 0 &&
+    !state.formattedArtworks
+
+  if (isTimelineLoading) {
     return (
-      <section className="relative z-artwork flex min-h-screen items-center justify-center px-space-6">
-        <div className="text-center font-heading text-base text-secondary">No artworks found</div>
+      <section className="relative z-artwork min-h-screen w-full">
+        <Loading />
       </section>
     )
+  }
+
+  if (state.filtered.length === 0) {
+    return <NoArtworks />
   }
 
   return (
