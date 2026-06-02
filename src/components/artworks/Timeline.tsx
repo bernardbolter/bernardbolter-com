@@ -2,33 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useArtworks } from '@/providers/ArtworkProvider'
-import { generateTimeline, generateSmallLines, getArtworkDate } from '@/helpers/timeline'
+import { generateTimeline, generateSmallLines } from '@/helpers/timeline'
 import type { SortingType, TimelineResult } from '@/types/timlineTypes'
 import type { Artwork } from '@/payload-types'
+import ArtworkImage from './ArtworkImage'
 
 type ArtworkWithImage = Artwork & {
   primaryImage?: ({ url?: string | null } & Partial<Artwork['primaryImage']>) | null
-}
-
-function getImageUrl(artwork: {
-  primaryImage?: { url?: string | null } | null | number
-  posterImage?: { url?: string | null } | null | number
-}): string | null {
-  if (
-    artwork.primaryImage &&
-    typeof artwork.primaryImage === 'object' &&
-    artwork.primaryImage.url
-  ) {
-    return artwork.primaryImage.url
-  }
-  if (
-    artwork.posterImage &&
-    typeof artwork.posterImage === 'object' &&
-    artwork.posterImage.url
-  ) {
-    return artwork.posterImage.url
-  }
-  return null
 }
 
 export default function Timeline() {
@@ -198,8 +178,6 @@ export default function Timeline() {
 
           {/* Artworks */}
           {timeline.artworksArray.map((artwork, index) => {
-            const imgUrl = getImageUrl(artwork)
-
             return (
               <div
                 key={artwork.id}
@@ -212,25 +190,21 @@ export default function Timeline() {
                   height: dimensions.containerHeight,
                 }}
               >
-                {/* Artwork card */}
-                <div className="relative w-full h-full bg-white rounded-lg shadow-md overflow-hidden">
-                  {imgUrl ? (
-                    <img
-                      src={imgUrl}
-                      alt={artwork.title ?? ''}
-                      className="w-full h-full object-contain bg-gray-50"
-                      loading={index < 5 ? 'eager' : 'lazy'}
+                <div className="relative h-full w-full overflow-hidden rounded-[0.5rem] bg-surface-panel-light shadow-sm">
+                  <div className="flex h-full w-full items-center justify-center">
+                    <ArtworkImage
+                      artwork={artwork}
+                      artworkContainerWidth={dimensions.containerWidth}
+                      artworkContainerHeight={dimensions.containerHeight}
+                      priority={index < 5}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                      <span className="text-gray-400">No image</span>
-                    </div>
-                  )}
+                  </div>
 
-                  {/* Info overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent">
-                    <h3 className="text-white font-medium truncate">{artwork.title}</h3>
-                    <p className="text-white/70 text-sm">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-dark/70 to-transparent px-space-3 py-space-3">
+                    <h3 className="truncate font-heading text-base text-surface-page">
+                      {artwork.title}
+                    </h3>
+                    <p className="font-heading text-sm text-surface-page/80">
                       {artwork.yearCreated ?? '—'}
                     </p>
                   </div>
@@ -241,8 +215,7 @@ export default function Timeline() {
         </div>
       </div>
 
-      {/* Debug info */}
-      <div className="absolute top-4 left-4 z-10 text-xs font-mono text-gray-500 bg-white/80 px-3 py-2 rounded">
+      <div className="absolute left-space-2 top-space-2 z-overlay rounded bg-surface-nav/80 px-space-2 py-space-1 font-heading text-xs text-secondary">
         <p>Artworks: {timeline.artworksArray.length}</p>
         <p>Width: {Math.round(timeline.totalTimelineWidth)}px</p>
         <p>Scroll: {Math.round(scrollX)}px</p>
