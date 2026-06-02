@@ -1,15 +1,49 @@
-// app/components/Klaro.tsx
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import 'klaro/dist/klaro.css';
+import { useEffect } from 'react'
+import 'klaro/dist/klaro.css'
+
+const GA_SCRIPT_ID = 'ga-gtag'
+
+function loadGoogleAnalyticsScript(measurementId: string): void {
+  if (typeof document === 'undefined' || !measurementId) return
+  if (document.getElementById(GA_SCRIPT_ID)) return
+
+  window.dataLayer = window.dataLayer ?? []
+  window.gtag = (...args: unknown[]) => {
+    window.dataLayer?.push(args)
+  }
+
+  window.gtag('consent', 'default', {
+    ad_storage: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'denied',
+    personalization_storage: 'denied',
+    security_storage: 'granted',
+  })
+
+  window.gtag('consent', 'update', { analytics_storage: 'granted' })
+
+  const script = document.createElement('script')
+  script.id = GA_SCRIPT_ID
+  script.async = true
+  script.src = `https://www.googletagmanager.com/gtag/js?id=${measurementId}`
+  script.onload = () => {
+    window.gtag?.('js', new Date())
+    window.gtag?.('config', measurementId, { send_page_view: false })
+  }
+  document.head.appendChild(script)
+}
 
 export default function KlaroComponent() {
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return
+
     const path = window.location.pathname
-    // Internal tooling should not run consent/data overlays.
     if (path.startsWith('/studio') || path.startsWith('/admin')) return
+
+    const measurementId = process.env.NEXT_PUBLIC_GA_ID
+    if (!measurementId) return
 
     void import('klaro').then((klaro) => {
       const config = {
@@ -20,7 +54,6 @@ export default function KlaroComponent() {
         mustConsent: true,
         acceptAll: true,
         hideLearnMore: false,
-
         translations: {
           en: {
             consentModal: {
@@ -39,10 +72,9 @@ export default function KlaroComponent() {
               analytics: 'Analytics',
               videos: 'Videos',
             },
-            privacyPolicy: { name: 'Privacy Policy', url: '/privacy' },
+            privacyPolicy: { name: 'Datenschutz', url: '/datenschutz' },
           },
         },
-
         services: [
           {
             name: 'youtube',
@@ -61,43 +93,21 @@ export default function KlaroComponent() {
               ['_gid', '/', '.bernardbolter.com'],
             ],
             callback: (consent: boolean) => {
-              if (!consent) return;
-
-              const dataLayer = window.dataLayer || [];
-              window.dataLayer = dataLayer;
-              const gtag = (...args: unknown[]) => dataLayer.push(args);
-              window.gtag = gtag;
-
-              gtag('consent', 'default', {
-                ad_storage: 'denied',
-                analytics_storage: 'denied',
-                functionality_storage: 'denied',
-                personalization_storage: 'denied',
-                security_storage: 'granted',
-              });
-
-              if (consent) {
-                gtag('consent', 'update', { analytics_storage: 'granted' });
-              }
-
-              gtag('js', new Date());
-              gtag('config', process.env.NEXT_PUBLIC_GA_ID!, { send_page_view: true });
+              if (!consent) return
+              loadGoogleAnalyticsScript(measurementId)
             },
           },
         ],
-      };
+      }
 
-      // Setup Klaro and ensure klaroConfig is exposed
-      const manager = klaro.setup(config);
-      
-      // Explicitly expose to window for components to access
-      (window as any).klaroConfig = config;
-      (window as any).klaro = klaro;
-      
-      console.log('[Klaro] Setup complete, manager:', manager);
-      console.log('[Klaro] window.klaroConfig:', (window as any).klaroConfig);
-    });
-  }, []);
+      klaro.setup(config)
 
-  return null;
+      const manager = klaro.getManager?.()
+      if (manager?.getConsent?.('googleAnalytics')) {
+        loadGoogleAnalyticsScript(measurementId)
+      }
+    })
+  }, [])
+
+  return null
 }
