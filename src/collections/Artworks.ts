@@ -10,6 +10,20 @@ import { dcsTab } from './artworks/dcsTabFields'
 import { fieldNotesTab } from './artworks/fieldNotesTab'
 import { megacitiesTab } from './artworks/megacitiesTabFields'
 
+const RESERVED_FRONTEND_SLUGS = new Set([
+  '',
+  'admin',
+  'api',
+  'artworks',
+  'bio',
+  'contact',
+  'cv',
+  'datenschutz',
+  'events',
+  'statement',
+  'studio',
+])
+
 export const Artworks: CollectionConfig = {
   slug: 'artworks',
   access: {
@@ -66,6 +80,15 @@ export const Artworks: CollectionConfig = {
               type: 'text',
               required: true,
               unique: true,
+              validate: (value: unknown) => {
+                if (typeof value !== 'string') return 'Slug is required.'
+                const normalized = value.trim().toLowerCase()
+                if (!normalized) return 'Slug is required.'
+                if (RESERVED_FRONTEND_SLUGS.has(normalized)) {
+                  return `Slug "${normalized}" is reserved for a site route.`
+                }
+                return true
+              },
             },
             {
               type: 'row',

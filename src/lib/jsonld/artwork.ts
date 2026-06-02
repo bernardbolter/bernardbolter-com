@@ -200,7 +200,7 @@ export function buildArtworkJsonLd(
   options: BuildArtworkJsonLdOptions = {},
 ): Record<string, unknown> {
   const baseUrl = options.baseUrl ?? getSiteBaseUrl()
-  const url = `${baseUrl}/artworks/${artwork.slug}`
+  const url = `${baseUrl}/${artwork.slug}`
   const creator = artistAsSchemaPerson(artist)
 
   const unit = artwork.dimensionUnit ?? 'cm'
