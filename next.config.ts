@@ -7,6 +7,12 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: '/artworks', destination: '/', permanent: true },
+      { source: '/artworks/:slug', destination: '/:slug', permanent: true },
+    ]
+  },
   images: {
     remotePatterns: [
       {
