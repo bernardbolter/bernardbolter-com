@@ -165,6 +165,14 @@ export const Artists: CollectionConfig = {
       admin: { description: 'One to two sentences (plain text).' },
     },
     {
+      name: 'datenschutzFull',
+      type: 'richText',
+      localized: true,
+      admin: {
+        description: 'Privacy policy (Datenschutz) — rendered on /datenschutz.',
+      },
+    },
+    {
       name: 'practiceNote',
       type: 'richText',
       localized: true,

@@ -334,6 +334,24 @@ export interface Artist {
    */
   statementShort?: string | null;
   /**
+   * Privacy policy (Datenschutz) — rendered on /datenschutz.
+   */
+  datenschutzFull?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
    * How of making — populated gradually via cataloguing sessions.
    */
   practiceNote?: {
@@ -1920,15 +1938,18 @@ export interface Artwork {
              */
             imageryDate?: string | null;
             imagerySource?: string | null;
-            positionInCollage: {
+            /**
+             * Optional % position on the composite — set in admin, not during Art/Official chat.
+             */
+            positionInCollage?: {
               /**
                * % from left
                */
-              x: number;
+              x?: number | null;
               /**
                * % from top
                */
-              y: number;
+              y?: number | null;
               id?: string | null;
             };
             /**
@@ -1939,11 +1960,11 @@ export interface Artwork {
                   /**
                    * % from left
                    */
-                  x: number;
+                  x?: number | null;
                   /**
                    * % from top
                    */
-                  y: number;
+                  y?: number | null;
                   id?: string | null;
                 }[]
               | null;
@@ -1971,11 +1992,11 @@ export interface Artwork {
               /**
                * % from left
                */
-              x: number;
+              x?: number | null;
               /**
                * % from top
                */
-              y: number;
+              y?: number | null;
               id?: string | null;
             };
             id?: string | null;
@@ -1990,11 +2011,11 @@ export interface Artwork {
             /**
              * % from left
              */
-            x: number;
+            x?: number | null;
             /**
              * % from top
              */
-            y: number;
+            y?: number | null;
             label?: string | null;
             citySlug?: string | null;
             id?: string | null;
@@ -2003,8 +2024,8 @@ export interface Artwork {
       junctions?:
         | {
             name: string;
-            x: number;
-            y: number;
+            x?: number | null;
+            y?: number | null;
             note?: string | null;
             id?: string | null;
           }[]
@@ -3286,6 +3307,7 @@ export interface ArtistsSelect<T extends boolean = true> {
   statementFull?: T;
   statementMedium?: T;
   statementShort?: T;
+  datenschutzFull?: T;
   practiceNote?: T;
   creditLine?: T;
   locations?:
