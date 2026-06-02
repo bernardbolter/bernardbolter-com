@@ -1,204 +1,209 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
+
 import { useArtworks } from '@/providers/ArtworkProvider'
-import { generateTimeline, generateSmallLines } from '@/helpers/timeline'
-import type { SortingType, TimelineResult } from '@/types/timlineTypes'
-import type { Artwork } from '@/payload-types'
+import { generateSmallLines } from '@/helpers/timeline'
+import { LeftArrowSvg, RightArrowSvg } from '@/components/icons'
 import ArtworkImage from './ArtworkImage'
 
-type ArtworkWithImage = Artwork & {
-  primaryImage?: ({ url?: string | null } & Partial<Artwork['primaryImage']>) | null
-}
-
 export default function Timeline() {
-  const [state] = useArtworks()
-  const artworks = state.filtered as ArtworkWithImage[]
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({
-    viewportWidth: 0,
-    viewportHeight: 0,
-    containerWidth: 300,
-    containerHeight: 300,
-    sideWidth: 0,
-  })
+  const [state, setState] = useArtworks()
+  const timelineRef = useRef<HTMLDivElement>(null)
+  const isProgramScroll = useRef(false)
+  const isMobile = (state.viewportWidth || 0) <= 767
+  const timeline = state.formattedArtworks
 
-  // Track scroll position
-  const [scrollX, setScrollX] = useState(0)
+  const scrollToIndex = useCallback(
+    (index: number) => {
+      if (!timelineRef.current || !timeline || index < 0 || index >= timeline.artworksArray.length) return
 
-  // Calculate dimensions based on viewport
-  useEffect(() => {
-    const updateDimensions = () => {
-      const vw = window.innerWidth
-      const vh = window.innerHeight
+      const targetArtwork = timeline.artworksArray[index]
+      const scrollPosition = isMobile
+        ? targetArtwork.verticalScrollPoint
+        : targetArtwork.horizontalScrollPoint
 
-      let containerW: number
-      let containerH: number
-      let sideW: number
+      isProgramScroll.current = true
+      setState((prev) => ({ ...prev, currentArtworkIndex: index }))
 
-      if (vw > 767) {
-        // Desktop: square container centered with side gaps
-        containerH = Math.min(vh - 120, vw - 100)
-        containerW = containerH
-        sideW = (vw - containerW) / 2
+      if (isMobile) {
+        timelineRef.current.scrollTo({ top: scrollPosition, behavior: 'smooth' })
       } else {
-        // Mobile: full width
-        containerW = vw - 40
-        containerH = containerW
-        sideW = 20
+        timelineRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' })
       }
 
-      setDimensions({
-        viewportWidth: vw,
-        viewportHeight: vh,
-        containerWidth: containerW,
-        containerHeight: containerH,
-        sideWidth: sideW,
-      })
-    }
+      window.setTimeout(() => {
+        isProgramScroll.current = false
+        setState((prev) => ({ ...prev, isTimelineScrollingProgamatically: false }))
+      }, 500)
+    },
+    [isMobile, setState, timeline],
+  )
 
-    updateDimensions()
-    window.addEventListener('resize', updateDimensions)
-    return () => window.removeEventListener('resize', updateDimensions)
-  }, [])
-
-  // Generate timeline data
-  const timeline: TimelineResult = useMemo(() => {
-    if (artworks.length === 0 || dimensions.viewportWidth === 0) {
-      return {
-        artworksArray: [],
-        timepointsArray: [],
-        totalTimelineWidth: 0,
-        totalTimelineHeight: 0,
-        timeSpanInfo: null,
-      }
-    }
-
-    return generateTimeline({
-      artworks,
-      sorting: (state.sorting as SortingType) || 'latest',
-      artworkContainerWidth: dimensions.containerWidth,
-      artworkContainerHeight: dimensions.containerHeight,
-      desktopSideWidth: dimensions.sideWidth,
-      viewportWidth: dimensions.viewportWidth,
-      viewportHeight: dimensions.viewportHeight,
-    })
-  }, [artworks, state.sorting, dimensions])
-
-  // Handle scroll
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
+    if (!timeline || state.savedTimelineIndex <= 0) return
+    scrollToIndex(state.savedTimelineIndex)
+  }, [scrollToIndex, state.savedTimelineIndex, timeline])
 
-    const handleScroll = () => {
-      setScrollX(container.scrollLeft)
+  useEffect(() => {
+    if (!state.isTimelineScrollingProgamatically) return
+    scrollToIndex(state.currentArtworkIndex)
+  }, [scrollToIndex, state.currentArtworkIndex, state.isTimelineScrollingProgamatically])
+
+  useEffect(() => {
+    const element = timelineRef.current
+    if (!element || !timeline) return
+
+    const handleArtScroll = () => {
+      if (isProgramScroll.current || state.isTimelineScrollingProgamatically) return
+
+      const scrollPosition = isMobile ? element.scrollTop : element.scrollLeft
+      const currentIndex = timeline.artworksArray.reduce(
+        (bestIndex, artwork, index) => {
+          const target = isMobile ? artwork.verticalScrollPoint : artwork.horizontalScrollPoint
+          const bestTarget = isMobile
+            ? timeline.artworksArray[bestIndex].verticalScrollPoint
+            : timeline.artworksArray[bestIndex].horizontalScrollPoint
+
+          return Math.abs(target - scrollPosition) < Math.abs(bestTarget - scrollPosition)
+            ? index
+            : bestIndex
+        },
+        0,
+      )
+
+      if (currentIndex !== state.currentArtworkIndex) {
+        setState((prev) => ({ ...prev, currentArtworkIndex: currentIndex }))
+      }
     }
 
-    container.addEventListener('scroll', handleScroll)
-    return () => container.removeEventListener('scroll', handleScroll)
-  }, [])
+    element.addEventListener('scroll', handleArtScroll)
+    return () => element.removeEventListener('scroll', handleArtScroll)
+  }, [isMobile, setState, state.currentArtworkIndex, state.isTimelineScrollingProgamatically, timeline])
 
-  // Generate tick marks
   const tickMarks = useMemo(() => {
-    if (timeline.totalTimelineWidth === 0) return null
+    if (!timeline) return null
 
     return generateSmallLines({
-      isMobile: dimensions.viewportWidth <= 767,
+      isMobile,
       totalTimelineHeight: timeline.totalTimelineHeight,
       totalTimelineWidth: timeline.totalTimelineWidth,
-      artworkContainerHeight: dimensions.containerHeight,
-      artworkContainerWidth: dimensions.containerWidth,
-      artworkDesktopSideWidth: dimensions.sideWidth,
+      artworkContainerHeight: state.artworkContainerHeight,
+      artworkContainerWidth: state.artworkContainerWidth,
+      artworkDesktopSideWidth: state.artworkDesktopSideWidth,
       targetSpacing: 20,
     })
-  }, [timeline, dimensions])
+  }, [isMobile, state.artworkContainerHeight, state.artworkContainerWidth, state.artworkDesktopSideWidth, timeline])
 
-  if (artworks.length === 0) {
+  if (!timeline || timeline.artworksArray.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400">
+      <div className="flex h-64 items-center justify-center font-heading text-sm text-secondary">
         No artworks to display
       </div>
     )
   }
 
-  const isMobile = dimensions.viewportWidth <= 767
+  const goPrevious = () => {
+    if (isProgramScroll.current) return
+    const nextIndex =
+      state.currentArtworkIndex > 0
+        ? state.currentArtworkIndex - 1
+        : timeline.artworksArray.length - 1
+    scrollToIndex(nextIndex)
+  }
+
+  const goNext = () => {
+    if (isProgramScroll.current) return
+    const nextIndex =
+      state.currentArtworkIndex < timeline.artworksArray.length - 1
+        ? state.currentArtworkIndex + 1
+        : 0
+    scrollToIndex(nextIndex)
+  }
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
-      {/* Timeline container */}
+    <div className="relative h-screen w-full">
       <div
-        ref={containerRef}
-        className="absolute inset-0 overflow-x-auto overflow-y-hidden scrollbar-hide"
-        style={{
-          scrollBehavior: 'smooth',
-        }}
+        ref={timelineRef}
+        className={`absolute inset-0 scrollbar-hide ${isMobile ? 'overflow-y-scroll overflow-x-hidden' : 'overflow-x-scroll overflow-y-hidden'}`}
       >
-        {/* Timeline track */}
         <div
-          className="relative h-full"
+          className={`relative ${isMobile ? 'h-auto w-full' : 'h-full'}`}
           style={{
-            width: isMobile ? dimensions.viewportWidth : timeline.totalTimelineWidth,
-            minWidth: isMobile ? dimensions.viewportWidth : timeline.totalTimelineWidth,
+            width: isMobile ? '100%' : timeline.totalTimelineWidth,
+            height: isMobile ? timeline.totalTimelineHeight : '100%',
+            paddingLeft: isMobile ? 0 : state.artworkDesktopSideWidth,
+            paddingRight: isMobile ? 0 : state.artworkDesktopSideWidth,
+            paddingTop: isMobile
+              ? Math.max(0, ((state.viewportHeight || 0) - state.artworkContainerHeight) / 2)
+              : 0,
           }}
         >
-          {/* Side padding on desktop */}
-          {!isMobile && (
-            <div className="absolute left-0 top-0 h-full" style={{ width: dimensions.sideWidth }} />
-          )}
-
-          {/* Tick marks */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 pointer-events-none"
+            className="pointer-events-none absolute"
             style={{
-              left: isMobile ? 0 : dimensions.sideWidth,
+              left: isMobile ? 0 : state.artworkContainerWidth / 2,
+              top: isMobile ? state.artworkContainerHeight / 2 : state.artworkContainerHeight / 2,
               width: isMobile
-                ? dimensions.viewportWidth
-                : timeline.totalTimelineWidth - dimensions.sideWidth * 2,
+                ? 50
+                : timeline.totalTimelineWidth - state.artworkContainerWidth - state.artworkDesktopSideWidth * 2,
+              height: isMobile
+                ? timeline.totalTimelineHeight - state.artworkContainerHeight
+                : 50,
             }}
           >
             {tickMarks}
           </div>
 
-          {/* Year markers */}
-          {timeline.timepointsArray
-            .filter((tp) => tp.isVisible)
-            .map((timepoint) => (
-              <div
-                key={timepoint.id}
-                className="absolute top-4 text-xs font-mono text-gray-400 pointer-events-none"
-                style={{
-                  left: isMobile
-                    ? timepoint.distanceFromStart
-                    : dimensions.sideWidth + timepoint.distanceFromStart,
-                }}
-              >
-                {timepoint.year}
-              </div>
-            ))}
+          {timeline.timepointsArray.map((timepoint) => (
+            <div
+              key={timepoint.id}
+              className="pointer-events-none absolute"
+              style={{
+                left: isMobile ? 0 : state.artworkContainerWidth / 2 + timepoint.distanceFromStart,
+                top: isMobile ? state.artworkContainerHeight / 2 + timepoint.distanceFromStart : 0,
+              }}
+            >
+              <div className={`absolute bg-ui-line ${isMobile ? 'h-px w-[0.5rem] left-[1.25rem] top-0' : 'h-[0.5rem] w-px top-[1.25rem]'}`} />
+              {timepoint.isVisible && (
+                <span className={`absolute font-heading text-xs text-secondary ${isMobile ? 'left-space-1 top-[-0.4rem]' : 'top-space-1 left-[-0.4rem]'}`}>
+                  {timepoint.year}
+                </span>
+              )}
+            </div>
+          ))}
 
-          {/* Artworks */}
           {timeline.artworksArray.map((artwork, index) => {
             return (
               <div
                 key={artwork.id}
-                className="absolute top-1/2 -translate-y-1/2"
+                className="absolute"
                 style={{
-                  left: isMobile
-                    ? artwork.horizontalScrollPoint
-                    : dimensions.sideWidth + artwork.horizontalScrollPoint,
-                  width: dimensions.containerWidth,
-                  height: dimensions.containerHeight,
+                  left: isMobile ? 0 : artwork.horizontalScrollPoint,
+                  top: isMobile ? artwork.verticalScrollPoint : '50%',
+                  transform: isMobile ? 'none' : 'translateY(-50%)',
+                  width: state.artworkContainerWidth,
+                  height: state.artworkContainerHeight,
+                  marginRight:
+                    !isMobile && index < timeline.artworksArray.length - 1
+                      ? artwork.marginRight
+                      : 0,
+                  marginBottom:
+                    isMobile && index < timeline.artworksArray.length - 1
+                      ? artwork.marginBottom
+                      : 0,
                 }}
               >
                 <div className="relative h-full w-full overflow-hidden rounded-[0.5rem] bg-surface-panel-light shadow-sm">
-                  <div className="flex h-full w-full items-center justify-center">
+                  <Link href={`/${artwork.slug}`} className="flex h-full w-full items-center justify-center">
                     <ArtworkImage
                       artwork={artwork}
-                      artworkContainerWidth={dimensions.containerWidth}
-                      artworkContainerHeight={dimensions.containerHeight}
+                      artworkContainerWidth={state.artworkContainerWidth}
+                      artworkContainerHeight={state.artworkContainerHeight}
                       priority={index < 5}
                     />
-                  </div>
+                  </Link>
 
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-dark/70 to-transparent px-space-3 py-space-3">
                     <h3 className="truncate font-heading text-base text-surface-page">
@@ -215,11 +220,16 @@ export default function Timeline() {
         </div>
       </div>
 
-      <div className="absolute left-space-2 top-space-2 z-overlay rounded bg-surface-nav/80 px-space-2 py-space-1 font-heading text-xs text-secondary">
-        <p>Artworks: {timeline.artworksArray.length}</p>
-        <p>Width: {Math.round(timeline.totalTimelineWidth)}px</p>
-        <p>Scroll: {Math.round(scrollX)}px</p>
-      </div>
+      {!isMobile && (
+        <div className="fixed bottom-space-4 right-space-2 z-ui-top flex gap-space-2">
+          <button className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1" onClick={goPrevious}>
+            <LeftArrowSvg />
+          </button>
+          <button className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1" onClick={goNext}>
+            <RightArrowSvg />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
