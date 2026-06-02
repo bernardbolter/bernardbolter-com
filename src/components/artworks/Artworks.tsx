@@ -2,10 +2,12 @@
 
 import { useMemo } from 'react'
 import { useArtworks } from '@/providers/ArtworkProvider'
+import ArtworksGrid from './ArtworksGrid'
+import ArtworkSwitcher from './ArtworkSwitcher'
 import Timeline from './Timeline'
 
 export default function Artworks() {
-  const [state, setState] = useArtworks()
+  const [state] = useArtworks()
   const showSwitcher = (state.viewportWidth || 0) >= 550 && !state.showSlideshow
 
   const summary = useMemo(() => {
@@ -24,36 +26,7 @@ export default function Artworks() {
   return (
     <section className="relative z-artwork min-h-screen w-full">
       {showSwitcher && (
-        <div className="fixed bottom-space-4 left-1/2 z-ui-top -translate-x-1/2 rounded-[0.375rem] bg-surface-nav p-space-1 shadow-sm">
-          <div className="flex items-center gap-space-1">
-            <button
-              className={`px-space-3 py-space-1 font-heading text-sm ${
-                state.artworkViewTimeline ? 'bg-ui-face text-dark' : 'text-secondary'
-              }`}
-              onClick={() =>
-                setState((prev) => ({
-                  ...prev,
-                  artworkViewTimeline: true,
-                }))
-              }
-            >
-              Timeline
-            </button>
-            <button
-              className={`px-space-3 py-space-1 font-heading text-sm ${
-                !state.artworkViewTimeline ? 'bg-ui-face text-dark' : 'text-secondary'
-              }`}
-              onClick={() =>
-                setState((prev) => ({
-                  ...prev,
-                  artworkViewTimeline: false,
-                }))
-              }
-            >
-              Grid
-            </button>
-          </div>
-        </div>
+        <ArtworkSwitcher />
       )}
 
       <div className="fixed bottom-space-2 right-space-2 z-nav rounded bg-surface-nav/80 px-space-2 py-space-1 font-heading text-xs text-secondary">
@@ -72,14 +45,7 @@ export default function Artworks() {
       ) : state.artworkViewTimeline || (state.viewportWidth || 0) < 550 ? (
         <Timeline />
       ) : (
-        <div className="flex min-h-screen items-center justify-center px-space-6">
-          <div className="max-w-[30rem] text-center">
-            <h2 className="font-heading text-xl text-dark">Grid mode</h2>
-            <p className="mt-space-2 font-heading text-sm text-secondary">
-              Grid composition is queued for the next phase and will replace this placeholder.
-            </p>
-          </div>
-        </div>
+        <ArtworksGrid />
       )}
 
       {state.totalCount > state.withImagesCount && (
