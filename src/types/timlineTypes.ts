@@ -1,4 +1,4 @@
-import { Artwork } from '@/payload-types'
+import type { Artwork } from '@/payload-types'
 
 export type SortingType = 'latest' | 'oldest' | 'random'
 

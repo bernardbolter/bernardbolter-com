@@ -5,7 +5,7 @@ import { useArtworks } from '@/providers/ArtworkProvider'
 
 const Info = () => {
   const [state, setState] = useArtworks()
-  const artist = state.artist
+  const artist = state.artistData
 
   console.log('🎨 Info Component - artistData:', artist)
 

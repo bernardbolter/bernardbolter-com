@@ -1,5 +1,5 @@
-// Map of series slugs to their corresponding colors
-const seriesColorMap: Record<string, string> = {
+/** Series slug → hex (design-system.md §2). Prefer `getSeriesColor()` in components. */
+export const SERIES_COLOR_MAP: Record<string, string> = {
   'a-colorful-history': '#9DC3C2',      // ach
   'art-collision': '#99C2A2',           // col
   'digital-city-series': '#F6BD60',     // dcs
@@ -19,6 +19,6 @@ const seriesColorMap: Record<string, string> = {
  * @returns The hex color code, or a default color if not found
  */
 export function getSeriesColor(seriesSlug: string): string {
-  const color = seriesColorMap[seriesSlug.toLowerCase()];
-  return color || '#999999'; // Default gray if series not found
+  const color = SERIES_COLOR_MAP[seriesSlug.toLowerCase()]
+  return color || '#999999'
 }

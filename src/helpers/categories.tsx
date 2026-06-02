@@ -1,11 +1,2 @@
-// categories interface
-interface Category {
-  id: number;
-  slug: string;
-  name: string;
-  color: string;
-}
-
-interface Categories {
-  categories: Category[];
-}
+export { filterValues } from '@/data/filterValues'
+export type { FilterCategory } from '@/types/frontend'

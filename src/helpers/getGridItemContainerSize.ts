@@ -1,10 +1,11 @@
 // Define the breakpoints and column/gap values from your SCSS
+/** Matches Tailwind screens in tailwind.config.js and design-system.md §4 */
 const BREAKPOINTS = {
-    s: 550,
-    m: 767,
-    l: 979,
-    xl: 1200,
-};
+  s: 550,
+  m: 768,
+  l: 979,
+  xl: 1200,
+}
 
 const GRID_SETTINGS = [
     { minWidth: BREAKPOINTS.xl, columns: 5, gap: 13 },

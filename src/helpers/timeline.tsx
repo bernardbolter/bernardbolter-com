@@ -265,8 +265,6 @@ export function generateTimeline(config: TimelineConfig): TimelineResult {
     })
   }
 
-  console.log('sorted Artwork: ', sortedArtworks)
-
   // Step 4: Calculate scroll points for artworks
   let currentHorizontalPosition = desktopSideWidth
   let currentVerticalPosition = 0

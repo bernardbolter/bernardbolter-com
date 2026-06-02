@@ -1,54 +1,36 @@
 'use client'
 
-import { useState, createContext, useContext, ReactNode, Dispatch, SetStateAction } from 'react'
+import { useState, createContext, useContext, ReactNode } from 'react'
 
-// Keep the context shape so useArtworks() doesn't break
-type ArtworksContextType = [any, Dispatch<SetStateAction<any>>]
+import { artworkHasDisplayImage } from '@/helpers/artworkCatalog'
+import {
+  createInitialArtworksState,
+  type ArtistInfoData,
+  type ArtworksContextType,
+  type ArtworksState,
+  type CatalogueArtwork,
+} from '@/types/frontend'
 
-const ArtworksContext = createContext<ArtworksContextType>([{}, () => {}])
+const ArtworksContext = createContext<ArtworksContextType>([
+  createInitialArtworksState([]),
+  () => {},
+])
 
 interface ArtworksProviderProps {
   children: ReactNode
-  artworks: any // Replace with your actual artworks type
-  artist: any // Replace with your actual artist type
-}
-
-// Helper to check if artwork has an image
-function hasImage(artwork: any): boolean {
-  if (
-    artwork.primaryImage &&
-    typeof artwork.primaryImage === 'object' &&
-    artwork.primaryImage.url
-  ) {
-    return true
-  }
-  if (
-    artwork.posterImage &&
-    typeof artwork.posterImage === 'object' &&
-    artwork.posterImage.url
-  ) {
-    return true
-  }
-  return false
+  artworks: CatalogueArtwork[]
+  artist: ArtistInfoData
 }
 
 export const ArtworksProvider = ({ children, artworks, artist }: ArtworksProviderProps) => {
-  // Filter to only artworks with images
-  const artworksWithImages = (artworks || []).filter(hasImage)
+  const catalogue = artworks ?? []
+  const artworksWithImages = catalogue.filter(artworkHasDisplayImage)
 
-  const [state, setState] = useState({
-    original: artworksWithImages,
-    filtered: artworksWithImages,
-    artist: artist || {},
-    totalCount: artworks?.length || 0,
+  const [state, setState] = useState<ArtworksState>(() => ({
+    ...createInitialArtworksState(artworksWithImages, artist),
+    totalCount: catalogue.length,
     withImagesCount: artworksWithImages.length,
-    // Timeline state
-    sorting: 'latest' as 'latest' | 'oldest' | 'random',
-    // Add placeholders so components looking for these don't error out
-    cvData: [],
-    bioData: null,
-    statementData: null,
-  })
+  }))
 
   return <ArtworksContext.Provider value={[state, setState]}>{children}</ArtworksContext.Provider>
 }
