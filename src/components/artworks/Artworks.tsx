@@ -1,128 +1,92 @@
-// src/components/Artworks/Artworks.tsx
 'use client'
 
-import { useEffect } from 'react'
+import { useMemo } from 'react'
 import { useArtworks } from '@/providers/ArtworkProvider'
-import type { Artwork } from '@/payload-types'
-
-type ArtworkWithImage = Artwork & {
-  primaryImage?: ({ url?: string } & Partial<Artwork['primaryImage']>) | null
-}
-
-function getImageUrl(artwork: ArtworkWithImage): {
-  url: string | null
-  source: 'R2' | null
-} {
-  if (
-    artwork.primaryImage &&
-    typeof artwork.primaryImage === 'object' &&
-    artwork.primaryImage.url
-  ) {
-    return { url: artwork.primaryImage.url, source: 'R2' }
-  }
-  if (
-    artwork.posterImage &&
-    typeof artwork.posterImage === 'object' &&
-    artwork.posterImage.url
-  ) {
-    return { url: artwork.posterImage.url, source: 'R2' }
-  }
-  return { url: null, source: null }
-}
+import Timeline from './Timeline'
 
 export default function Artworks() {
-  const [state] = useArtworks()
-  const artworks = state.filtered as ArtworkWithImage[]
+  const [state, setState] = useArtworks()
+  const showSwitcher = (state.viewportWidth || 0) >= 550 && !state.showSlideshow
 
-  // Stats for image sources
-  const stats = {
-    r2: artworks.filter((a) => getImageUrl(a).url).length,
-  }
+  const summary = useMemo(() => {
+    if (state.filtered.length === 0) return 'No artworks found'
+    return `${state.filtered.length} artworks`
+  }, [state.filtered.length])
 
-  useEffect(() => {
-    console.log('=== ARTWORKS STATE ===')
-    console.log(
-      'Showing:',
-      artworks.length,
-      '| Filtered out:',
-      state.totalCount - state.withImagesCount,
-    )
-    console.log('From R2:', stats.r2)
-    console.log('First artwork:', artworks[0])
-  }, [artworks, stats.r2, state.totalCount, state.withImagesCount])
-
-  if (artworks.length === 0) {
+  if (state.filtered.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-black/40">No artworks found</div>
+      <section className="relative z-artwork flex min-h-screen items-center justify-center px-space-6">
+        <div className="text-center font-heading text-base text-secondary">No artworks found</div>
+      </section>
     )
   }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center gap-4 mb-4 text-xs font-mono">
-        <span className="text-black/60">
-          {artworks.length} artworks
-          {state.totalCount > state.withImagesCount && (
-            <span className="text-black/40 ml-1">
-              (filtered {state.totalCount - state.withImagesCount} without images)
-            </span>
-          )}
-        </span>
-        <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded">With image: {stats.r2}</span>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {artworks.map((artwork) => {
-          const { url, source } = getImageUrl(artwork)
-
-          return (
-            <div
-              key={artwork.id}
-              className="group relative bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+    <section className="relative z-artwork min-h-screen w-full">
+      {showSwitcher && (
+        <div className="fixed bottom-space-4 left-1/2 z-ui-top -translate-x-1/2 rounded-[0.375rem] bg-surface-nav p-space-1 shadow-sm">
+          <div className="flex items-center gap-space-1">
+            <button
+              className={`px-space-3 py-space-1 font-heading text-sm ${
+                state.artworkViewTimeline ? 'bg-ui-face text-dark' : 'text-secondary'
+              }`}
+              onClick={() =>
+                setState((prev) => ({
+                  ...prev,
+                  artworkViewTimeline: true,
+                }))
+              }
             >
-              {/* Image container */}
-              <div className="relative aspect-square bg-gray-100">
-                {url ? (
-                  <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={artwork.title ?? ''}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                    {/* Source badge */}
-                    {source && (
-                      <span
-                        className="absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-bold rounded bg-green-500 text-white"
-                      >
-                        {source}
-                      </span>
-                    )}
-                  </>
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">no image</span>
-                  </div>
-                )}
-              </div>
+              Timeline
+            </button>
+            <button
+              className={`px-space-3 py-space-1 font-heading text-sm ${
+                !state.artworkViewTimeline ? 'bg-ui-face text-dark' : 'text-secondary'
+              }`}
+              onClick={() =>
+                setState((prev) => ({
+                  ...prev,
+                  artworkViewTimeline: false,
+                }))
+              }
+            >
+              Grid
+            </button>
+          </div>
+        </div>
+      )}
 
-              {/* Info */}
-              <div className="p-2">
-                <p className="text-sm font-medium text-gray-800 truncate">{artwork.title}</p>
-                <p className="text-xs text-gray-500 truncate">
-                  {typeof artwork.series === 'object' && artwork.series
-                    ? artwork.series.name
-                    : (artwork.seriesSlug ?? '—')}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {artwork.yearCreated ?? '—'}
-                </p>
-              </div>
-            </div>
-          )
-        })}
+      <div className="fixed bottom-space-2 right-space-2 z-nav rounded bg-surface-nav/80 px-space-2 py-space-1 font-heading text-xs text-secondary">
+        {summary}
       </div>
-    </div>
+
+      {state.showSlideshow ? (
+        <div className="flex min-h-screen items-center justify-center px-space-6">
+          <div className="max-w-[30rem] text-center">
+            <h2 className="font-heading text-xl text-dark">Slideshow mode</h2>
+            <p className="mt-space-2 font-heading text-sm text-secondary">
+              Slideshow rendering is the next phase step; controls are wired and state is active.
+            </p>
+          </div>
+        </div>
+      ) : state.artworkViewTimeline || (state.viewportWidth || 0) < 550 ? (
+        <Timeline />
+      ) : (
+        <div className="flex min-h-screen items-center justify-center px-space-6">
+          <div className="max-w-[30rem] text-center">
+            <h2 className="font-heading text-xl text-dark">Grid mode</h2>
+            <p className="mt-space-2 font-heading text-sm text-secondary">
+              Grid composition is queued for the next phase and will replace this placeholder.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {state.totalCount > state.withImagesCount && (
+        <div className="fixed bottom-[2.25rem] right-space-2 z-nav rounded bg-surface-nav/80 px-space-2 py-space-1 font-heading text-xs text-secondary">
+          {state.totalCount - state.withImagesCount} items hidden (no image)
+        </div>
+      )}
+    </section>
   )
 }
