@@ -8,6 +8,7 @@ import KlaroComponent from '@/components/common/Klaro'
 import ArtworksProvider from '@/providers/ArtworkProvider'
 import { getArtworks } from '@/lib/payload/artworks'
 import { getPerson } from '@/lib/payload/person'
+import { mapArtistToInfoData } from '@/helpers/mapArtistInfo'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
 import AnimationWrapper from './AnimationWrapper'
@@ -89,7 +90,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   ])
 
   const artworksData = artworks
-  const artistInfo = person
+  const artistInfo = mapArtistToInfoData(person)
 
   return (
     <html lang="en">

@@ -1,3 +1,5 @@
+import { normalizeMegacitiesSelectFields } from './normalizeMegacitiesSelects'
+
 /** Payload `artworks` select values — keep in sync with Artworks.ts. */
 export const ARTWORK_MEDIUM_VALUES = [
   'acrylic-photo-transfer-on-canvas',
@@ -123,6 +125,8 @@ const MEDIUM_ALIASES: Record<string, string> = {
 
 export type NormalizeArtworkContext = {
   seriesSlug?: string | null
+  /** Custom medium values from art-official-settings global */
+  extraMediumValues?: readonly string[]
 }
 
 function resolveSupportValue(value: unknown): string | undefined {
@@ -136,7 +140,10 @@ function resolveSupportValue(value: unknown): string | undefined {
   return normalizeSelectValue(raw, ARTWORK_SUPPORT_VALUES, SUPPORT_LABEL_MAP)
 }
 
-function resolveMediumValue(value: unknown): string | undefined {
+function resolveMediumValue(
+  value: unknown,
+  extraAllowed: readonly string[] = [],
+): string | undefined {
   if (typeof value !== 'string') return undefined
   const raw = value.trim()
   if (!raw) return undefined
@@ -144,7 +151,8 @@ function resolveMediumValue(value: unknown): string | undefined {
   const alias = MEDIUM_ALIASES[raw.toLowerCase()] ?? MEDIUM_ALIASES[slugifySelectInput(raw)]
   if (alias) return alias
 
-  return normalizeSelectValue(raw, ARTWORK_MEDIUM_VALUES, MEDIUM_LABEL_MAP)
+  const allowed = [...ARTWORK_MEDIUM_VALUES, ...extraAllowed]
+  return normalizeSelectValue(raw, allowed, MEDIUM_LABEL_MAP)
 }
 
 function slugifySelectInput(input: string): string {
@@ -227,7 +235,7 @@ export function normalizeArtworkSelectFields(
         ? out.seriesSlug.trim()
         : undefined
 
-  const medium = resolveMediumValue(out.medium)
+  const medium = resolveMediumValue(out.medium, ctx.extraMediumValues ?? [])
   if (medium) out.medium = medium
   else if (out.medium != null && out.medium !== '') {
     delete out.medium
@@ -281,5 +289,5 @@ export function normalizeArtworkSelectFields(
         : ['physical']
   }
 
-  return out
+  return normalizeMegacitiesSelectFields(out)
 }

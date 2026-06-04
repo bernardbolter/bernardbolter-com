@@ -6,6 +6,7 @@ import {
   assessFormalContributionSchema,
   fetchWikipediaArticleSchema,
   flagWeakPhaseSchema,
+  setPhaseSchema,
   generateConfirmationDraftSchema,
   getWikidataEntitySchema,
   listLegacyRecordsSchema,
@@ -21,6 +22,7 @@ import {
   TOOL_ASSESS_FORMAL_CONTRIBUTION,
   TOOL_FETCH_WIKIPEDIA_ARTICLE,
   TOOL_FLAG_WEAK_PHASE,
+  TOOL_SET_PHASE,
   TOOL_GENERATE_CONFIRMATION_DRAFT,
   TOOL_GET_MEDIA_UPLOAD_STATUS,
   TOOL_GET_WIKIDATA_ENTITY,
@@ -278,6 +280,25 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
             context: { skipAgent: true },
           })
         }
+        return toolResult({ ok: true, phase: args.phase })
+      }
+
+      case TOOL_SET_PHASE: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) {
+          return failTool(tool.name, parsed.error)
+        }
+        const args = setPhaseSchema.parse(parsed.data)
+        await payload.update({
+          collection: 'sessions',
+          id: session.id,
+          data: { currentPhase: args.phase },
+          overrideAccess: false,
+          user,
+          context: { skipAgent: true },
+        })
+        session.currentPhase = args.phase
+        send('phase-transition', { phase: args.phase })
         return toolResult({ ok: true, phase: args.phase })
       }
 

@@ -3,12 +3,14 @@ import { z } from 'zod'
 import type { Tool } from '@anthropic-ai/sdk/resources/messages/messages'
 
 import { PRACTICE_KNOWLEDGE_SLUGS } from './practiceKnowledgeSlugs'
+import { SESSION_PHASES } from './sessionPhase'
 
 export const TOOL_UPDATE_FIELD = 'update_field'
 export const TOOL_STORE_SESSION_FIELD = 'store_session_field'
 export const TOOL_TRIGGER_IMAGE_ANALYSIS = 'trigger_image_analysis'
 export const TOOL_GENERATE_CONFIRMATION_DRAFT = 'generate_confirmation_draft'
 export const TOOL_FLAG_WEAK_PHASE = 'flag_weak_phase'
+export const TOOL_SET_PHASE = 'set_phase'
 export const TOOL_ASSESS_FORMAL_CONTRIBUTION = 'assess_formal_contribution'
 export const TOOL_LOOKUP_COMMONS_FILE = 'lookup_commons_file'
 export const TOOL_SEARCH_WIKIDATA = 'search_wikidata'
@@ -101,16 +103,16 @@ export const generateConfirmationDraftSchema = z.object({
   agentDraftFormalContributionAssessment: z.string(),
 })
 
+const sessionPhaseSchema = z.enum(SESSION_PHASES)
+
 export const flagWeakPhaseSchema = z.object({
-  phase: z.enum([
-    'pre-upload',
-    'identity',
-    'intent',
-    'art-historical',
-    'classification',
-    'confirmation',
-  ]),
+  phase: sessionPhaseSchema,
   note: z.string().optional(),
+})
+
+export const setPhaseSchema = z.object({
+  phase: sessionPhaseSchema,
+  reason: z.string().optional(),
 })
 
 export const assessFormalContributionSchema = z.object({
@@ -179,6 +181,7 @@ const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_TRIGGER_IMAGE_ANALYSIS]: triggerImageAnalysisSchema,
   [TOOL_GENERATE_CONFIRMATION_DRAFT]: generateConfirmationDraftSchema,
   [TOOL_FLAG_WEAK_PHASE]: flagWeakPhaseSchema,
+  [TOOL_SET_PHASE]: setPhaseSchema,
   [TOOL_ASSESS_FORMAL_CONTRIBUTION]: assessFormalContributionSchema,
   [TOOL_LOOKUP_COMMONS_FILE]: lookupCommonsFileSchema,
   [TOOL_SEARCH_WIKIDATA]: searchWikidataSchema,
@@ -304,18 +307,29 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
     input_schema: {
       type: 'object',
       properties: {
+        phase: { type: 'string', enum: [...SESSION_PHASES] },
+        note: { type: 'string' },
+      },
+      required: ['phase'],
+    },
+  },
+  {
+    name: TOOL_SET_PHASE,
+    description:
+      'Advance the session to the next phase. Call when the current phase fields are sufficiently captured and the conversation is ready to move on.',
+    input_schema: {
+      type: 'object',
+      properties: {
         phase: {
           type: 'string',
-          enum: [
-            'pre-upload',
-            'identity',
-            'intent',
-            'art-historical',
-            'classification',
-            'confirmation',
-          ],
+          enum: [...SESSION_PHASES],
+          description: 'The phase to transition to.',
         },
-        note: { type: 'string' },
+        reason: {
+          type: 'string',
+          description:
+            'One-line internal note on why the phase is advancing. Not shown to artist.',
+        },
       },
       required: ['phase'],
     },

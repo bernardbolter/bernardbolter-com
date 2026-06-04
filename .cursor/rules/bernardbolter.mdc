@@ -1,0 +1,137 @@
+# Bernard Bolter Archive — Cursor Rules
+
+## Workspace safety
+
+This workspace contains two repos:
+- `bernardbolter-new` — the active Next.js + Tailwind + Payload CMS repo. **Write here only.**
+- `bernardbolter-sass-old` — the legacy WordPress/Sass repo. **Read only. Never create, edit, or delete any file in this folder.**
+
+If a task requires reading an old component, read it. Do not modify it.
+
+---
+
+## Stack
+
+- Next.js (App Router)
+- Tailwind CSS
+- Payload CMS
+- Neon (Postgres)
+- TypeScript throughout
+
+---
+
+## Tailwind — hard rules
+
+- **Never use default Tailwind breakpoints** (`sm:`, `md:`, `lg:`, `xl:`). This project uses custom breakpoints only: `s:` (550px), `m:` (768px), `l:` (979px), `xl:` (1200px).
+- Font sizes and spacing in `rem`, not `px`. Exceptions: 1–2px borders, SVG strokes, integer grid gaps.
+- Do not invent spacing values outside the scale defined in `tailwind.config.ts`.
+- Do not add new color values — use CSS variables and the token system only.
+
+---
+
+## Z-index — named layers only
+
+Never use an arbitrary z-index number. Use only these named layers (defined in `tailwind.config.ts`):
+
+| Layer | Value | Usage |
+|---|---|---|
+| `z-chrome` | 2000 | Info panel, name container |
+| `z-nav` | 3000 | Nav, search nav, filter nav |
+| `z-overlay` | 4000 | Artwork image overlays |
+| `z-ui-top` | 5000 | Nav buttons, switcher |
+| `z-modal` | 6000 | Modals, lightboxes |
+
+---
+
+## Typography
+
+Three fonts, three roles — do not swap them:
+
+| Token | Font | Role |
+|---|---|---|
+| `font-body` | Barlow | Body prose only |
+| `font-heading` | Barlow Condensed | Headings, labels, nav, UI text |
+| `font-title` | Staatliches | Large display text and panel section labels only |
+
+- Do not use Barlow for headings.
+- Do not use Barlow Condensed for body prose.
+- Do not use Staatliches for anything other than large display and section labels.
+- Do not apply `text-transform: uppercase` globally — Staatliches handles this inherently.
+
+---
+
+## Colors
+
+- All colors via CSS variables and the token system. No hardcoded hex values in components.
+- Series colors always via `getSeriesColor(slug)` from `src/helpers/seriesColor.ts`. Never hardcode a series color.
+- Token naming: `surface-*` for backgrounds, `text-*` for text, `ui-*` for chrome, `series-*` for series accents, `status-*` for form feedback.
+
+---
+
+## Artwork display — critical
+
+This site represents artwork at a size that reflects real-world physical scale. This logic must never be violated.
+
+- **Never use `object-cover` on artwork images.** Always `object-contain`.
+- **Never normalize artwork display** to fill uniform grid cells.
+- **All artwork dimensions via `useArtworkDimensions()`** from `src/hooks/useArtworkDimensions.tsx`. Never hardcode width/height for artwork display.
+- Size (`sm`, `md`, `lg`, `xl`) and orientation (landscape, portrait, square) constraints must both apply simultaneously.
+- This logic lives in the hook and the reusable component — never duplicated per view.
+
+---
+
+## Scroll containers
+
+All page-level scroll containers must have hidden scrollbars:
+```css
+overflow: scroll;
+scrollbar-width: none;
+::-webkit-scrollbar { display: none; }
+```
+
+Never use `overflow: hidden` on scroll containers.
+
+---
+
+## Forms
+
+- **Never use `<form>` tags.** Use `div` + `onClick` / `onChange` handlers.
+
+---
+
+## Component patterns
+
+- Series image placeholder backgrounds use `getSeriesColor(slug)` — always.
+- The `isProgramScroll` ref on timeline scroll handlers must never be removed or refactored. It prevents scroll events firing during programmatic navigation.
+- TitleCorner SVG coordinates must not be altered.
+- The `ArtworkTitle` component has three modes — do not collapse them.
+
+---
+
+## What NOT to do
+
+- ❌ Write any file in `bernardbolter-sass-old/`
+- ❌ Use `sm:`, `md:`, `lg:` breakpoints
+- ❌ Use `object-cover` on artwork images
+- ❌ Hardcode series colors
+- ❌ Hardcode artwork dimensions
+- ❌ Use arbitrary z-index values
+- ❌ Use `px` for font sizes or spacing (exceptions: borders, SVG strokes, grid gaps)
+- ❌ Use `overflow: hidden` on scroll containers
+- ❌ Use `<form>` tags
+- ❌ Use Barlow Condensed for body prose
+- ❌ Use Staatliches for anything other than large display text
+- ❌ Remove or refactor the `isProgramScroll` ref
+- ❌ Alter TitleCorner SVG coordinates
+- ❌ Introduce new spacing values not in the scale
+- ❌ Introduce new breakpoints
+
+---
+
+## Source of truth hierarchy
+
+When in doubt about a styling decision:
+1. `design-system.md` — tokens, rules, constraints
+2. `design-system-visual.html` — visual reference (open in browser)
+3. Old Sass component in `bernardbolter-sass-old/` — structure and logic reference
+4. Tailwind config — token values as implemented

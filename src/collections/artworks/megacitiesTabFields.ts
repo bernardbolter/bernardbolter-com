@@ -2,9 +2,10 @@ import type { Tab } from 'payload'
 
 import { privateFieldAccess } from '@/access/isArtistOrAdmin'
 
+/** Overlay / map coordinates — optional until set in admin tooling (Art/Official does not collect x/y). */
 const xyPointFields = [
-  { name: 'x', type: 'number' as const, required: true, admin: { description: '% from left' } },
-  { name: 'y', type: 'number' as const, required: true, admin: { description: '% from top' } },
+  { name: 'x', type: 'number' as const, admin: { description: '% from left' } },
+  { name: 'y', type: 'number' as const, admin: { description: '% from top' } },
 ]
 
 export const megacitiesTab: Tab = {
@@ -187,6 +188,9 @@ export const megacitiesTab: Tab = {
                   name: 'positionInCollage',
                   type: 'group',
                   label: 'Position in collage',
+                  admin: {
+                    description: 'Optional % position on the composite — set in admin, not during Art/Official chat.',
+                  },
                   fields: xyPointFields,
                 },
                 {
@@ -297,8 +301,8 @@ export const megacitiesTab: Tab = {
               },
               fields: [
                 { name: 'name', type: 'text', required: true },
-                { name: 'x', type: 'number', required: true },
-                { name: 'y', type: 'number', required: true },
+                { name: 'x', type: 'number' },
+                { name: 'y', type: 'number' },
                 { name: 'note', type: 'textarea' },
               ],
             },

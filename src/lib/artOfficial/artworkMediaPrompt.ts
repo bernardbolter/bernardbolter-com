@@ -29,7 +29,7 @@ VIDEO AND PERFORMANCE
 - YouTube/Vimeo links go on videoUrl / documentationVideoUrl / videos[].videoUrl — file upload not required when they only have a link.
 
 ACH
-- ach-source = historical photograph on the canvas (not the finished painting).
+- ach-source = one or more historical photographs on the canvas (not the finished painting). Each upload appends to ach.sourcePhotographs.
 - ach-transfer = in-process canvas after transfer, before painted fields.
 
 DCS

@@ -5,45 +5,8 @@ import { redirect } from 'next/navigation'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 import { AdminViewShell } from './AdminViewShell'
-import { ArtOfficialInstructions } from './artOfficial/ArtOfficialInstructions'
-import { NewSessionButton } from './artOfficial/NewSessionButton'
+import { ArtOfficialHome } from './artOfficial/ArtOfficialHome'
 import { getStartRecommendation } from '@/lib/artOfficial/startRecommendation'
-
-function SessionList({
-  title,
-  docs,
-}: {
-  title: string
-  docs: Array<{
-    sessionId?: string | null
-    sessionType?: string | null
-    updatedAt?: string | null
-    dialogueRefinementFlag?: boolean | null
-    weakPhases?: string[] | null
-  }>
-}) {
-  if (!docs.length) return null
-  return (
-    <section style={{ marginBottom: 32 }}>
-      <h2 style={{ fontSize: 16, marginBottom: 12 }}>{title}</h2>
-      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-        {docs.map((s) => (
-          <li key={s.sessionId} style={{ marginBottom: 8 }}>
-            <Link href={`/admin/art-official/${s.sessionId}`}>
-              {s.sessionType} · {s.updatedAt ? new Date(s.updatedAt).toLocaleString() : ''}
-              {s.dialogueRefinementFlag ? ' · needs refinement' : ''}
-            </Link>
-            {s.weakPhases?.length ? (
-              <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.65 }}>
-                ({s.weakPhases.join(', ')})
-              </span>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
 
 export async function ArtOfficialView(props: AdminViewServerProps) {
   const { initPageResult, payload } = props
@@ -114,37 +77,17 @@ export async function ArtOfficialView(props: AdminViewServerProps) {
           Conversational cataloguing for the artist archive.{' '}
           <Link href="/admin/art-official/audit">Session coverage audit →</Link>
         </p>
-        {practiceKnowledgeCount.totalDocs === 0 ? (
-          <p
-            style={{
-              padding: 12,
-              marginBottom: 16,
-              background: 'var(--theme-warning-100)',
-              borderRadius: 4,
-              fontSize: 13,
-              lineHeight: 1.5,
-            }}
-          >
-            Practice Knowledge rows are missing. Onboarding commit cannot write until you run:{' '}
-            <code>npx tsx src/scripts/seed-practice-knowledge.ts</code>
-          </p>
-        ) : null}
-        <ArtOfficialInstructions
+        <ArtOfficialHome
           recommendation={recommendation}
           practiceKnowledgeHref={practiceKnowledgeHref}
           artistsHref={artistsHref}
           artistCreateHref={artistCreateHref}
           artistExists={artistExists}
+          practiceKnowledgeEmpty={practiceKnowledgeCount.totalDocs === 0}
+          inProgress={inProgress.docs}
+          needsRefinement={needsRefinement.docs}
+          completed={completed.docs}
         />
-        <NewSessionButton
-          defaultSessionType={recommendation.sessionType}
-          disabled={!artistExists}
-          artistsHref={artistsHref}
-          artistCreateHref={artistCreateHref}
-        />
-        <SessionList title="In progress" docs={inProgress.docs} />
-        <SessionList title="Needs refinement" docs={needsRefinement.docs} />
-        <SessionList title="Recent completed" docs={completed.docs} />
       </Gutter>
     </AdminViewShell>
   )

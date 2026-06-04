@@ -60,8 +60,11 @@ export async function POST(request: Request) {
       status: 'in-progress',
       messages: [],
       // Pre-upload questionnaire only runs for new artworks — skip when refining an existing one.
-      ...(parsed.data.sessionType === 'artwork-cataloguing' && !parsed.data.artworkRecord
-        ? { preUploadStep: 1 }
+      ...(parsed.data.sessionType === 'artwork-cataloguing'
+        ? {
+            currentPhase: parsed.data.artworkRecord ? 'identity' : 'pre-upload',
+            ...(!parsed.data.artworkRecord ? { preUploadStep: 1 } : {}),
+          }
         : {}),
     },
     overrideAccess: false,

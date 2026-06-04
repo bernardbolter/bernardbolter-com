@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import type { Session, User } from '@/payload-types'
 
 import { normalizeSizeTier } from './inferSizeTier'
+import { getCustomMediums } from './artworkMediumOptions'
 import { normalizeArtworkSelectFields } from './normalizeArtworkSelects'
 import { findSeriesIdBySlug, seriesNotFoundMessage } from './seriesSlugs'
 
@@ -287,5 +288,9 @@ export async function resolveArtworkCommitReferences(
   if (stagedTier) out.sizeTier = stagedTier
   else delete out.sizeTier
 
-  return normalizeArtworkSelectFields(out, { seriesSlug })
+  const customMediums = await getCustomMediums(ctx.payload)
+  return normalizeArtworkSelectFields(out, {
+    seriesSlug,
+    extraMediumValues: customMediums.map((row) => row.value),
+  })
 }

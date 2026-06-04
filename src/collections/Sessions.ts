@@ -105,6 +105,33 @@ export const Sessions: CollectionConfig = {
       admin: { description: 'Full Anthropic message array (opaque).' },
     },
     {
+      name: 'currentPhase',
+      type: 'select',
+      options: [
+        { label: 'Pre-upload', value: 'pre-upload' },
+        { label: 'Identity', value: 'identity' },
+        { label: 'Physical', value: 'physical' },
+        { label: 'Classification', value: 'classification' },
+        { label: 'Intent', value: 'intent' },
+        { label: 'Art historical', value: 'art-historical' },
+        { label: 'Late', value: 'late' },
+        { label: 'Confirmation', value: 'confirmation' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description:
+          'Art/Official dialogue phase (model tiering). Updated by set_phase or manual advance.',
+      },
+    },
+    {
+      name: 'tokenLog',
+      type: 'json',
+      admin: {
+        description:
+          'Per-turn Anthropic usage (input/output/cache). Staff-only; not exposed on public APIs.',
+      },
+    },
+    {
       name: 'preUploadStep',
       type: 'number',
       min: 1,
@@ -156,9 +183,11 @@ export const Sessions: CollectionConfig = {
       options: [
         { label: 'Pre-upload', value: 'pre-upload' },
         { label: 'Identity', value: 'identity' },
+        { label: 'Physical', value: 'physical' },
         { label: 'Intent', value: 'intent' },
         { label: 'Art historical', value: 'art-historical' },
         { label: 'Classification', value: 'classification' },
+        { label: 'Late', value: 'late' },
         { label: 'Confirmation', value: 'confirmation' },
       ],
     },

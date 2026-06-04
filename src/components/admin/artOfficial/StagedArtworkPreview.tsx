@@ -2,23 +2,10 @@
 
 import { useEffect, useState } from 'react'
 
-type MediaDoc = {
-  url?: string | null
-  thumbnailURL?: string | null
-  alt?: string | null
-  sizes?: {
-    thumbnail?: { url?: string | null }
-  }
-}
-
-function previewUrl(doc: MediaDoc): string | null {
-  return (
-    doc.thumbnailURL ??
-    doc.sizes?.thumbnail?.url ??
-    doc.url ??
-    null
-  )
-}
+import {
+  mediaPreviewUrl,
+  normalizeMediaApiResponse,
+} from '@/lib/artOfficial/mediaPreview'
 
 export function StagedArtworkPreview({ mediaId }: { mediaId: number }) {
   const [src, setSrc] = useState<string | null>(null)
@@ -39,13 +26,12 @@ export function StagedArtworkPreview({ mediaId }: { mediaId: number }) {
           if (!cancelled) setError(true)
           return
         }
-        const raw = (await res.json()) as MediaDoc | { doc?: MediaDoc }
-        const data = raw && typeof raw === 'object' && 'doc' in raw && raw.doc ? raw.doc : (raw as MediaDoc)
-        const url = previewUrl(data)
+        const data = normalizeMediaApiResponse(await res.json())
+        const url = data ? mediaPreviewUrl(data) : null
         if (!cancelled) {
           if (url) setSrc(url)
           else setError(true)
-          if (data.alt) setAlt(data.alt)
+          if (data?.alt) setAlt(data.alt)
         }
       } catch {
         if (!cancelled) setError(true)

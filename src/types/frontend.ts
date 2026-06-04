@@ -25,9 +25,8 @@ export interface SortOption {
 }
 
 export interface ArtistInfoLink {
-  title?: string
-  url?: string
-  target?: string
+  label: string
+  url: string
 }
 
 /** Subset of Artist global used by Info panel (Payload field names). */
@@ -38,11 +37,7 @@ export interface ArtistInfoData {
   workCity1?: string | null
   workCity2?: string | null
   workCity3?: string | null
-  link1?: ArtistInfoLink | null
-  link2?: ArtistInfoLink | null
-  link3?: ArtistInfoLink | null
-  link4?: ArtistInfoLink | null
-  link5?: ArtistInfoLink | null
+  websiteLinks?: ArtistInfoLink[]
 }
 
 export interface ArtworksState {

@@ -74,7 +74,16 @@ export function resolveMediaSlotStates(args: {
     const skipped = staged.some((a) => a.slotId === slot.id && a.kind === 'skipped')
     const timelineValue = slot.field
       ? timelineValueForField(args.timeline, slot.field)
-      : undefined
+      : slot.nestedArrayPath
+        ? args.timeline.some(
+            (e) =>
+              e.targetCollection === 'artworks' &&
+              typeof e.field === 'string' &&
+              e.field.startsWith(slot.nestedArrayPath!),
+          )
+          ? true
+          : undefined
+        : undefined
 
     let status: MediaSlotStatus = 'pending'
     if (skipped) status = 'skipped'
@@ -156,6 +165,16 @@ export function mergeStagedMediaIntoArtworkPatch(
       appendArrayRow(out, 'installationShots', { image: row.mediaId })
       continue
     }
+    if (
+      slot.nestedArrayPath &&
+      slot.kind === 'image' &&
+      row.mediaId != null
+    ) {
+      const imageKey = slot.nestedArrayImageField ?? 'sourceImage'
+      appendNestedArrayRow(out, slot.nestedArrayPath, { [imageKey]: row.mediaId })
+      continue
+    }
+
     if (slot.arrayField === 'videos') {
       const videoType =
         row.videoType ??
@@ -194,6 +213,29 @@ function appendArrayRow(
   const arr = Array.isArray(existing) ? [...existing] : []
   arr.push(row)
   patch[field] = arr
+}
+
+function appendNestedArrayRow(
+  patch: Record<string, unknown>,
+  path: string,
+  row: Record<string, unknown>,
+): void {
+  const segments = path.split('.').filter(Boolean)
+  if (segments.length < 2) return
+  let cursor: Record<string, unknown> = patch
+  for (let i = 0; i < segments.length - 1; i += 1) {
+    const key = segments[i]
+    const next = cursor[key]
+    if (next == null || typeof next !== 'object' || Array.isArray(next)) {
+      cursor[key] = {}
+    }
+    cursor = cursor[key] as Record<string, unknown>
+  }
+  const leaf = segments[segments.length - 1]
+  const existing = cursor[leaf]
+  const arr = Array.isArray(existing) ? [...existing] : []
+  arr.push(row)
+  cursor[leaf] = arr
 }
 
 function setDottedPath(obj: Record<string, unknown>, path: string, value: unknown): void {

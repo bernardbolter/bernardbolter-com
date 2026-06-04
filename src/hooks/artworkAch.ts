@@ -98,6 +98,20 @@ export const artworkAchBeforeChange: CollectionBeforeChangeHook = ({ data }) => 
   mapAndTour.cityPlaceholderColor = resolveCityPlaceholder(d.city)
   ach.mapAndTour = mapAndTour
 
+  // Mirror first sourcePhotographs row onto sourcePhotograph.sourceImage when unset
+  const sourcePhotos = ach.sourcePhotographs
+  if (Array.isArray(sourcePhotos) && sourcePhotos.length > 0) {
+    const first = sourcePhotos[0]
+    if (first && typeof first === 'object') {
+      const firstImage = (first as Record<string, unknown>).sourceImage
+      const source = (ach.sourcePhotograph as Record<string, unknown> | undefined) ?? {}
+      if (firstImage != null && source.sourceImage == null) {
+        source.sourceImage = firstImage
+        ach.sourcePhotograph = source
+      }
+    }
+  }
+
   // Group 3 — approximate date year + source credit
   const source = (ach.sourcePhotograph as Record<string, unknown> | undefined) ?? {}
   const parsedYear = parseApproximateDateYear(source.approximateDate)

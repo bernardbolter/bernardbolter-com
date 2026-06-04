@@ -145,7 +145,7 @@ export async function stageArtworkMediaUpload(args: {
   }
 
   const nextStaged =
-    slot.arrayField != null
+    slot.arrayField != null || slot.nestedArrayPath != null
       ? [...stagedMedia, attachment]
       : [...stagedMedia.filter((r) => r.slotId !== slot.id), attachment]
 

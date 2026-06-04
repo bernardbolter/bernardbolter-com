@@ -45,6 +45,34 @@ export const Artists: CollectionConfig = {
     },
     slugField({ useAsSlug: 'name' }),
     {
+      name: 'birthCity',
+      type: 'text',
+      label: 'Birth city',
+      defaultValue: 'San Francisco',
+      admin: { description: 'Shown in the site info panel (e.g. b. San Francisco, 1974).' },
+    },
+    {
+      name: 'birthYear',
+      type: 'number',
+      label: 'Birth year',
+      defaultValue: 1974,
+      admin: { description: 'Shown in the site info panel.' },
+    },
+    {
+      name: 'workCity1',
+      type: 'text',
+      label: 'Work city 1',
+      defaultValue: 'Berlin',
+      admin: { description: 'First city in “Lives and works …” on the info panel.' },
+    },
+    {
+      name: 'workCity2',
+      type: 'text',
+      label: 'Work city 2',
+      defaultValue: 'San Francisco',
+      admin: { description: 'Second city in “Lives and works …” on the info panel.' },
+    },
+    {
       name: 'careerStage',
       type: 'select',
       defaultValue: 'studio',
@@ -225,9 +253,23 @@ export const Artists: CollectionConfig = {
     {
       name: 'otherLinks',
       type: 'array',
-      labels: { singular: 'Link', plural: 'Other links' },
+      labels: { singular: 'Website link', plural: 'Info panel website links' },
+      admin: {
+        description:
+          'External sites shown in the left info menu (label + URL). Reorder, add, or remove rows here.',
+      },
+      defaultValue: [
+        { label: 'acolorfulhistory.com', url: 'https://acolorfulhistory.com' },
+        { label: 'digitalcityseries.com', url: 'https://digitalcityseries.com' },
+        { label: 'smoothism.com', url: 'https://smoothism.com' },
+      ],
       fields: [
-        { name: 'label', type: 'text', required: true },
+        {
+          name: 'label',
+          type: 'text',
+          required: true,
+          admin: { description: 'Display text, e.g. acolorfulhistory.com' },
+        },
         { name: 'url', type: 'text', required: true },
       ],
     },

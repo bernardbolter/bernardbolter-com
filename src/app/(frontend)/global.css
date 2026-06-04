@@ -132,23 +132,29 @@ h6 {
 .menu-plus::after {
   content: '';
   position: absolute;
-  background-color: var(--ui-icon);
+  background-color: var(--menu-plus-color, var(--ui-icon));
+  transition: background-color 0.3s ease-in-out;
+}
+
+.menu-link:hover .menu-plus::before,
+.menu-link:hover .menu-plus::after {
+  filter: brightness(1.08);
 }
 
 .menu-plus::before {
   left: 50%;
   top: -50%;
   width: 2px;
-  height: 14px;
+  height: 11px;
   transform: translateX(-50%);
 }
 
 .menu-plus::after {
   top: 0;
-  left: 0;
-  width: 14px;
+  left: 50%;
+  width: 11px;
   height: 2px;
-  transform: translateY(-50%);
+  transform: translate(-50%, -50%);
 }
 
 .menu-trigger-open .menu-lines::before,

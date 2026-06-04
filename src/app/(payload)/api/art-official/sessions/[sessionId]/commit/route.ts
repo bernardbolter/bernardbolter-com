@@ -133,6 +133,17 @@ export async function POST(request: Request, context: RouteContext) {
           })
           artworkId = created.id
         }
+
+        if (artworkId) {
+          await payload.update({
+            collection: 'artworks',
+            id: artworkId,
+            data: { reasoningStatus: 'complete' },
+            overrideAccess: false,
+            user,
+            context: { skipAgent: true },
+          })
+        }
       } catch (err) {
         const message =
           formatPayloadValidationError(err) ??

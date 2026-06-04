@@ -111,7 +111,7 @@ export default function ContactPage() {
           <p>
             For legal and privacy details, see{' '}
             <Link href="/datenschutz" className="inline-flex items-center gap-1 underline">
-              <span className="h-3 w-3 fill-dark">
+              <span className="inline-flex h-3 w-3 shrink-0 text-dark">
                 <LinkSvg />
               </span>
               Datenschutz

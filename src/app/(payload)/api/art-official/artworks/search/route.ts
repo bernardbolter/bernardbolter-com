@@ -9,19 +9,22 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const q = url.searchParams.get('q')?.trim() ?? ''
   const limit = Math.min(Number(url.searchParams.get('limit') ?? 12), 50)
+  const artworkId = Number(url.searchParams.get('artworkId'))
 
-  if (!q) {
+  if (!q && !Number.isFinite(artworkId)) {
     return Response.json({ docs: [] })
   }
 
   const result = await payload.find({
     collection: 'artworks',
-    where: {
-      or: [
-        { title: { contains: q } },
-        { slug: { contains: q } },
-      ],
-    },
+    where: Number.isFinite(artworkId)
+      ? { id: { equals: artworkId } }
+      : {
+          or: [
+            { title: { contains: q } },
+            { slug: { contains: q } },
+          ],
+        },
     sort: '-updatedAt',
     limit,
     depth: 1,

@@ -129,9 +129,11 @@ export interface Config {
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('en' | 'de') | ('en' | 'de')[];
   globals: {
     'print-set-config': PrintSetConfig;
+    'art-official-settings': ArtOfficialSetting;
   };
   globalsSelect: {
     'print-set-config': PrintSetConfigSelect<false> | PrintSetConfigSelect<true>;
+    'art-official-settings': ArtOfficialSettingsSelect<false> | ArtOfficialSettingsSelect<true>;
   };
   locale: 'en' | 'de';
   widgets: {
@@ -237,6 +239,22 @@ export interface Artist {
    */
   generateSlug?: boolean | null;
   slug: string;
+  /**
+   * Shown in the site info panel (e.g. b. San Francisco, 1974).
+   */
+  birthCity?: string | null;
+  /**
+   * Shown in the site info panel.
+   */
+  birthYear?: number | null;
+  /**
+   * First city in “Lives and works …” on the info panel.
+   */
+  workCity1?: string | null;
+  /**
+   * Second city in “Lives and works …” on the info panel.
+   */
+  workCity2?: string | null;
   careerStage?: ('studio' | 'market' | 'institutional') | null;
   /**
    * Hidden on this site — artist, gallery, and collector are separate properties.
@@ -393,8 +411,14 @@ export interface Artist {
   publicEmail?: string | null;
   website?: string | null;
   instagramUrl?: string | null;
+  /**
+   * External sites shown in the left info menu (label + URL). Reorder, add, or remove rows here.
+   */
   otherLinks?:
     | {
+        /**
+         * Display text, e.g. acolorfulhistory.com
+         */
         label: string;
         url: string;
         id?: string | null;
@@ -475,6 +499,10 @@ export interface Artwork {
   seriesSlug?: string | null;
   status: 'draft' | 'published' | 'archived';
   /**
+   * Tracks how deeply this artwork has been catalogued through Art/Official. Set by Quick Upload and session commit — not edited manually.
+   */
+  reasoningStatus?: ('stub' | 'partial' | 'complete') | null;
+  /**
    * Set once at creation; immutable. Provenance of the catalogue record.
    */
   recordOrigin: 'artist-catalogued' | 'gallery-catalogued' | 'collector-catalogued' | 'migrated' | 'enrichment-agent';
@@ -524,14 +552,10 @@ export interface Artwork {
    * Legacy WordPress artwork URL.
    */
   oldWpUrl?: string | null;
-  medium:
-    | 'acrylic-photo-transfer-on-canvas'
-    | 'acrylic-on-canvas'
-    | 'mixed-media-on-canvas'
-    | 'photo-collage'
-    | 'video'
-    | 'digital'
-    | 'other';
+  /**
+   * Medium slug (built-in or custom from Art/Official Quick Upload). Labels in Globals → Art/Official settings.
+   */
+  medium: string;
   /**
    * Override or specify when medium is “Other”.
    */
@@ -1378,6 +1402,22 @@ export interface Artwork {
           }[]
         | null;
     };
+    /**
+     * Historical photographs transferred to canvas. Add one or more; the first is mirrored to the primary source record below.
+     */
+    sourcePhotographs?:
+      | {
+          sourceImage: number | Media;
+          /**
+           * Optional title for this source image.
+           */
+          sourceTitle?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Structured metadata for the main source image. Image file may also be listed in Source photographs above.
+     */
     sourcePhotograph?: {
       /**
        * The historical photograph Bernard transferred to canvas.
@@ -3019,6 +3059,33 @@ export interface Session {
     | boolean
     | null;
   /**
+   * Art/Official dialogue phase (model tiering). Updated by set_phase or manual advance.
+   */
+  currentPhase?:
+    | (
+        | 'pre-upload'
+        | 'identity'
+        | 'physical'
+        | 'classification'
+        | 'intent'
+        | 'art-historical'
+        | 'late'
+        | 'confirmation'
+      )
+    | null;
+  /**
+   * Per-turn Anthropic usage (input/output/cache). Staff-only; not exposed on public APIs.
+   */
+  tokenLog?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Current pre-upload question (1–4). Updated by Art/Official as the dialogue advances.
    */
   preUploadStep?: number | null;
@@ -3062,7 +3129,18 @@ export interface Session {
     | null;
   agentDraftFormalContributionAssessment?: string | null;
   sessionNotes?: string | null;
-  weakPhases?: ('pre-upload' | 'identity' | 'intent' | 'art-historical' | 'classification' | 'confirmation')[] | null;
+  weakPhases?:
+    | (
+        | 'pre-upload'
+        | 'identity'
+        | 'physical'
+        | 'intent'
+        | 'art-historical'
+        | 'classification'
+        | 'late'
+        | 'confirmation'
+      )[]
+    | null;
   blindDescriptionUseful?: boolean | null;
   formalContributionAccuracy?: ('accurate' | 'partial' | 'missed') | null;
   /**
@@ -3287,6 +3365,10 @@ export interface ArtistsSelect<T extends boolean = true> {
   nameLegal?: T;
   generateSlug?: T;
   slug?: T;
+  birthCity?: T;
+  birthYear?: T;
+  workCity1?: T;
+  workCity2?: T;
   careerStage?: T;
   primaryActorType?: T;
   actorRoles?: T;
@@ -3700,6 +3782,7 @@ export interface ArtworksSelect<T extends boolean = true> {
   series?: T;
   seriesSlug?: T;
   status?: T;
+  reasoningStatus?: T;
   recordOrigin?: T;
   yearCreated?: T;
   yearCompleted?: T;
@@ -4037,6 +4120,13 @@ export interface ArtworksSelect<T extends boolean = true> {
                     h?: T;
                     id?: T;
                   };
+            };
+        sourcePhotographs?:
+          | T
+          | {
+              sourceImage?: T;
+              sourceTitle?: T;
+              id?: T;
             };
         sourcePhotograph?:
           | T
@@ -4557,6 +4647,8 @@ export interface SessionsSelect<T extends boolean = true> {
   lines?: T;
   completedAt?: T;
   messages?: T;
+  currentPhase?: T;
+  tokenLog?: T;
   preUploadStep?: T;
   firstImpression?: T;
   secondDescription?: T;
@@ -4669,6 +4761,33 @@ export interface PrintSetConfig {
   createdAt?: string | null;
 }
 /**
+ * Custom medium labels added from Quick Upload appear here and in artwork medium selects.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "art-official-settings".
+ */
+export interface ArtOfficialSetting {
+  id: number;
+  /**
+   * Extra medium select options. Managed automatically when you add a new medium in Quick Upload.
+   */
+  customMediums?:
+    | {
+        /**
+         * Stable slug stored on artworks.medium
+         */
+        value: string;
+        /**
+         * Label shown in dropdowns
+         */
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "print-set-config_select".
  */
@@ -4678,6 +4797,22 @@ export interface PrintSetConfigSelect<T extends boolean = true> {
   frameLabel?: T;
   frameNotes?: T;
   active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "art-official-settings_select".
+ */
+export interface ArtOfficialSettingsSelect<T extends boolean = true> {
+  customMediums?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

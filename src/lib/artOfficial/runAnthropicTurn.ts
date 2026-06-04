@@ -12,9 +12,17 @@ import { createToolUseAccumulator } from './chatMessages'
 
 export type StreamedToolUse = { name: string; input: unknown; id: string }
 
+export type AnthropicTurnUsage = {
+  input_tokens: number
+  output_tokens: number
+  cache_read_input_tokens: number
+  cache_creation_input_tokens: number
+}
+
 export type AnthropicTurnResult = {
   assistantText: string
   toolUses: StreamedToolUse[]
+  usage: AnthropicTurnUsage
 }
 
 export async function runAnthropicTurn({
@@ -67,7 +75,17 @@ export async function runAnthropicTurn({
   const finalMessage = await stream.finalMessage()
   logAnthropicCacheUsage(finalMessage.usage)
 
-  return { assistantText, toolUses: toolAcc.finish() }
+  const usage = finalMessage.usage
+  return {
+    assistantText,
+    toolUses: toolAcc.finish(),
+    usage: {
+      input_tokens: usage.input_tokens ?? 0,
+      output_tokens: usage.output_tokens ?? 0,
+      cache_read_input_tokens: usage.cache_read_input_tokens ?? 0,
+      cache_creation_input_tokens: usage.cache_creation_input_tokens ?? 0,
+    },
+  }
 }
 
 function logAnthropicCacheUsage(usage: {

@@ -1,6 +1,6 @@
 import { applyAgentTool } from '@/lib/artOfficial/applyAgentTool'
 import { formatChatError } from '@/lib/artOfficial/formatChatError'
-import { ART_OFFICIAL_MODEL, requireAnthropic } from '@/lib/artOfficial/anthropic'
+import { requireAnthropic } from '@/lib/artOfficial/anthropic'
 import { ANTHROPIC_TOOL_SCHEMAS } from '@/lib/artOfficial/agentTools'
 import { buildSystemPromptParts } from '@/lib/artOfficial/buildSystemPrompt'
 import {
@@ -26,7 +26,18 @@ import {
   runAnthropicTurn,
 } from '@/lib/artOfficial/runAnthropicTurn'
 import { applyStagedMediaUpload } from '@/lib/artOfficial/applyStagedMediaUpload'
+import {
+  defaultSessionPhase,
+  normalizeSessionPhase,
+  resolveModel,
+  type SessionPhase,
+} from '@/lib/artOfficial/sessionPhase'
 import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
+import {
+  aggregateUsage,
+  appendTokenLog,
+  type TokenLogEntry,
+} from '@/lib/artOfficial/tokenLog'
 
 const MAX_TOOL_ROUNDS = 5
 
@@ -62,6 +73,7 @@ export async function POST(request: Request) {
       userMessage?: string
       imageMediaId?: number
       mediaUpload?: MediaUploadPayload
+      currentPhase?: SessionPhase
     }
     try {
       body = await request.json()
@@ -141,6 +153,27 @@ export async function POST(request: Request) {
       typeof session.artworkRecord === 'object'
         ? (session.artworkRecord?.id as number | undefined)
         : (session.artworkRecord as number | undefined)
+
+    const sessionType = session.sessionType as string
+    const defaultPhase = defaultSessionPhase(sessionType, Boolean(artworkRecordId))
+    let currentPhase = normalizeSessionPhase(
+      body.currentPhase ?? session.currentPhase,
+      defaultPhase,
+    )
+
+    if (currentPhase !== session.currentPhase) {
+      await payload.update({
+        collection: 'sessions',
+        id: session.id,
+        data: { currentPhase },
+        overrideAccess: false,
+        user,
+        context: { skipAgent: true },
+      })
+      session.currentPhase = currentPhase
+    }
+
+    const model = resolveModel(currentPhase, sessionType)
 
     let systemParts
     try {
@@ -241,17 +274,28 @@ export async function POST(request: Request) {
           )
 
           const newStored: StoredMessage[] = []
+          let phaseTransition: SessionPhase | undefined
+          const turnUsage: Omit<
+            TokenLogEntry,
+            'turn' | 'phase' | 'model' | 'timestamp'
+          > = {
+            inputTokens: 0,
+            outputTokens: 0,
+            cacheReadTokens: 0,
+            cacheWriteTokens: 0,
+          }
 
           for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-            const { assistantText, toolUses } = await runAnthropicTurn({
+            const { assistantText, toolUses, usage } = await runAnthropicTurn({
               anthropic,
-              model: ART_OFFICIAL_MODEL,
+              model,
               system,
               tools,
               messages: apiMessages,
               maxTokens: 1024,
               onToken: (text) => send('token', { text }),
             })
+            aggregateUsage(turnUsage, usage)
 
             if (!toolUses.length) {
               newStored.push({
@@ -276,7 +320,16 @@ export async function POST(request: Request) {
                 user,
                 session,
                 tool,
-                send,
+                send: (event, data) => {
+                  if (event === 'phase-transition' && data && typeof data === 'object') {
+                    const phase = (data as { phase?: unknown }).phase
+                    if (typeof phase === 'string') {
+                      phaseTransition = normalizeSessionPhase(phase, currentPhase)
+                      currentPhase = phaseTransition
+                    }
+                  }
+                  send(event, data)
+                },
               })
               toolResults.push({ tool_use_id: tool.id, content })
             }
@@ -315,11 +368,21 @@ export async function POST(request: Request) {
             send('token', { text: fallback })
           }
 
+          const tokenLog = appendTokenLog(session.tokenLog, {
+            turn: priorMessages.length + 1,
+            phase: currentPhase,
+            model,
+            ...turnUsage,
+            timestamp: new Date().toISOString(),
+          })
+
           await payload.update({
             collection: 'sessions',
             id: session.id,
             data: {
               messages: [...priorMessages, userTurn, ...newStored],
+              tokenLog,
+              ...(phaseTransition ? { currentPhase: phaseTransition } : {}),
             },
             overrideAccess: false,
             user,
@@ -328,6 +391,8 @@ export async function POST(request: Request) {
 
           send('done', {
             sessionId: session.sessionId,
+            phaseTransition,
+            model,
             promptCache: isPromptCacheEnabled() ? {} : undefined,
           })
           controller.close()

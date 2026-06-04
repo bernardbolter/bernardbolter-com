@@ -137,6 +137,7 @@ export const ARTWORK_FIELD_CATALOG: CatalogField[] = [
   { field: 'ach.internalGroupTitle', category: 'series-specific', layer: 'artist', tier: 'studio' },
   { field: 'ach.overlay.overlayColors', category: 'series-specific', layer: 'agent', tier: 'studio' },
   { field: 'ach.overlay.overlayRects', category: 'series-specific', layer: 'agent', tier: 'studio' },
+  { field: 'ach.sourcePhotographs', category: 'series-specific', layer: 'artist', tier: 'studio' },
   { field: 'ach.sourcePhotograph.sourceImage', category: 'series-specific', layer: 'artist', tier: 'studio' },
   { field: 'ach.sourcePhotograph.sourceCreator', category: 'series-specific', layer: 'agent', tier: 'studio' },
   { field: 'ach.sourcePhotograph.sourceCreatorWikidataUri', category: 'series-specific', layer: 'agent', tier: 'studio' },

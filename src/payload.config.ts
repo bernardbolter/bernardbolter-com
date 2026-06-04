@@ -30,6 +30,7 @@ import { DCSCapturePhotos } from './collections/DCSCapturePhotos'
 import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
 import { Sessions } from './collections/Sessions'
+import { ArtOfficialSettings } from './globals/ArtOfficialSettings'
 import { PrintSetConfig } from './globals/PrintSetConfig'
 
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -111,7 +112,7 @@ export default buildConfig({
     SmallPrints,
     Sessions,
   ],
-  globals: [PrintSetConfig],
+  globals: [PrintSetConfig, ArtOfficialSettings],
   editor: lexicalEditor(),
   secret: payloadSecret,
   typescript: {

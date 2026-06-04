@@ -5,6 +5,8 @@ import { artworkAchBeforeChange, artworkAchValidateAr } from '@/hooks/artworkAch
 import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
+import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
+
 import { artworkPrimaryMediaFields } from './artworks/artworkPrimaryMediaFields'
 import { dcsTab } from './artworks/dcsTabFields'
 import { fieldNotesTab } from './artworks/fieldNotesTab'
@@ -163,6 +165,22 @@ export const Artworks: CollectionConfig = {
                     { label: 'Archived', value: 'archived' },
                   ],
                   admin: { width: '50%' },
+                },
+                {
+                  name: 'reasoningStatus',
+                  type: 'select',
+                  defaultValue: 'complete',
+                  options: [
+                    { label: 'Stub — quick upload only', value: 'stub' },
+                    { label: 'Partial — some sessions completed', value: 'partial' },
+                    { label: 'Complete — full Art/Official session done', value: 'complete' },
+                  ],
+                  admin: {
+                    width: '50%',
+                    readOnly: true,
+                    description:
+                      'Tracks how deeply this artwork has been catalogued through Art/Official. Set by Quick Upload and session commit — not edited manually.',
+                  },
                 },
                 {
                   name: 'recordOrigin',
@@ -337,20 +355,17 @@ export const Artworks: CollectionConfig = {
           fields: [
             {
               name: 'medium',
-              type: 'select',
+              type: 'text',
               required: true,
-              options: [
-                {
-                  label: 'Acrylic photo transfer on canvas',
-                  value: 'acrylic-photo-transfer-on-canvas',
+              index: true,
+              validate: validateArtworkMedium,
+              admin: {
+                description:
+                  'Medium slug (built-in or custom from Art/Official Quick Upload). Labels in Globals → Art/Official settings.',
+                components: {
+                  Field: '/components/admin/ArtworkMediumSelectField#ArtworkMediumSelectField',
                 },
-                { label: 'Acrylic on canvas', value: 'acrylic-on-canvas' },
-                { label: 'Mixed media on canvas', value: 'mixed-media-on-canvas' },
-                { label: 'Photo collage', value: 'photo-collage' },
-                { label: 'Video', value: 'video' },
-                { label: 'Digital', value: 'digital' },
-                { label: 'Other', value: 'other' },
-              ],
+              },
             },
             {
               name: 'mediumOther',
@@ -2051,9 +2066,36 @@ export const Artworks: CollectionConfig = {
 
                 // ── Group 3 — Source Photograph ───────────────
                 {
+                  name: 'sourcePhotographs',
+                  type: 'array',
+                  labels: { singular: 'Source photograph', plural: 'Source photographs' },
+                  admin: {
+                    description:
+                      'Historical photographs transferred to canvas. Add one or more; the first is mirrored to the primary source record below.',
+                  },
+                  fields: [
+                    {
+                      name: 'sourceImage',
+                      type: 'upload',
+                      relationTo: 'media',
+                      required: true,
+                    },
+                    {
+                      name: 'sourceTitle',
+                      type: 'text',
+                      localized: true,
+                      admin: { description: 'Optional title for this source image.' },
+                    },
+                  ],
+                },
+                {
                   name: 'sourcePhotograph',
                   type: 'group',
-                  label: 'Source photograph',
+                  label: 'Primary source photograph (metadata)',
+                  admin: {
+                    description:
+                      'Structured metadata for the main source image. Image file may also be listed in Source photographs above.',
+                  },
                   fields: [
                     {
                       name: 'sourceImage',

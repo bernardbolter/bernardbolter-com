@@ -16,10 +16,16 @@ import {
   collapseTimelineToLatest,
   upsertTimelineEntry,
 } from '@/lib/artOfficial/sessionTimeline'
+import {
+  defaultSessionPhase,
+  normalizeSessionPhase,
+  type SessionPhase,
+} from '@/lib/artOfficial/sessionPhase'
 import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
 import type { StagedMediaAttachment } from '@/lib/artOfficial/stagedMedia'
 
 import { AutoGrowTextarea } from './AutoGrowTextarea'
+import { DialoguePhaseSelect } from './DialoguePhaseSelect'
 import { type AgentActivity, ChatAgentStatus } from './ChatAgentStatus'
 import { ChatErrorBanner } from './ChatErrorBanner'
 import { ComposerUploadBar } from './ComposerUploadBar'
@@ -51,9 +57,23 @@ function parseDisplayMessages(session: ArtOfficialSession): ChatMessage[] {
   )
 }
 
+function initialDialoguePhase(session: ArtOfficialSession): SessionPhase {
+  const hasArtworkRecord =
+    typeof session.artworkRecord === 'number'
+      ? session.artworkRecord > 0
+      : typeof session.artworkRecord === 'object' && session.artworkRecord !== null
+  return normalizeSessionPhase(
+    session.currentPhase,
+    defaultSessionPhase(session.sessionType ?? '', hasArtworkRecord),
+  )
+}
+
 export function ChatPane({ initialSession }: { initialSession: ArtOfficialSession }) {
   const router = useRouter()
   const [session, setSession] = useState(initialSession)
+  const [currentPhase, setCurrentPhase] = useState<SessionPhase>(() =>
+    initialDialoguePhase(initialSession),
+  )
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     parseDisplayMessages(initialSession),
   )
@@ -110,6 +130,7 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             userMessage,
             imageMediaId: options?.imageMediaId,
             mediaUpload: options?.mediaUpload,
+            currentPhase,
           }),
         })
 
@@ -184,6 +205,24 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             }
             if (type === 'pre-upload-step' && typeof data.preUploadStep === 'number') {
               setSession((s) => ({ ...s, preUploadStep: data.preUploadStep as number }))
+            }
+            if (type === 'phase-transition' && typeof data.phase === 'string') {
+              setCurrentPhase((prev) => normalizeSessionPhase(data.phase, prev))
+              setSession((s) => ({
+                ...s,
+                currentPhase: normalizeSessionPhase(
+                  data.phase,
+                  normalizeSessionPhase(
+                    s.currentPhase,
+                    defaultSessionPhase(
+                      s.sessionType ?? '',
+                      typeof s.artworkRecord === 'number'
+                        ? s.artworkRecord > 0
+                        : typeof s.artworkRecord === 'object' && s.artworkRecord !== null,
+                    ),
+                  ),
+                ),
+              }))
             }
             if (type === 'image-analysis') {
               setAgentActivity('analyzing')
@@ -286,7 +325,7 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
         setSending(false)
       }
     },
-    [session.sessionId],
+    [session.sessionId, currentPhase],
   )
 
   async function send() {
@@ -329,6 +368,16 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
       <div className="art-official-chat__layout">
         <div className="art-official-chat__main">
           {refinementBanner}
+          {isArtworkSession ? (
+            <DialoguePhaseSelect
+              phase={currentPhase}
+              disabled={sending}
+              onPhaseChange={(phase) => {
+                setCurrentPhase(phase)
+                setSession((s) => ({ ...s, currentPhase: phase }))
+              }}
+            />
+          ) : null}
           <SessionGuidePanel
             sessionType={session.sessionType}
             hasMessages={hasMessages}

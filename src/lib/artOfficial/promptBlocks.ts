@@ -338,7 +338,7 @@ SEQUENCE — follow in this order
    - Propose ach.overlay.overlayRects (1–4 rectangles) covering painted field regions. Each entry: { color: "#RRGGBB", x: "8%", y: "12%", w: "30%", h: "20%" }. All positions as PERCENT STRINGS, never pixels or floats. Maximum 4 rects.
 
 2) ach.sourcePhotograph (Source Photograph)
-   - Ask the artist to attach the historical source photograph via the Media uploads panel (slot id \`ach-source\` → ach.sourcePhotograph.sourceImage). They can upload a new file or use **Choose from library** if it is already in Media. Share the Wikimedia Commons URL if known.
+   - Ask the artist to attach historical source photograph(s) via the Media uploads panel (slot id \`ach-source\` → ach.sourcePhotographs; metadata on ach.sourcePhotograph). They can upload new files or use **Choose from library** if already in Media. Share the Wikimedia Commons URL if known.
    - From the Commons URL or your knowledge, stage: ach.sourcePhotograph.sourceTitle, sourceCreator, approximateDate, sourceInstitution, sourceLicense (one of cc0 | cc-by | cc-by-sa | public-domain | other), sourceLicenseUrl, sourceWikimediaCommonsUrl.
    - Look up and stage Wikidata URIs (full https URLs, not Q-numbers alone): sourceCreatorWikidataUri, sourceInstitutionWikidataUri, sourceWikidataUri (if the photograph itself has an entry). Mark confidence "inferred" until the artist confirms.
    - Stage ach.sourcePhotograph.imageCaptureType as a relationship to the matching image-capture-technologies record (use its numeric id when you have it; otherwise propose the slug name in conversation and let the artist pick in the admin). Base proposal on the photograph's date and visual character: c.1840s–1850s → daguerreotype; c.1850s–1875 → ambrotype or wet-plate-collodion; c.1870s–1925 → dry-plate or glass-plate; aerial → early-aerial; satellite → satellite.
@@ -526,8 +526,8 @@ DEFERRABLE until reflective close-gate passes:
 ──────────────────────────────────────────────────
 - "Which Megacities type is this?" Present: composite country (standard country, 7–10 cities) | Skate City (named spots, not cities) | cultural composite (cross-border / diaspora / political body) | exhibition origin (commission, series status TBD). Stage megacities.series.seriesType.
 - If cultural or political selection: "What was the actual selection criterion?" Stage megacities.series.classificationNote — never invent.
-- "Is this a confirmed main-series entry, an exhibition artifact, or still undecided?" → megacities.series.seriesStatus
-- "Where is it in execution — full size complete, small scale done, or in progress?" → megacities.series.completionStatus
+- "Is this a confirmed main-series entry, an exhibition artifact, or still undecided?" → megacities.series.seriesStatus — MUST use exactly one of: full_series | exhibition_artifact | undecided (never main-series or prose labels)
+- "Where is it in execution — full size complete, small scale done, or in progress?" → megacities.series.completionStatus — MUST use exactly one of: completed_full_size | small_scale_done | in_progress (never full-size-complete)
 - "When did you research/select the cities or spots, and when did you finish the full-size file?" → megacities.series.yearResearched, yearCompleted
 - Optional: position in series order (Deutsche Stadt = 1, etc.) → megacities.series.compositeNumber
 
@@ -535,7 +535,7 @@ DEFERRABLE until reflective close-gate passes:
 2) megacities.composition — Cities / spots
 ──────────────────────────────────────────────────
 - "How many cities or spots are in this composite?" → megacities.composition.locationCount (number; should match locations array length)
-- "What was the selection rule — largest by population, capitals, cultural centres, political body members, geographic anchors, or mixed?" → megacities.composition.citySelectionCriteria
+- "What was the selection rule — largest by population, capitals, cultural centres, political body members, geographic anchors, or mixed?" → megacities.composition.citySelectionCriteria — MUST use: largest_by_population | capital_cities | cultural_centres | political_body_members | geographic_anchors | mixed
 - Draw out: "Why these places together — what story does the collage tell?" Stage megacities.composition.compositionRationale and megacities.composition.selectionNote (artist's words).
 - Build megacities.composition.locations as an array. For each city/spot confirm at minimum { name }. For country composites add country, region when known. For skate_city rows include spotType, spotName, spotLegacyNote instead of treating them as cities.
 - WIKIDATA (batch silently after cities are named — source "external-lookup", confidence "inferred"): for each city in a country composite (not skate spots unless the artist asks), call search_wikidata({ query: "Berlin Germany" }) then get_wikidata_entity({ entityId: "Q64" }). Merge into the locations[] row: wikidataUri, population, populationYear, coordinates.lat/lng when returned. Re-stage the full megacities.composition.locations array after each batch of lookups — never drop existing artist-entered notes. Do not spend dialogue turns reading population statistics aloud until reflective fields are covered.
@@ -580,6 +580,8 @@ Ask only when relevant: "Does this country composite follow a river or waterway 
 MEGACITIES TOOL EXAMPLES
 ──────────────────────────────────────────────────
 update_field({ targetCollection: "artworks", field: "megacities.series.seriesType", value: "composite_country", confidence: "confirmed", source: "conversation" })
+update_field({ targetCollection: "artworks", field: "megacities.series.seriesStatus", value: "full_series", confidence: "confirmed", source: "conversation" })
+update_field({ targetCollection: "artworks", field: "megacities.series.completionStatus", value: "completed_full_size", confidence: "confirmed", source: "conversation" })
 update_field({ targetCollection: "artworks", field: "megacities.composition.locations", value: [{ name: "Berlin", country: "Germany", wikidataUri: "https://www.wikidata.org/entity/Q64", population: 3664088, populationYear: "2021", coordinates: { lat: 52.52, lng: 13.405 } }], confidence: "inferred", source: "external-lookup" })
 update_field({ targetCollection: "artworks", field: "megacities.curatorial.artistStatement", value: "…", confidence: "confirmed", source: "conversation" })`
 }

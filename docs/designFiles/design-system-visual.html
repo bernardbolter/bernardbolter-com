@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bernard Bolter — Design System Visual Reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@300;400;500;600;700;800;900&family=Staatliches&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    /* Surfaces */
+    --surface-page: #FDFEFF;
+    --surface-nav: rgba(255,255,255,0.8);
+    --surface-nav-light: rgba(255,255,255,0.3);
+    --surface-title: #efefef;
+    --surface-side-light: #ddd;
+    --surface-side-dark: #ccc;
+    --surface-panel: #f4f4f4;
+    --surface-panel-heading: #ddd;
+    --surface-panel-odd: #eee;
+    --surface-panel-even: #dedede;
+    /* Text */
+    --text-dark: #393B3E;
+    --text-medium: #464646;
+    --text-light: #696969;
+    --text-primary: #444;
+    --text-secondary: #666;
+    --text-strong: #222;
+    --text-muted: #999;
+    /* UI Chrome */
+    --ui-icon: #666;
+    --ui-icon-light: #efefef;
+    --ui-face: #eee;
+    --ui-line: #999;
+    --ui-highlight: #b9b9b9;
+    --ui-timeline: #878585;
+    --ui-filter-text: #454565;
+    /* Status */
+    --status-success: #56ba5a;
+    --status-warning: #f0ad4e;
+    --status-error: #d9534f;
+    /* Series */
+    --series-ach: #9DC3C2;
+    --series-col: #99C2A2;
+    --series-dcs: #F6BD60;
+    --series-meg: #FC7753;
+    --series-war: #6D2E46;
+    --series-van: #7B8CDE;
+    --series-og: #395B0E;
+    --series-ins: #A27E8E;
+    --series-pho: #2D4654;
+    --series-vid: #996a3e;
+    --series-sold: #d4af37;
+    /* Title box dimensions — provisional, adjust after site is live */
+    --title-box-max-width-desktop:   180px;  /* top-right anchor */
+    --title-box-max-width-mobile:    180px;  /* bottom-left anchor */
+    --title-box-max-width-slideshow: 220px;  /* bottom-right anchor */
+    --title-box-max-width-dark:      180px;  /* dark slideshow */
+    /* Fonts */
+    --font-body: 'Barlow', sans-serif;
+    --font-heading: 'Barlow Condensed', sans-serif;
+    --font-title: 'Staatliches', sans-serif;
+  }
+
+  html { font-size: 16px; }
+  body {
+    background: var(--surface-page);
+    color: var(--text-dark);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── PAGE LAYOUT ── */
+  .page-header {
+    background: var(--text-dark);
+    color: #fff;
+    padding: 2rem 3rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    border-bottom: 1px solid #555;
+  }
+  .page-header h1 {
+    font-family: var(--font-title);
+    font-size: 2rem;
+    letter-spacing: 0.05em;
+    color: #fff;
+  }
+  .page-header p {
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    color: #999;
+    font-weight: 300;
+  }
+
+  /* Nav */
+  .ds-nav {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    background: #2a2c2e;
+    border-bottom: 1px solid #444;
+    padding: 0 3rem;
+    scrollbar-width: none;
+  }
+  .ds-nav::-webkit-scrollbar { display: none; }
+  .ds-nav a {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #888;
+    text-decoration: none;
+    padding: 0.625rem 1rem;
+    white-space: nowrap;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .ds-nav a:hover { color: #fff; border-bottom-color: var(--series-sold); }
+
+  .content { max-width: 1200px; margin: 0 auto; padding: 3rem; }
+
+  /* ── SECTION HEADERS ── */
+  .section {
+    margin-bottom: 4rem;
+    scroll-margin-top: 2rem;
+  }
+  .section-label {
+    font-family: var(--font-heading);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ui-highlight);
+    margin-bottom: 0.5rem;
+  }
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 0.375rem;
+    line-height: 1;
+  }
+  .section-desc {
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    color: var(--text-light);
+    margin-bottom: 2rem;
+    max-width: 60ch;
+  }
+  .section-divider {
+    width: 100%;
+    height: 1px;
+    background: var(--ui-line);
+    margin-bottom: 2rem;
+    opacity: 0.3;
+  }
+
+  /* ── TOKEN LABEL ── */
+  .token-name {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--ui-icon);
+    display: block;
+    margin-top: 0.375rem;
+  }
+  .token-hex {
+    font-family: monospace;
+    font-size: 0.6875rem;
+    color: var(--ui-highlight);
+    display: block;
+  }
+  .token-use {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 0.125rem;
+    max-width: 10rem;
+    line-height: 1.3;
+  }
+
+  /* ── COLORS ── */
+  .color-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .color-swatch {
+    display: flex;
+    flex-direction: column;
+  }
+  .swatch-block {
+    height: 3.5rem;
+    border-radius: 3px;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+  .swatch-block--tall { height: 5rem; }
+  .swatch-block--border { border: 1px solid #ccc; }
+
+  /* ── SERIES ROW ── */
+  .series-row {
+    display: flex;
+    gap: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    height: 3rem;
+  }
+  .series-cell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0.25rem 0.375rem;
+  }
+  .series-cell span {
+    font-family: monospace;
+    font-size: 0.5rem;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .series-cell--dark span { color: rgba(255,255,255,0.7); }
+
+  /* ── TYPOGRAPHY ── */
+  .type-row {
+    display: flex;
+    align-items: baseline;
+    gap: 2rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .type-row:last-child { border-bottom: none; }
+  .type-meta {
+    width: 14rem;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .type-meta-label {
+    font-family: monospace;
+    font-size: 0.6875rem;
+    color: var(--ui-highlight);
+  }
+  .type-meta-use {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+  }
+  .type-sample { flex: 1; line-height: 1.1; }
+
+  /* ── SPACING ── */
+  .spacing-row {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .spacing-bar-wrap {
+    width: 18rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .spacing-bar {
+    background: var(--series-ach);
+    height: 1.25rem;
+    border-radius: 2px;
+    opacity: 0.7;
+    flex-shrink: 0;
+  }
+  .spacing-labels {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .spacing-token { font-family: monospace; font-size: 0.75rem; color: var(--text-dark); }
+  .spacing-values { font-size: 0.6875rem; color: var(--text-secondary); font-family: var(--font-body); }
+
+  /* ── Z-INDEX ── */
+  .z-stack {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 0.25rem;
+    max-width: 36rem;
+  }
+  .z-layer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.625rem 1rem;
+    border-left: 3px solid;
+    border-radius: 0 3px 3px 0;
+  }
+  .z-layer-value {
+    font-family: monospace;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    width: 3rem;
+    flex-shrink: 0;
+  }
+  .z-layer-name {
+    font-family: monospace;
+    font-size: 0.8125rem;
+    width: 6rem;
+    flex-shrink: 0;
+  }
+  .z-layer-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+  }
+
+  /* ── BUTTON SVGs ── */
+  .button-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .button-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .button-item svg { width: 3.25rem; height: 3.125rem; }
+  .button-item span {
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    text-align: center;
+  }
+  .svgs-light-fill { fill: #efefef; }
+  .svgs-face-fill  { fill: #eee; }
+  .svgs-dark-fill  { fill: #666; }
+  .svgs-dark-stroke { stroke: #666; }
+  .svgs-light-stroke { stroke: #efefef; }
+
+  /* ── TITLE BOX ── */
+  .title-box-demos {
+    display: flex;
+    gap: 3rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .title-box-demo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  .title-box-demo-label {
+    font-size: 0.6875rem;
+    font-family: monospace;
+    color: var(--ui-highlight);
+  }
+
+  /* Title box construction */
+  .title-box-outer { display: flex; flex-direction: column; }
+  .title-box-border-top { display: flex; flex-direction: row; }
+  .title-box-border-middle { display: flex; flex-direction: row; }
+  .title-box-border-bottom { display: flex; flex-direction: row; }
+  .corner { width: 10px; height: 10px; flex-shrink: 0; }
+  .edge-top { height: 10px; flex-grow: 1; background: var(--surface-title); border-top: 1px solid var(--title-dark); }
+  .edge-top--show { border-bottom: 1px solid var(--title-dark); }
+  .edge-left { width: 10px; background: var(--surface-title); border-right: 1px solid var(--title-dark); }
+  .edge-right-shadow { width: 10px; background: var(--surface-side-light); }
+  .edge-right-show { border-left: 1px solid var(--title-dark); border-right: 1px solid var(--title-dark); }
+  .title-box-inside {
+    background: var(--surface-title);
+    padding: 0.625rem 0.75rem 0 0.375rem;
+    min-width: 8rem;
+    position: relative;
+  }
+  .title-box-inside--slideshow {
+    background: var(--text-secondary);
+    padding: 0.375rem 0.375rem 0.625rem 0.375rem;
+  }
+  .edge-bottom { height: 10px; flex-grow: 1; background: var(--surface-title); }
+  .edge-bottom-shadow { background: var(--surface-side-light); }
+  .edge-bottom--show { border-top: 1px solid var(--title-dark); }
+  .title-box-title {
+    font-family: var(--font-heading);
+    font-size: 1.375rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1;
+    padding-bottom: 0.25rem;
+  }
+  .title-box-title--light { color: var(--surface-title); }
+  .title-box-year {
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    line-height: 1;
+  }
+  .title-box-year--light { color: var(--artpanel-even); }
+  .title-box-medium {
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding-bottom: 0.25rem;
+  }
+  .title-box-medium--light { color: var(--artpanel-even); }
+  .series-dot {
+    width: 15px; height: 15px;
+    border-radius: 50%;
+    background: var(--series-ach);
+    position: absolute;
+    bottom: 0.25rem; right: 0.625rem;
+  }
+
+  /* ── STATUS COLORS ── */
+  .status-row { display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .status-chip {
+    padding: 0.375rem 0.875rem;
+    border-radius: 3px;
+    font-family: var(--font-heading);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── ARTWORK SIZE DEMO ── */
+  .size-demo-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+  .size-demo-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .size-demo-box {
+    background: var(--series-ach);
+    opacity: 0.5;
+  }
+  .size-demo-item span {
+    font-family: monospace;
+    font-size: 0.6875rem;
+    color: var(--text-secondary);
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  /* ── BREAKPOINTS ── */
+  .bp-row {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    max-width: 48rem;
+  }
+  .bp-cell {
+    flex: 1;
+    padding: 0.75rem 0.5rem;
+    border-right: 1px solid rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .bp-cell:last-child { border-right: none; }
+  .bp-name {
+    font-family: monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: block;
+    margin-bottom: 0.125rem;
+  }
+  .bp-value {
+    font-family: monospace;
+    font-size: 0.6875rem;
+    color: var(--ui-highlight);
+    display: block;
+  }
+</style>
+</head>
+<body>
+
+<header style="padding:2rem 3rem 1.5rem;border-bottom:1px solid #eee;display:flex;align-items:flex-start;justify-content:space-between;gap:2rem;background:var(--surface-page);">
+  <div>
+    <h1 style="font-family:var(--font-title);font-size:2.5rem;color:var(--text-dark);line-height:1;letter-spacing:0.03em;">BERNARD BOLTER</h1>
+    <p style="font-family:var(--font-heading);font-size:0.875rem;font-weight:300;color:var(--text-secondary);margin-top:0.25rem;letter-spacing:0.05em;">Design System Visual Reference</p>
+  </div>
+  <!-- Nav — tight vertical column with series dots -->
+  <nav style="display:flex;flex-direction:column;gap:0;align-items:flex-start;padding-top:0.125rem;">
+    <a href="#colors"       style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-ach);flex-shrink:0;"></div>Colors</a>
+    <a href="#series"       style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-dcs);flex-shrink:0;"></div>Series</a>
+    <a href="#typography"   style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-meg);flex-shrink:0;"></div>Typography</a>
+    <a href="#spacing"      style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-war);flex-shrink:0;"></div>Spacing</a>
+    <a href="#zindex"       style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-van);flex-shrink:0;"></div>Z-Index</a>
+    <a href="#breakpoints"  style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-pho);flex-shrink:0;"></div>Breakpoints</a>
+    <a href="#titlebox"     style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-og);flex-shrink:0;"></div>Title Box</a>
+    <a href="#buttons"      style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-ins);flex-shrink:0;"></div>Buttons</a>
+    <a href="#responsive" style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-col);flex-shrink:0;"></div>Responsive</a>
+    <a href="#artwork-sizing" style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-vid);flex-shrink:0;"></div>Artwork Sizing</a>
+    <a href="#svgs" style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-war);flex-shrink:0;"></div>SVGs</a>
+    <a href="#status"       style="display:flex;align-items:center;gap:0.375rem;text-decoration:none;padding:0.125rem 0;font-family:var(--font-heading);font-size:0.75rem;font-weight:500;color:var(--text-secondary);letter-spacing:0.04em;"><div style="width:7px;height:7px;border-radius:50%;background:var(--series-sold);flex-shrink:0;"></div>Status</a>
+  </nav>
+</header>
+
+<div class="content">
+
+  <!-- ══ COLORS ══ -->
+  <section class="section" id="colors">
+    <p class="section-label">Section 2</p>
+    <h2 class="section-title">Color Tokens</h2>
+
+    <!-- Explanation banner -->
+    <div style="background:var(--surface-panel);border-left:3px solid var(--series-dcs);padding:1rem 1.25rem;border-radius:0 3px 3px 0;margin-bottom:2rem;max-width:52rem;">
+      <p style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-primary);margin-bottom:0.375rem;">Token naming — new site vs old Sass</p>
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-secondary);line-height:1.6;">The new site uses a structured token system: <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">surface-*</code> · <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">text-*</code> · <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">ui-*</code> · <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">series-*</code> · <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">status-*</code>. <strong>When designing or building new features, always use the new token name</strong> shown in dark below. The old Sass variable is shown in grey underneath — use it only when porting existing components. Once the site is fully ported, the old names will be removed from this guide.</p>
+    </div>
+
+    <!-- Swatch legend -->
+    <div style="display:flex;gap:2rem;margin-bottom:1.5rem;align-items:center;">
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div style="width:2rem;height:1.25rem;background:#444;border-radius:2px;"></div>
+        <span style="font-size:0.6875rem;font-family:var(--font-body);color:var(--text-secondary);">New token — use this</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <div style="width:2rem;height:1.25rem;background:#bbb;border-radius:2px;"></div>
+        <span style="font-size:0.6875rem;font-family:var(--font-body);color:var(--text-secondary);">Old Sass name — porting reference only</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Surfaces</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-page)"></div>
+        <span class="token-name">$surface-page</span>
+        <span class="token-hex">#FDFEFF</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $background</span>
+        <span class="token-use">Page background</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-nav)"></div>
+        <span class="token-name">$surface-nav</span>
+        <span class="token-hex">rgba(255,255,255,.8)</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $nav-background</span>
+        <span class="token-use">Info panel, name container</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-title)"></div>
+        <span class="token-name">$surface-title</span>
+        <span class="token-hex">#efefef</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $title-light</span>
+        <span class="token-use">Title box front face</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-side-light)"></div>
+        <span class="token-name">$surface-side-light</span>
+        <span class="token-hex">#ddd</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $title-shadow</span>
+        <span class="token-use">Title box lighter side face</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-side-dark)"></div>
+        <span class="token-name">$surface-side-dark</span>
+        <span class="token-hex">#ccc</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">new token</span>
+        <span class="token-use">Title box darker side face</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-panel)"></div>
+        <span class="token-name">$surface-panel</span>
+        <span class="token-hex">#f4f4f4</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $art-image-background</span>
+        <span class="token-use">Artwork detail info section</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-panel-heading)"></div>
+        <span class="token-name">$surface-panel-heading</span>
+        <span class="token-hex">#ddd</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $art-image-heading</span>
+        <span class="token-use">Panel section heading bars</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-panel-odd)"></div>
+        <span class="token-name">$surface-panel-odd</span>
+        <span class="token-hex">#eee</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $art-image-odd</span>
+        <span class="token-use">Alternating row odd</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--surface-panel-even)"></div>
+        <span class="token-name">$surface-panel-even</span>
+        <span class="token-hex">#dedede</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $art-image-even</span>
+        <span class="token-use">Alternating row even</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;margin-top:1.5rem;">Text</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--text-dark)"></div>
+        <span class="token-name">$text-dark</span>
+        <span class="token-hex">#393B3E</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $dark</span>
+        <span class="token-use">Strongest text, info links</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--text-medium)"></div>
+        <span class="token-name">$text-medium</span>
+        <span class="token-hex">#464646</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $medium</span>
+        <span class="token-use">Mid-weight text</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--text-light)"></div>
+        <span class="token-name">$text-light</span>
+        <span class="token-hex">#696969</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $light</span>
+        <span class="token-use">Tertiary text</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--text-primary)"></div>
+        <span class="token-name">$text-primary</span>
+        <span class="token-hex">#444</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $title-text-dark</span>
+        <span class="token-use">Primary labels, artwork title</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--text-secondary)"></div>
+        <span class="token-name">$text-secondary</span>
+        <span class="token-hex">#666</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $title-text</span>
+        <span class="token-use">Secondary labels, year, medium</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--text-strong)"></div>
+        <span class="token-name">$text-strong</span>
+        <span class="token-hex">#222</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $grid-text</span>
+        <span class="token-use">Grid artwork titles</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--text-muted)"></div>
+        <span class="token-name">$text-muted</span>
+        <span class="token-hex">#999</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $grid-text-light</span>
+        <span class="token-use">Muted labels, secondary grid</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;margin-top:1.5rem;">UI Chrome</h3>
+    <div class="color-grid">
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--ui-icon)"></div>
+        <span class="token-name">$ui-icon</span>
+        <span class="token-hex">#666</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $svg-dark</span>
+        <span class="token-use">Icon fills, button icons</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--ui-icon-light)"></div>
+        <span class="token-name">$ui-icon-light</span>
+        <span class="token-hex">#efefef</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $svg-light</span>
+        <span class="token-use">Icons on dark backgrounds</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block swatch-block--border" style="background:var(--ui-face)"></div>
+        <span class="token-name">$ui-face</span>
+        <span class="token-hex">#eee</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $svg-face</span>
+        <span class="token-use">Button front face fill</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--ui-line)"></div>
+        <span class="token-name">$ui-line</span>
+        <span class="token-hex">#999</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $art-image-line</span>
+        <span class="token-use">Dividers, seam lines</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--ui-highlight)"></div>
+        <span class="token-name">$ui-highlight</span>
+        <span class="token-hex">#b9b9b9</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $nav-highlight</span>
+        <span class="token-use">Nav link hover states</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--ui-timeline)"></div>
+        <span class="token-name">$ui-timeline</span>
+        <span class="token-hex">#878585</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $timeline</span>
+        <span class="token-use">Timeline line, ticks, switcher</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--ui-filter-text)"></div>
+        <span class="token-name">$ui-filter-text</span>
+        <span class="token-hex">#454565</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $filter-text</span>
+        <span class="token-use">Filter/sort nav labels</span>
+      </div>
+    </div>
+
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;margin-top:1.5rem;">Status</h3>
+    <div class="color-grid" style="max-width:28rem;">
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--status-success)"></div>
+        <span class="token-name">$status-success</span>
+        <span class="token-hex">#56ba5a</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $confirmation-color</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--status-warning)"></div>
+        <span class="token-name">$status-warning</span>
+        <span class="token-hex">#f0ad4e</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $warning-color</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--status-error)"></div>
+        <span class="token-name">$status-error</span>
+        <span class="token-hex">#d9534f</span>
+        <span style="font-family:monospace;font-size:0.6875rem;color:#bbb;display:block;">was: $error-color</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ SERIES COLORS ══ -->
+  <section class="section" id="series">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 2</p>
+    <h2 class="section-title">Series Colors</h2>
+    <p class="section-desc">Always use getSeriesColor(slug) — never hardcode these. Used for image placeholder backgrounds, filter dots, and the series indicator circle on the title box.</p>
+
+    <div style="display:flex;flex-direction:column;gap:0.5rem;max-width:36rem;">
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-ach);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#9DC3C2</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-ach</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">a-colorful-history</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-col);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#99C2A2</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-col</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">art-collision</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-dcs);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#F6BD60</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-dcs</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">digital-city-series</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-meg);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#FC7753</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-meg</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">megacities</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-war);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#6D2E46</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-war</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">breaking-down-art</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-van);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#7B8CDE</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-van</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">vanishing-landscapes</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-og);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#395B0E</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-og</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">og-oil-paintings</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-ins);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#A27E8E</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-ins</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">installations</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-pho);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#2D4654</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-pho</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">photography</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-vid);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#996a3e</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-vid</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">videos</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div style="width:1.5rem;height:1.5rem;border-radius:50%;background:var(--series-sold);flex-shrink:0;"></div>
+        <div style="width:3.5rem;font-family:monospace;font-size:0.75rem;color:var(--text-secondary);">#d4af37</div>
+        <div style="font-family:monospace;font-size:0.75rem;color:var(--text-primary);">$series-sold</div>
+        <div style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">sold</div>
+      </div>
+
+    </div>
+    <p style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);margin-top:1rem;">These also map to blur placeholder data URLs in blurURLs.ts — shown while artwork images load.</p>
+  </section>
+
+    <!-- ══ TYPOGRAPHY ══ -->
+  <section class="section" id="typography">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 3</p>
+    <h2 class="section-title">Typography</h2>
+    <p class="section-desc">Three fonts. Barlow Condensed for almost all headings and UI. Barlow for body prose only. Staatliches for large display text.</p>
+
+    <!-- Font families -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-bottom:2.5rem;">
+      <div style="padding:1.5rem;background:var(--surface-panel);border-radius:3px;">
+        <p style="font-size:0.6875rem;font-family:monospace;color:var(--ui-highlight);margin-bottom:0.5rem;">--font-body · Barlow</p>
+        <p style="font-family:'Barlow',sans-serif;font-size:1.25rem;color:var(--text-dark);line-height:1.4;">The quick brown fox jumps over the lazy dog. Mixed media and digital art.</p>
+        <p style="font-size:0.6875rem;color:var(--text-secondary);margin-top:0.5rem;font-family:var(--font-body);">Weights: 300 400 500 600 700 — Body prose only</p>
+      </div>
+      <div style="padding:1.5rem;background:var(--surface-panel);border-radius:3px;">
+        <p style="font-size:0.6875rem;font-family:monospace;color:var(--ui-highlight);margin-bottom:0.5rem;">--font-heading · Barlow Condensed</p>
+        <p style="font-family:'Barlow Condensed',sans-serif;font-size:1.25rem;font-weight:600;color:var(--text-dark);line-height:1.2;">The quick brown fox jumps over the lazy dog. Mixed media and digital art.</p>
+        <p style="font-size:0.6875rem;color:var(--text-secondary);margin-top:0.5rem;font-family:var(--font-body);">Weights: 300 400 500 600 700 800 900 — All headings &amp; UI labels</p>
+      </div>
+      <div style="padding:1.5rem;background:var(--surface-panel);border-radius:3px;">
+        <p style="font-size:0.6875rem;font-family:monospace;color:var(--ui-highlight);margin-bottom:0.5rem;">--font-title · Staatliches</p>
+        <p style="font-family:'Staatliches',sans-serif;font-size:2rem;color:var(--text-dark);line-height:1;letter-spacing:0.03em;">Bernard Bolter</p>
+        <p style="font-size:0.6875rem;color:var(--text-secondary);margin-top:0.5rem;font-family:var(--font-body);">Weight: 400 only — Artist name, page overlays, section labels</p>
+      </div>
+    </div>
+
+    <!-- Type scale -->
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">0.6875rem · 11px</span><span class="type-meta-use">Converted sizes, fine print</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:0.6875rem;font-weight:200;color:var(--text-secondary);">30.5cm × 22.8cm · 12" × 9"</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">0.75rem · 12px · w300</span><span class="type-meta-use">Grid titles, secondary labels</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:0.75rem;font-weight:300;color:var(--grid-text);">City at Dusk, 2019</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">0.875rem · 14px · w400</span><span class="type-meta-use">Body prose (mobile), UI labels</span></div>
+      <div class="type-sample" style="font-family:var(--font-body);font-size:0.875rem;font-weight:400;color:var(--text-dark);">Bernard Bolter is a San Francisco born, Berlin based mixed media and digital artist working across painting, photography and digital media.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">0.875rem · 14px · w500</span><span class="type-meta-use">Year, medium, size in title box</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:0.875rem;font-weight:500;color:var(--text-secondary);">2023 · Oil on canvas · 80cm × 60cm</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">1rem · 16px</span><span class="type-meta-use">Standard UI text</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:1rem;font-weight:500;color:var(--text-dark);">About the Artwork</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">1.125rem · 18px · w400</span><span class="type-meta-use">Body prose (desktop)</span></div>
+      <div class="type-sample" style="font-family:var(--font-body);font-size:1.125rem;font-weight:400;color:var(--text-dark);">Working across painting, photography and digital media, his practice explores the intersection of memory and place.</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">1.1875rem · 19px · w700</span><span class="type-meta-use">Info nav links</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:1.1875rem;font-weight:700;color:var(--text-dark);">Bio · CV · Statement · Contact</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">1.375rem · 22px · w700</span><span class="type-meta-use">Artwork title (mobile)</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:1.375rem;font-weight:700;color:var(--text-primary);letter-spacing:0.015em;">Waiting for the City</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">1.5rem · 24px · w700</span><span class="type-meta-use">Artwork title (desktop)</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:1.5rem;font-weight:700;color:var(--text-primary);letter-spacing:0.015em;">Waiting for the City</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">1.8125rem · 29px</span><span class="type-meta-use">Artist name (Info panel)</span></div>
+      <div class="type-sample" style="font-family:var(--font-title);font-size:1.8125rem;color:var(--text-primary);letter-spacing:0.03em;">BERNARD BOLTER</div>
+    </div>
+    <div class="type-row">
+      <div class="type-meta"><span class="type-meta-label">3.75rem · 60px · w900</span><span class="type-meta-use">Page overlay title (mobile)</span></div>
+      <div class="type-sample" style="font-family:var(--font-heading);font-size:3.75rem;font-weight:900;color:#E2E2E2;line-height:1;letter-spacing:0.03em;text-transform:uppercase;">BIO</div>
+    </div>
+  </section>
+
+  <!-- ══ SPACING ══ -->
+  <section class="section" id="spacing">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 4</p>
+    <h2 class="section-title">Spacing Scale</h2>
+    <p class="section-desc">rem for all spacing. px only for 1–2px borders, SVG strokes, and grid gap integers. 1rem = 16px.</p>
+
+    <div style="max-width:40rem;">
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:0.25rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-1 · 0.25rem</span><span class="spacing-values">4px — Micro gaps, icon padding</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:0.375rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-2 · 0.375rem</span><span class="spacing-values">6px — Tight UI gaps, small insets</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:0.5rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-3 · 0.5rem</span><span class="spacing-values">8px — Inner padding (small)</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:0.625rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-4 · 0.625rem</span><span class="spacing-values">10px — Nav padding, dot offset</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:0.75rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-5 · 0.75rem</span><span class="spacing-values">12px — Component padding (compact)</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:0.875rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-6 · 0.875rem</span><span class="spacing-values">14px — Standard gap</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:1rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-7 · 1rem</span><span class="spacing-values">16px — Base unit, default padding</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:1.25rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-8 · 1.25rem</span><span class="spacing-values">20px — Section padding, card insets</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:1.5rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-9 · 1.5rem</span><span class="spacing-values">24px — Generous padding</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:1.875rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-10 · 1.875rem</span><span class="spacing-values">30px — Prose spacing, section gaps</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:2rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-11 · 2rem</span><span class="spacing-values">32px — Large gaps</span></div>
+      </div>
+      <div class="spacing-row">
+        <div class="spacing-bar-wrap"><div class="spacing-bar" style="width:3rem;"></div></div>
+        <div class="spacing-labels"><span class="spacing-token">space-12 · 3rem</span><span class="spacing-values">48px — Page-level vertical rhythm</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Z-INDEX ══ -->
+  <section class="section" id="zindex">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 4 — Z-Index</p>
+    <h2 class="section-title">Z-Index Layers</h2>
+    <p class="section-desc">Seven named layers. Never use arbitrary values. Pick a layer by purpose, then use +1 for stacking within the same group.</p>
+
+    <div class="z-stack">
+      <div class="z-layer" style="background:rgba(57,59,62,0.05);border-left-color:#393B3E;">
+        <span class="z-layer-value" style="color:#393B3E;">0</span>
+        <span class="z-layer-name" style="color:#393B3E;">z-base</span>
+        <span class="z-layer-desc">Normal document flow</span>
+      </div>
+      <div class="z-layer" style="background:rgba(157,195,194,0.12);border-left-color:var(--series-ach);">
+        <span class="z-layer-value" style="color:#5a9695;">1000</span>
+        <span class="z-layer-name" style="color:#5a9695;">z-artwork</span>
+        <span class="z-layer-desc">Artwork images, timeline content</span>
+      </div>
+      <div class="z-layer" style="background:rgba(107,136,222,0.1);border-left-color:var(--series-van);">
+        <span class="z-layer-value" style="color:var(--series-van);">2000</span>
+        <span class="z-layer-name" style="color:var(--series-van);">z-chrome</span>
+        <span class="z-layer-desc">Info panel, name container, info content</span>
+      </div>
+      <div class="z-layer" style="background:rgba(246,189,96,0.12);border-left-color:var(--series-dcs);">
+        <span class="z-layer-value" style="color:#b88a30;">3000</span>
+        <span class="z-layer-name" style="color:#b88a30;">z-nav</span>
+        <span class="z-layer-desc">Title box, magnify button, artwork image controls</span>
+      </div>
+      <div class="z-layer" style="background:rgba(252,119,83,0.1);border-left-color:var(--series-meg);">
+        <span class="z-layer-value" style="color:#c05030;">4000</span>
+        <span class="z-layer-name" style="color:#c05030;">z-overlay</span>
+        <span class="z-layer-desc">Slideshow, filter drawer, search drawer, switcher</span>
+      </div>
+      <div class="z-layer" style="background:rgba(109,46,70,0.1);border-left-color:var(--series-war);">
+        <span class="z-layer-value" style="color:var(--series-war);">5000</span>
+        <span class="z-layer-name" style="color:var(--series-war);">z-ui-top</span>
+        <span class="z-layer-desc">Close buttons, nav buttons</span>
+      </div>
+      <div class="z-layer" style="background:rgba(45,70,84,0.1);border-left-color:var(--series-pho);">
+        <span class="z-layer-value" style="color:var(--series-pho);">9000</span>
+        <span class="z-layer-name" style="color:var(--series-pho);">z-modal</span>
+        <span class="z-layer-desc">Lightbox, Klaro cookie modal</span>
+      </div>
+    </div>
+    <p style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);margin-top:1rem;">Note: Artwork title in slideshow mode sits at z-modal - 1 (8999) — above overlay but below true modals.</p>
+  </section>
+
+  <!-- ══ BREAKPOINTS ══ -->
+  <section class="section" id="breakpoints">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 4 — Breakpoints</p>
+    <h2 class="section-title">Breakpoints</h2>
+    <p class="section-desc">Four custom breakpoints. Never use Tailwind defaults (sm, md, lg). Always use s, m, l, xl.</p>
+    <div class="bp-row">
+      <div class="bp-cell" style="background:rgba(157,195,194,0.1);">
+        <span class="bp-name">s:</span><span class="bp-value">550px</span>
+      </div>
+      <div class="bp-cell" style="background:rgba(246,189,96,0.1);">
+        <span class="bp-name">m:</span><span class="bp-value">768px</span>
+      </div>
+      <div class="bp-cell" style="background:rgba(252,119,83,0.1);">
+        <span class="bp-name">l:</span><span class="bp-value">979px</span>
+      </div>
+      <div class="bp-cell" style="background:rgba(109,46,70,0.1);">
+        <span class="bp-name">xl:</span><span class="bp-value">1200px</span>
+      </div>
+    </div>
+    <p style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">Grid switches: 1 col (default) → 2 col (s) → 3 col (m) → 4 col (l) → 5 col (xl). Max grid width: 1500px.</p>
+  </section>
+
+  <!-- ══ RESPONSIVE ══ -->
+  <section class="section" id="responsive">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 5</p>
+    <h2 class="section-title">Responsive Behaviour</h2>
+    <p class="section-desc">Several components make architectural shifts at 768px — not just visual tweaks. Agents must understand these structural changes before writing any layout code.</p>
+
+    <!-- The big 768px shift -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">The major shift at 768px</h3>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:48rem;margin-bottom:2rem;">
+
+      <div style="background:var(--surface-panel);padding:1.25rem;border-radius:3px;">
+        <p style="font-family:var(--font-heading);font-size:0.75rem;font-weight:700;color:var(--series-ach);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;">≤ 768px — Mobile</p>
+        <div style="display:flex;flex-direction:column;gap:0.375rem;">
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Timeline: <strong>vertical scroll</strong></p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Container: <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">vw - 50px</code> square</p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Title box: <strong>--mobile</strong> mode</p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Side width: <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">0</code></p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Arrow controls: <strong>hidden</strong></p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Nav top: <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">4px</code></p>
+        </div>
+      </div>
+
+      <div style="background:var(--surface-panel);padding:1.25rem;border-radius:3px;">
+        <p style="font-family:var(--font-heading);font-size:0.75rem;font-weight:700;color:var(--series-van);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem;">> 768px — Desktop</p>
+        <div style="display:flex;flex-direction:column;gap:0.375rem;">
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Timeline: <strong>horizontal scroll</strong></p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Container: <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">vh - 125px</code> square</p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Title box: <strong>--desktop</strong> mode</p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Side width: <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">(vw - (vh - 125)) / 2</code></p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Arrow controls: <strong>visible</strong></p>
+          <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);">Nav top: <code style="font-size:0.75rem;background:#e4e4e4;padding:0 3px;border-radius:2px;">130px</code> (timeline)</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Grid columns -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Grid column progression</h3>
+    <div style="display:flex;gap:0;max-width:48rem;border:1px solid rgba(0,0,0,0.08);border-radius:3px;overflow:hidden;margin-bottom:2rem;">
+      <div style="flex:1;padding:0.875rem 0.625rem;border-right:1px solid rgba(0,0,0,0.06);text-align:center;background:rgba(157,195,194,0.08);">
+        <div style="font-family:monospace;font-size:0.6875rem;color:var(--text-secondary);margin-bottom:0.25rem;">default</div>
+        <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:var(--text-dark);">1</div>
+        <div style="font-size:0.625rem;color:var(--text-secondary);font-family:monospace;">gap 5px</div>
+      </div>
+      <div style="flex:1;padding:0.875rem 0.625rem;border-right:1px solid rgba(0,0,0,0.06);text-align:center;background:rgba(246,189,96,0.08);">
+        <div style="font-family:monospace;font-size:0.6875rem;color:var(--text-secondary);margin-bottom:0.25rem;">s: 550px</div>
+        <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:var(--text-dark);">2</div>
+        <div style="font-size:0.625rem;color:var(--text-secondary);font-family:monospace;">gap 7px</div>
+      </div>
+      <div style="flex:1;padding:0.875rem 0.625rem;border-right:1px solid rgba(0,0,0,0.06);text-align:center;background:rgba(252,119,83,0.08);">
+        <div style="font-family:monospace;font-size:0.6875rem;color:var(--text-secondary);margin-bottom:0.25rem;">m: 768px</div>
+        <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:var(--text-dark);">3</div>
+        <div style="font-size:0.625rem;color:var(--text-secondary);font-family:monospace;">gap 9px</div>
+      </div>
+      <div style="flex:1;padding:0.875rem 0.625rem;border-right:1px solid rgba(0,0,0,0.06);text-align:center;background:rgba(109,46,70,0.08);">
+        <div style="font-family:monospace;font-size:0.6875rem;color:var(--text-secondary);margin-bottom:0.25rem;">l: 979px</div>
+        <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:var(--text-dark);">4</div>
+        <div style="font-size:0.625rem;color:var(--text-secondary);font-family:monospace;">gap 11px</div>
+      </div>
+      <div style="flex:1;padding:0.875rem 0.625rem;text-align:center;background:rgba(45,70,84,0.08);">
+        <div style="font-family:monospace;font-size:0.6875rem;color:var(--text-secondary);margin-bottom:0.25rem;">xl: 1200px</div>
+        <div style="font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:var(--text-dark);">5</div>
+        <div style="font-size:0.625rem;color:var(--text-secondary);font-family:monospace;">gap 13px</div>
+      </div>
+    </div>
+
+    <!-- Close button positions -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Close button top position per page</h3>
+    <div style="max-width:40rem;margin-bottom:2rem;">
+      <div style="display:grid;grid-template-columns:6rem repeat(4,1fr);gap:0;border:1px solid rgba(0,0,0,0.08);border-radius:3px;overflow:hidden;font-size:0.75rem;font-family:monospace;">
+        <div style="padding:0.5rem 0.75rem;background:var(--surface-panel);font-family:var(--font-heading);font-size:0.6875rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;">Page</div>
+        <div style="padding:0.5rem 0.75rem;background:var(--surface-panel);font-family:var(--font-heading);font-size:0.6875rem;font-weight:700;color:var(--text-secondary);text-align:center;">default</div>
+        <div style="padding:0.5rem 0.75rem;background:var(--surface-panel);font-family:var(--font-heading);font-size:0.6875rem;font-weight:700;color:var(--text-secondary);text-align:center;">≥550px</div>
+        <div style="padding:0.5rem 0.75rem;background:var(--surface-panel);font-family:var(--font-heading);font-size:0.6875rem;font-weight:700;color:var(--text-secondary);text-align:center;">≥768px</div>
+        <div style="padding:0.5rem 0.75rem;background:var(--surface-panel);font-family:var(--font-heading);font-size:0.6875rem;font-weight:700;color:var(--text-secondary);text-align:center;">≥979px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-primary);">CV</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">49px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">65px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">88px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">105px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-primary);background:var(--surface-panel-odd);">Contact</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">50px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">58px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">89px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">100px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-primary);">Statement</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">45px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">62px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">79px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;">108px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-primary);background:var(--surface-panel-odd);">Bio</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">80px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">103px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">130px</div>
+        <div style="padding:0.5rem 0.75rem;border-top:1px solid rgba(0,0,0,0.06);color:var(--text-secondary);text-align:center;background:var(--surface-panel-odd);">135px</div>
+      </div>
+    </div>
+
+    <!-- Do nots -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;">Do not</h3>
+    <div style="display:flex;flex-direction:column;gap:0.375rem;max-width:48rem;">
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);"><span style="color:var(--status-error);font-weight:700;">✕</span> Use <code style="font-size:0.75rem;background:#f0f0f0;padding:0 3px;border-radius:2px;">overflow: hidden</code> on scroll containers — all use <code style="font-size:0.75rem;background:#f0f0f0;padding:0 3px;border-radius:2px;">overflow: scroll</code> with hidden scrollbars</p>
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);"><span style="color:var(--status-error);font-weight:700;">✕</span> Show the grid or switcher below 550px — timeline only at that width</p>
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);"><span style="color:var(--status-error);font-weight:700;">✕</span> Use default Tailwind breakpoints <code style="font-size:0.75rem;background:#f0f0f0;padding:0 3px;border-radius:2px;">sm: md: lg:</code> — only <code style="font-size:0.75rem;background:#f0f0f0;padding:0 3px;border-radius:2px;">s: m: l: xl:</code></p>
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);"><span style="color:var(--status-error);font-weight:700;">✕</span> Hardcode artwork container dimensions — calculate from viewport, store in provider state</p>
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);"><span style="color:var(--status-error);font-weight:700;">✕</span> Apply the same title box mode at all widths — must switch at 768px</p>
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);"><span style="color:var(--status-error);font-weight:700;">✕</span> Show desktop arrow controls on mobile — only render above 768px</p>
+    </div>
+
+  </section>
+
+  <!-- ══ ARTWORK SIZING ══ -->
+  <section class="section" id="artwork-sizing">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 6</p>
+    <h2 class="section-title">Artwork Sizing — Size Tiers</h2>
+    <p class="section-desc">Artworks display at sizes that represent their real-world physical scale. Always use useArtworkDimensions hook. Never normalize to uniform grid cells. Never use object-cover.</p>
+
+    <div style="margin-bottom:1.5rem;">
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-secondary);margin-bottom:1rem;">Visual impression of size tiers — landscape orientation, same container. The larger the real artwork, the larger it appears on screen.</p>
+      <div class="size-demo-row">
+        <div class="size-demo-item">
+          <div class="size-demo-box" style="width:calc(200px * 0.65);height:calc(130px * 0.65);"></div>
+          <span>sm · factor 0.65<br/>small works</span>
+        </div>
+        <div class="size-demo-item">
+          <div class="size-demo-box" style="width:calc(200px * 0.75);height:calc(130px * 0.75);"></div>
+          <span>md · factor 0.75<br/>medium</span>
+        </div>
+        <div class="size-demo-item">
+          <div class="size-demo-box" style="width:calc(200px * 0.85);height:calc(130px * 0.85);"></div>
+          <span>lg · factor 0.85<br/>large (default)</span>
+        </div>
+        <div class="size-demo-item">
+          <div class="size-demo-box" style="width:calc(200px * 0.95);height:calc(130px * 0.95);"></div>
+          <span>xl · factor 0.95<br/>large-scale works</span>
+        </div>
+      </div>
+      <p style="font-size:0.75rem;font-family:var(--font-body);color:var(--text-secondary);margin-top:0.75rem;">Square artworks use reduced factors (xl 0.90, lg 0.80, md 0.70, sm 0.60). Portrait artworks are height-constrained. Landscape artworks are width-constrained.</p>
+    </div>
+  </section>
+
+  <!-- ══ TITLE BOX ══ -->
+  <section class="section" id="titlebox">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 7</p>
+    <h2 class="section-title">Artwork Title Box — 3D Illusion</h2>
+    <p class="section-desc">No border strokes — 3D effect comes entirely from colour contrast between three surfaces. All values are CSS variables. Two visible side faces per mode; the other two sides are open (face colour blends to nothing).</p>
+
+    <div style="display:flex;gap:0.75rem;align-items:center;margin-bottom:2rem;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">
+        <div style="width:2rem;height:1rem;background:#efefef;border:1px solid rgba(0,0,0,0.08);border-radius:2px;"></div>title-face #efefef
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">
+        <div style="width:2rem;height:1rem;background:#ddd;border-radius:2px;"></div>title-side-light #ddd
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);">
+        <div style="width:2rem;height:1rem;background:#ccc;border-radius:2px;"></div>title-side-dark #ccc
+      </div>
+    </div>
+
+    <div class="title-box-demos">
+
+      <!-- A: top-right anchor -->
+      <div class="title-box-demo">
+        <span class="title-box-demo-label">Desktop — top-right anchor</span>
+        <div style="display:inline-flex;flex-direction:column;">
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,10 10,10 10,0" fill="#ddd"/></svg>
+            <div style="height:10px;flex-grow:1;background:#ddd;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ddd"/><polygon points="10,0 10,10 0,10" fill="#ccc"/></svg>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="background:#efefef;padding:14px 6px 0 14px;min-width:110px;max-width:var(--title-box-max-width-desktop);display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-heading);font-size:1.25rem;font-weight:800;color:#444;line-height:1;margin-bottom:3px;">Brandenburger Tor . 1899</div>
+              <div style="font-family:var(--font-heading);font-size:0.8125rem;font-weight:500;color:#666;line-height:1.3;">2018 · Acrylic transfer and<br>acrylic on canvas</div>
+              <div style="display:flex;justify-content:flex-end;"><div style="width:8px;height:8px;border-radius:50%;background:var(--series-ach);"></div></div>
+            </div>
+            <div style="width:10px;background:#ccc;"></div>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="height:10px;flex-grow:1;background:#efefef;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ccc"/></svg>
+          </div>
+        </div>
+        <p style="font-size:0.6875rem;color:var(--text-secondary);font-family:var(--font-body);max-width:12rem;line-height:1.5;margin-top:0.5rem;">Top + right sides visible. Open corners blend into face colour.</p>
+      </div>
+
+      <!-- B: bottom-left anchor, pops up-right -->
+      <div class="title-box-demo">
+        <span class="title-box-demo-label">Mobile — bottom-left anchor</span>
+        <div style="display:inline-flex;flex-direction:column;">
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="10,0 10,10 0,10" fill="#ddd"/></svg>
+            <div style="height:10px;flex-grow:1;background:#efefef;"></div>
+            <div style="width:10px;height:10px;background:#efefef;"></div>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#ddd;"></div>
+            <div style="background:#efefef;padding:6px 14px 14px 18px;min-width:110px;max-width:var(--title-box-max-width-mobile);display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-heading);font-size:1.25rem;font-weight:800;color:#444;line-height:1;margin-bottom:3px;">Brandenburger Tor . 1899</div>
+              <div style="font-family:var(--font-heading);font-size:0.8125rem;font-weight:500;color:#666;line-height:1.3;">2018 · Acrylic transfer and<br>acrylic on canvas</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--series-ach);align-self:flex-end;"></div>
+            </div>
+            <div style="width:10px;background:#efefef;"></div>
+          </div>
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,10 10,10 10,0" fill="#ccc"/><polygon points="0,0 0,10 10,0" fill="#ddd"/></svg>
+            <div style="height:10px;flex-grow:1;background:#ccc;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ccc"/></svg>
+          </div>
+        </div>
+        <p style="font-size:0.6875rem;color:var(--text-secondary);font-family:var(--font-body);max-width:12rem;line-height:1.5;margin-top:0.5rem;">Left + bottom sides visible. Box pops up and right.</p>
+      </div>
+
+      <!-- C: bottom-right anchor, pops up-left -->
+      <div class="title-box-demo">
+        <span class="title-box-demo-label">Slideshow — bottom-right anchor</span>
+        <div style="display:inline-flex;flex-direction:column;">
+          <div style="display:flex;">
+            <div style="width:10px;height:10px;background:#efefef;"></div>
+            <div style="height:10px;flex-grow:1;background:#efefef;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 0,10 10,10" fill="#ddd"/></svg>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="background:#efefef;padding:6px 18px 14px 14px;min-width:110px;max-width:var(--title-box-max-width-slideshow);display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-heading);font-size:1.25rem;font-weight:800;color:#444;line-height:1;margin-bottom:3px;">Brandenburger Tor . 1899</div>
+              <div style="font-family:var(--font-heading);font-size:0.8125rem;font-weight:500;color:#666;line-height:1.3;">2018 · Acrylic transfer and<br>acrylic on canvas</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--series-ach);align-self:flex-end;"></div>
+            </div>
+            <div style="width:10px;background:#ddd;"></div>
+          </div>
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 10,10" fill="#ccc"/></svg>
+            <div style="height:10px;flex-grow:1;background:#ccc;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 10,10" fill="#ddd"/><polygon points="0,0 0,10 10,10" fill="#ccc"/></svg>
+          </div>
+        </div>
+        <p style="font-size:0.6875rem;color:var(--text-secondary);font-family:var(--font-body);max-width:12rem;line-height:1.5;margin-top:0.5rem;">Right + bottom sides visible. Box pops up and left.</p>
+      </div>
+
+      <!-- D: slideshow dark -->
+      <div class="title-box-demo">
+        <span class="title-box-demo-label">Slideshow dark — top-right anchor</span>
+        <div style="display:inline-flex;flex-direction:column;">
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,10 10,10 10,0" fill="#444"/></svg>
+            <div style="height:10px;flex-grow:1;background:#444;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#444"/><polygon points="10,0 10,10 0,10" fill="#333"/></svg>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#555;"></div>
+            <div style="background:#555;padding:14px 6px 0 6px;min-width:110px;max-width:var(--title-box-max-width-dark);display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-heading);font-size:1.25rem;font-weight:800;color:#efefef;line-height:1;margin-bottom:3px;">Brandenburger Tor . 1899</div>
+              <div style="font-family:var(--font-heading);font-size:0.8125rem;font-weight:500;color:#bbb;line-height:1.3;">2018 · Acrylic transfer and<br>acrylic on canvas</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--series-ach);align-self:flex-end;"></div>
+            </div>
+            <div style="width:10px;background:#333;"></div>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#555;"></div>
+            <div style="height:10px;flex-grow:1;background:#555;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#333"/></svg>
+          </div>
+        </div>
+        <p style="font-size:0.6875rem;color:var(--text-secondary);font-family:var(--font-body);max-width:12rem;line-height:1.5;margin-top:0.5rem;">Dark face, light text. Same geometry as desktop mode.</p>
+      </div>
+
+    </div>
+    <div class="section-divider" style="margin-top:2rem;"></div>
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;margin-top:1.5rem;">Title length variants — desktop mode</h3>
+    <div class="title-box-demos">
+      <div class="title-box-demo">
+        <span class="title-box-demo-label">Short title</span>
+        <div style="display:inline-flex;flex-direction:column;">
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,10 10,10 10,0" fill="#ddd"/></svg>
+            <div style="height:10px;flex-grow:1;background:#ddd;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ddd"/><polygon points="10,0 10,10 0,10" fill="#ccc"/></svg>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="background:#efefef;padding:14px 6px 0 14px;min-width:110px;max-width:var(--title-box-max-width-desktop);display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-heading);font-size:1.25rem;font-weight:800;color:#444;line-height:1;margin-bottom:3px;">Berlin</div>
+              <div style="font-family:var(--font-heading);font-size:0.8125rem;font-weight:500;color:#666;line-height:1.3;">2018 · Oil</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--series-ach);align-self:flex-end;"></div>
+            </div>
+            <div style="width:10px;background:#ccc;"></div>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="height:10px;flex-grow:1;background:#efefef;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ccc"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="title-box-demo">
+        <span class="title-box-demo-label">Medium title</span>
+        <div style="display:inline-flex;flex-direction:column;">
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,10 10,10 10,0" fill="#ddd"/></svg>
+            <div style="height:10px;flex-grow:1;background:#ddd;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ddd"/><polygon points="10,0 10,10 0,10" fill="#ccc"/></svg>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="background:#efefef;padding:14px 6px 0 14px;min-width:110px;max-width:var(--title-box-max-width-desktop);display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-heading);font-size:1.25rem;font-weight:800;color:#444;line-height:1;margin-bottom:3px;">Brandenburger Tor . 1899</div>
+              <div style="font-family:var(--font-heading);font-size:0.8125rem;font-weight:500;color:#666;line-height:1.3;">2018 · Acrylic transfer and<br>acrylic on canvas</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--series-ach);align-self:flex-end;"></div>
+            </div>
+            <div style="width:10px;background:#ccc;"></div>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="height:10px;flex-grow:1;background:#efefef;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ccc"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="title-box-demo">
+        <span class="title-box-demo-label">Long title — wrapping</span>
+        <div style="display:inline-flex;flex-direction:column;">
+          <div style="display:flex;">
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,10 10,10 10,0" fill="#ddd"/></svg>
+            <div style="height:10px;flex-grow:1;background:#ddd;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ddd"/><polygon points="10,0 10,10 0,10" fill="#ccc"/></svg>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="background:#efefef;padding:14px 6px 0 14px;min-width:110px;max-width:var(--title-box-max-width-desktop);display:flex;flex-direction:column;">
+              <div style="font-family:var(--font-heading);font-size:1.25rem;font-weight:800;color:#444;line-height:1;margin-bottom:3px;">Digital City Series — Hong Kong Night Market Study No. 3</div>
+              <div style="font-family:var(--font-heading);font-size:0.8125rem;font-weight:500;color:#666;line-height:1.3;">2021 · Mixed media, acrylic transfer,<br>digital print on canvas</div>
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--series-ach);align-self:flex-end;"></div>
+            </div>
+            <div style="width:10px;background:#ccc;"></div>
+          </div>
+          <div style="display:flex;">
+            <div style="width:10px;background:#efefef;"></div>
+            <div style="height:10px;flex-grow:1;background:#efefef;"></div>
+            <svg width="10" height="10" viewBox="0 0 10 10" shape-rendering="crispEdges"><polygon points="0,0 10,0 0,10" fill="#ccc"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);max-width:60ch;line-height:1.5;">All values are CSS variables — adjust title-face, title-side-light, title-side-dark after first build and compare in browser. Do not alter corner SVG polygon coordinates.</p>
+  </section>
+
+  <!-- ══ BUTTONS ══ -->
+  <section class="section" id="buttons">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 8</p>
+    <h2 class="section-title">Button SVG Language</h2>
+    <p class="section-desc">Same 3D box principle as the title box. Shadow shape stroke = #999 (lighter, recedes). Icon fill = #666 (darker, comes forward). Shell never changes — only the icon swaps.</p>
+
+    <div class="button-row">
+      <!-- Play -->
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M43.8242 44.5L50.0742 49.5H8.6582L1.5752 44.5H43.8242ZM51 11.6484V48.959L44.5 43.7588V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#eee"/>
+          <path d="M13.2064 35.9397C13.3303 36.0201 13.4748 36.0201 13.5987 35.9397L35.7935 22.98C35.9381 22.8996 36 22.7991 36 22.6384C36 22.4977 35.9174 22.3772 35.7935 22.3169L13.5987 10.0603C13.0619 10.1407 13 10.2411 13 10.4019V35.5987C13 35.7594 13.0619 35.8593 13.2064 35.9397Z" fill="#666"/>
+        </svg>
+        <span>Play</span>
+      </div>
+      <!-- Pause -->
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M43.8242 44.5L50.0742 49.5H8.6582L1.5752 44.5H43.8242ZM51 11.6484V48.959L44.5 43.7588V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <rect fill="#666" x="11" y="10" width="10" height="26"/>
+          <rect fill="#666" x="25" y="10" width="10" height="26"/>
+        </svg>
+        <span>Pause</span>
+      </div>
+      <!-- Left -->
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M50.999 11.6484V49.5H8.65723L1.57422 44.5H44.499V1.68164L50.999 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M-0.000976562 6L5.99902 0H43.999V44H-0.000976562V6Z" fill="#eee"/>
+          <path d="M40.6963 31.3108L40.6963 14.3133L21.0788 14.3133L21.0788 6L2.9994 22.8102L21.0788 39.6241L21.0788 31.3108L40.6963 31.3108Z" fill="#666"/>
+        </svg>
+        <span>Left Arrow</span>
+      </div>
+      <!-- Right -->
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M0.5 11.6484V49.5H42.8418L49.9248 44.5H7V1.68164L0.5 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M51.5 6L45.5 0H7.5V44H51.5V6Z" fill="#eee"/>
+          <path d="M11 31.3108L11 14.3133L30.6175 14.3133L30.6175 6L48.6969 22.8102L30.6175 39.6241L30.6175 31.3108L11 31.3108Z" fill="#666"/>
+        </svg>
+        <span>Right Arrow</span>
+      </div>
+      <!-- Filter — exact path from FilterLightSvg.js -->
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M43.8242 44.5L50.0742 49.5H8.6582L1.5752 44.5H43.8242ZM51 11.6484V48.959L44.5 43.7588V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#eee"/>
+          <path fill="#666" fill-rule="evenodd" clip-rule="evenodd" d="M30.2402 31.8485H16.7415C16.6522 31.8491 16.5629 31.8567 16.4746 31.8712C16.0475 30.755 15.266 29.8305 14.264 29.2561C13.2621 28.6816 12.102 28.4931 10.9828 28.7228C9.86355 28.9524 8.85485 29.586 8.1296 30.5148C7.40435 31.4437 7.00773 32.61 7.00773 33.8137C7.00773 35.0175 7.40435 36.1838 8.1296 37.1126C8.85485 38.0415 9.86355 38.6751 10.9828 38.9047C12.102 39.1344 13.2621 38.9458 14.264 38.3714C15.266 37.797 16.0475 36.8725 16.4746 35.7563C16.5629 35.7708 16.6522 35.7784 16.7415 35.779H30.2402C30.7337 35.779 31.2069 35.572 31.5559 35.2036C31.9048 34.8352 32.1009 34.3355 32.1009 33.8145C32.1009 33.2935 31.9048 32.7938 31.5559 32.4254C31.2069 32.057 30.7337 31.85 30.2402 31.85V31.8485ZM35.0844 16.8134C34.1127 16.8139 33.1629 17.1183 32.3548 17.688C31.5467 18.2577 30.9165 19.0673 30.5436 20.0147L16.7387 20.045C16.2469 20.045 15.7753 20.2512 15.4275 20.6183C15.0798 20.9855 14.8844 21.4834 14.8844 22.0026C14.8844 22.5219 15.0798 23.0198 15.4275 23.3869C15.7753 23.7541 16.2469 23.9603 16.7387 23.9603L30.5214 23.9301C30.853 24.8051 31.404 25.5683 32.1152 26.1376C32.8265 26.707 33.6712 27.0612 34.5587 27.1621C35.4462 27.263 36.343 27.1068 37.1527 26.7103C37.9625 26.3138 38.6547 25.692 39.1551 24.9116C39.6555 24.1312 39.9451 23.2216 39.9929 22.2806C40.0407 21.3395 39.8449 20.4025 39.4265 19.57C39.008 18.7376 38.3828 18.0411 37.6178 17.5555C36.8528 17.0698 35.977 16.8133 35.0844 16.8134ZM11.9166 15.3808C12.8965 15.3806 13.854 15.0712 14.6662 14.4922C15.4784 13.9133 16.1081 13.0914 16.4746 12.1318C16.5629 12.1463 16.6522 12.1539 16.7415 12.1545H30.2402C30.7337 12.1545 31.2069 11.9475 31.5559 11.5791C31.9048 11.2107 32.1009 10.711 32.1009 10.19C32.1009 9.66901 31.9048 9.16934 31.5559 8.80093C31.2069 8.43251 30.7337 8.22554 30.2402 8.22554H16.7415C16.6522 8.22618 16.5629 8.23375 16.4746 8.24821C16.1408 7.3747 15.5881 6.61356 14.8759 6.04639C14.1636 5.47921 13.3185 5.12738 12.4313 5.02861C11.5441 4.92985 10.6481 5.08786 9.83942 5.48572C9.03076 5.88358 8.3399 6.50628 7.84089 7.28708C7.34187 8.06788 7.05353 8.97733 7.00676 9.91796C6.95999 10.8586 7.15656 11.7949 7.5754 12.6266C7.99424 13.4582 8.61955 14.1539 9.38432 14.639C10.1491 15.124 11.0245 15.381 11.9166 15.3808Z"/>
+        </svg>
+        <span>Filter</span>
+      </div>
+    </div>
+
+    <div style="background:var(--surface-panel);padding:1rem 1.25rem;border-radius:3px;max-width:48rem;margin-top:1rem;">
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-primary);line-height:1.6;">
+        <strong style="font-family:var(--font-heading);font-weight:700;">Token split:</strong> Shadow shape stroke <code style="font-size:0.75rem;background:#e0e0e0;padding:0 3px;border-radius:2px;">#999</code> (lighter — recedes). Icon fill <code style="font-size:0.75rem;background:#e0e0e0;padding:0 3px;border-radius:2px;">#666</code> (darker — comes forward). Chamfered top-left corner on face via <code style="font-size:0.75rem;background:#e0e0e0;padding:0 3px;border-radius:2px;">M0 6 L6 0</code> — same diagonal device as title box corners.
+      </p>
+    </div>
+  </section>
+
+  <!-- ══ SVG INVENTORY ══ -->
+  <section class="section" id="svgs">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 10 — SVG Inventory</p>
+    <h2 class="section-title">SVG Icon Inventory</h2>
+    <p class="section-desc">All SVGs in the project. Source of truth is the /src/svgs/ directory in the repo — update this section when the new repo is finalised. Current icons are rendered from the existing source paths.</p>
+
+    <div style="background:var(--surface-panel);border-left:3px solid var(--series-meg);padding:1rem 1.25rem;border-radius:0 3px 3px 0;margin-bottom:2rem;max-width:52rem;">
+      <p style="font-size:0.8125rem;font-family:var(--font-body);color:var(--text-secondary);line-height:1.6;"><strong style="font-family:var(--font-heading);font-weight:700;color:var(--text-primary);">Note:</strong> SVG paths here are copied from the current WordPress/Sass repo. When the Payload CMS repo is finalised, repopulate each SVG from the new source files — the repo is the source of truth, not this document. Any tweaks to shapes or proportions should be made in the component files first, then reflected here.</p>
+    </div>
+
+    <!-- Navigation SVGs -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Navigation & Controls</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:2rem;align-items:flex-end;">
+
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M43.8242 44.5L50.0742 49.5H8.6582L1.5752 44.5H43.8242ZM51 11.6484V48.959L44.5 43.7588V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#eee"/>
+          <path d="M13.2064 35.9397C13.3303 36.0201 13.4748 36.0201 13.5987 35.9397L35.7935 22.98C35.9381 22.8996 36 22.7991 36 22.6384C36 22.4977 35.9174 22.3772 35.7935 22.3169L13.5987 10.0603C13.0619 10.1407 13 10.2411 13 10.4019V35.5987C13 35.7594 13.0619 35.8593 13.2064 35.9397Z" fill="#666"/>
+        </svg>
+        <span>Play</span>
+      </div>
+
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M43.8242 44.5L50.0742 49.5H8.6582L1.5752 44.5H43.8242ZM51 11.6484V48.959L44.5 43.7588V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <rect fill="#666" x="11" y="10" width="10" height="26"/>
+          <rect fill="#666" x="25" y="10" width="10" height="26"/>
+        </svg>
+        <span>Pause</span>
+      </div>
+
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M50.999 11.6484V49.5H8.65723L1.57422 44.5H44.499V1.68164L50.999 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M-0.000976562 6L5.99902 0H43.999V44H-0.000976562V6Z" fill="#eee"/>
+          <path d="M40.6963 31.3108L40.6963 14.3133L21.0788 14.3133L21.0788 6L2.9994 22.8102L21.0788 39.6241L21.0788 31.3108L40.6963 31.3108Z" fill="#666"/>
+        </svg>
+        <span>Left Arrow</span>
+      </div>
+
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M0.5 11.6484V49.5H42.8418L49.9248 44.5H7V1.68164L0.5 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M51.5 6L45.5 0H7.5V44H51.5V6Z" fill="#eee"/>
+          <path d="M11 31.3108L11 14.3133L30.6175 14.3133L30.6175 6L48.6969 22.8102L30.6175 39.6241L30.6175 31.3108L11 31.3108Z" fill="#666"/>
+        </svg>
+        <span>Right Arrow</span>
+      </div>
+
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M43.8242 44.5L50.0742 49.5H8.6582L1.5752 44.5H43.8242ZM51 11.6484V48.959L44.5 43.7588V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#eee"/>
+          <path fill="#666" fill-rule="evenodd" clip-rule="evenodd" d="M30.2402 31.8485H16.7415C16.6522 31.8491 16.5629 31.8567 16.4746 31.8712C16.0475 30.755 15.266 29.8305 14.264 29.2561C13.2621 28.6816 12.102 28.4931 10.9828 28.7228C9.86355 28.9524 8.85485 29.586 8.1296 30.5148C7.40435 31.4437 7.00773 32.61 7.00773 33.8137C7.00773 35.0175 7.40435 36.1838 8.1296 37.1126C8.85485 38.0415 9.86355 38.6751 10.9828 38.9047C12.102 39.1344 13.2621 38.9458 14.264 38.3714C15.266 37.797 16.0475 36.8725 16.4746 35.7563C16.5629 35.7708 16.6522 35.7784 16.7415 35.779H30.2402C30.7337 35.779 31.2069 35.572 31.5559 35.2036C31.9048 34.8352 32.1009 34.3355 32.1009 33.8145C32.1009 33.2935 31.9048 32.7938 31.5559 32.4254C31.2069 32.057 30.7337 31.85 30.2402 31.85V31.8485ZM35.0844 16.8134C34.1127 16.8139 33.1629 17.1183 32.3548 17.688C31.5467 18.2577 30.9165 19.0673 30.5436 20.0147L16.7387 20.045C16.2469 20.045 15.7753 20.2512 15.4275 20.6183C15.0798 20.9855 14.8844 21.4834 14.8844 22.0026C14.8844 22.5219 15.0798 23.0198 15.4275 23.3869C15.7753 23.7541 16.2469 23.9603 16.7387 23.9603L30.5214 23.9301C30.853 24.8051 31.404 25.5683 32.1152 26.1376C32.8265 26.707 33.6712 27.0612 34.5587 27.1621C35.4462 27.263 36.343 27.1068 37.1527 26.7103C37.9625 26.3138 38.6547 25.692 39.1551 24.9116C39.6555 24.1312 39.9451 23.2216 39.9929 22.2806C40.0407 21.3395 39.8449 20.4025 39.4265 19.57C39.008 18.7376 38.3828 18.0411 37.6178 17.5555C36.8528 17.0698 35.977 16.8133 35.0844 16.8134ZM11.9166 15.3808C12.8965 15.3806 13.854 15.0712 14.6662 14.4922C15.4784 13.9133 16.1081 13.0914 16.4746 12.1318C16.5629 12.1463 16.6522 12.1539 16.7415 12.1545H30.2402C30.7337 12.1545 31.2069 11.9475 31.5559 11.5791C31.9048 11.2107 32.1009 10.711 32.1009 10.19C32.1009 9.66901 31.9048 9.16934 31.5559 8.80093C31.2069 8.43251 30.7337 8.22554 30.2402 8.22554H16.7415C16.6522 8.22618 16.5629 8.23375 16.4746 8.24821C16.1408 7.3747 15.5881 6.61356 14.8759 6.04639C14.1636 5.47921 13.3185 5.12738 12.4313 5.02861C11.5441 4.92985 10.6481 5.08786 9.83942 5.48572C9.03076 5.88358 8.3399 6.50628 7.84089 7.28708C7.34187 8.06788 7.05353 8.97733 7.00676 9.91796C6.95999 10.8586 7.15656 11.7949 7.5754 12.6266C7.99424 13.4582 8.61955 14.1539 9.38432 14.639C10.1491 15.124 11.0245 15.381 11.9166 15.3808Z"/>
+        </svg>
+        <span>Filter</span>
+      </div>
+
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M51 11.6484V49.5H8.6582L1.5752 44.5H44.5V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#eee"/>
+          <path d="M20.1645 8.00003C18.0863 8.00091 16.0378 8.46198 14.1865 9.34554C12.3353 10.2291 10.7337 11.5101 9.51271 13.0838C8.29176 14.6574 7.48609 16.4792 7.16157 18.4C6.83705 20.3209 7.00289 22.2863 7.64552 24.1357C8.28816 25.9851 9.38936 27.6659 10.8591 29.0408C12.3288 30.4157 14.1254 31.4456 16.1019 32.0463C18.0785 32.647 20.1789 32.8016 22.2315 32.4972C24.284 32.1929 26.2305 31.4384 27.9118 30.2953L34.4712 36.4334C34.8589 36.7962 35.3847 37 35.9329 37C36.4811 37 37.0069 36.7962 37.3946 36.4334C37.7822 36.0707 38 35.5787 38 35.0657C38 34.5526 37.7822 34.0606 37.3946 33.6979L30.8352 27.5598C32.2649 25.7209 33.1225 23.5474 33.313 21.2803C33.5035 19.0132 33.0195 16.741 31.9145 14.7155C30.8095 12.6901 29.1268 10.9905 27.0529 9.80518C24.9789 8.61984 22.5947 7.99504 20.1645 8.00003Z" fill="#666"/>
+        </svg>
+        <span>Search</span>
+      </div>
+
+      <div class="button-item">
+        <svg viewBox="0 0 52 50">
+          <path d="M43.8242 44.5L50.0742 49.5H8.6582L1.5752 44.5H43.8242ZM51 11.6484V48.959L44.5 43.7588V1.68164L51 11.6484Z" fill="#efefef" stroke="#999" stroke-width="0.8"/>
+          <path d="M0 6L6 0H44V44H0V6Z" fill="#eee"/>
+          <path d="M13.2064 35.9397C13.3303 36.0201 13.4748 36.0201 13.5987 35.9397L35.7935 22.98C35.9381 22.8996 36 22.7991 36 22.6384C36 22.4977 35.9174 22.3772 35.7935 22.3169L13.5987 10.0603C13.0619 10.1407 13 10.2411 13 10.4019V35.5987C13 35.7594 13.0619 35.8593 13.2064 35.9397Z" fill="#666" style="opacity:0"/>
+          <rect fill="#666" x="13" y="12" width="21" height="21"/>
+        </svg>
+        <span>Stop Slideshow</span>
+      </div>
+
+    </div>
+
+    <!-- Utility SVGs -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Utility & UI</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:2rem;align-items:flex-end;">
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="16 16 68 68">
+          <path fill="#666" d="M 50 18 C 32.350578 18 18 32.350577 18 50 C 18 67.649423 32.350578 82 50 82 C 67.649423 82 82 67.649423 82 50 C 82 32.350577 67.649423 18 50 18 z M 50 22 C 65.487663 22 78 34.512337 78 50 C 78 65.487663 65.487663 78 50 78 C 34.512338 78 22 65.487663 22 50 C 22 34.512337 34.512338 22 50 22 z M 38.78125 36.96875 A 2.0001999 2.0001999 0 0 0 37.59375 40.40625 L 47.1875 50 L 37.59375 59.59375 A 2.0001999 2.0001999 0 1 0 40.40625 62.40625 L 50 52.8125 L 59.59375 62.40625 A 2.0001999 2.0001999 0 1 0 62.40625 59.59375 L 52.8125 50 L 62.40625 40.40625 A 2.0001999 2.0001999 0 0 0 59.59375 37.59375 L 50 47.1875 L 40.40625 37.59375 A 2.0001999 2.0001999 0 0 0 38.78125 36.96875 z"/>
+        </svg>
+        <span>Close Circle</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="38 40 22 20">
+          <polygon points="49.9,42.8 48.5,41.4 39.9,50 48.5,58.6 49.9,57.2 43.7,51 58.7,51 58.7,49 43.7,49" fill="#666"/>
+        </svg>
+        <span>Back Arrow</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 40 40">
+          <circle cx="16" cy="16" r="12" fill="none" stroke="#666" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="25" y1="25" x2="30" y2="30" stroke="#666" stroke-width="1.6" stroke-linecap="round"/>
+          <rect x="10" y="15.2" width="12" height="1.6" rx="0.8" fill="#666"/>
+          <rect x="15.2" y="10" width="1.6" height="12" rx="0.8" fill="#666"/>
+        </svg>
+        <span>Magnify (zoom in)</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 40 40">
+          <circle cx="16" cy="16" r="12" fill="none" stroke="#666" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="25" y1="25" x2="30" y2="30" stroke="#666" stroke-width="1.6" stroke-linecap="round"/>
+          <rect x="10" y="15.2" width="12" height="1.6" rx="0.8" fill="#666"/>
+        </svg>
+        <span>Magnify (zoom out)</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 44 39">
+          <path fill="#666" d="M16.9415 28.5085C18.5705 29.5439 20.4205 30.2418 22.3657 30.5549L16.8784 35.648C15.0243 37.3691 12.5096 38.336 9.88742 38.3361C7.26524 38.3362 4.7504 37.3695 2.89615 35.6486C1.0419 33.9277 0.00012473 31.5936 1.11996e-08 29.1598C-0.000124708 26.726 1.04141 24.3918 2.89549 22.6708L12.2157 14.0189C14.0717 12.3008 16.586 11.336 19.2072 11.336C21.8285 11.336 24.3427 12.3008 26.1987 14.0189C26.3978 14.2082 26.5629 14.4259 26.6876 14.6638C26.8525 14.9888 26.9237 15.227 26.9562 15.471C26.9921 15.8334 26.9754 16.087 26.9181 16.334C26.7983 16.8029 26.5664 17.202 26.2352 17.5245C25.9041 17.847 25.4858 18.0812 25.024 18.2028C24.5622 18.3243 24.0737 18.3288 23.6095 18.2156C23.1452 18.1024 22.7221 17.8758 22.3842 17.5594C21.8652 17.0792 21.2276 16.724 20.5269 16.5248C19.8262 16.3256 19.0837 16.2884 18.364 16.4164L18.3635 16.4165C17.48 16.5721 16.6672 16.9702 16.0302 17.5594L11.8128 21.4751L11.8088 21.4781L6.7101 26.2112C5.8693 26.9939 5.39715 28.0541 5.39715 29.1594C5.39715 30.2647 5.8693 31.3248 6.7101 32.1075C7.56617 32.8656 8.70389 33.2885 9.88705 33.2885C11.0702 33.2885 12.2079 32.8656 13.064 32.1075L16.9415 28.5085ZM41.1036 2.68841C39.1857 1.8361 37.0959 1.15999 34.1128 0C32.8145 0 31.5288 0.237424 30.3293 0.698709C29.1298 1.15999 28.04 1.8361 27.1221 2.68841L21.6289 7.7868C23.574 8.10163 25.4241 8.79869 27.0553 9.83125L30.9365 6.22884C31.7922 5.47054 32.9297 5.04742 34.1128 5.04742C35.2958 5.04742 36.4334 5.47054 37.2891 6.22884C38.1448 6.98714 38.6049 8.06788 38.6049 9.17725C38.6048 10.2869 38.1448 11.3676 37.2879 12.1252L27.969 20.7758C27.1131 21.5338 25.9756 21.9568 24.7926 21.9568C23.6096 21.9568 22.4721 21.5338 21.6163 20.7758C20.6983 19.9181 19.4084 20.0434 18.8018 20.777C18.1951 21.5107 18.2965 22.6802 18.8018 23.316C19.7198 24.1687 20.8096 24.8447 22.0091 25.306C23.2086 25.7672 24.4943 26.0047 25.7926 26.0047C27.091 26.0047 28.3766 25.7672 29.5761 25.306C30.7756 24.8447 31.8655 24.1687 32.7834 23.316L41.1036 15.6656C42.0219 14.8136 42.7503 13.8021 43.2472 12.6888C43.7442 11.5754 44 10.3821 44 9.17702C44 7.97192 43.7442 6.77862 43.2472 5.66529C42.7503 4.55196 42.0219 3.54041 41.1036 2.68841Z"/>
+        </svg>
+        <span>Link</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 24 30">
+          <path fill="#666" d="M10.939,8.061a1.5,1.5,0,0,0,2.122-2.122l-4-4a1.5,1.5,0,0,0-2.122,0l-4,4A1.5,1.5,0,0,0,5.061,8.061L6.5,6.621V21a1.5,1.5,0,0,0,3,0V6.621Z"/>
+          <path fill="#666" d="M21.061,15.939a1.5,1.5,0,0,0-2.122,0L17.5,17.379V3a1.5,1.5,0,0,0-3,0V17.379l-1.439-1.44a1.5,1.5,0,0,0-2.122,2.122l4,4a1.5,1.5,0,0,0,2.122,0l4-4A1.5,1.5,0,0,0,21.061,15.939Z"/>
+        </svg>
+        <span>Sort</span>
+      </div>
+
+    </div>
+
+    <!-- Timer SVG -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Progress & Timer</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:2rem;align-items:flex-end;">
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="-2 -2 40 40">
+          <circle cx="13" cy="13" r="13" fill="none" stroke="#ddd" stroke-width="2"/>
+          <circle cx="13" cy="13" r="13" fill="none" stroke="#666" stroke-width="2"
+            stroke-dasharray="81.68" stroke-dashoffset="20.42" stroke-linecap="round"/>
+        </svg>
+        <span>Timer (75%)</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="-2 -2 40 40">
+          <circle cx="13" cy="13" r="13" fill="none" stroke="#ddd" stroke-width="2"/>
+          <circle cx="13" cy="13" r="13" fill="none" stroke="#666" stroke-width="2"
+            stroke-dasharray="81.68" stroke-dashoffset="81.68" stroke-linecap="round"/>
+        </svg>
+        <span>Timer (0%)</span>
+      </div>
+
+    </div>
+
+    <!-- Social SVGs -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Social Icons</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:2rem;align-items:flex-end;">
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 128 128">
+          <circle cx="64" cy="64" r="64" fill="url(#ig-grad)"/>
+          <defs>
+            <linearGradient id="ig-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#FFB900"/>
+              <stop offset="100%" style="stop-color:#9100EB"/>
+            </linearGradient>
+          </defs>
+          <path d="M82.333,104H45.667C33.72,104,24,94.281,24,82.333V45.667C24,33.719,33.72,24,45.667,24h36.666C94.281,24,104,33.719,104,45.667v36.667C104,94.281,94.281,104,82.333,104z M45.667,30.667c-8.271,0-15,6.729-15,15v36.667c0,8.271,6.729,15,15,15h36.666c8.271,0,15-6.729,15-15V45.667c0-8.271-6.729-15-15-15H45.667z" fill="#fff"/>
+          <path d="M64,84c-11.028,0-20-8.973-20-20c0-11.029,8.972-20,20-20s20,8.971,20,20C84,75.027,75.028,84,64,84z M64,50.667c-7.352,0-13.333,5.981-13.333,13.333c0,7.353,5.981,13.333,13.333,13.333S77.333,71.353,77.333,64C77.333,56.648,71.353,50.667,64,50.667z" fill="#fff"/>
+          <circle cx="85.25" cy="42.75" r="4.583" fill="#fff"/>
+        </svg>
+        <span>Instagram</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 274.9 274.9">
+          <circle cx="137.45" cy="137.45" r="137.45" fill="#353535"/>
+          <path d="M170.94,61.49v.14c0,2.41.72,37.33,37.36,39.51,0,32.48,0,0,0,27-2.76.16-24.12-1.39-37.42-13.24l0,52.52c.32,23.78-12.92,47.1-37.7,51.81-6.94,1.32-13.2,1.46-23.69-.83C49,200.29,69.1,110.61,129.81,120.2c0,29,0,0,0,29-25.08-3.69-33.47,17.17-26.81,32.11,6.07,13.6,31,16.55,39.75-2.64a50.91,50.91,0,0,0,1.48-12.84V61.49Z" fill="#fff"/>
+        </svg>
+        <span>TikTok</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 1000 1000">
+          <circle cx="500" cy="500" r="500" fill="#FF0000"/>
+          <path d="M818.2,339.1c-7.6-28.8-30.1-51.4-58.7-59.1c-51.8-14-259.4-14-259.4-14s-207.7,0-259.4,14c-28.6,7.7-51.1,30.3-58.7,59.1C168,391.2,168,500,168,500s0,108.8,13.9,160.9c7.6,28.8,30.1,51.4,58.7,59.1c51.8,14,259.4,14,259.4,14s207.7,0,259.4-14c28.6-7.7,51.1-30.3,58.7-59.1C832,608.8,832,500,832,500S832,391.2,818.2,339.1z M432.1,598.7V401.3L605.6,500L432.1,598.7z" fill="#fff"/>
+        </svg>
+        <span>YouTube</span>
+      </div>
+
+      <div class="button-item">
+        <svg width="36" height="36" viewBox="0 0 1000 1000">
+          <circle cx="500" cy="500" r="500" fill="#0078B5"/>
+          <path d="M184.2,387.3h132.9v427.7H184.2V387.3z M250.7,174.7c42.5,0,77,34.5,77,77.1s-34.5,77.1-77,77.1c-42.6,0-77.1-34.5-77.1-77.1C173.5,209.3,208,174.7,250.7,174.7" fill="#fff"/>
+          <path d="M400.5,387.3H528v58.4h1.8c17.7-33.6,61-69.1,125.8-69.1c134.6,0,159.5,88.6,159.5,203.7v234.7H682.2V607.1c0-49.7-0.9-113.4-69.1-113.4c-69.2,0-79.8,54-79.8,109.8v211.6H400.5V387.3z" fill="#fff"/>
+        </svg>
+        <span>LinkedIn</span>
+      </div>
+
+    </div>
+
+    <!-- Menu SVG -->
+    <h3 style="font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text-secondary);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:1rem;">Menu</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:1.5rem;margin-bottom:1rem;align-items:flex-end;">
+
+      <!-- Closed state -->
+      <div class="button-item">
+        <svg width="50" height="50" viewBox="0 0 50 50">
+          <!-- Top line -->
+          <rect x="5" y="5" width="40" height="5" fill="#666"/>
+          <!-- Middle line -->
+          <rect x="5" y="19" width="40" height="5" fill="#666"/>
+          <!-- Bottom line (shorter, same baseline as plus horizontal bar) -->
+          <rect x="5" y="33" width="20" height="5" fill="#666"/>
+          <!-- Plus horizontal bar — extends from bottom line -->
+          <rect x="28" y="33" width="17" height="5" fill="#666"/>
+          <!-- Plus vertical bar — centered on horizontal bar (x=28, width=17, center=36.5, bar width=5, so x=34) -->
+          <rect x="34" y="26" width="5" height="19" fill="#666"/>
+        </svg>
+        <span>Menu (closed)</span>
+      </div>
+
+      <!-- Open state — X, plus fades out -->
+      <div class="button-item">
+        <svg width="50" height="50" viewBox="0 0 50 50">
+          <!-- Middle line stays -->
+          <rect x="5" y="19" width="40" height="5" fill="#666"/>
+          <!-- Diagonal up-right (top line rotated) -->
+          <line x1="5" y1="21" x2="20" y2="6" stroke="#666" stroke-width="5" stroke-linecap="round"/>
+          <!-- Diagonal down-right (bottom line rotated) -->
+          <line x1="5" y1="21" x2="20" y2="36" stroke="#666" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+        <span>Menu (open)</span>
+      </div>
+
+    </div>
+
+    <p style="font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-body);max-width:60ch;line-height:1.5;margin-top:1rem;">⚠ Repopulate all SVGs from /src/svgs/ when the new Payload CMS repo is finalised. The repo is the source of truth.</p>
+  </section>
+
+  <!-- ══ STATUS ══ -->
+  <section class="section" id="status">
+    <div class="section-divider"></div>
+    <p class="section-label">Section 9</p>
+    <h2 class="section-title">Status Colors</h2>
+    <p class="section-desc">Form validation, alerts, submission feedback.</p>
+    <div class="status-row">
+      <div class="status-chip" style="background:rgba(86,186,90,0.12);color:#2d7a30;border:1px solid rgba(86,186,90,0.3);">✓ Message received — thank you</div>
+      <div class="status-chip" style="background:rgba(240,173,78,0.12);color:#9a6a10;border:1px solid rgba(240,173,78,0.3);">⚠ Please check your input</div>
+      <div class="status-chip" style="background:rgba(217,83,79,0.12);color:#a03330;border:1px solid rgba(217,83,79,0.3);">⚠ A network error occurred</div>
+    </div>
+    <div class="color-grid" style="max-width:24rem;margin-top:1rem;">
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--status-success)"></div>
+        <span class="token-name">$confirmation-color</span><span class="token-hex">#56ba5a</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--status-warning)"></div>
+        <span class="token-name">$warning-color</span><span class="token-hex">#f0ad4e</span>
+      </div>
+      <div class="color-swatch">
+        <div class="swatch-block" style="background:var(--status-error)"></div>
+        <span class="token-name">$error-color</span><span class="token-hex">#d9534f</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

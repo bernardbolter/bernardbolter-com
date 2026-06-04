@@ -22,8 +22,12 @@ export type ArtworkMediaSlot = {
   kind: MediaSlotKind
   /** Payload dotted path for a single upload or URL field */
   field?: string
-  /** For array slots — append rows to this array field */
+  /** For array slots — append rows to this top-level array field */
   arrayField?: string
+  /** Nested array on artworks (e.g. ach.sourcePhotographs) */
+  nestedArrayPath?: string
+  /** Upload field name inside each nested array row (default: image) */
+  nestedArrayImageField?: string
   achOnly?: boolean
   dcsOnly?: boolean
   megacitiesOnly?: boolean
@@ -53,12 +57,13 @@ export const ARTWORK_MEDIA_SLOTS: ArtworkMediaSlot[] = [
   },
   {
     id: 'ach-source',
-    label: 'ACH source photograph',
+    label: 'ACH source photographs',
     description:
-      'The historical photograph transferred onto the canvas (A Colorful History). Not the finished painting.',
+      'Historical photographs transferred onto the canvas (A Colorful History). Add one or more — not the finished painting.',
     phase: 'ach',
     kind: 'image',
-    field: 'ach.sourcePhotograph.sourceImage',
+    nestedArrayPath: 'ach.sourcePhotographs',
+    nestedArrayImageField: 'sourceImage',
     achOnly: true,
     suggestAfterPrimary: true,
   },
