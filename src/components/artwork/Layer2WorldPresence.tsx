@@ -12,6 +12,7 @@ import type { Artist, Artwork, Media } from '@/payload-types'
 type Props = {
   artwork: Artwork
   artist: Artist | null
+  hideEditions?: boolean
 }
 
 function mediaUrl(media: number | Media | null | undefined): string | null {
@@ -42,7 +43,7 @@ function locationLabel(artwork: Artwork, artist: Artist | null): string | null {
   }
 }
 
-export default function Layer2WorldPresence({ artwork, artist }: Props) {
+export default function Layer2WorldPresence({ artwork, artist, hideEditions = false }: Props) {
   const status = artwork.availabilityStatus ?? 'not-for-sale'
   const documentationVideo = getDocumentationVideoSource(artwork)
   const installationShots = artwork.installationShots ?? []
@@ -57,20 +58,19 @@ export default function Layer2WorldPresence({ artwork, artist }: Props) {
       <div className="artwork-page__inner">
         <p className="artwork-page__section-title">Availability</p>
         {status === 'available' ? (
-          <>
-            <span className="availability-pill availability-pill--available">Available</span>
+          <div className="artwork-image__info--available">
+            <h2>This artwork is available</h2>
             {typeof artwork.askingPrice === 'number' ? (
-              <p className="artwork-page__prose">
-                {formatPrice(artwork.askingPrice, artwork.listingCurrency)}
-              </p>
+              <div className="artwork-image__info--price-wrapper">
+                <h3>{formatPrice(artwork.askingPrice, artwork.listingCurrency)}</h3>
+                <p>shipping in the EU included</p>
+              </div>
             ) : null}
-            <p className="artwork-page__prose artwork-page__prose--secondary">
-              EU shipping available on request.
-            </p>
-            <Link href="/contact" className="series-card__cta mt-3 inline-block">
-              Inquire by email
-            </Link>
-          </>
+            <p className="artwork-image__info--email">email for details</p>
+            <h5>
+              <Link href="/contact">bernardbolter@gmail.com</Link>
+            </h5>
+          </div>
         ) : null}
         {status === 'sold' ? (
           <>
@@ -99,7 +99,7 @@ export default function Layer2WorldPresence({ artwork, artist }: Props) {
           </>
         ) : null}
 
-        {(artwork.editions ?? []).length > 0 ? (
+        {!hideEditions && (artwork.editions ?? []).length > 0 ? (
           <>
             <hr className="artwork-page__divider" />
             <p className="artwork-page__section-title">Print editions</p>

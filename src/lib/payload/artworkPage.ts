@@ -54,10 +54,11 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
   return result.docs[0] ?? null
 }
 
-/** Dev-only styling preview — draft fixture records with full field access. */
+/**
+ * Dev-only: load any artwork by slug (draft or published) with full field access.
+ * Production callers must guard with `NODE_ENV === 'development'`.
+ */
 export async function getArtworkForPreview(slug: string): Promise<Artwork | null> {
-  if (!slug.startsWith('__')) return null
-
   const payload = await getPayload({ config })
   const result = await payload.find({
     collection: 'artworks',
@@ -68,4 +69,14 @@ export async function getArtworkForPreview(slug: string): Promise<Artwork | null
     overrideAccess: true,
   })
   return result.docs[0] ?? null
+}
+
+/** Published artwork for the public page; drafts visible in local dev only. */
+export async function getArtworkForPage(slug: string): Promise<Artwork | null> {
+  const published = await getPublishedArtworkForPage(slug)
+  if (published) return published
+  if (process.env.NODE_ENV === 'development') {
+    return getArtworkForPreview(slug)
+  }
+  return null
 }

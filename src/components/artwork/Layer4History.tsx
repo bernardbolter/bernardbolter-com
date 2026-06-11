@@ -34,9 +34,9 @@ export default function Layer4History({ artwork }: Props) {
     <section className="artwork-page__layer artwork-page__layer--secondary">
       <div className="artwork-page__inner">
         {exhibitions.length > 0 ? (
-          <>
-            <p className="artwork-page__section-title">Exhibition history</p>
-            <ul className="space-y-3 text-sm">
+          <div className="artwork-image__info--exhibition-history-wrapper">
+            <h2>Exhibition History</h2>
+            <ul className="artwork-image__info--exhibition-history">
               {exhibitions.map(({ event, year }) => (
                 <li key={event.id}>
                   <span className="text-secondary">{year}</span>
@@ -57,22 +57,25 @@ export default function Layer4History({ artwork }: Props) {
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         ) : null}
 
         {showProvenance ? (
-          <>
-            <hr className="artwork-page__divider" />
-            <p className="artwork-page__section-title">Provenance</p>
-            {provenanceSummary ? (
-              <p className="artwork-page__prose">{provenanceConfidenceStatement(provenanceSummary)}</p>
-            ) : null}
-            <p className="artwork-page__prose artwork-page__prose--secondary mt-2">
-              Ownership history is held privately. This statement reflects the level of documentation
-              on record.
-            </p>
+          <div className="artwork-image__info--provenance-wrapper">
+            <h2>
+              Provenance <span>(history of ownership)</span>
+            </h2>
+            <div className="artwork-image__info--provenance">
+              {provenanceSummary ? (
+                <p className="artwork-page__prose">{provenanceConfidenceStatement(provenanceSummary)}</p>
+              ) : null}
+              <p className="artwork-page__prose artwork-page__prose--secondary">
+                Ownership history is held privately. This statement reflects the level of documentation
+                on record.
+              </p>
+            </div>
             {ownership.length > 0 ? (
-              <ul className="mt-4 space-y-2 text-sm">
+              <ul className="artwork-image__info--provenance">
                 {ownership.map((entry, index) => (
                   <li key={`${entry.displayName}-${index}`}>
                     <span className="font-medium">{entry.displayName}</span>
@@ -87,7 +90,7 @@ export default function Layer4History({ artwork }: Props) {
                 ))}
               </ul>
             ) : null}
-          </>
+          </div>
         ) : null}
 
         {loans.length > 0 ? (

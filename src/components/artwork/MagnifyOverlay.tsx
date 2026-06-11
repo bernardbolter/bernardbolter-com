@@ -1,71 +1,205 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
-import Draggable from 'react-draggable'
+import Image from 'next/image'
+import { useMemo, useRef, useState, type RefObject } from 'react'
+import Draggable, { type DraggableData, type DraggableEvent } from 'react-draggable'
 
+import {
+  computeMagnifyMiniMap,
+  getMagnifyDragBounds,
+} from '@/lib/artwork/magnifyDisplay'
+import type { DragPosition } from '@/lib/artwork/magnifyDisplay'
 import type { ArtworkGalleryImage } from '@/lib/artwork/artworkGalleryImages'
 
 type Props = {
-  image: ArtworkGalleryImage
+  images: ArtworkGalleryImage[]
+  activeIndex: number
+  dragPositions: DragPosition[]
+  onDrag: (index: number, position: DragPosition) => void
   onClose: () => void
+  onImageLoaded?: (index: number) => void
+  seriesColor: string
+  blurDataURL?: string
+  artworkTitle: string
 }
 
-export default function MagnifyOverlay({ image, onClose }: Props) {
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const nodeRef = useRef<HTMLDivElement>(null)
+export default function MagnifyOverlay({
+  images,
+  activeIndex,
+  dragPositions,
+  onDrag,
+  onClose,
+  onImageLoaded,
+  seriesColor,
+  blurDataURL,
+  artworkTitle,
+}: Props) {
+  const nodeRefs = useRef<Array<RefObject<HTMLDivElement | null>>>([])
+  const [loadingIndex, setLoadingIndex] = useState<number | null>(activeIndex)
+  const [errorIndex, setErrorIndex] = useState<number | null>(null)
 
-  const showMinimap = useMemo(() => {
-    if (typeof window === 'undefined') return false
-    return image.width > window.innerWidth * 0.9 || image.height > window.innerHeight * 0.9
-  }, [image.width, image.height])
+  if (nodeRefs.current.length !== images.length) {
+    nodeRefs.current = images.map(() => ({ current: null }))
+  }
+
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1200
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 900
+  const activeImage = images[activeIndex]
+  const currentPosition = dragPositions[activeIndex] ?? { x: 0, y: 0 }
+
+  const miniMap = useMemo(() => {
+    if (!activeImage) return null
+    const { canDrag } = getMagnifyDragBounds(
+      viewportWidth,
+      viewportHeight,
+      activeImage.width,
+      activeImage.height,
+    )
+    if (!canDrag) return null
+    return computeMagnifyMiniMap({
+      viewportWidth,
+      viewportHeight,
+      imageWidth: activeImage.width,
+      imageHeight: activeImage.height,
+      position: currentPosition,
+    })
+  }, [activeImage, currentPosition, viewportHeight, viewportWidth])
+
+  if (!activeImage) return null
 
   return (
-    <div className="magnify-overlay" role="dialog" aria-modal="true" aria-label="Magnified artwork">
-      <button
-        type="button"
-        className="magnify-overlay__close rounded bg-white/10 px-3 py-1 text-sm text-white"
-        onClick={onClose}
+    <div className="artwork-image__magnify-overlay-wrapper" onClick={onClose} role="dialog" aria-modal="true">
+      <div
+        className="artwork-image__magnify-frame"
+        style={{ width: viewportWidth, height: viewportHeight }}
+        onClick={(event) => event.stopPropagation()}
       >
-        Close
-      </button>
-      <div className="magnify-overlay__viewport">
-        <Draggable
-          nodeRef={nodeRef}
-          position={position}
-          onStop={(_, data) => setPosition({ x: data.x, y: data.y })}
-          bounds="parent"
+        <div
+          className="artwork-image__magnify-slider-wrapper"
+          style={{
+            width: viewportWidth * images.length,
+            transform: `translateX(-${activeIndex * viewportWidth}px)`,
+          }}
         >
-          <div ref={nodeRef}>
-            <img
-              src={image.url}
-              alt={image.alt}
-              width={image.width}
-              height={image.height}
-              className="max-w-none select-none"
-              draggable={false}
+          {images.map((image, index) => {
+            const nodeRef = nodeRefs.current[index]!
+            const { bounds, canDrag } = getMagnifyDragBounds(
+              viewportWidth,
+              viewportHeight,
+              image.width,
+              image.height,
+            )
+
+            return (
+              <div
+                key={image.url}
+                className="artwork-image__magnified-slide"
+                style={{ width: viewportWidth, height: viewportHeight }}
+              >
+                <Draggable
+                  nodeRef={nodeRef}
+                  disabled={!canDrag}
+                  bounds={bounds}
+                  position={dragPositions[index] ?? { x: 0, y: 0 }}
+                  onDrag={(event: DraggableEvent, data: DraggableData) =>
+                    onDrag(index, { x: data.x, y: data.y })
+                  }
+                  onStop={(event: DraggableEvent, data: DraggableData) =>
+                    onDrag(index, { x: data.x, y: data.y })
+                  }
+                >
+                  <div
+                    ref={nodeRef}
+                    className="artwork-image__magnified-image-wrapper"
+                    style={{
+                      cursor: canDrag ? 'grab' : 'default',
+                      width: image.width,
+                      height: image.height,
+                      background: seriesColor,
+                    }}
+                  >
+                    <Image
+                      src={image.url}
+                      alt={image.alt}
+                      width={image.width}
+                      height={image.height}
+                      quality={100}
+                      unoptimized
+                      placeholder="blur"
+                      blurDataURL={blurDataURL}
+                      priority={index === activeIndex}
+                      draggable={false}
+                      style={{
+                        objectFit: 'contain',
+                        opacity: errorIndex === index ? 0 : 1,
+                      }}
+                      onLoad={() => {
+                        onImageLoaded?.(index)
+                        if (index === activeIndex) {
+                          setLoadingIndex(null)
+                          setErrorIndex(null)
+                        }
+                      }}
+                      onLoadingComplete={() => {
+                        onImageLoaded?.(index)
+                        if (index === activeIndex) {
+                          setLoadingIndex(null)
+                          setErrorIndex(null)
+                        }
+                      }}
+                      onError={() => {
+                        if (index === activeIndex) {
+                          setLoadingIndex(null)
+                          setErrorIndex(index)
+                        }
+                      }}
+                    />
+                    {index === activeIndex && (loadingIndex === index || errorIndex === index) ? (
+                      <div className="artwork-image__loading-text">
+                        {errorIndex === index ? (
+                          <>
+                            <p>{artworkTitle}</p>
+                            <p>high-resolution image failed to load</p>
+                          </>
+                        ) : (
+                          <>
+                            <p>loading high-resolution</p>
+                            <p>{`${artworkTitle}...`}</p>
+                          </>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                </Draggable>
+              </div>
+            )
+          })}
+        </div>
+
+        {miniMap ? (
+          <div
+            className="artwork-image__mini-map-container"
+            style={{ width: miniMap.miniMapSize, height: miniMap.miniMapSize }}
+          >
+            <div
+              className="artwork-image__mini-map-image-outline"
+              style={{
+                width: miniMap.mapImgW,
+                height: miniMap.mapImgH,
+                transform: `translate(${miniMap.finalImgTranslateX}px, ${miniMap.finalImgTranslateY}px)`,
+              }}
+            />
+            <div
+              className="artwork-image__mini-map-viewport-box"
+              style={{
+                width: miniMap.viewScaleW,
+                height: miniMap.viewScaleH,
+                transform: `translate(${miniMap.fixedBoxPosX}px, ${miniMap.fixedBoxPosY}px)`,
+              }}
             />
           </div>
-        </Draggable>
+        ) : null}
       </div>
-      {showMinimap ? (
-        <div className="magnify-overlay__minimap overflow-hidden bg-black/40">
-          <img
-            src={image.url}
-            alt=""
-            className="h-full w-full object-contain opacity-70"
-            draggable={false}
-          />
-          <div
-            className="pointer-events-none absolute border border-white/80 bg-white/10"
-            style={{
-              width: '40%',
-              height: '40%',
-              left: `${Math.min(60, Math.max(0, 50 - position.x / 50))}%`,
-              top: `${Math.min(60, Math.max(0, 50 - position.y / 50))}%`,
-            }}
-          />
-        </div>
-      ) : null}
     </div>
   )
 }

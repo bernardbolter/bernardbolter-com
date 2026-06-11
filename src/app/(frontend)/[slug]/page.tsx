@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
+import Info from '@/components/info/Info'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import {
-  getPublishedArtworkForPage,
+  getArtworkForPage,
   getPublishedArtworkSlugs,
 } from '@/lib/payload/artworkPage'
 import { getArtistRecord } from '@/lib/payload/siteDocuments'
@@ -22,7 +23,7 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const artwork = await getPublishedArtworkForPage(slug)
+  const artwork = await getArtworkForPage(slug)
   if (!artwork) {
     return { title: 'Artwork not found' }
   }
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Page({ params }: Props) {
   const { slug } = await params
   const [artwork, artist] = await Promise.all([
-    getPublishedArtworkForPage(slug),
+    getArtworkForPage(slug),
     getArtistRecord(),
   ])
   if (!artwork) notFound()
@@ -52,7 +53,10 @@ export default async function Page({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ArtworkPage artwork={artwork} artist={artist} />
+      <div className="artwork-page__layout">
+        <Info />
+        <ArtworkPage artwork={artwork} artist={artist} />
+      </div>
     </>
   )
 }

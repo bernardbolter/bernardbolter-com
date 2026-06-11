@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
+import Info from '@/components/info/Info'
 import { getArtworkForPreview } from '@/lib/payload/artworkPage'
 import { getArtistRecord } from '@/lib/payload/siteDocuments'
 
@@ -27,5 +28,10 @@ export default async function PreviewArtworkPage({ params }: Props) {
 
   if (!artwork) notFound()
 
-  return <ArtworkPage artwork={artwork} artist={artist} />
+  return (
+    <div className="artwork-page__layout">
+      <Info />
+      <ArtworkPage artwork={artwork} artist={artist} />
+    </div>
+  )
 }

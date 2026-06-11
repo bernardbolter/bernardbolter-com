@@ -1,9 +1,16 @@
 import type { CollectionConfig } from 'payload'
 
+import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 import { normalizeVideoMimeType } from '@/lib/artOfficial/mediaMime'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  access: {
+    read: () => true,
+    create: ({ req: { user } }) => isArtistOrAdmin(user),
+    update: ({ req: { user } }) => isArtistOrAdmin(user),
+    delete: ({ req: { user } }) => isArtistOrAdmin(user),
+  },
   upload: {
     staticDir: 'media',
     imageSizes: [

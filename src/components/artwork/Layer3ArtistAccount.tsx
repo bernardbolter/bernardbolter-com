@@ -32,8 +32,8 @@ type IntentField = {
 function IntentBlock({ label, value, secondary }: IntentField) {
   if (!value?.trim()) return null
   return (
-    <div className="mb-6">
-      <p className="artwork-page__label mb-2">{label}</p>
+    <div className="artwork-image__info--about-wrapper mb-6">
+      <h2>{label}</h2>
       <p
         className={`artwork-page__prose ${secondary ? 'artwork-page__prose--secondary' : ''} ${label === 'Contribution' ? 'artwork-page__prose--prominent' : ''}`}
       >
@@ -59,7 +59,7 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
   const seriesColor = getSeriesColor(seriesSlug)
 
   const intentFields: IntentField[] = [
-    { label: 'About the work', value: aboutText(artwork) },
+    { label: 'About the Artwork', value: aboutText(artwork) },
     { label: 'Intent', value: artwork.intent },
     { label: 'Direct inspiration', value: artwork.directInspiration },
     { label: 'Making', value: artwork.makingNote },

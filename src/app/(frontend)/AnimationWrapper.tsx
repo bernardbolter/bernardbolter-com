@@ -5,6 +5,8 @@ import { AnimatePresence, motion, Variants } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect } from 'react';
 
+import { isArtworkDetailPath } from '@/lib/routes/isArtworkDetailPath';
+
 // 1. Rename and update the variants for a subtle opacity fade
 const subtleFadeVariants: Variants = {
   // Page starts fully transparent (no scale applied)
@@ -37,15 +39,18 @@ export default function AnimationWrapper({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const isArtworkPage = isArtworkDetailPath(pathname);
 
-  // Function to toggle body overflow
   const handleAnimationStart = () => {
-    document.body.style.overflow = 'hidden';
+    if (!isArtworkPage) {
+      document.body.style.overflow = 'hidden';
+    }
   };
 
   const handleAnimationComplete = () => {
-    // Only restore overflow when the new page is finished animating
-    document.body.style.overflow = ''; 
+    if (!isArtworkPage) {
+      document.body.style.overflow = '';
+    }
   };
 
   useEffect(() => {
@@ -67,16 +72,14 @@ export default function AnimationWrapper({
         exit="exit"
         onAnimationStart={handleAnimationStart}
         onAnimationComplete={handleAnimationComplete} // This will fire once per animation cycle
-        style={{ 
-          // CRITICAL: Keep these styles for positioning and background integrity
-          position: 'absolute', 
-          width: '100%', 
+        style={{
+          position: 'absolute',
+          width: '100%',
           minHeight: '100vh',
           top: 0,
           left: 0,
-          // IMPORTANT: Ensure this color matches the rest of your page background
-          backgroundColor: 'var(--page-background-color, #FDFEFF)', 
-          overflow: 'hidden', 
+          backgroundColor: 'var(--page-background-color, #FDFEFF)',
+          overflow: isArtworkPage ? 'visible' : 'hidden',
         }}
       >
         {children}
