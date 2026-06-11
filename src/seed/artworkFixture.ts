@@ -233,10 +233,29 @@ async function seed() {
   const eventId = await upsertFixtureEvent(payload, artworkId)
   console.log('✓ Fixture event linked:', eventId)
 
+  await payload.update({
+    collection: 'artworks',
+    id: artworkId,
+    data: {
+      loanHistory: [
+        {
+          institution: 'Galerie Nord',
+          dateOut: '2022-09-10',
+          dateReturned: '2022-11-20',
+          eventId,
+        },
+      ],
+    },
+    overrideAccess: true,
+    context: { skipEmbedding: true },
+  })
+  console.log('✓ Fixture loan history linked')
+
   console.log('\nFixture seed complete.')
   console.log(`Slug: ${ARTWORK_FIXTURE_SLUG}`)
   console.log('Status: draft — do not publish')
   console.log('\nPreview in admin: /admin/collections/artworks')
+  console.log(`Dev page preview: /preview/artwork/${ARTWORK_FIXTURE_SLUG}`)
   console.log('(Public route stays 404 until published — fixture slugs cannot be published.)')
 }
 

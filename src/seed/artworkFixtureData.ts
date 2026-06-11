@@ -193,6 +193,28 @@ export function buildArtworkFixtureData(
     workState: 'original',
     workStateDate: '2024-01-15',
     provenanceOriginKnown: true,
+    provenanceConfidenceLayer: [
+      {
+        claim: 'Work created in artist studio, Neukölln, 2019',
+        evidenceBasis: 'Artist catalogue record',
+        confidenceLevel: 'documented-fact',
+      },
+      {
+        claim: 'Exhibited at Galerie Nord, Berlin, 2022',
+        evidenceBasis: 'Exhibition invitation and install photography',
+        confidenceLevel: 'credible-inference',
+      },
+    ],
+    ownershipHistory: [
+      {
+        ownerPrivate: 'fixture-redacted',
+        displayName: 'Private collection',
+        city: 'Berlin',
+        dateAcquired: '2020-06',
+        collectorVisible: true,
+        claimStatus: 'claimed',
+      },
+    ],
     sameAsUrls: [
       { url: 'https://www.artsy.net/artwork/bernard-bolter-gates-of-perception-iii' },
     ],

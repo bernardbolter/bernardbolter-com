@@ -53,3 +53,19 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
   })
   return result.docs[0] ?? null
 }
+
+/** Dev-only styling preview — draft fixture records with full field access. */
+export async function getArtworkForPreview(slug: string): Promise<Artwork | null> {
+  if (!slug.startsWith('__')) return null
+
+  const payload = await getPayload({ config })
+  const result = await payload.find({
+    collection: 'artworks',
+    locale: defaultLocale,
+    where: { slug: { equals: slug } },
+    limit: 1,
+    depth: ARTWORK_PAGE_DEPTH,
+    overrideAccess: true,
+  })
+  return result.docs[0] ?? null
+}

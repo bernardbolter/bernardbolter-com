@@ -131,10 +131,6 @@ export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
   context,
   req,
 }) => {
-  if (context?.skipArUpdate) {
-    return data
-  }
-
   const d = data as Record<string, unknown>
   const prev = (originalDoc ?? {}) as Record<string, unknown>
 
@@ -146,6 +142,10 @@ export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
         : ''
   if (slug.startsWith('__') && d.status === 'published') {
     throw new APIError('Artworks with fixture slugs (starting with __) cannot be published.', 400)
+  }
+
+  if (context?.skipArUpdate) {
+    return data
   }
 
   await syncArtworkMediumAatUri(d, req)

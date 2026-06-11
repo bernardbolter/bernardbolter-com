@@ -61,4 +61,25 @@ describe('generateArtworkJsonLd', () => {
       sameAs: 'http://vocab.getty.edu/aat/300014666',
     })
   })
+
+  it('never emits private commerce fields in JSON-LD', () => {
+    const jsonLd = generateArtworkJsonLd(
+      minimalArtwork({
+        askingPrice: 12000,
+        ownershipHistory: [{ ownerPrivate: 'secret' }],
+        loanHistory: [{ institution: 'Museum' }],
+        provenanceConfidenceLayer: [{ confidenceLevel: 'documented-fact' }],
+        salesRecord: [{ netToArtist: 5000 }],
+      } as Partial<Artwork>),
+      null,
+      { baseUrl: 'https://bernardbolter.com' },
+    )
+
+    expect(jsonLd).not.toHaveProperty('askingPrice')
+    expect(jsonLd).not.toHaveProperty('ownershipHistory')
+    expect(jsonLd).not.toHaveProperty('loanHistory')
+    expect(jsonLd).not.toHaveProperty('salesRecord')
+    expect(jsonLd).not.toHaveProperty('provenanceConfidenceLayer')
+    expect(jsonLd['artism:provenanceConfidenceLevel']).toBe('documented')
+  })
 })

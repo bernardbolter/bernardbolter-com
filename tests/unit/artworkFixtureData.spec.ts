@@ -33,5 +33,8 @@ describe('artworkFixtureData', () => {
     expect(data.reasoningStatus).toBe('complete')
     expect(data.creator).toBe(2)
     expect(data.artHistoricalReferences).toEqual([20, 21])
+    expect(data.provenanceConfidenceLayer).toHaveLength(2)
+    expect(data.ownershipHistory).toHaveLength(1)
+    expect(data.arEnabled).toBe(true)
   })
 })
