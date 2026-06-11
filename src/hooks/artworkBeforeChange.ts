@@ -1,6 +1,10 @@
 import type { CollectionBeforeChangeHook } from 'payload'
 
 import { parseInputImperialToInches } from '@/helpers/convertUnits'
+import {
+  assignArtworkCatalogueIdentity,
+  syncArtworkMediumAatUri,
+} from '@/hooks/assignArtworkCatalogueIdentity'
 import { fractionToDecimal } from '@/utilities/fractionToDecimal'
 
 function hasPhysicalMeasurement(data: Record<string, unknown>): boolean {
@@ -119,11 +123,12 @@ export function parseDurationToSeconds(duration: string | null | undefined): num
   return null
 }
 
-export const artworkBeforeChange: CollectionBeforeChangeHook = ({
+export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
   data,
   operation,
   originalDoc,
   context,
+  req,
 }) => {
   if (context?.skipArUpdate) {
     return data
@@ -131,6 +136,14 @@ export const artworkBeforeChange: CollectionBeforeChangeHook = ({
 
   const d = data as Record<string, unknown>
   const prev = (originalDoc ?? {}) as Record<string, unknown>
+
+  await syncArtworkMediumAatUri(d, req)
+  await assignArtworkCatalogueIdentity({
+    data: d,
+    operation,
+    originalDoc: prev,
+    req,
+  })
 
   if (operation === 'create') {
     if (d.recordOrigin == null) {

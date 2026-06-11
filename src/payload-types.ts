@@ -240,6 +240,10 @@ export interface Artist {
   generateSlug?: boolean | null;
   slug: string;
   /**
+   * Prefix for catalogue numbers on artworks, e.g. BB in BB-ACH-2019-003.
+   */
+  cataloguePrefix?: string | null;
+  /**
    * Shown in the site info panel (e.g. b. San Francisco, 1974).
    */
   birthCity?: string | null;
@@ -283,6 +287,14 @@ export interface Artist {
    * Wikidata entity URI, e.g. https://www.wikidata.org/entity/Qxxxxxx
    */
   wikidataUri?: string | null;
+  /**
+   * Authoritative archive URL (e.g. https://bernardbolter.com). Defaults from site URL when empty; editable for corrections.
+   */
+  canonicalDomain?: string | null;
+  /**
+   * Public key for cryptographic attestation of published records. Optional until verification is implemented.
+   */
+  archivePublicKey?: string | null;
   bioFull?: {
     root: {
       type: string;
@@ -317,6 +329,23 @@ export interface Artist {
    * Single sentence, third person (plain text).
    */
   bioShort?: string | null;
+  /**
+   * Full-width image at the bottom of /cv (above the long artist statement).
+   */
+  cvFooterImage?: (number | null) | Media;
+  /**
+   * Photos for the masonry grid on /bio. Drag rows to reorder.
+   */
+  bioPhotos?:
+    | {
+        image: number | Media;
+        /**
+         * Optional caption shown in the bio lightbox.
+         */
+        caption?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   statementFull?: {
     root: {
       type: string;
@@ -410,7 +439,22 @@ export interface Artist {
    */
   publicEmail?: string | null;
   website?: string | null;
+  /**
+   * Info panel Instagram icon.
+   */
   instagramUrl?: string | null;
+  /**
+   * Info panel TikTok icon.
+   */
+  tiktokUrl?: string | null;
+  /**
+   * Info panel YouTube icon.
+   */
+  youtubeUrl?: string | null;
+  /**
+   * Info panel LinkedIn icon.
+   */
+  linkedinUrl?: string | null;
   /**
    * External sites shown in the left info menu (label + URL). Reorder, add, or remove rows here.
    */
@@ -484,6 +528,14 @@ export interface Artwork {
    * Alternate title — also known as (other language or market).
    */
   altTitle?: string | null;
+  /**
+   * Auto-assigned catalogue ID, e.g. BB-ACH-2019-003 (prefix · series code · year · sequence).
+   */
+  catalogueNumber?: string | null;
+  /**
+   * Sequence within series + year — used to build catalogueNumber.
+   */
+  catalogueSequence?: number | null;
   slug: string;
   /**
    * Primary artist for this work.
@@ -560,6 +612,10 @@ export interface Artwork {
    * Override or specify when medium is “Other”.
    */
   mediumOther?: string | null;
+  /**
+   * Getty AAT URI for this medium. Auto-filled from the medium registry when known; editable for overrides.
+   */
+  mediumAatUri?: string | null;
   /**
    * Gates which dimension sections apply. A work can combine types.
    */
@@ -2318,6 +2374,14 @@ export interface Event {
   eventTypeCustom?: string | null;
   status: 'draft' | 'published';
   featured?: boolean | null;
+  /**
+   * Set automatically from enrichment progress. Complete enables the public event page.
+   */
+  enrichmentStatus?: ('stub' | 'partial' | 'complete') | null;
+  /**
+   * When true, CV title links to /events/[slug].
+   */
+  hasPage?: boolean | null;
   startDate: string;
   endDate?: string | null;
   isOngoing?: boolean | null;
@@ -2332,6 +2396,20 @@ export interface Event {
   venueTgnUri?: string | null;
   venueUrl?: string | null;
   venueWikidataUri?: string | null;
+  venueAddress?: string | null;
+  venueLatLng?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  /**
+   * External URIs for this event — Wikidata, e-flux, institutional archive, etc.
+   */
+  sameAs?:
+    | {
+        uri: string;
+        id?: string | null;
+      }[]
+    | null;
   isOnline?: boolean | null;
   onlineEventUrl?: string | null;
   additionalVenues?:
@@ -2369,16 +2447,46 @@ export interface Event {
         | 'commissioned-artist'
       )
     | null;
+  /**
+   * Other artists in this show. Name is required; URIs are optional.
+   */
   coExhibitors?:
     | {
-        name?: string | null;
+        name: string;
+        /**
+         * Optional — e.g. painter, sculptor, video artist.
+         */
+        role?: string | null;
+        ulanUri?: string | null;
+        wikidataUri?: string | null;
+        sameAs?:
+          | {
+              uri?: string | null;
+              id?: string | null;
+            }[]
+          | null;
         id?: string | null;
       }[]
     | null;
   catalogue?: boolean | null;
   catalogueUrl?: string | null;
   pressUrl?: string | null;
-  recordingUrl?: string | null;
+  installationImages?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        altText?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  mediaLinks?:
+    | {
+        url: string;
+        type?: ('video' | 'audio' | 'image-series' | 'livestream') | null;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   descriptionShort?: string | null;
   descriptionLong?: {
     root: {
@@ -2421,6 +2529,32 @@ export interface Event {
   commissionClient?: string | null;
   commissionSite?: string | null;
   commissionBudget?: number | null;
+  performanceType?: ('live' | 'durational' | 'participatory' | 'lecture-performance' | 'sound' | 'other') | null;
+  duration?: string | null;
+  collaborators?:
+    | {
+        name: string;
+        role: string;
+        ulanUri?: string | null;
+        wikidataUri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  programmeContext?: string | null;
+  eventFormatType?: string | null;
+  slidesUrl?: string | null;
+  coSpeakers?:
+    | {
+        name?: string | null;
+        role?: string | null;
+        ulanUri?: string | null;
+        wikidataUri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  festivalProgramme?: string | null;
+  screeningFormat?: ('35mm' | 'digital' | 'video-installation' | 'online') | null;
+  premiereStatus?: ('world' | 'european' | 'national' | 'none') | null;
   cvSection?:
     | (
         | 'education'
@@ -3029,7 +3163,8 @@ export interface Session {
     | 'onboarding'
     | 'sequencing'
     | 'episode-storyboard'
-    | 'episode-assembly';
+    | 'episode-assembly'
+    | 'event-enrichment';
   status: 'in-progress' | 'completed' | 'abandoned';
   artistId?: (number | null) | Artist;
   artworkRecord?: (number | null) | Artwork;
@@ -3041,6 +3176,10 @@ export interface Session {
    * MoP episode for storyboard or assembly sessions.
    */
   episodeRecord?: (number | null) | Episode;
+  /**
+   * Event stub being enriched in an event-enrichment session.
+   */
+  eventRecord?: (number | null) | Event;
   /**
    * Active Lines this session contributes to.
    */
@@ -3365,6 +3504,7 @@ export interface ArtistsSelect<T extends boolean = true> {
   nameLegal?: T;
   generateSlug?: T;
   slug?: T;
+  cataloguePrefix?: T;
   birthCity?: T;
   birthYear?: T;
   workCity1?: T;
@@ -3383,9 +3523,19 @@ export interface ArtistsSelect<T extends boolean = true> {
       };
   ulanUri?: T;
   wikidataUri?: T;
+  canonicalDomain?: T;
+  archivePublicKey?: T;
   bioFull?: T;
   bioMedium?: T;
   bioShort?: T;
+  cvFooterImage?: T;
+  bioPhotos?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        id?: T;
+      };
   statementFull?: T;
   statementMedium?: T;
   statementShort?: T;
@@ -3406,6 +3556,9 @@ export interface ArtistsSelect<T extends boolean = true> {
   publicEmail?: T;
   website?: T;
   instagramUrl?: T;
+  tiktokUrl?: T;
+  youtubeUrl?: T;
+  linkedinUrl?: T;
   otherLinks?:
     | T
     | {
@@ -3671,6 +3824,8 @@ export interface EventsSelect<T extends boolean = true> {
   eventTypeCustom?: T;
   status?: T;
   featured?: T;
+  enrichmentStatus?: T;
+  hasPage?: T;
   startDate?: T;
   endDate?: T;
   isOngoing?: T;
@@ -3682,6 +3837,19 @@ export interface EventsSelect<T extends boolean = true> {
   venueTgnUri?: T;
   venueUrl?: T;
   venueWikidataUri?: T;
+  venueAddress?: T;
+  venueLatLng?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  sameAs?:
+    | T
+    | {
+        uri?: T;
+        id?: T;
+      };
   isOnline?: T;
   onlineEventUrl?: T;
   additionalVenues?:
@@ -3704,12 +3872,36 @@ export interface EventsSelect<T extends boolean = true> {
     | T
     | {
         name?: T;
+        role?: T;
+        ulanUri?: T;
+        wikidataUri?: T;
+        sameAs?:
+          | T
+          | {
+              uri?: T;
+              id?: T;
+            };
         id?: T;
       };
   catalogue?: T;
   catalogueUrl?: T;
   pressUrl?: T;
-  recordingUrl?: T;
+  installationImages?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        altText?: T;
+        id?: T;
+      };
+  mediaLinks?:
+    | T
+    | {
+        url?: T;
+        type?: T;
+        label?: T;
+        id?: T;
+      };
   descriptionShort?: T;
   descriptionLong?: T;
   artistNote?: T;
@@ -3735,6 +3927,32 @@ export interface EventsSelect<T extends boolean = true> {
   commissionClient?: T;
   commissionSite?: T;
   commissionBudget?: T;
+  performanceType?: T;
+  duration?: T;
+  collaborators?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        ulanUri?: T;
+        wikidataUri?: T;
+        id?: T;
+      };
+  programmeContext?: T;
+  eventFormatType?: T;
+  slidesUrl?: T;
+  coSpeakers?:
+    | T
+    | {
+        name?: T;
+        role?: T;
+        ulanUri?: T;
+        wikidataUri?: T;
+        id?: T;
+      };
+  festivalProgramme?: T;
+  screeningFormat?: T;
+  premiereStatus?: T;
   cvSection?: T;
   cvDisplayTitle?: T;
   cvPriority?: T;
@@ -3777,6 +3995,8 @@ export interface ArtworksSelect<T extends boolean = true> {
   posterImageAltText?: T;
   title?: T;
   altTitle?: T;
+  catalogueNumber?: T;
+  catalogueSequence?: T;
   slug?: T;
   creator?: T;
   series?: T;
@@ -3799,6 +4019,7 @@ export interface ArtworksSelect<T extends boolean = true> {
   oldWpUrl?: T;
   medium?: T;
   mediumOther?: T;
+  mediumAatUri?: T;
   measurementType?: T;
   support?: T;
   framing?: T;
@@ -4644,6 +4865,7 @@ export interface SessionsSelect<T extends boolean = true> {
   artworkRecord?: T;
   triptychRecord?: T;
   episodeRecord?: T;
+  eventRecord?: T;
   lines?: T;
   completedAt?: T;
   messages?: T;
@@ -4781,6 +5003,10 @@ export interface ArtOfficialSetting {
          * Label shown in dropdowns
          */
         label: string;
+        /**
+         * Optional Getty AAT URI for this medium — used in JSON-LD artMedium as DefinedTerm when set.
+         */
+        aatUri?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -4811,6 +5037,7 @@ export interface ArtOfficialSettingsSelect<T extends boolean = true> {
     | {
         value?: T;
         label?: T;
+        aatUri?: T;
         id?: T;
       };
   updatedAt?: T;

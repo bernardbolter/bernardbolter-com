@@ -78,6 +78,26 @@ export const Artworks: CollectionConfig = {
               },
             },
             {
+              name: 'catalogueNumber',
+              type: 'text',
+              unique: true,
+              index: true,
+              admin: {
+                readOnly: true,
+                description:
+                  'Auto-assigned catalogue ID, e.g. BB-ACH-2019-003 (prefix · series code · year · sequence).',
+              },
+            },
+            {
+              name: 'catalogueSequence',
+              type: 'number',
+              admin: {
+                readOnly: true,
+                hidden: true,
+                description: 'Sequence within series + year — used to build catalogueNumber.',
+              },
+            },
+            {
               name: 'slug',
               type: 'text',
               required: true,
@@ -374,6 +394,14 @@ export const Artworks: CollectionConfig = {
               admin: {
                 description: 'Override or specify when medium is “Other”.',
                 condition: (_, data) => data?.medium === 'other',
+              },
+            },
+            {
+              name: 'mediumAatUri',
+              type: 'text',
+              admin: {
+                description:
+                  'Getty AAT URI for this medium. Auto-filled from the medium registry when known; editable for overrides.',
               },
             },
             {

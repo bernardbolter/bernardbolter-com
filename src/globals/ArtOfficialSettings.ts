@@ -38,6 +38,14 @@ export const ArtOfficialSettings: GlobalConfig = {
           required: true,
           admin: { description: 'Label shown in dropdowns' },
         },
+        {
+          name: 'aatUri',
+          type: 'text',
+          admin: {
+            description:
+              'Optional Getty AAT URI for this medium — used in JSON-LD artMedium as DefinedTerm when set.',
+          },
+        },
       ],
     },
   ],

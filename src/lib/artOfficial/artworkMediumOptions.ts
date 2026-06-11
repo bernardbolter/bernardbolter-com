@@ -17,7 +17,11 @@ export const BUILTIN_ARTWORK_MEDIUM_OPTIONS: MediumOption[] = [
 
 export const BUILTIN_VALUES = new Set(BUILTIN_ARTWORK_MEDIUM_OPTIONS.map((o) => o.value))
 
-export type CustomMediumRow = { value: string; label: string }
+export type CustomMediumRow = {
+  value: string
+  label: string
+  aatUri?: string | null
+}
 
 export const ART_OFFICIAL_SETTINGS_SLUG = 'art-official-settings'
 
@@ -47,6 +51,7 @@ export async function getCustomMediums(payload: Payload): Promise<CustomMediumRo
       .map((row) => ({
         value: row.value.trim(),
         label: row.label.trim(),
+        aatUri: typeof row.aatUri === 'string' ? row.aatUri.trim() : undefined,
       }))
       .filter((row) => row.value && row.label && !BUILTIN_VALUES.has(row.value))
   } catch {
