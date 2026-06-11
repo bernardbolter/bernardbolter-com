@@ -47,10 +47,12 @@ export async function getPublishedEventBySlug(slug: string): Promise<Event | nul
       and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
     },
     limit: 1,
-    depth: 0,
+    depth: 2,
     overrideAccess: false,
   })
-  return result.docs[0] ?? null
+  const event = result.docs[0] ?? null
+  if (event && !event.hasPage) return null
+  return event
 }
 
 /** One random published artwork for 404 / discovery surfaces. */

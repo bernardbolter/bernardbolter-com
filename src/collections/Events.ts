@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { privateFieldAccess, isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { eventAfterChange } from '@/hooks/eventAfterChange'
 import { eventBeforeChange } from '@/hooks/eventBeforeChange'
 import { isPublished } from '@/utilities/accessControl'
 
@@ -40,6 +41,7 @@ export const Events: CollectionConfig = {
   slug: 'events',
   hooks: {
     beforeChange: [eventBeforeChange],
+    afterChange: [eventAfterChange],
   },
   access: {
     read: isPublished,
@@ -86,6 +88,32 @@ export const Events: CollectionConfig = {
               admin: { position: 'sidebar' },
             },
             { name: 'featured', type: 'checkbox', defaultValue: false, admin: { position: 'sidebar' } },
+            {
+              name: 'enrichmentStatus',
+              type: 'select',
+              defaultValue: 'stub',
+              options: [
+                { label: 'Stub — CV only, no page', value: 'stub' },
+                { label: 'Partial — some enrichment done', value: 'partial' },
+                { label: 'Complete — full page ready', value: 'complete' },
+              ],
+              admin: {
+                position: 'sidebar',
+                readOnly: true,
+                description:
+                  'Set automatically from enrichment progress. Complete enables the public event page.',
+              },
+            },
+            {
+              name: 'hasPage',
+              type: 'checkbox',
+              defaultValue: false,
+              admin: {
+                position: 'sidebar',
+                readOnly: true,
+                description: 'When true, CV title links to /events/[slug].',
+              },
+            },
           ],
         },
         {
@@ -111,6 +139,24 @@ export const Events: CollectionConfig = {
             { name: 'venueTgnUri', type: 'text' },
             { name: 'venueUrl', type: 'text' },
             { name: 'venueWikidataUri', type: 'text' },
+            { name: 'venueAddress', type: 'text' },
+            {
+              name: 'venueLatLng',
+              type: 'group',
+              fields: [
+                { name: 'lat', type: 'number' },
+                { name: 'lng', type: 'number' },
+              ],
+            },
+            {
+              name: 'sameAs',
+              type: 'array',
+              fields: [{ name: 'uri', type: 'text', required: true }],
+              admin: {
+                description:
+                  'External URIs for this event — Wikidata, e-flux, institutional archive, etc.',
+              },
+            },
             { name: 'isOnline', type: 'checkbox', defaultValue: false },
             {
               name: 'onlineEventUrl',
@@ -181,12 +227,64 @@ export const Events: CollectionConfig = {
             {
               name: 'coExhibitors',
               type: 'array',
-              fields: [{ name: 'name', type: 'text' }],
+              admin: {
+                description:
+                  'Other artists in this show. Name is required; URIs are optional.',
+                condition: (_, sibling) =>
+                  sibling?.eventType === 'group-exhibition' ||
+                  sibling?.eventType === 'art-fair',
+              },
+              fields: [
+                { name: 'name', type: 'text', required: true },
+                {
+                  name: 'role',
+                  type: 'text',
+                  admin: { description: 'Optional — e.g. painter, sculptor, video artist.' },
+                },
+                { name: 'ulanUri', type: 'text' },
+                { name: 'wikidataUri', type: 'text' },
+                {
+                  name: 'sameAs',
+                  type: 'array',
+                  fields: [{ name: 'uri', type: 'text' }],
+                },
+              ],
             },
             { name: 'catalogue', type: 'checkbox', defaultValue: false },
             { name: 'catalogueUrl', type: 'text' },
             { name: 'pressUrl', type: 'text' },
-            { name: 'recordingUrl', type: 'text' },
+          ],
+        },
+        {
+          label: 'Media',
+          fields: [
+            {
+              name: 'installationImages',
+              type: 'array',
+              fields: [
+                { name: 'image', type: 'upload', relationTo: 'media', required: true },
+                { name: 'caption', type: 'text' },
+                { name: 'altText', type: 'text' },
+              ],
+            },
+            {
+              name: 'mediaLinks',
+              type: 'array',
+              fields: [
+                { name: 'url', type: 'text', required: true },
+                {
+                  name: 'type',
+                  type: 'select',
+                  options: [
+                    { label: 'Video', value: 'video' },
+                    { label: 'Audio', value: 'audio' },
+                    { label: 'Image series', value: 'image-series' },
+                    { label: 'Livestream', value: 'livestream' },
+                  ],
+                },
+                { name: 'label', type: 'text' },
+              ],
+            },
           ],
         },
         {
@@ -338,6 +436,88 @@ export const Events: CollectionConfig = {
               type: 'number',
               access: privateFieldAccess,
               admin: { condition: (_, sibling) => sibling?.eventType === 'public-commission' },
+            },
+            {
+              name: 'performanceType',
+              type: 'select',
+              options: [
+                { label: 'Live', value: 'live' },
+                { label: 'Durational', value: 'durational' },
+                { label: 'Participatory', value: 'participatory' },
+                { label: 'Lecture-performance', value: 'lecture-performance' },
+                { label: 'Sound', value: 'sound' },
+                { label: 'Other', value: 'other' },
+              ],
+              admin: { condition: (_, sibling) => sibling?.eventType === 'performance' },
+            },
+            {
+              name: 'duration',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'performance' },
+            },
+            {
+              name: 'collaborators',
+              type: 'array',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'performance' },
+              fields: [
+                { name: 'name', type: 'text', required: true },
+                { name: 'role', type: 'text', required: true },
+                { name: 'ulanUri', type: 'text' },
+                { name: 'wikidataUri', type: 'text' },
+              ],
+            },
+            {
+              name: 'programmeContext',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'performance' },
+            },
+            {
+              name: 'eventFormatType',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'talk-panel' },
+            },
+            {
+              name: 'slidesUrl',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'talk-panel' },
+            },
+            {
+              name: 'coSpeakers',
+              type: 'array',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'talk-panel' },
+              fields: [
+                { name: 'name', type: 'text' },
+                { name: 'role', type: 'text' },
+                { name: 'ulanUri', type: 'text' },
+                { name: 'wikidataUri', type: 'text' },
+              ],
+            },
+            {
+              name: 'festivalProgramme',
+              type: 'text',
+              admin: { condition: (_, sibling) => sibling?.eventType === 'screening' },
+            },
+            {
+              name: 'screeningFormat',
+              type: 'select',
+              options: [
+                { label: '35mm', value: '35mm' },
+                { label: 'Digital', value: 'digital' },
+                { label: 'Video installation', value: 'video-installation' },
+                { label: 'Online', value: 'online' },
+              ],
+              admin: { condition: (_, sibling) => sibling?.eventType === 'screening' },
+            },
+            {
+              name: 'premiereStatus',
+              type: 'select',
+              options: [
+                { label: 'World', value: 'world' },
+                { label: 'European', value: 'european' },
+                { label: 'National', value: 'national' },
+                { label: 'None', value: 'none' },
+              ],
+              admin: { condition: (_, sibling) => sibling?.eventType === 'screening' },
             },
           ],
         },
