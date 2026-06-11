@@ -29,10 +29,11 @@ function normalizeWebsiteLinks(artist: Artist): ArtistInfoLink[] {
 
 function mapSocialLinks(artist: Artist): ArtistSocialLinks {
   const social: ArtistSocialLinks = {}
-  const instagram = artist.instagramUrl?.trim()
-  const tiktok = artist.tiktokUrl?.trim()
-  const youtube = artist.youtubeUrl?.trim()
-  const linkedin = artist.linkedinUrl?.trim()
+  const channels = artist.socialChannels ?? {}
+  const instagram = channels.instagram?.trim()
+  const tiktok = channels.tiktok?.trim()
+  const youtube = channels.youtube?.trim()
+  const linkedin = channels.linkedin?.trim()
 
   if (instagram) social.instagram = instagram
   if (tiktok) social.tiktok = tiktok

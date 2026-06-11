@@ -1,7 +1,11 @@
 import type { CollectionConfig } from 'payload'
 import { slugField } from 'payload'
 
-import { isArtistOrAdmin, privateFieldAccess } from '@/access/isArtistOrAdmin'
+import {
+  isArtistOrAdmin,
+  privateFieldAccess,
+  publicReadStaffWriteAccess,
+} from '@/access/isArtistOrAdmin'
 import { artistAfterChange } from '@/hooks/artistAfterChange'
 import { artistBeforeChange } from '@/hooks/artistBeforeChange'
 
@@ -272,6 +276,156 @@ export const Artists: CollectionConfig = {
       admin: { description: 'Canonical attribution string for listings and loans.' },
     },
     {
+      type: 'collapsible',
+      label: 'Contact page',
+      admin: {
+        initCollapsed: false,
+        description: 'Availability, provenance copy, social channels, and Impressum for /contact.',
+      },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'contactStatus',
+              type: 'select',
+              defaultValue: 'available',
+              options: [
+                { label: 'Available', value: 'available' },
+                { label: 'Away — slow to respond', value: 'away' },
+                { label: 'Not currently available', value: 'unavailable' },
+              ],
+              admin: {
+                width: '50%',
+                description:
+                  'Update this to reflect your current availability. Shown on the contact page.',
+              },
+            },
+            {
+              name: 'contactStatusNote',
+              type: 'text',
+              admin: {
+                width: '50%',
+                description:
+                  'Optional one-line note shown alongside the status on the contact page.',
+              },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'whatsappNumber',
+              type: 'text',
+              admin: {
+                width: '50%',
+                description:
+                  'WhatsApp number in international format without spaces, e.g. 49171234567.',
+              },
+            },
+            {
+              name: 'whatsappPrefilledMessage',
+              type: 'text',
+              admin: {
+                width: '50%',
+                description: 'Optional pre-filled message for wa.me links on the contact page.',
+              },
+            },
+          ],
+        },
+        {
+          name: 'socialChannels',
+          type: 'group',
+          fields: [
+            { name: 'instagram', type: 'text', label: 'Instagram URL' },
+            { name: 'facebook', type: 'text', label: 'Facebook URL' },
+            { name: 'youtube', type: 'text', label: 'YouTube URL' },
+            { name: 'vimeo', type: 'text', label: 'Vimeo URL' },
+            { name: 'linkedin', type: 'text', label: 'LinkedIn URL' },
+            { name: 'tiktok', type: 'text', label: 'TikTok URL' },
+          ],
+          admin: {
+            description:
+              'Leave blank any platform not in active use. Populated platforms appear on the site.',
+          },
+        },
+        {
+          name: 'primarySocialChannel',
+          type: 'select',
+          options: [
+            { label: 'Instagram', value: 'instagram' },
+            { label: 'Facebook', value: 'facebook' },
+            { label: 'YouTube', value: 'youtube' },
+            { label: 'Vimeo', value: 'vimeo' },
+            { label: 'LinkedIn', value: 'linkedin' },
+            { label: 'TikTok', value: 'tiktok' },
+          ],
+          admin: {
+            description:
+              'Platform where you actively respond to DMs — highlighted on the contact page.',
+          },
+        },
+        {
+          name: 'contactProvenanceText',
+          type: 'richText',
+          localized: true,
+          admin: {
+            description:
+              'Provenance invitation — explains what provenance means here and invites owners to get in touch.',
+          },
+        },
+        {
+          name: 'contactThankYouText',
+          type: 'richText',
+          localized: true,
+          admin: {
+            description: 'Optional personal note of thanks to collectors and supporters.',
+          },
+        },
+        {
+          name: 'contactCorrectionsText',
+          type: 'richText',
+          localized: true,
+          admin: {
+            description:
+              'Optional invitation for archive materials — photographs, catalogues, exhibition records.',
+          },
+        },
+        {
+          name: 'contactEnquiryIntro',
+          type: 'richText',
+          localized: true,
+          admin: {
+            description:
+              'Short intro above the contact form — commissions, exhibition proposals, general questions.',
+          },
+        },
+        {
+          name: 'impressum',
+          type: 'group',
+          access: {
+            read: publicReadStaffWriteAccess.read,
+            update: publicReadStaffWriteAccess.update,
+          },
+          fields: [
+            { name: 'legalName', type: 'text', label: 'Full legal name' },
+            { name: 'streetAddress', type: 'text', label: 'Street address' },
+            { name: 'postalCode', type: 'text', label: 'Postal code' },
+            { name: 'city', type: 'text', label: 'City' },
+            { name: 'country', type: 'text', label: 'Country' },
+            { name: 'publicEmail', type: 'email', label: 'Public contact email' },
+            {
+              name: 'kleinunternehmerText',
+              type: 'textarea',
+              label: 'Kleinunternehmer legal text',
+            },
+            { name: 'odrText', type: 'richText', label: 'ODR platform legal text' },
+          ],
+        },
+      ],
+    },
+    {
       name: 'locations',
       type: 'array',
       labels: { singular: 'Location', plural: 'Locations' },
@@ -306,10 +460,6 @@ export const Artists: CollectionConfig = {
       },
     },
     { name: 'website', type: 'text' },
-    { name: 'instagramUrl', type: 'text', admin: { description: 'Info panel Instagram icon.' } },
-    { name: 'tiktokUrl', type: 'text', admin: { description: 'Info panel TikTok icon.' } },
-    { name: 'youtubeUrl', type: 'text', admin: { description: 'Info panel YouTube icon.' } },
-    { name: 'linkedinUrl', type: 'text', admin: { description: 'Info panel LinkedIn icon.' } },
     {
       name: 'otherLinks',
       type: 'array',

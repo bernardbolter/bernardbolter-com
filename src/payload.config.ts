@@ -59,6 +59,7 @@ export default buildConfig({
       beforeNavLinks: [
         '/components/admin/ArtOfficialNavLink#ArtOfficialNavLink',
         '/components/admin/StudioNavLink#StudioNavLink',
+        '/components/admin/UpdateAvailabilityNavLink#UpdateAvailabilityNavLink',
       ],
       beforeDashboard: [
         '/components/admin/ArtOfficialDashboardLink#ArtOfficialDashboardLink',

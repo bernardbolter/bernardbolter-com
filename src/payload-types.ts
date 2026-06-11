@@ -420,6 +420,133 @@ export interface Artist {
    * Canonical attribution string for listings and loans.
    */
   creditLine?: string | null;
+  /**
+   * Update this to reflect your current availability. Shown on the contact page.
+   */
+  contactStatus?: ('available' | 'away' | 'unavailable') | null;
+  /**
+   * Optional one-line note shown alongside the status on the contact page.
+   */
+  contactStatusNote?: string | null;
+  /**
+   * WhatsApp number in international format without spaces, e.g. 49171234567.
+   */
+  whatsappNumber?: string | null;
+  /**
+   * Optional pre-filled message for wa.me links on the contact page.
+   */
+  whatsappPrefilledMessage?: string | null;
+  /**
+   * Leave blank any platform not in active use. Populated platforms appear on the site.
+   */
+  socialChannels?: {
+    instagram?: string | null;
+    facebook?: string | null;
+    youtube?: string | null;
+    vimeo?: string | null;
+    linkedin?: string | null;
+    tiktok?: string | null;
+  };
+  /**
+   * Platform where you actively respond to DMs — highlighted on the contact page.
+   */
+  primarySocialChannel?: ('instagram' | 'facebook' | 'youtube' | 'vimeo' | 'linkedin' | 'tiktok') | null;
+  /**
+   * Provenance invitation — explains what provenance means here and invites owners to get in touch.
+   */
+  contactProvenanceText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Optional personal note of thanks to collectors and supporters.
+   */
+  contactThankYouText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Optional invitation for archive materials — photographs, catalogues, exhibition records.
+   */
+  contactCorrectionsText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Short intro above the contact form — commissions, exhibition proposals, general questions.
+   */
+  contactEnquiryIntro?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  impressum?: {
+    legalName?: string | null;
+    streetAddress?: string | null;
+    postalCode?: string | null;
+    city?: string | null;
+    country?: string | null;
+    publicEmail?: string | null;
+    kleinunternehmerText?: string | null;
+    odrText?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
   locations?:
     | {
         city: string;
@@ -439,22 +566,6 @@ export interface Artist {
    */
   publicEmail?: string | null;
   website?: string | null;
-  /**
-   * Info panel Instagram icon.
-   */
-  instagramUrl?: string | null;
-  /**
-   * Info panel TikTok icon.
-   */
-  tiktokUrl?: string | null;
-  /**
-   * Info panel YouTube icon.
-   */
-  youtubeUrl?: string | null;
-  /**
-   * Info panel LinkedIn icon.
-   */
-  linkedinUrl?: string | null;
   /**
    * External sites shown in the left info menu (label + URL). Reorder, add, or remove rows here.
    */
@@ -3542,6 +3653,37 @@ export interface ArtistsSelect<T extends boolean = true> {
   datenschutzFull?: T;
   practiceNote?: T;
   creditLine?: T;
+  contactStatus?: T;
+  contactStatusNote?: T;
+  whatsappNumber?: T;
+  whatsappPrefilledMessage?: T;
+  socialChannels?:
+    | T
+    | {
+        instagram?: T;
+        facebook?: T;
+        youtube?: T;
+        vimeo?: T;
+        linkedin?: T;
+        tiktok?: T;
+      };
+  primarySocialChannel?: T;
+  contactProvenanceText?: T;
+  contactThankYouText?: T;
+  contactCorrectionsText?: T;
+  contactEnquiryIntro?: T;
+  impressum?:
+    | T
+    | {
+        legalName?: T;
+        streetAddress?: T;
+        postalCode?: T;
+        city?: T;
+        country?: T;
+        publicEmail?: T;
+        kleinunternehmerText?: T;
+        odrText?: T;
+      };
   locations?:
     | T
     | {
@@ -3555,10 +3697,6 @@ export interface ArtistsSelect<T extends boolean = true> {
       };
   publicEmail?: T;
   website?: T;
-  instagramUrl?: T;
-  tiktokUrl?: T;
-  youtubeUrl?: T;
-  linkedinUrl?: T;
   otherLinks?:
     | T
     | {

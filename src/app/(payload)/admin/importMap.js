@@ -28,6 +28,7 @@ import { ArtOfficialDashboardLink as ArtOfficialDashboardLink_4073412bffa0767173
 import { StudioDashboardLink as StudioDashboardLink_43641fc7b74866575d223b300e63a75a } from '../../../components/admin/StudioDashboardLink'
 import { ArtOfficialNavLink as ArtOfficialNavLink_d089545826d58bb72f7914c7a484afa8 } from '../../../components/admin/ArtOfficialNavLink'
 import { StudioNavLink as StudioNavLink_c0d1034a8709d8a749125120127fbc46 } from '../../../components/admin/StudioNavLink'
+import { UpdateAvailabilityNavLink as UpdateAvailabilityNavLink_45f209f1fb9f0e9338cea4503fc4b670 } from '../../../components/admin/UpdateAvailabilityNavLink'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { ArtOfficialView as ArtOfficialView_f78859173f06ab48b0500c265ac3fe37 } from '../../../components/admin/ArtOfficialView'
 import { AuditView as AuditView_98c641df83da4c225587f2e861b285cd } from '../../../components/admin/artOfficial/AuditView'
@@ -65,6 +66,7 @@ export const importMap = {
   "/components/admin/StudioDashboardLink#StudioDashboardLink": StudioDashboardLink_43641fc7b74866575d223b300e63a75a,
   "/components/admin/ArtOfficialNavLink#ArtOfficialNavLink": ArtOfficialNavLink_d089545826d58bb72f7914c7a484afa8,
   "/components/admin/StudioNavLink#StudioNavLink": StudioNavLink_c0d1034a8709d8a749125120127fbc46,
+  "/components/admin/UpdateAvailabilityNavLink#UpdateAvailabilityNavLink": UpdateAvailabilityNavLink_45f209f1fb9f0e9338cea4503fc4b670,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "/components/admin/ArtOfficialView#ArtOfficialView": ArtOfficialView_f78859173f06ab48b0500c265ac3fe37,
   "/components/admin/artOfficial/AuditView#AuditView": AuditView_98c641df83da4c225587f2e861b285cd,
