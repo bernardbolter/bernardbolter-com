@@ -7,6 +7,7 @@ import type {
   Tag,
 } from '@/payload-types'
 
+import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { buildArtMediumJsonLdValue } from '@/lib/artwork/mediumVocabulary'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
@@ -66,19 +67,6 @@ function cmQuantitativeValue(mm: number): Record<string, unknown> {
 function resolveSupportLabel(artwork: Artwork): string | undefined {
   if (!artwork.support) return undefined
   return SUPPORT_LABELS[artwork.support] ?? artwork.support
-}
-
-function collectSameAsUris(artwork: Artwork): string[] {
-  const uris = new Set<string>()
-  for (const row of artwork.sameAsUrls ?? []) {
-    const url = trimString(row.url)
-    if (url) uris.add(url)
-  }
-  for (const row of artwork.sameAs ?? []) {
-    const url = trimString(row.url)
-    if (url) uris.add(url)
-  }
-  return [...uris]
 }
 
 function resolveTopLevelSeries(series: Series): Series {
@@ -182,7 +170,7 @@ export function generateArtworkJsonLd(
     }
   }
 
-  const sameAs = collectSameAsUris(artwork)
+  const sameAs = collectArtworkSameAsUris(artwork)
   if (sameAs.length) doc.sameAs = sameAs
 
   if (
