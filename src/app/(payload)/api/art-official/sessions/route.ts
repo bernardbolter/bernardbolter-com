@@ -9,10 +9,12 @@ const createSessionSchema = z.object({
     'biography',
     'onboarding',
     'sequencing',
+    'event-enrichment',
   ]),
   artworkRecord: z.number().int().positive().optional(),
   triptychRecord: z.number().int().positive().optional(),
   sequencingSeries: z.number().int().positive().optional(),
+  eventRecord: z.number().int().positive().optional(),
 })
 
 export async function POST(request: Request) {
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
       artworkRecord: parsed.data.artworkRecord,
       triptychRecord: parsed.data.triptychRecord,
       sequencingSeries: parsed.data.sequencingSeries,
+      eventRecord: parsed.data.eventRecord,
       status: 'in-progress',
       messages: [],
       // Pre-upload questionnaire only runs for new artworks — skip when refining an existing one.

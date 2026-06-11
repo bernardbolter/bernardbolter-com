@@ -39,6 +39,7 @@ export const Sessions: CollectionConfig = {
         { label: 'Sequencing', value: 'sequencing' },
         { label: 'Episode storyboard', value: 'episode-storyboard' },
         { label: 'Episode assembly', value: 'episode-assembly' },
+        { label: 'Event enrichment', value: 'event-enrichment' },
       ],
       admin: { position: 'sidebar' },
     },
@@ -82,6 +83,15 @@ export const Sessions: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: 'MoP episode for storyboard or assembly sessions.',
+      },
+    },
+    {
+      name: 'eventRecord',
+      type: 'relationship',
+      relationTo: 'events',
+      admin: {
+        position: 'sidebar',
+        description: 'Event stub being enriched in an event-enrichment session.',
       },
     },
     {

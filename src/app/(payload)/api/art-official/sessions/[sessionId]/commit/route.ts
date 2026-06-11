@@ -8,6 +8,7 @@ import {
   sanitizeArtworkCommitPatch,
 } from '@/lib/artOfficial/buildArtworkPatch'
 import { mergeStagedMediaIntoArtworkPatch } from '@/lib/artOfficial/stagedMedia'
+import { buildEventPatchFromTimeline } from '@/lib/artOfficial/buildEventPatch'
 import { buildTriptychPatchFromTimeline } from '@/lib/artOfficial/buildTriptychPatch'
 import {
   applyPracticeKnowledgePatches,
@@ -61,6 +62,7 @@ export async function POST(request: Request, context: RouteContext) {
   let artworkId: number | undefined
   let triptychId: number | undefined
   let episodeId: number | undefined
+  let eventId: number | undefined
   let practiceKnowledge: Awaited<ReturnType<typeof applyPracticeKnowledgePatches>> | undefined
   let sequencingApplied = 0
   let timelineRecompute: Awaited<ReturnType<typeof recomputeTimeline>> | undefined
@@ -324,6 +326,42 @@ export async function POST(request: Request, context: RouteContext) {
       break
     }
 
+    case 'update-event': {
+      const linkedEventId =
+        body.eventId ??
+        (typeof session.eventRecord === 'object'
+          ? session.eventRecord?.id
+          : session.eventRecord)
+      if (!linkedEventId) {
+        return Response.json({ error: 'Session is not linked to an event' }, { status: 412 })
+      }
+
+      const serverPatch = buildEventPatchFromTimeline(timeline)
+      const clientPatch =
+        body.eventData && typeof body.eventData === 'object'
+          ? (body.eventData as Record<string, unknown>)
+          : {}
+      const eventPatch = { ...clientPatch, ...serverPatch }
+
+      if (Object.keys(eventPatch).length === 0) {
+        return Response.json(
+          { error: 'No event fields were staged. Continue the chat, then commit again.' },
+          { status: 412 },
+        )
+      }
+
+      await payload.update({
+        collection: 'events',
+        id: linkedEventId as number,
+        data: eventPatch as never,
+        overrideAccess: false,
+        user,
+        locale: 'en',
+      })
+      eventId = linkedEventId as number
+      break
+    }
+
     case 'update-episode': {
       const linkedEpisodeId =
         typeof session.episodeRecord === 'object'
@@ -388,6 +426,7 @@ export async function POST(request: Request, context: RouteContext) {
         artworkRecord: artworkId ?? session.artworkRecord,
         triptychRecord: triptychId ?? session.triptychRecord,
         episodeRecord: episodeId ?? session.episodeRecord,
+        eventRecord: eventId ?? session.eventRecord,
         ...(body.firstImpression ? { firstImpression: body.firstImpression } : {}),
         ...(body.secondDescription ? { secondDescription: body.secondDescription } : {}),
         ...(body.refinementNotes ? { refinementNotes: body.refinementNotes } : {}),
@@ -403,6 +442,7 @@ export async function POST(request: Request, context: RouteContext) {
     artworkId,
     triptychId,
     episodeId,
+    eventId,
     refinementFlagged,
     practiceKnowledge,
     sequencingApplied,

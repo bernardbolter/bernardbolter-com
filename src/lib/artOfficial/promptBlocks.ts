@@ -136,7 +136,8 @@ export function sessionTypeOverride(
     | 'onboarding'
     | 'sequencing'
     | 'episode-storyboard'
-    | 'episode-assembly',
+    | 'episode-assembly'
+    | 'event-enrichment',
 ): string {
   switch (sessionType) {
     case 'artwork-cataloguing':
@@ -191,6 +192,8 @@ Propose estimated positions from conversation; never invent dates. After commit,
       return 'SESSION TYPE: Episode storyboard — structure beats for a MoP episode. Stage updates on episodes only (storyboard array, concept, shotList).'
     case 'episode-assembly':
       return 'SESSION TYPE: Episode assembly — map clips and transcripts to beats. Stage updates on episodes only (assembly array, captionDrafts).'
+    case 'event-enrichment':
+      return 'SESSION TYPE: Event enrichment — deepen a CV event for its public page. Stage updates on events only via update_field.'
     default:
       return ''
   }

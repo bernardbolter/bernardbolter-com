@@ -105,6 +105,20 @@ const KICKOFFS: Record<SessionType | 'artwork-cataloguing-refinement', SessionKi
     message:
       "I'd like to assemble this episode from clips. Please review linked FieldNotes and ask your first question about the edit map.",
   },
+  'event-enrichment': {
+    title: 'Event enrichment',
+    intro:
+      'Build out a CV event for its public page — description, venue details, external links, and context. The agent stages fields; commit updates the Events record.',
+    topics: [
+      'What happened at the event',
+      'Authoritative external links (institutional page, Wikidata, e-flux)',
+      'Venue address and map coordinates',
+      'Co-exhibitors, collaborators, or speakers',
+    ],
+    buttonLabel: 'Begin event enrichment',
+    message:
+      "I'd like to enrich this event for its public page. Please review the stub record, summarise what's missing, and ask your first question.",
+  },
 }
 
 export function getSessionKickoff(

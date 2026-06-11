@@ -231,12 +231,58 @@
     flex-direction: column;
     gap: 6px;
     font-size: 13px;
+    font-weight: 500;
+    color: var(--theme-text);
 
     input,
     select {
-      padding: 6px 8px;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
       font-size: 14px;
+      font-weight: 400;
+      line-height: 1.35;
+      color: var(--theme-text);
+      background: var(--theme-elevation-0);
+      border: 1px solid var(--theme-elevation-150);
+      border-radius: var(--border-radius-s);
+      transition: border-color 0.15s ease;
+
+      &:focus {
+        outline: none;
+        border-color: var(--theme-elevation-400);
+        box-shadow: 0 0 0 1px var(--theme-elevation-100);
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
     }
+
+    select {
+      cursor: pointer;
+      appearance: auto;
+    }
+  }
+
+  &__event-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+
+    @media (min-width: 520px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+    padding-top: 4px;
   }
 
   &__wp-select {

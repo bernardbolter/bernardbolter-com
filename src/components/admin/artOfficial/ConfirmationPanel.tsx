@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { buildPracticeKnowledgePatches } from '@/lib/artOfficial/buildPracticeKnowledgePatches'
 import { buildArtworkPatchFromTimeline } from '@/lib/artOfficial/buildArtworkPatch'
+import { buildEventPatchFromTimeline } from '@/lib/artOfficial/buildEventPatch'
 import { collapseTimelineToLatest } from '@/lib/artOfficial/sessionTimeline'
 import { commitButtonHint, wrapUpSummary } from '@/lib/artOfficial/confirmationCopy'
 
@@ -82,6 +83,15 @@ export function ConfirmationPanel({
         practiceKnowledgePatches: buildPracticeKnowledgePatches(timeline),
         reapply: options?.reapply === true,
       }
+    } else if (sessionType === 'event-enrichment') {
+      body = {
+        eventData: buildEventPatchFromTimeline(collapseTimelineToLatest(timeline)),
+      }
+      const existingEvent =
+        typeof session.eventRecord === 'object'
+          ? session.eventRecord?.id
+          : session.eventRecord
+      if (existingEvent) body.eventId = existingEvent
     } else {
       body = { practiceKnowledgePatches: [] }
     }

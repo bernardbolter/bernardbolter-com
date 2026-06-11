@@ -80,7 +80,9 @@ export function SessionSidebar({
                 ? 'Statement commits statementFull / statementMedium / statementShort on Artist.'
                 : sessionType === 'triptych-cataloguing'
                   ? 'Triptych commits corpus fields on Triptychs (panels and commerce stay in admin).'
-                  : `${sessionType} — committed at confirmation only.`}
+                  : sessionType === 'event-enrichment'
+                    ? 'Event enrichment commits staged fields on the linked Events record.'
+                    : `${sessionType} — committed at confirmation only.`}
         </p>
       </div>
       <div className="art-official-sidebar__fields">

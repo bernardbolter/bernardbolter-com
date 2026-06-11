@@ -11,6 +11,8 @@ export function wrapUpSummary(sessionType: string | null | undefined): string {
     case 'biography':
     case 'artist-statement':
       return 'When the text is ready, commit to update your Artist record with the staged biography or statement fields.'
+    case 'event-enrichment':
+      return 'When the event narrative and links are staged, commit to update the Events record. enrichmentStatus and hasPage update automatically when the page is ready.'
     default:
       return 'When you are done in chat, commit to save staged fields to the CMS.'
   }
@@ -24,6 +26,8 @@ export function commitButtonHint(sessionType: string | null | undefined): string
       return 'Writes staged Practice Knowledge sections to the database and marks the session complete.'
     case 'sequencing':
       return 'Applies staged sortIndex and date anchors, recomputes timelineDate/dateDisplay, and marks the session complete.'
+    case 'event-enrichment':
+      return 'Writes staged event fields to the linked Events record and marks the session complete.'
     default:
       return 'Saves staged fields from this session to the CMS and marks the session complete.'
   }

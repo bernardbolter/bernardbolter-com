@@ -30,6 +30,8 @@ import type { SystemPromptParts } from './promptCache'
 import type { SessionType } from './routing'
 import { buildSeriesSlugPromptBlock, listSeriesWithParents, isSlugDescendantOf } from './seriesSlugs'
 import { buildArtworkRefinementBlock } from './artworkRefinement'
+import { buildEventRefinementBlock } from './buildEventRefinementBlock'
+import { buildEventEnrichmentBlock } from './eventEnrichmentPrompt'
 
 export type BuildSystemPromptArgs = {
   payload: Payload
@@ -38,6 +40,7 @@ export type BuildSystemPromptArgs = {
   artistId: number
   episodeId?: number
   artworkRecordId?: number
+  eventRecordId?: number
   weakPhases?: string[] | null
   isRefinement?: boolean
   preUpload?: PreUploadSessionState
@@ -123,6 +126,9 @@ export async function buildSystemPromptParts(
   if (sessionType === 'sequencing') {
     cachedPrefixParts.push(buildSequencingBlock())
   }
+  if (sessionType === 'event-enrichment') {
+    cachedPrefixParts.push(buildEventEnrichmentBlock(), buildSessionCloseBlock())
+  }
 
   const cachedPrefix = cachedPrefixParts.join('\n\n---\n\n')
 
@@ -169,6 +175,14 @@ export async function buildSystemPromptParts(
       const stateBlock = preUpload ? buildPreUploadStateBlock(preUpload) : null
       if (stateBlock) dynamicParts.push(stateBlock)
     }
+  }
+  if (sessionType === 'event-enrichment' && args.eventRecordId) {
+    const refinementBlock = await buildEventRefinementBlock({
+      payload,
+      user,
+      eventId: args.eventRecordId,
+    })
+    dynamicParts.push(refinementBlock)
   }
   if (sessionType === 'episode-storyboard' && episodeId) {
     const episode = await payload.findByID({

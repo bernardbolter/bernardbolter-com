@@ -154,6 +154,11 @@ export async function POST(request: Request) {
         ? (session.artworkRecord?.id as number | undefined)
         : (session.artworkRecord as number | undefined)
 
+    const eventRecordId =
+      typeof session.eventRecord === 'object'
+        ? (session.eventRecord?.id as number | undefined)
+        : (session.eventRecord as number | undefined)
+
     const sessionType = session.sessionType as string
     const defaultPhase = defaultSessionPhase(sessionType, Boolean(artworkRecordId))
     let currentPhase = normalizeSessionPhase(
@@ -184,6 +189,7 @@ export async function POST(request: Request) {
         artistId,
         episodeId,
         artworkRecordId,
+        eventRecordId,
         weakPhases: session.weakPhases,
         isRefinement,
         preUpload: {

@@ -6,23 +6,40 @@ import { Suspense, useCallback } from 'react'
 
 import { ArtOfficialInstructions } from './ArtOfficialInstructions'
 import { NewSessionButton } from './NewSessionButton'
+import { EventSessionLauncher } from './EventSessionLauncher'
+import { QuickEventIntake } from './QuickEventIntake'
 import { QuickUpload } from './QuickUpload'
 import { SessionLauncher } from './SessionLauncher'
+import { UnreasonedEventsQueue } from './UnreasonedEventsQueue'
 import { UnreasonedQueue } from './UnreasonedQueue'
 import type { StartRecommendation } from '@/lib/artOfficial/startRecommendation'
 
 import './artOfficialHome.scss'
 
-export type ArtOfficialTab = 'queue' | 'upload' | 'session'
+export type ArtOfficialTab =
+  | 'queue'
+  | 'upload'
+  | 'session'
+  | 'event-intake'
+  | 'event-queue'
 
 const TABS: { id: ArtOfficialTab; label: string }[] = [
   { id: 'session', label: 'Session' },
   { id: 'queue', label: 'Unreasoned Queue' },
   { id: 'upload', label: 'Quick Upload' },
+  { id: 'event-intake', label: 'Quick Event' },
+  { id: 'event-queue', label: 'Events Queue' },
 ]
 
 function parseTab(value: string | null): ArtOfficialTab {
-  if (value === 'queue' || value === 'upload') return value
+  if (
+    value === 'queue' ||
+    value === 'upload' ||
+    value === 'event-intake' ||
+    value === 'event-queue'
+  ) {
+    return value
+  }
   return 'session'
 }
 
@@ -91,6 +108,8 @@ function ArtOfficialHomeInner({
   const tab = parseTab(searchParams.get('tab'))
   const artworkIdParam = searchParams.get('artworkId')
   const launchArtworkId = artworkIdParam ? Number(artworkIdParam) : null
+  const eventIdParam = searchParams.get('eventId')
+  const launchEventId = eventIdParam ? Number(eventIdParam) : null
 
   const setTab = useCallback(
     (next: ArtOfficialTab, extra?: Record<string, string>) => {
@@ -121,7 +140,7 @@ function ArtOfficialHomeInner({
             }
             onClick={() => {
               if (t.id === 'session') setTab('session')
-              else setTab(t.id, { artworkId: '' })
+              else setTab(t.id, { artworkId: '', eventId: '' })
             }}
           >
             {t.label}
@@ -140,11 +159,29 @@ function ArtOfficialHomeInner({
 
       {tab === 'upload' ? <QuickUpload /> : null}
 
+      {tab === 'event-intake' ? <QuickEventIntake /> : null}
+
+      {tab === 'event-queue' ? (
+        <UnreasonedEventsQueue
+          onBeginSession={(eventId) => setTab('session', { eventId: String(eventId) })}
+          onQuickEvent={() => setTab('event-intake')}
+        />
+      ) : null}
+
       {tab === 'session' ? (
         <div className="art-official-home__session-panel">
           {launchArtworkId && Number.isFinite(launchArtworkId) ? (
             <SessionLauncher
               artworkId={launchArtworkId}
+              disabled={!artistExists}
+              onStarted={(sessionId) =>
+                router.push(`/admin/art-official/${sessionId}`)
+              }
+            />
+          ) : null}
+          {launchEventId && Number.isFinite(launchEventId) ? (
+            <EventSessionLauncher
+              eventId={launchEventId}
               disabled={!artistExists}
               onStarted={(sessionId) =>
                 router.push(`/admin/art-official/${sessionId}`)

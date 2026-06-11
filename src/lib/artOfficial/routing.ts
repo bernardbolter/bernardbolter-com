@@ -7,6 +7,7 @@ export type SessionType =
   | 'sequencing'
   | 'episode-storyboard'
   | 'episode-assembly'
+  | 'event-enrichment'
 
 export const SESSION_TYPES: SessionType[] = [
   'artwork-cataloguing',
@@ -17,6 +18,7 @@ export const SESSION_TYPES: SessionType[] = [
   'sequencing',
   'episode-storyboard',
   'episode-assembly',
+  'event-enrichment',
 ]
 
 export function requiresArtwork(t: SessionType): boolean {
@@ -31,12 +33,17 @@ export function requiresEpisode(t: SessionType): boolean {
   return t === 'episode-storyboard' || t === 'episode-assembly'
 }
 
+export function requiresEvent(t: SessionType): boolean {
+  return t === 'event-enrichment'
+}
+
 export type CommitTarget =
   | { kind: 'create-artwork' }
   | { kind: 'create-triptych' }
   | { kind: 'apply-sequencing' }
   | { kind: 'update-artist-singleton' }
   | { kind: 'update-episode' }
+  | { kind: 'update-event' }
   | { kind: 'no-record-write' }
 
 export function commitTarget(t: SessionType): CommitTarget {
@@ -53,6 +60,8 @@ export function commitTarget(t: SessionType): CommitTarget {
     case 'episode-storyboard':
     case 'episode-assembly':
       return { kind: 'update-episode' }
+    case 'event-enrichment':
+      return { kind: 'update-event' }
     case 'onboarding':
       return { kind: 'no-record-write' }
     default: {

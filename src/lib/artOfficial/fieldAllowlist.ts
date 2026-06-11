@@ -66,6 +66,57 @@ const EPISODE_AGENT_FIELDS = new Set([
   'captionDrafts',
 ])
 
+const EVENT_AGENT_FIELDS = new Set([
+  'title',
+  'descriptionShort',
+  'descriptionLong',
+  'artistNote',
+  'pressQuote',
+  'venueName',
+  'venueCity',
+  'venueCountry',
+  'venueAddress',
+  'venueUrl',
+  'venueTgnUri',
+  'venueWikidataUri',
+  'venueLatLng',
+  'sameAs',
+  'organiser',
+  'curator',
+  'role',
+  'coExhibitors',
+  'catalogue',
+  'catalogueUrl',
+  'pressUrl',
+  'mediaLinks',
+  'startDate',
+  'endDate',
+  'openingDate',
+  'isOngoing',
+  'performanceType',
+  'duration',
+  'collaborators',
+  'programmeContext',
+  'eventFormatType',
+  'slidesUrl',
+  'coSpeakers',
+  'festivalProgramme',
+  'screeningFormat',
+  'premiereStatus',
+])
+
+const EVENT_FORBIDDEN = new Set([
+  'slug',
+  'status',
+  'enrichmentStatus',
+  'hasPage',
+  'eventId',
+  'jsonldPreview',
+  'jsonldSameAs',
+  'installationImages',
+  'artworks',
+])
+
 /** Flat top-level artwork fields that must stage and commit (regression guard). */
 export const ARTWORK_COMMIT_ROOT_FIELDS = [
   'movementTags',
@@ -99,6 +150,12 @@ export function isFieldAllowedForAgent(collection: string, field: string): boole
 
   if (collection === 'episodes') {
     return EPISODE_AGENT_FIELDS.has(field)
+  }
+
+  if (collection === 'events') {
+    const root = field.split('.')[0]
+    if (EVENT_FORBIDDEN.has(root)) return false
+    return EVENT_AGENT_FIELDS.has(root)
   }
 
   return !FORBIDDEN.has(`${collection}.${field}`)
