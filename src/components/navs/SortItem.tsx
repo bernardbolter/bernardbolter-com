@@ -9,13 +9,20 @@ export default function SortItem({ slug, name }: SortOption) {
 
   return (
     <div
-      className="flex cursor-pointer items-center justify-between py-space-2"
+      className="sort-nav__item--container"
       onClick={() => setState((prev) => ({ ...prev, sorting: slug }))}
+      role="button"
+      tabIndex={0}
     >
-      <p className={`m-0 font-heading text-sm ${active ? 'font-bold text-dark' : 'font-normal text-secondary'}`}>
+      <p className={active ? 'filter-nav__name filter-nav__name--active' : 'filter-nav__name'}>
         {name}
       </p>
-      <div className="h-3 w-3 border border-ui-line bg-ui-face" style={{ borderRadius: active ? '50%' : '0' }} />
+      <div
+        className="filter-nav__box sorting-nav__box"
+        style={{
+          borderRadius: active ? '50%' : '',
+        }}
+      />
     </div>
   )
 }

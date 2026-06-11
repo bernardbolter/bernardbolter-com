@@ -1,8 +1,14 @@
 'use client'
 
+import {
+  FilterSvg,
+  PauseSvg,
+  PlaySvg,
+  SearchSvg,
+  TimerSvg,
+} from '@/components/icons'
 import useWindowSize from '@/hooks/useWindowSize'
 import { useArtworks } from '@/providers/ArtworkProvider'
-import { FilterSvg, PauseSvg, PlaySvg, SearchSvg, TimerSvg } from '@/components/icons'
 
 import FilterNav from './FilterNav'
 import SearchNav from './SearchNav'
@@ -13,8 +19,9 @@ export default function Nav() {
 
   return (
     <nav
-      className="fixed right-0 z-ui-top flex flex-col gap-space-2 p-space-2"
+      className="nav-container"
       style={{
+        zIndex: 5001,
         top: !state.artworkViewTimeline
           ? 4
           : state.showSlideshow
@@ -24,15 +31,23 @@ export default function Nav() {
               : 4,
       }}
     >
-      <button
-        className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1"
+      <div
+        className="nav-button"
+        role="button"
+        tabIndex={0}
         style={{ display: state.showSlideshow ? 'block' : 'none' }}
       >
         <TimerSvg />
-      </button>
+      </div>
 
-      <button
-        className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1"
+      <div
+        className={
+          state.searchNavOpen
+            ? 'nav-button search-button search-button--open'
+            : 'nav-button search-button'
+        }
+        role="button"
+        tabIndex={0}
         onClick={() =>
           setState((prev) => ({
             ...prev,
@@ -43,11 +58,13 @@ export default function Nav() {
         style={{ display: state.showSlideshow ? 'none' : 'block' }}
       >
         <SearchSvg searchNavOpen={state.searchNavOpen} />
-      </button>
+      </div>
       <SearchNav />
 
-      <button
-        className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1"
+      <div
+        className="nav-button"
+        role="button"
+        tabIndex={0}
         onClick={() =>
           setState((prev) => {
             const nextShowSlideshow = !prev.showSlideshow
@@ -61,24 +78,32 @@ export default function Nav() {
         }
       >
         <PlaySvg showSlideshow={state.showSlideshow} />
-      </button>
+      </div>
 
-      <button
-        className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1"
+      <div
+        className={
+          state.filterNavOpen
+            ? 'nav-button filter-button filter-button--open'
+            : 'nav-button filter-button'
+        }
+        role="button"
+        tabIndex={0}
         onClick={() => setState((prev) => ({ ...prev, filterNavOpen: !prev.filterNavOpen }))}
         style={{ display: state.showSlideshow ? 'none' : 'block' }}
       >
         <FilterSvg filterNavOpen={state.filterNavOpen} />
-      </button>
+      </div>
       <FilterNav />
 
-      <button
-        className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1"
+      <div
+        className="nav-button"
+        role="button"
+        tabIndex={0}
         onClick={() => setState((prev) => ({ ...prev, slideshowPlaying: !prev.slideshowPlaying }))}
         style={{ display: state.showSlideshow ? 'block' : 'none' }}
       >
         <PauseSvg />
-      </button>
+      </div>
     </nav>
   )
 }

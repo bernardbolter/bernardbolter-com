@@ -9,7 +9,7 @@ export default function FilterItem({ name, slug, color }: FilterCategory) {
 
   return (
     <div
-      className="flex cursor-pointer items-center justify-between py-space-2"
+      className="filter-nav__item--container"
       onClick={() =>
         setState((prev) => ({
           ...prev,
@@ -18,13 +18,18 @@ export default function FilterItem({ name, slug, color }: FilterCategory) {
             : [...prev.filtersArray, slug],
         }))
       }
+      role="button"
+      tabIndex={0}
     >
-      <p className={`m-0 font-heading text-sm ${active ? 'font-bold text-dark' : 'font-normal text-secondary'}`}>
+      <p className={active ? 'filter-nav__name filter-nav__name--active' : 'filter-nav__name'}>
         {name}
       </p>
       <div
-        className="h-3 w-3 border border-ui-line"
-        style={{ backgroundColor: color, borderRadius: active ? '50%' : '0' }}
+        className="filter-nav__box"
+        style={{
+          backgroundColor: color,
+          borderRadius: active ? '50%' : '',
+        }}
       />
     </div>
   )

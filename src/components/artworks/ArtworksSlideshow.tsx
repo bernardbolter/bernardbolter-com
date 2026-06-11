@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactPlayer from 'react-player'
 
 import ArtworkImage from './ArtworkImage'
@@ -29,6 +29,8 @@ function getPrimaryVideoSource(artwork: Artwork): string | null {
 
 export default function ArtworksSlideshow({ autoPlayInterval = 5000 }: ArtworksSlideshowProps) {
   const [state, setState] = useArtworks()
+  const [loadedIndex, setLoadedIndex] = useState(-1)
+
   const animationRef = useRef<number | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const startTimeRef = useRef<number>(0)
@@ -46,6 +48,7 @@ export default function ArtworksSlideshow({ autoPlayInterval = 5000 }: ArtworksS
   )
 
   const totalArtworks = state.filtered.length
+  const isMediaLoaded = loadedIndex === state.currentArtworkIndex
 
   const advanceToNext = useCallback(() => {
     if (totalArtworks <= 1) return
@@ -75,6 +78,7 @@ export default function ArtworksSlideshow({ autoPlayInterval = 5000 }: ArtworksS
   useEffect(() => {
     pausedProgressRef.current = 0
     setState((prev) => ({ ...prev, slideshowTimerProgress: 0 }))
+    setLoadedIndex(-1)
   }, [setState, state.currentArtworkIndex])
 
   useEffect(() => {
@@ -82,24 +86,38 @@ export default function ArtworksSlideshow({ autoPlayInterval = 5000 }: ArtworksS
       cancelAnimationFrame(animationRef.current)
       animationRef.current = null
     }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current)
-      timeoutRef.current = null
-    }
 
-    if (!state.slideshowPlaying || totalArtworks <= 1) return
+    if (!state.slideshowPlaying || !isMediaLoaded) return
 
-    const remainingMs = autoPlayInterval - (pausedProgressRef.current / 100) * autoPlayInterval
     startTimeRef.current = Date.now() - (pausedProgressRef.current / 100) * autoPlayInterval
-
     animationRef.current = requestAnimationFrame(updateProgress)
-    timeoutRef.current = setTimeout(advanceToNext, Math.max(remainingMs, 1))
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
         animationRef.current = null
       }
+    }
+  }, [
+    autoPlayInterval,
+    isMediaLoaded,
+    state.currentArtworkIndex,
+    state.slideshowPlaying,
+    updateProgress,
+  ])
+
+  useEffect(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+
+    if (!state.slideshowPlaying || totalArtworks <= 1 || !isMediaLoaded) return
+
+    const remainingMs = autoPlayInterval - (pausedProgressRef.current / 100) * autoPlayInterval
+    timeoutRef.current = setTimeout(advanceToNext, Math.max(remainingMs, 1))
+
+    return () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current)
         timeoutRef.current = null
@@ -108,43 +126,65 @@ export default function ArtworksSlideshow({ autoPlayInterval = 5000 }: ArtworksS
   }, [
     advanceToNext,
     autoPlayInterval,
-    setState,
+    isMediaLoaded,
     state.currentArtworkIndex,
     state.slideshowPlaying,
     totalArtworks,
-    updateProgress,
   ])
+
+  useEffect(() => {
+    if (!state.slideshowPlaying && pausedProgressRef.current > 0) {
+      setState((prev) => ({
+        ...prev,
+        slideshowTimerProgress: pausedProgressRef.current,
+      }))
+    }
+  }, [setState, state.slideshowPlaying])
+
+  const handleImageLoad = useCallback(() => {
+    setLoadedIndex(state.currentArtworkIndex)
+  }, [state.currentArtworkIndex])
+
+  const handleVideoReady = useCallback(() => {
+    setLoadedIndex(state.currentArtworkIndex)
+  }, [state.currentArtworkIndex])
 
   if (!currentArtwork) return null
 
   return (
-    <div className="flex h-screen w-full items-center justify-center">
-      {videoSrc ? (
-        <div
-          className="overflow-hidden bg-surface-panel-light"
-          style={{
-            width: state.artworkContainerWidth,
-            height: state.artworkContainerHeight,
-          }}
-        >
-          <ReactPlayer
-            src={videoSrc}
-            playing={state.slideshowPlaying}
-            muted
-            controls={false}
-            width="100%"
-            height="100%"
-            onEnded={advanceToNext}
+    <div className="artworks-slideshow__container">
+      <div className="artworks-slideshow__media">
+        {videoSrc ? (
+          <div
+            className="overflow-hidden"
+            style={{
+              width: state.artworkContainerWidth,
+              height: state.artworkContainerHeight,
+            }}
+          >
+            <ReactPlayer
+              key={state.currentArtworkIndex}
+              src={videoSrc}
+              playing={state.slideshowPlaying}
+              muted
+              controls={false}
+              width="100%"
+              height="100%"
+              onReady={handleVideoReady}
+              onEnded={advanceToNext}
+            />
+          </div>
+        ) : (
+          <ArtworkImage
+            key={state.currentArtworkIndex}
+            artwork={currentArtwork}
+            artworkContainerWidth={state.artworkContainerWidth}
+            artworkContainerHeight={state.artworkContainerHeight}
+            priority
+            onLoad={handleImageLoad}
           />
-        </div>
-      ) : (
-        <ArtworkImage
-          artwork={currentArtwork}
-          artworkContainerWidth={state.artworkContainerWidth}
-          artworkContainerHeight={state.artworkContainerHeight}
-          priority
-        />
-      )}
+        )}
+      </div>
     </div>
   )
 }

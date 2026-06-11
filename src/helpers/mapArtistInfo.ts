@@ -1,5 +1,5 @@
 import type { Artist } from '@/payload-types'
-import type { ArtistInfoData, ArtistInfoLink } from '@/types/frontend'
+import type { ArtistInfoData, ArtistInfoLink, ArtistSocialLinks } from '@/types/frontend'
 
 const INFO_PANEL_DEFAULTS: ArtistInfoData = {
   name: 'Bernard Bolter',
@@ -27,10 +27,29 @@ function normalizeWebsiteLinks(artist: Artist): ArtistInfoLink[] {
   return links.length > 0 ? links : DEFAULT_WEBSITE_LINKS
 }
 
+function mapSocialLinks(artist: Artist): ArtistSocialLinks {
+  const social: ArtistSocialLinks = {}
+  const instagram = artist.instagramUrl?.trim()
+  const tiktok = artist.tiktokUrl?.trim()
+  const youtube = artist.youtubeUrl?.trim()
+  const linkedin = artist.linkedinUrl?.trim()
+
+  if (instagram) social.instagram = instagram
+  if (tiktok) social.tiktok = tiktok
+  if (youtube) social.youtube = youtube
+  if (linkedin) social.linkedin = linkedin
+
+  return social
+}
+
 /** Maps Payload artist record to Info panel fields (with legacy fallbacks). */
 export function mapArtistToInfoData(artist: Artist | null | undefined): ArtistInfoData {
   if (!artist) {
-    return { ...INFO_PANEL_DEFAULTS, websiteLinks: DEFAULT_WEBSITE_LINKS }
+    return {
+      ...INFO_PANEL_DEFAULTS,
+      websiteLinks: DEFAULT_WEBSITE_LINKS,
+      socialLinks: {},
+    }
   }
 
   const currentCities = (artist.locations ?? [])
@@ -44,5 +63,6 @@ export function mapArtistToInfoData(artist: Artist | null | undefined): ArtistIn
     workCity1: artist.workCity1?.trim() || currentCities[0] || INFO_PANEL_DEFAULTS.workCity1,
     workCity2: artist.workCity2?.trim() || currentCities[1] || INFO_PANEL_DEFAULTS.workCity2,
     websiteLinks: normalizeWebsiteLinks(artist),
+    socialLinks: mapSocialLinks(artist),
   }
 }

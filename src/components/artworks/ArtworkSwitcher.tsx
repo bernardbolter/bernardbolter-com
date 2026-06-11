@@ -4,10 +4,16 @@ import { useArtworks } from '@/providers/ArtworkProvider'
 
 export default function ArtworkSwitcher() {
   const [state, setState] = useArtworks()
+  const isDesktopSwitcher = (state.viewportWidth || 0) > 767
 
   return (
     <button
-      className="fixed bottom-space-4 left-1/2 z-ui-top flex -translate-x-1/2 items-center gap-space-2 rounded-[0.375rem] bg-surface-nav p-space-1 shadow-sm"
+      type="button"
+      className={
+        isDesktopSwitcher
+          ? 'fixed top-0 z-[4001] ml-[40%] flex cursor-pointer flex-row items-center rounded-b-[0.375rem] bg-surface-nav px-[5px] py-[3px] m:ml-[55%] m:-translate-x-[55%]'
+          : 'fixed bottom-space-4 left-1/2 z-ui-top flex -translate-x-1/2 cursor-pointer items-center gap-space-2 rounded-[0.375rem] bg-surface-nav p-space-1 shadow-sm'
+      }
       onClick={() =>
         setState((prev) => ({
           ...prev,
@@ -16,22 +22,22 @@ export default function ArtworkSwitcher() {
       }
     >
       <p
-        className={`px-space-2 py-space-1 font-heading text-sm ${
-          state.artworkViewTimeline ? 'text-dark' : 'text-secondary'
+        className={`m-0 cursor-pointer px-[2px] font-heading text-xs font-extrabold uppercase ${
+          state.artworkViewTimeline ? 'text-primary' : 'text-secondary'
         }`}
       >
         Timeline
       </p>
-      <div className="flex h-[1.375rem] w-[2.75rem] items-center rounded-full bg-ui-face px-[0.1875rem]">
+      <div className="relative mx-[2px] h-[1.125rem] w-[2.5rem] rounded-full border border-ui-line bg-ui-face">
         <div
-          className={`h-[1rem] w-[1rem] rounded-full bg-dark transition-transform duration-300 ${
-            state.artworkViewTimeline ? 'translate-x-0' : 'translate-x-[1.25rem]'
+          className={`absolute left-[2px] top-[2px] h-3 w-3 rounded-full bg-ui-timeline transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+            state.artworkViewTimeline ? 'translate-x-0' : 'translate-x-[1.5rem]'
           }`}
         />
       </div>
       <p
-        className={`px-space-2 py-space-1 font-heading text-sm ${
-          !state.artworkViewTimeline ? 'text-dark' : 'text-secondary'
+        className={`m-0 cursor-pointer px-[2px] font-heading text-xs font-extrabold uppercase ${
+          !state.artworkViewTimeline ? 'text-primary' : 'text-secondary'
         }`}
       >
         Grid

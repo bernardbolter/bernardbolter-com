@@ -19,6 +19,7 @@ interface ArtworkImageProps {
   artworkContainerHeight: number
   useImageFactors?: boolean
   priority?: boolean
+  onLoad?: () => void
 }
 
 export default function ArtworkImage({
@@ -27,6 +28,7 @@ export default function ArtworkImage({
   artworkContainerHeight,
   useImageFactors = false,
   priority = false,
+  onLoad,
 }: ArtworkImageProps) {
   const imageUrl = getDisplayImageUrl(artwork)
   const { width, height } = getPrimaryMediaDimensions(artwork)
@@ -78,6 +80,7 @@ export default function ArtworkImage({
         blurDataURL={blurDataURL}
         priority={priority}
         sizes={`(max-width: 48rem) 100vw, ${Math.round(displayWidth)}px`}
+        onLoad={onLoad}
       />
     </div>
   )

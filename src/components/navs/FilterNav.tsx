@@ -1,10 +1,14 @@
 'use client'
 
-import useWindowSize from '@/hooks/useWindowSize'
-import { useArtworks } from '@/providers/ArtworkProvider'
+import {
+  CloseCircleSvg,
+  FilterLightSvg,
+  SortSvg,
+} from '@/components/icons'
 import { filterValues } from '@/data/filterValues'
 import { sortValues } from '@/data/sortValues'
-import { CloseCircleSvg, FilterSvg, SortSvg } from '@/components/icons'
+import useWindowSize from '@/hooks/useWindowSize'
+import { useArtworks } from '@/providers/ArtworkProvider'
 
 import FilterItem from './FilterItem'
 import SortItem from './SortItem'
@@ -15,9 +19,11 @@ export default function FilterNav() {
 
   return (
     <div
-      className={`fixed right-[3.625rem] z-nav w-[16rem] bg-surface-nav p-space-3 transition-transform duration-300 ${
-        state.filterNavOpen ? 'translate-x-0' : 'translate-x-[120%]'
-      }`}
+      className={
+        state.filterNavOpen
+          ? 'filter-nav__container filter-nav__container--open'
+          : 'filter-nav__container'
+      }
       style={{
         top:
           size.width && size.width < 768
@@ -34,70 +40,77 @@ export default function FilterNav() {
               : (size.height || 500) - 83,
       }}
     >
-      <div
-        className="mb-space-2 flex cursor-pointer items-center gap-space-2"
-        onClick={() =>
-          setState((prev) => ({
-            ...prev,
-            filtersArray: [],
-            searchValue: '',
-            filterNavOpen: false,
-          }))
-        }
-      >
-        <div className="h-6 w-6 fill-dark">
+      <div className="filter-nav__container--inner">
+        <div
+          className="filter-nav__close-container"
+          onClick={() =>
+            setState((prev) => ({
+              ...prev,
+              filtersArray: [],
+              searchValue: '',
+              filterNavOpen: false,
+            }))
+          }
+          role="button"
+          tabIndex={0}
+        >
           <CloseCircleSvg />
+          <p>clear</p>
         </div>
-        <p className="font-heading text-sm text-secondary">clear</p>
-      </div>
 
-      <div className="flex items-center justify-between">
-        <h3 className="font-heading text-base font-bold text-dark">Sort</h3>
-        <div className="h-5 w-5 fill-dark">
+        <div className="filter-nav__header filter-nav__header--sort">
+          <h3>Sort</h3>
           <SortSvg />
         </div>
-      </div>
-      <div className="my-space-2 h-px w-[1.875rem] bg-dark" />
 
-      <div className="mb-space-3">
-        {sortValues.map((value) => (
-          <SortItem key={value.id} {...value} />
-        ))}
-      </div>
+        <div className="filter-nav__line" />
 
-      <div className="flex items-center justify-between">
-        <h3 className="font-heading text-base font-bold text-dark">Filters</h3>
-        <div className="h-5 w-5 fill-dark">
-          <FilterSvg />
+        <div className="filter-nav__content">
+          {sortValues.map((value) => (
+            <SortItem key={value.id} {...value} />
+          ))}
         </div>
-      </div>
-      <div className="my-space-2 h-px w-[1.875rem] bg-dark" />
 
-      <div
-        className="flex cursor-pointer items-center justify-between py-space-2"
-        onClick={() => setState((prev) => ({ ...prev, isAvailableFilter: !prev.isAvailableFilter }))}
-      >
-        <p
-          className={`m-0 font-heading text-sm ${
-            state.isAvailableFilter ? 'font-bold text-dark' : 'font-normal text-secondary'
-          }`}
-        >
-          Available
-        </p>
+        <div className="filter-nav__header filter-nav__header--filters">
+          <h3>Filters</h3>
+          <FilterLightSvg />
+        </div>
+
+        <div className="filter-nav__line" />
+
         <div
-          className="h-3 w-3 border border-ui-line"
-          style={{
-            backgroundColor: '#d4af37',
-            borderRadius: state.isAvailableFilter ? '50%' : '0',
-          }}
-        />
-      </div>
+          className="filter-nav__item--container"
+          onClick={() =>
+            setState((prev) => ({ ...prev, isAvailableFilter: !prev.isAvailableFilter }))
+          }
+          role="button"
+          tabIndex={0}
+        >
+          <p
+            className={
+              state.isAvailableFilter
+                ? 'filter-nav__name filter-nav__name--active'
+                : 'filter-nav__name'
+            }
+          >
+            Available
+          </p>
+          <div
+            className="filter-nav__box"
+            style={{
+              backgroundColor: '#d4af37',
+              borderRadius: state.isAvailableFilter ? '50%' : '',
+            }}
+          />
+        </div>
 
-      <div className="my-space-2 h-px w-[1.875rem] bg-dark" />
-      <div className="overflow-y-auto">
-        {filterValues.map((value) => (
-          <FilterItem key={value.id} {...value} />
-        ))}
+        <div className="filter-nav__line" />
+
+        <div className="filter-nav__content">
+          {filterValues.map((value) => (
+            <FilterItem key={value.id} {...value} />
+          ))}
+        </div>
       </div>
     </div>
   )

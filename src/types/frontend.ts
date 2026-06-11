@@ -30,6 +30,13 @@ export interface ArtistInfoLink {
 }
 
 /** Subset of Artist global used by Info panel (Payload field names). */
+export interface ArtistSocialLinks {
+  instagram?: string | null
+  tiktok?: string | null
+  youtube?: string | null
+  linkedin?: string | null
+}
+
 export interface ArtistInfoData {
   name?: string | null
   birthCity?: string | null
@@ -38,6 +45,7 @@ export interface ArtistInfoData {
   workCity2?: string | null
   workCity3?: string | null
   websiteLinks?: ArtistInfoLink[]
+  socialLinks?: ArtistSocialLinks
 }
 
 export interface ArtworksState {

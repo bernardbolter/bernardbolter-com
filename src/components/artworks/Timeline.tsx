@@ -1,31 +1,46 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, type PointerEvent } from 'react'
 
-import { useArtworks } from '@/providers/ArtworkProvider'
-import { generateSmallLines } from '@/helpers/timeline'
 import { LeftArrowSvg, RightArrowSvg } from '@/components/icons'
+import { generateSmallLines } from '@/helpers/timeline'
+import { useArtworks } from '@/providers/ArtworkProvider'
+
 import ArtworkImage from './ArtworkImage'
 
 export default function Timeline() {
   const [state, setState] = useArtworks()
   const timelineRef = useRef<HTMLDivElement>(null)
   const isProgramScroll = useRef(false)
-  const isMobile = (state.viewportWidth || 0) <= 767
+  const isDraggingTimeline = useRef(false)
+  const dragStart = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 })
+  const stateRef = useRef(state)
+
+  const viewportWidth = state.viewportWidth || 0
+  const viewportHeight = state.viewportHeight || 0
+  const isMobile = viewportWidth <= 767
   const timeline = state.formattedArtworks
+
+  useEffect(() => {
+    stateRef.current = state
+  }, [state])
 
   const scrollToIndex = useCallback(
     (index: number) => {
-      if (!timelineRef.current || !timeline || index < 0 || index >= timeline.artworksArray.length) return
-
-      const targetArtwork = timeline.artworksArray[index]
-      const scrollPosition = isMobile
-        ? targetArtwork.verticalScrollPoint
-        : targetArtwork.horizontalScrollPoint
+      if (!timelineRef.current || !timeline || index < 0 || index >= timeline.artworksArray.length) {
+        return
+      }
 
       isProgramScroll.current = true
-      setState((prev) => ({ ...prev, currentArtworkIndex: index }))
+
+      if (index !== stateRef.current.currentArtworkIndex) {
+        setState((prev) => ({ ...prev, currentArtworkIndex: index }))
+      }
+
+      const scrollPosition = isMobile
+        ? timeline.artworksArray[index].verticalScrollPoint
+        : timeline.artworksArray[index].horizontalScrollPoint
 
       if (isMobile) {
         timelineRef.current.scrollTo({ top: scrollPosition, behavior: 'smooth' })
@@ -35,7 +50,6 @@ export default function Timeline() {
 
       window.setTimeout(() => {
         isProgramScroll.current = false
-        setState((prev) => ({ ...prev, isTimelineScrollingProgamatically: false }))
       }, 500)
     },
     [isMobile, setState, timeline],
@@ -43,46 +57,79 @@ export default function Timeline() {
 
   useEffect(() => {
     if (!timeline || state.savedTimelineIndex <= 0) return
-    scrollToIndex(state.savedTimelineIndex)
-  }, [scrollToIndex, state.savedTimelineIndex, timeline])
+    setState((prev) => ({
+      ...prev,
+      currentArtworkIndex: prev.savedTimelineIndex,
+      isTimelineScrollingProgamatically: true,
+    }))
+  }, [setState, state.savedTimelineIndex, timeline])
 
   useEffect(() => {
     if (!state.isTimelineScrollingProgamatically) return
     scrollToIndex(state.currentArtworkIndex)
-  }, [scrollToIndex, state.currentArtworkIndex, state.isTimelineScrollingProgamatically])
+    window.setTimeout(() => {
+      setState((prev) => ({ ...prev, isTimelineScrollingProgamatically: false }))
+    }, 500)
+  }, [scrollToIndex, setState, state.currentArtworkIndex, state.isTimelineScrollingProgamatically])
+
+  const handleArtScroll = useCallback(() => {
+    const currentState = stateRef.current
+    if (
+      isProgramScroll.current ||
+      currentState.isTimelineScrollingProgamatically ||
+      !currentState.formattedArtworks ||
+      !timelineRef.current
+    ) {
+      return
+    }
+
+    const mobile = (currentState.viewportWidth || 0) <= 767
+    const currentScrollPosition = mobile
+      ? timelineRef.current.scrollTop
+      : timelineRef.current.scrollLeft
+    const viewportDimension = mobile
+      ? currentState.viewportHeight || 0
+      : currentState.viewportWidth || 0
+    const artworkDimension = mobile
+      ? currentState.artworkContainerHeight
+      : currentState.artworkContainerWidth
+    const sideOffset = mobile ? 0 : currentState.artworkDesktopSideWidth
+
+    const viewportCenterAbsolute = currentScrollPosition + viewportDimension / 2
+
+    let bestIndex = 0
+    let minDistance = Infinity
+    let accumulatedDimension = sideOffset
+
+    currentState.formattedArtworks.artworksArray.forEach((artwork, index) => {
+      const artworkCenter = accumulatedDimension + artworkDimension / 2
+      const distance = Math.abs(artworkCenter - viewportCenterAbsolute)
+
+      if (distance < minDistance) {
+        minDistance = distance
+        bestIndex = index
+      }
+
+      accumulatedDimension += artworkDimension
+      if (index < currentState.formattedArtworks!.artworksArray.length - 1) {
+        accumulatedDimension += mobile ? artwork.marginBottom : artwork.marginRight
+      }
+    })
+
+    if (bestIndex !== currentState.currentArtworkIndex) {
+      setState((prev) => ({ ...prev, currentArtworkIndex: bestIndex }))
+    }
+  }, [setState])
 
   useEffect(() => {
     const element = timelineRef.current
     if (!element || !timeline) return
 
-    const handleArtScroll = () => {
-      if (isProgramScroll.current || state.isTimelineScrollingProgamatically) return
-
-      const scrollPosition = isMobile ? element.scrollTop : element.scrollLeft
-      const currentIndex = timeline.artworksArray.reduce(
-        (bestIndex, artwork, index) => {
-          const target = isMobile ? artwork.verticalScrollPoint : artwork.horizontalScrollPoint
-          const bestTarget = isMobile
-            ? timeline.artworksArray[bestIndex].verticalScrollPoint
-            : timeline.artworksArray[bestIndex].horizontalScrollPoint
-
-          return Math.abs(target - scrollPosition) < Math.abs(bestTarget - scrollPosition)
-            ? index
-            : bestIndex
-        },
-        0,
-      )
-
-      if (currentIndex !== state.currentArtworkIndex) {
-        setState((prev) => ({ ...prev, currentArtworkIndex: currentIndex }))
-      }
-    }
-
     element.addEventListener('scroll', handleArtScroll)
     return () => element.removeEventListener('scroll', handleArtScroll)
-  }, [isMobile, setState, state.currentArtworkIndex, state.isTimelineScrollingProgamatically, timeline])
+  }, [handleArtScroll, timeline])
 
-  const tickMarks = useMemo(() => {
+  const smallLines = useMemo(() => {
     if (!timeline) return null
 
     return generateSmallLines({
@@ -94,7 +141,13 @@ export default function Timeline() {
       artworkDesktopSideWidth: state.artworkDesktopSideWidth,
       targetSpacing: 20,
     })
-  }, [isMobile, state.artworkContainerHeight, state.artworkContainerWidth, state.artworkDesktopSideWidth, timeline])
+  }, [
+    isMobile,
+    state.artworkContainerHeight,
+    state.artworkContainerWidth,
+    state.artworkDesktopSideWidth,
+    timeline,
+  ])
 
   if (!timeline || timeline.artworksArray.length === 0) {
     return (
@@ -104,16 +157,56 @@ export default function Timeline() {
     )
   }
 
-  const goPrevious = () => {
+  const handleTimelinePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (!timelineRef.current || event.button !== 0) return
+
+    isDraggingTimeline.current = true
+    dragStart.current = {
+      x: event.clientX,
+      y: event.clientY,
+      scrollLeft: timelineRef.current.scrollLeft,
+      scrollTop: timelineRef.current.scrollTop,
+    }
+
+    event.currentTarget.setPointerCapture(event.pointerId)
+    event.currentTarget.classList.add('artworks-timeline__timeline-container--dragging')
+  }, [])
+
+  const handleTimelinePointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (!isDraggingTimeline.current || !timelineRef.current) return
+
+      const mobile = (stateRef.current.viewportWidth || 0) <= 767
+
+      if (mobile) {
+        timelineRef.current.scrollTop =
+          dragStart.current.scrollTop + (dragStart.current.y - event.clientY)
+      } else {
+        timelineRef.current.scrollLeft =
+          dragStart.current.scrollLeft + (dragStart.current.x - event.clientX)
+      }
+    },
+    [],
+  )
+
+  const endTimelineDrag = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingTimeline.current) return
+
+    isDraggingTimeline.current = false
+    event.currentTarget.releasePointerCapture(event.pointerId)
+    event.currentTarget.classList.remove('artworks-timeline__timeline-container--dragging')
+  }, [])
+
+  const scrollPrevious = () => {
     if (isProgramScroll.current) return
-    const nextIndex =
+    const prevIndex =
       state.currentArtworkIndex > 0
         ? state.currentArtworkIndex - 1
         : timeline.artworksArray.length - 1
-    scrollToIndex(nextIndex)
+    scrollToIndex(prevIndex)
   }
 
-  const goNext = () => {
+  const scrollNext = () => {
     if (isProgramScroll.current) return
     const nextIndex =
       state.currentArtworkIndex < timeline.artworksArray.length - 1
@@ -122,114 +215,140 @@ export default function Timeline() {
     scrollToIndex(nextIndex)
   }
 
+  const halfWidth = state.artworkContainerWidth / 2
+  const halfHeight = state.artworkContainerHeight / 2
+  const sideWidth = state.artworkDesktopSideWidth
+
   return (
-    <div className="relative h-screen w-full">
+    <div className="artworks-timeline__container">
       <div
         ref={timelineRef}
-        className={`absolute inset-0 scrollbar-hide ${isMobile ? 'overflow-y-scroll overflow-x-hidden' : 'overflow-x-scroll overflow-y-hidden'}`}
+        className="artworks-timeline__artworks-container"
+        style={{
+          width: '100%',
+          height: !isMobile && viewportHeight ? `${viewportHeight}px` : '100vh',
+          paddingTop: isMobile ? (viewportHeight - state.artworkContainerHeight) / 2 : 0,
+        }}
       >
         <div
-          className={`relative ${isMobile ? 'h-auto w-full' : 'h-full'}`}
+          className="artworks-timeline__artworks"
           style={{
-            width: isMobile ? '100%' : timeline.totalTimelineWidth,
-            height: isMobile ? timeline.totalTimelineHeight : '100%',
-            paddingLeft: isMobile ? 0 : state.artworkDesktopSideWidth,
-            paddingRight: isMobile ? 0 : state.artworkDesktopSideWidth,
-            paddingTop: isMobile
-              ? Math.max(0, ((state.viewportHeight || 0) - state.artworkContainerHeight) / 2)
-              : 0,
+            width: !isMobile ? `${timeline.totalTimelineWidth}px` : 'auto',
+            height: isMobile ? `${timeline.totalTimelineHeight}px` : 'auto',
+            paddingLeft: !isMobile ? `${sideWidth}px` : '0px',
+            paddingRight: !isMobile ? `${sideWidth}px` : '0px',
+          }}
+        >
+          {timeline.artworksArray.map((artwork, index) => (
+            <div
+              key={artwork.id}
+              className="artworks-timeline__artwork-inside"
+              style={{
+                marginRight:
+                  !isMobile && index < timeline.artworksArray.length - 1
+                    ? `${artwork.marginRight || 0}px`
+                    : '0px',
+                marginBottom:
+                  isMobile && index < timeline.artworksArray.length - 1
+                    ? `${artwork.marginBottom || 0}px`
+                    : '0px',
+                minWidth: `${state.artworkContainerWidth}px`,
+                minHeight: `${state.artworkContainerHeight}px`,
+              }}
+            >
+              <Link
+                href={`/${artwork.slug}`}
+                className="flex h-full w-full items-center justify-center"
+              >
+                <ArtworkImage
+                  artwork={artwork}
+                  artworkContainerWidth={state.artworkContainerWidth}
+                  artworkContainerHeight={state.artworkContainerHeight}
+                  priority={index < 5}
+                />
+              </Link>
+            </div>
+          ))}
+        </div>
+
+        <div
+          className="artworks-timeline__timeline-container"
+          role="slider"
+          aria-label="Artwork timeline"
+          aria-valuemin={0}
+          aria-valuemax={Math.max(timeline.artworksArray.length - 1, 0)}
+          aria-valuenow={state.currentArtworkIndex}
+          onPointerDown={handleTimelinePointerDown}
+          onPointerMove={handleTimelinePointerMove}
+          onPointerUp={endTimelineDrag}
+          onPointerCancel={endTimelineDrag}
+          style={{
+            width: !isMobile
+              ? `${timeline.totalTimelineWidth - sideWidth * 2}px`
+              : '50px',
+            height: isMobile ? `${timeline.totalTimelineHeight}px` : '50px',
+            marginLeft: !isMobile ? `${sideWidth}px` : '0px',
+            marginRight: !isMobile ? `${sideWidth}px` : '0px',
           }}
         >
           <div
-            className="pointer-events-none absolute"
+            className="artworks-timeline__line"
             style={{
-              left: isMobile ? 0 : state.artworkContainerWidth / 2,
-              top: isMobile ? state.artworkContainerHeight / 2 : state.artworkContainerHeight / 2,
-              width: isMobile
-                ? 50
-                : timeline.totalTimelineWidth - state.artworkContainerWidth - state.artworkDesktopSideWidth * 2,
-              height: isMobile
-                ? timeline.totalTimelineHeight - state.artworkContainerHeight
-                : 50,
+              width: !isMobile
+                ? `${timeline.totalTimelineWidth - state.artworkContainerWidth - sideWidth * 2}px`
+                : '1px',
+              height: !isMobile
+                ? '1px'
+                : `${timeline.totalTimelineHeight - state.artworkContainerHeight}px`,
+              left: !isMobile ? `${halfWidth}px` : '24px',
+              top: !isMobile ? '24px' : `${halfHeight}px`,
+            }}
+          />
+          <div
+            className="artworks-timeline__small-lines"
+            style={{
+              marginLeft: !isMobile ? `${halfWidth}px` : '0px',
+              marginTop: !isMobile ? '0px' : `${halfHeight}px`,
             }}
           >
-            {tickMarks}
+            {smallLines}
           </div>
-
-          {timeline.timepointsArray.map((timepoint) => (
-            <div
-              key={timepoint.id}
-              className="pointer-events-none absolute"
-              style={{
-                left: isMobile ? 0 : state.artworkContainerWidth / 2 + timepoint.distanceFromStart,
-                top: isMobile ? state.artworkContainerHeight / 2 + timepoint.distanceFromStart : 0,
-              }}
-            >
-              <div className={`absolute bg-ui-line ${isMobile ? 'h-px w-[0.5rem] left-[1.25rem] top-0' : 'h-[0.5rem] w-px top-[1.25rem]'}`} />
-              {timepoint.isVisible && (
-                <span className={`absolute font-heading text-xs text-secondary ${isMobile ? 'left-space-1 top-[-0.4rem]' : 'top-space-1 left-[-0.4rem]'}`}>
-                  {timepoint.year}
-                </span>
-              )}
-            </div>
-          ))}
-
-          {timeline.artworksArray.map((artwork, index) => {
-            return (
+          <div
+            className="artworks-timeline__year-markers"
+            style={{
+              left: !isMobile ? `-${halfWidth}px` : '0px',
+              top: !isMobile ? '0px' : `-${halfHeight}px`,
+            }}
+          >
+            {timeline.timepointsArray.map((yearMarker) => (
               <div
-                key={artwork.id}
-                className="absolute"
+                key={yearMarker.id}
+                className="artworks-timeline__year-marker"
                 style={{
-                  left: isMobile ? 0 : artwork.horizontalScrollPoint,
-                  top: isMobile ? artwork.verticalScrollPoint : '50%',
-                  transform: isMobile ? 'none' : 'translateY(-50%)',
-                  width: state.artworkContainerWidth,
-                  height: state.artworkContainerHeight,
-                  marginRight:
-                    !isMobile && index < timeline.artworksArray.length - 1
-                      ? artwork.marginRight
-                      : 0,
-                  marginBottom:
-                    isMobile && index < timeline.artworksArray.length - 1
-                      ? artwork.marginBottom
-                      : 0,
+                  left: !isMobile ? `${halfWidth + yearMarker.distanceFromStart}px` : '0px',
+                  top: isMobile ? `${halfHeight + yearMarker.distanceFromStart}px` : '0px',
                 }}
               >
-                <div className="relative h-full w-full overflow-hidden rounded-[0.5rem] bg-surface-panel-light shadow-sm">
-                  <Link href={`/${artwork.slug}`} className="flex h-full w-full items-center justify-center">
-                    <ArtworkImage
-                      artwork={artwork}
-                      artworkContainerWidth={state.artworkContainerWidth}
-                      artworkContainerHeight={state.artworkContainerHeight}
-                      priority={index < 5}
-                    />
-                  </Link>
-
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-dark/70 to-transparent px-space-3 py-space-3">
-                    <h3 className="truncate font-heading text-base text-surface-page">
-                      {artwork.title}
-                    </h3>
-                    <p className="font-heading text-sm text-surface-page/80">
-                      {artwork.yearCreated ?? '—'}
-                    </p>
-                  </div>
-                </div>
+                <div className="artworks-timeline__year-tick" />
+                {yearMarker.isVisible ? (
+                  <span className="artworks-timeline__year-label">{yearMarker.year}</span>
+                ) : null}
               </div>
-            )
-          })}
+            ))}
+          </div>
         </div>
       </div>
 
-      {!isMobile && (
-        <div className="fixed bottom-space-4 right-space-2 z-ui-top flex gap-space-2">
-          <button className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1" onClick={goPrevious}>
-            <LeftArrowSvg />
-          </button>
-          <button className="h-[2.125rem] w-[2.0625rem] border border-ui-line bg-surface-nav p-space-1" onClick={goNext}>
+      {!isMobile ? (
+        <div className="artworks-timeline__controls-container">
+          <div className="artworks-timeline__control" onClick={scrollPrevious} role="button" tabIndex={0}>
+            <LeftArrowSvg isRight={false} />
+          </div>
+          <div className="artworks-timeline__control" onClick={scrollNext} role="button" tabIndex={0}>
             <RightArrowSvg />
-          </button>
+          </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }
