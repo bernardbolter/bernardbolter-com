@@ -159,13 +159,90 @@ export function formatCvLine(event: Event): string {
   return `${year} ${displayTitle}`
 }
 
+export type CvEntryParts = {
+  year: string
+  primary: string
+  secondary?: string
+  tertiary?: string
+  variant: 'venue' | 'education' | 'publication' | 'plain'
+}
+
 export type CvSectionBlock = {
   slug: CvSectionSlug
   heading: string
-  items: Array<{ id: number | string; text: string }>
+  items: Array<{
+    id: number | string
+    text: string
+    parts: CvEntryParts
+    hasPage?: boolean
+    slug?: string | null
+  }>
 }
 
-function selectedCollectionLines(artist: Artist | null | undefined): Array<{ id: string; text: string }> {
+const CV_DISPLAY_HEADING: Partial<Record<CvSectionSlug, string>> = {
+  education: 'EDUCATION',
+  'solo-exhibitions': 'SOLO',
+  'group-exhibitions': 'GROUP',
+  performances: 'PERFORMANCE',
+  publications: 'PUBLICATIONS',
+  'talks-panels': 'ORGANIZATIONS',
+}
+
+export function cvSectionDisplayHeading(slug: CvSectionSlug, fallback: string): string {
+  return CV_DISPLAY_HEADING[slug] ?? fallback.toUpperCase()
+}
+
+export function cvEntryPartsFromEvent(event: Event): CvEntryParts {
+  const year = eventDisplayYear(event)
+  const displayTitle = (event.cvDisplayTitle ?? event.title).trim()
+
+  if (event.eventType === 'education') {
+    const degreePart = [event.degree, event.subject].filter(Boolean).join(', ')
+    const titlePart = degreePart || displayTitle
+    return {
+      year: event.yearStart != null ? String(event.yearStart) : year,
+      primary: (event.institution ?? '').trim(),
+      secondary: titlePart ? `'${titlePart}'` : undefined,
+      tertiary: event.venueCity ? `- ${event.venueCity.trim()}` : undefined,
+      variant: 'education',
+    }
+  }
+
+  if (event.eventType === 'publication' || event.eventType === 'bibliography') {
+    return {
+      year,
+      primary: displayTitle,
+      secondary: (event.bibliographyAuthor ?? event.publicationTitle ?? event.role ?? '').trim() || undefined,
+      variant: 'publication',
+    }
+  }
+
+  if (event.eventType === 'award' || event.eventType === 'talk-panel') {
+    return {
+      year,
+      primary: displayTitle,
+      secondary: (event.awardGrantingOrganisation ?? event.venueName ?? event.role ?? '').trim() || undefined,
+      variant: 'publication',
+    }
+  }
+
+  const city = (event.venueCity ?? '').trim()
+  return {
+    year,
+    primary: (event.venueName ?? event.residencyOrganisation ?? '').trim(),
+    secondary: displayTitle ? `'${displayTitle}'` : undefined,
+    tertiary: city ? `- ${city}` : undefined,
+    variant: 'venue',
+  }
+}
+
+function plainEntryParts(text: string): CvEntryParts {
+  return { year: '', primary: text, variant: 'plain' }
+}
+
+function selectedCollectionLines(
+  artist: Artist | null | undefined,
+): Array<{ id: string; text: string; parts: CvEntryParts }> {
   const rows = artist?.selectedCollections
   if (!Array.isArray(rows)) return []
   return rows
@@ -176,7 +253,7 @@ function selectedCollectionLines(artist: Artist | null | undefined): Array<{ id:
       const country = (r.country ?? '').trim()
       const place = [city, country].filter(Boolean).join(', ')
       const text = place ? `${name}, ${place}` : name
-      return { id: `sc-${i}`, text }
+      return { id: `sc-${i}`, text, parts: plainEntryParts(text) }
     })
     .filter((x) => x.text.length > 0)
 }
@@ -230,7 +307,13 @@ export function buildCvSections(events: Event[], artist?: Artist | null): CvSect
     blocks.push({
       slug,
       heading: SECTION_HEADING[slug],
-      items: list.map((ev) => ({ id: ev.id, text: formatCvLine(ev) })),
+      items: list.map((ev) => ({
+        id: ev.id,
+        text: formatCvLine(ev),
+        parts: cvEntryPartsFromEvent(ev),
+        hasPage: Boolean(ev.hasPage),
+        slug: ev.slug,
+      })),
     })
   }
 
