@@ -2,6 +2,8 @@ import type { CollectionConfig } from 'payload'
 import { slugField } from 'payload'
 
 import { isArtistOrAdmin, privateFieldAccess } from '@/access/isArtistOrAdmin'
+import { artistAfterChange } from '@/hooks/artistAfterChange'
+import { artistBeforeChange } from '@/hooks/artistBeforeChange'
 
 export const Artists: CollectionConfig = {
   slug: 'artists',
@@ -44,6 +46,15 @@ export const Artists: CollectionConfig = {
       },
     },
     slugField({ useAsSlug: 'name' }),
+    {
+      name: 'cataloguePrefix',
+      type: 'text',
+      defaultValue: 'BB',
+      admin: {
+        description:
+          'Prefix for catalogue numbers on artworks, e.g. BB in BB-ACH-2019-003.',
+      },
+    },
     {
       name: 'birthCity',
       type: 'text',
@@ -161,6 +172,22 @@ export const Artists: CollectionConfig = {
       },
     },
     {
+      name: 'canonicalDomain',
+      type: 'text',
+      admin: {
+        description:
+          'Authoritative archive URL (e.g. https://bernardbolter.com). Defaults from site URL when empty; editable for corrections.',
+      },
+    },
+    {
+      name: 'archivePublicKey',
+      type: 'text',
+      admin: {
+        description:
+          'Public key for cryptographic attestation of published records. Optional until verification is implemented.',
+      },
+    },
+    {
       name: 'bioFull',
       type: 'richText',
       localized: true,
@@ -175,6 +202,36 @@ export const Artists: CollectionConfig = {
       type: 'text',
       localized: true,
       admin: { description: 'Single sentence, third person (plain text).' },
+    },
+    {
+      name: 'cvFooterImage',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'Full-width image at the bottom of /cv (above the long artist statement).',
+      },
+    },
+    {
+      name: 'bioPhotos',
+      type: 'array',
+      labels: { singular: 'Photo', plural: 'Bio page photos' },
+      admin: {
+        description: 'Photos for the masonry grid on /bio. Drag rows to reorder.',
+      },
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          required: true,
+        },
+        {
+          name: 'caption',
+          type: 'text',
+          admin: { description: 'Optional caption shown in the bio lightbox.' },
+        },
+      ],
     },
     {
       name: 'statementFull',
@@ -249,7 +306,10 @@ export const Artists: CollectionConfig = {
       },
     },
     { name: 'website', type: 'text' },
-    { name: 'instagramUrl', type: 'text' },
+    { name: 'instagramUrl', type: 'text', admin: { description: 'Info panel Instagram icon.' } },
+    { name: 'tiktokUrl', type: 'text', admin: { description: 'Info panel TikTok icon.' } },
+    { name: 'youtubeUrl', type: 'text', admin: { description: 'Info panel YouTube icon.' } },
+    { name: 'linkedinUrl', type: 'text', admin: { description: 'Info panel LinkedIn icon.' } },
     {
       name: 'otherLinks',
       type: 'array',
@@ -317,7 +377,9 @@ export const Artists: CollectionConfig = {
     },
   ],
   hooks: {
+    afterChange: [artistAfterChange],
     beforeChange: [
+      artistBeforeChange,
       async ({ data, operation }) => {
         if (operation === 'create' && !data.platformJoinDate) {
           data.platformJoinDate = new Date().toISOString()
