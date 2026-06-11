@@ -49,8 +49,12 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
 
   if (typeof doc.slug === 'string' && doc.slug.trim()) {
     const path = `/${doc.slug.trim()}`
-    revalidatePath(path)
-    revalidatePath(`${path}/embedding`)
+    try {
+      revalidatePath(path)
+      revalidatePath(`${path}/embedding`)
+    } catch {
+      // No Next.js static generation store (seed scripts, tests)
+    }
   }
   if (!process.env.CLIP_EMBEDDING_URL) {
     return doc

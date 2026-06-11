@@ -17,6 +17,10 @@ export async function assignArtworkCatalogueIdentity({
   originalDoc,
   req,
 }: AssignArgs): Promise<void> {
+  if (typeof data.catalogueNumber === 'string' && data.catalogueNumber.trim()) {
+    return
+  }
+
   if (operation === 'update') {
     const prevNumber = originalDoc?.catalogueNumber
     if (typeof prevNumber === 'string' && prevNumber.trim()) {

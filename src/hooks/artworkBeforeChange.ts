@@ -1,4 +1,5 @@
 import type { CollectionBeforeChangeHook } from 'payload'
+import { APIError } from 'payload'
 
 import { parseInputImperialToInches } from '@/helpers/convertUnits'
 import {
@@ -136,6 +137,16 @@ export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
 
   const d = data as Record<string, unknown>
   const prev = (originalDoc ?? {}) as Record<string, unknown>
+
+  const slug =
+    typeof d.slug === 'string'
+      ? d.slug.trim()
+      : typeof prev.slug === 'string'
+        ? prev.slug.trim()
+        : ''
+  if (slug.startsWith('__') && d.status === 'published') {
+    throw new APIError('Artworks with fixture slugs (starting with __) cannot be published.', 400)
+  }
 
   await syncArtworkMediumAatUri(d, req)
   await assignArtworkCatalogueIdentity({
