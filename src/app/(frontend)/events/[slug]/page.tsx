@@ -1,5 +1,8 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+
+import EventPage from '@/components/events/EventPage'
+import Info from '@/components/info/Info'
 import { buildEventJsonLd } from '@/lib/jsonld/event'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistGlobal, getPublishedEventBySlug } from '@/lib/payload/siteDocuments'
@@ -22,7 +25,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function EventJsonLdPage({ params }: Props) {
+export default async function EventDetailPage({ params }: Props) {
   const { slug } = await params
   const [event, artist] = await Promise.all([getPublishedEventBySlug(slug), getArtistGlobal()])
   if (!event) notFound()
@@ -35,9 +38,10 @@ export default async function EventJsonLdPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main>
-        <h1>{event.title}</h1>
-      </main>
+      <div className="event-page__layout">
+        <Info />
+        <EventPage event={event} />
+      </div>
     </>
   )
 }
