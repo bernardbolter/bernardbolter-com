@@ -91,7 +91,7 @@ function mapWpOrientation(value: unknown): WordpressImportEntry['orientation'] {
 function mapWpSizeTier(value: unknown): WordpressImportEntry['sizeTier'] {
   if (typeof value !== 'string') return null
   const v = value.trim().toLowerCase()
-  if (v === 'sm' || v === 'md' || v === 'lg' || v === 'xl') return v
+  if (v === 'xs' || v === 'sm' || v === 'md' || v === 'lg' || v === 'xl') return v
   return null
 }
 

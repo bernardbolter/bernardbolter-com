@@ -13,6 +13,16 @@ describe('inferSizeTierFromDimensions', () => {
     ).toBe('lg')
   })
 
+  it('maps very small cm work to xs', () => {
+    expect(
+      inferSizeTierFromDimensions({
+        widthWhole: 10,
+        heightWhole: 12,
+        dimensionUnit: 'cm',
+      }),
+    ).toBe('xs')
+  })
+
   it('maps small cm work to sm', () => {
     expect(
       inferSizeTierFromDimensions({

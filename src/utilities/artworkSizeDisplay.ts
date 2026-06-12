@@ -1,4 +1,5 @@
 import type { Artwork } from '@/payload-types'
+import { SIZE_TIER_VALUES } from '@/lib/artOfficial/inferSizeTier'
 import type { ArtworkSizeTier } from '@/types/frontend'
 
 export type ArtworkOrientation = 'portrait' | 'landscape' | 'square'
@@ -28,22 +29,26 @@ const SIZE_FACTORS = {
     lg: 0.85,
     md: 0.75,
     sm: 0.65,
+    xs: 0.55,
   },
   square: {
     xl: 0.9,
     lg: 0.8,
     md: 0.7,
     sm: 0.6,
+    xs: 0.5,
   },
   imageCommon: {
     xl: 0.95,
     lg: 0.9,
     md: 0.85,
     sm: 0.8,
+    xs: 0.75,
   },
 } as const
 
 export const SIZE_TIER_LABELS: Record<ArtworkSizeTier, string> = {
+  xs: 'Extra small',
   sm: 'Small',
   md: 'Medium',
   lg: 'Large',
@@ -51,8 +56,8 @@ export const SIZE_TIER_LABELS: Record<ArtworkSizeTier, string> = {
 }
 
 export function normalizeSizeTier(sizeTier: string | null | undefined): ArtworkSizeTier {
-  if (sizeTier === 'sm' || sizeTier === 'md' || sizeTier === 'lg' || sizeTier === 'xl') {
-    return sizeTier
+  if (sizeTier && (SIZE_TIER_VALUES as readonly string[]).includes(sizeTier)) {
+    return sizeTier as ArtworkSizeTier
   }
   return DEFAULT_SIZE_TIER
 }

@@ -1025,6 +1025,7 @@ export function QuickUpload() {
                 onChange={(e) => setSizeTierOverride(e.target.value)}
               >
                 <option value="">Use derived ({derived.sizeTier ?? '—'})</option>
+                <option value="xs">xs</option>
                 <option value="sm">sm</option>
                 <option value="md">md</option>
                 <option value="lg">lg</option>

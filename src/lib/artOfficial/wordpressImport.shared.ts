@@ -11,7 +11,7 @@ export type WordpressImportEntry = {
   seriesName: string | null
   seriesSlug: string | null
   orientation: 'landscape' | 'portrait' | 'square' | null
-  sizeTier: 'sm' | 'md' | 'lg' | 'xl' | null
+  sizeTier: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | null
   availabilityStatus: 'not-for-sale' | 'available' | 'sold' | 'on-loan' | null
 }
 

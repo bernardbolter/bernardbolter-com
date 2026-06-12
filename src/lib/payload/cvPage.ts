@@ -21,7 +21,7 @@ const getCachedCvPageArtist = unstable_cache(fetchCvPageArtist, ['artist-cv-page
   tags: ['artists'],
 })
 
-/** Artist row with populated CV footer media. */
+/** Artist row with populated statement footer images. */
 export async function getCvPageArtist(): Promise<Artist | null> {
   if (process.env.NODE_ENV === 'development') {
     return fetchCvPageArtist()

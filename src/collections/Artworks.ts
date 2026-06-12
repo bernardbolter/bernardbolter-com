@@ -729,9 +729,10 @@ export const Artworks: CollectionConfig = {
               type: 'select',
               admin: {
                 description:
-                  'Layout tier on the public site. Rule-of-thumb: longest side <300mm → sm; 300–800 → md; 800–2000 → lg; >2000 → xl.',
+                  'Layout tier on the public site. Rule-of-thumb: longest side <150mm → xs; 150–300 → sm; 300–800 → md; 800–2000 → lg; >2000 → xl.',
               },
               options: [
+                { label: 'XS', value: 'xs' },
                 { label: 'SM', value: 'sm' },
                 { label: 'MD', value: 'md' },
                 { label: 'LG', value: 'lg' },

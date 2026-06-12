@@ -330,9 +330,14 @@ export interface Artist {
    */
   bioShort?: string | null;
   /**
-   * Full-width image at the bottom of /cv (above the long artist statement).
+   * Full-width images below the artist statement on /statement and /cv. Drag rows to reorder.
    */
-  cvFooterImage?: (number | null) | Media;
+  statementFooterImages?:
+    | {
+        image: number | Media;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Photos for the masonry grid on /bio. Drag rows to reorder.
    */
@@ -820,9 +825,9 @@ export interface Artwork {
     | boolean
     | null;
   /**
-   * Layout tier on the public site. Rule-of-thumb: longest side <300mm → sm; 300–800 → md; 800–2000 → lg; >2000 → xl.
+   * Layout tier on the public site. Rule-of-thumb: longest side <150mm → xs; 150–300 → sm; 300–800 → md; 800–2000 → lg; >2000 → xl.
    */
-  sizeTier?: ('sm' | 'md' | 'lg' | 'xl') | null;
+  sizeTier?: ('xs' | 'sm' | 'md' | 'lg' | 'xl') | null;
   orientation?: ('portrait' | 'landscape' | 'square') | null;
   /**
    * City where the work was made (controlled vocabulary).
@@ -3639,7 +3644,12 @@ export interface ArtistsSelect<T extends boolean = true> {
   bioFull?: T;
   bioMedium?: T;
   bioShort?: T;
-  cvFooterImage?: T;
+  statementFooterImages?:
+    | T
+    | {
+        image?: T;
+        id?: T;
+      };
   bioPhotos?:
     | T
     | {

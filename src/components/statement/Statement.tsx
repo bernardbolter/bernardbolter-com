@@ -2,12 +2,16 @@ import Link from 'next/link'
 
 import { CloseCircleSvg } from '@/components/icons'
 import HeaderTitle from '@/components/info/HeaderTitle'
+import type { StatementFooterImage } from '@/lib/payload/statementFooterImages'
+
+import StatementFooterImages from './StatementFooterImages'
 
 interface StatementProps {
   paragraphs: string[]
+  footerImages?: StatementFooterImage[]
 }
 
-export default function Statement({ paragraphs }: StatementProps) {
+export default function Statement({ paragraphs, footerImages = [] }: StatementProps) {
   return (
     <div className="bio-container">
       <HeaderTitle title="STATE" large />
@@ -29,6 +33,8 @@ export default function Statement({ paragraphs }: StatementProps) {
             <p>Statement content coming soon.</p>
           </div>
         )}
+
+        <StatementFooterImages images={footerImages} variant="statement" />
       </div>
     </div>
   )

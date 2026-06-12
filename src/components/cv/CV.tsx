@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState, type ReactNode } from 'react'
 
@@ -12,15 +11,8 @@ import {
   type CvSectionBlock,
 } from '@/lib/cv/buildCvSections'
 
-interface CvFooterProps {
-  imageUrl?: string | null
-  imageAlt?: string
-  statementParagraphs: string[]
-}
-
 interface CvProps {
   sections: CvSectionBlock[]
-  footer: CvFooterProps
 }
 
 function LinkedTitle({
@@ -90,7 +82,7 @@ function CvEntry({
   )
 }
 
-export default function CV({ sections, footer }: CvProps) {
+export default function CV({ sections }: CvProps) {
   const [buttonHovered, setButtonHovered] = useState(false)
 
   return (
@@ -135,30 +127,6 @@ export default function CV({ sections, footer }: CvProps) {
             </section>
           ))
         )}
-
-        {footer.imageUrl || footer.statementParagraphs.length > 0 ? (
-          <div className="cv__footer">
-            {footer.imageUrl ? (
-              <div className="cv__footer-image-wrap">
-                <Image
-                  src={footer.imageUrl}
-                  alt={footer.imageAlt || 'CV image'}
-                  width={1600}
-                  height={900}
-                  className="cv__footer-image"
-                  sizes="(max-width: 768px) 90vw, 800px"
-                />
-              </div>
-            ) : null}
-            {footer.statementParagraphs.length > 0 ? (
-              <div className="cv__footer-statement">
-                {footer.statementParagraphs.map((paragraph, index) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </div>
   )

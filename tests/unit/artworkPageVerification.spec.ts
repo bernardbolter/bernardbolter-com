@@ -96,7 +96,7 @@ describe('artwork page verification checklist', () => {
   })
 
   describe('size tier × orientation display', () => {
-    const tiers = ['sm', 'md', 'lg', 'xl'] as const
+    const tiers = ['xs', 'sm', 'md', 'lg', 'xl'] as const
     const orientations = ['landscape', 'portrait', 'square'] as const
 
     for (const tier of tiers) {

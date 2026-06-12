@@ -3,7 +3,8 @@ import type { Metadata } from 'next'
 import Info from '@/components/info/Info'
 import Statement from '@/components/statement/Statement'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
-import { getPerson } from '@/lib/payload/person'
+import { getCvPageArtist } from '@/lib/payload/cvPage'
+import { readStatementFooterImages } from '@/lib/payload/statementFooterImages'
 
 export const revalidate = 3600
 
@@ -14,17 +15,18 @@ export const metadata: Metadata = {
 }
 
 export default async function StatementPage() {
-  const person = await getPerson()
-  const statementText = lexicalToPlain(person?.statementFull)
+  const artist = await getCvPageArtist()
+  const statementText = lexicalToPlain(artist?.statementFull)
   const paragraphs = statementText
     .split('\n\n')
     .map((entry) => entry.trim())
     .filter(Boolean)
+  const footerImages = readStatementFooterImages(artist)
 
   return (
     <div className="bio-page__container">
       <Info />
-      <Statement paragraphs={paragraphs} />
+      <Statement paragraphs={paragraphs} footerImages={footerImages} />
     </div>
   )
 }

@@ -28,7 +28,7 @@ const quickUploadSchema = z.object({
   depthWhole: z.number().positive().optional(),
   dimensionUnit: z.enum(['cm', 'in']),
   orientation: z.enum(['landscape', 'portrait', 'square']),
-  sizeTier: z.enum(['sm', 'md', 'lg', 'xl']),
+  sizeTier: z.enum(['xs', 'sm', 'md', 'lg', 'xl']),
   availabilityStatus: z.enum([
     'not-for-sale',
     'available',

@@ -74,7 +74,7 @@ medium, support, primaryImage (already uploaded)
 
 MIDDLE — main body, weave of practical and reflective (see REFLECTIVE CORE block — never defer reflection until after ACH/DCS/Megacities):
 PRACTICAL: widthWhole, heightWhole, depthWhole (if 3D), dimensionUnit (cm or in),
-           sizeTier — ALWAYS ASK (subjective layout choice, never silent): once widthWhole, heightWhole, and dimensionUnit are known, you MUST ask how this work should read on the site grid (sm / md / lg / xl) before staging. You may mention the rule-of-thumb from longest side (<300mm sm, 300–800 md, 800–2000 lg, >2000 xl) as a starting suggestion only — the artist decides. Stage sizeTier only after they answer, with confidence "confirmed" and source "conversation". Never stage sizeTier from inference alone; the server does not fill it at commit. Applies to digital prints with a real output size too.
+           sizeTier — ALWAYS ASK (subjective layout choice, never silent): once widthWhole, heightWhole, and dimensionUnit are known, you MUST ask how this work should read on the site grid (xs / sm / md / lg / xl) before staging. You may mention the rule-of-thumb from longest side (<150mm xs, 150–300 sm, 300–800 md, 800–2000 lg, >2000 xl) as a starting suggestion only — the artist decides. Stage sizeTier only after they answer, with confidence "confirmed" and source "conversation". Never stage sizeTier from inference alone; the server does not fill it at commit. Applies to digital prints with a real output size too.
            framing, processNotes, materialAndProcessMeaning (why THIS medium/process for THIS work — not a general description), sourceMaterials, artHistoricalReferences,
            locationCreated — ask where the artwork was physically made: city, country, countryCode (2-letter ISO), lat/lng if known. Stage as nested fields: locationCreated.city, locationCreated.country, locationCreated.countryCode, locationCreated.label (e.g. "Studio in Neukölln, Berlin")
 REFLECTIVE: intent, makingNote, directInspiration, artHistoricalContext,
@@ -668,7 +668,7 @@ LATE (must all be resolved before confirmation draft):
 - encounterNote — return to the blind pre-upload description; compare then vs now
 
 PRACTICAL (when dimensions are on the record):
-- sizeTier — must be staged from an explicit artist answer (sm | md | lg | xl), or marked N/A only if there is no physical/output size to show on the site. Never skip the question because dimensions imply a tier.
+- sizeTier — must be staged from an explicit artist answer (xs | sm | md | lg | xl), or marked N/A only if there is no physical/output size to show on the site. Never skip the question because dimensions imply a tier.
 
 TAG CLASSIFICATION (always — every cataloguing session):
 - movementTags, styleTags, subjectTags, genreTags, periodTags — all five staged, or each marked N/A with one reason (rare). Never commit with zero tag fields addressed.

@@ -28,5 +28,6 @@ describe('artworkCatalog', () => {
   it('defaults sizeTier to lg', () => {
     expect(getSizeTier({ sizeTier: null })).toBe('lg')
     expect(getSizeTier({ sizeTier: 'sm' })).toBe('sm')
+    expect(getSizeTier({ sizeTier: 'xs' })).toBe('xs')
   })
 })

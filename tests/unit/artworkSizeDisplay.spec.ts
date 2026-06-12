@@ -13,6 +13,7 @@ import {
 describe('artworkSizeDisplay', () => {
   it('maps size tiers to human-readable labels', () => {
     expect(SIZE_TIER_LABELS).toEqual({
+      xs: 'Extra small',
       sm: 'Small',
       md: 'Medium',
       lg: 'Large',
@@ -43,6 +44,14 @@ describe('artworkSizeDisplay', () => {
     expect(getSizeFactor('lg', 'square', false)).toBe(0.8)
     expect(getSizeFactor('lg', 'landscape', false)).toBe(0.85)
     expect(getSizeFactor('lg', 'landscape', true)).toBe(0.9)
+  })
+
+  it('renders xs smaller than sm using the same factor pattern', () => {
+    expect(getSizeFactor('xs', 'landscape', false)).toBeLessThan(getSizeFactor('sm', 'landscape', false))
+    expect(getSizeFactor('xs', 'square', false)).toBeLessThan(getSizeFactor('sm', 'square', false))
+    expect(getSizeFactor('xs', 'landscape', true)).toBeLessThan(getSizeFactor('sm', 'landscape', true))
+    expect(getSizeFactor('xs', 'landscape', false)).toBe(0.55)
+    expect(getSizeFactor('sm', 'landscape', false)).toBe(0.65)
   })
 
   it('scales landscape artwork within container using size tier', () => {

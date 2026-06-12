@@ -1,4 +1,5 @@
 import type { Artwork, Media } from '@/payload-types'
+import { SIZE_TIER_VALUES } from '@/lib/artOfficial/inferSizeTier'
 import type { ArtworkSizeTier } from '@/types/frontend'
 
 const DEFAULT_SIZE_TIER: ArtworkSizeTier = 'lg'
@@ -34,8 +35,8 @@ export function getDisplayImageUrl(
 
 export function getSizeTier(artwork: Pick<Artwork, 'sizeTier'>): ArtworkSizeTier {
   const tier = artwork.sizeTier
-  if (tier === 'sm' || tier === 'md' || tier === 'lg' || tier === 'xl') {
-    return tier
+  if (tier && (SIZE_TIER_VALUES as readonly string[]).includes(tier)) {
+    return tier as ArtworkSizeTier
   }
   return DEFAULT_SIZE_TIER
 }

@@ -208,13 +208,21 @@ export const Artists: CollectionConfig = {
       admin: { description: 'Single sentence, third person (plain text).' },
     },
     {
-      name: 'cvFooterImage',
-      type: 'upload',
-      relationTo: 'media',
+      name: 'statementFooterImages',
+      type: 'array',
+      labels: { singular: 'Footer image', plural: 'Statement footer images' },
       admin: {
         description:
-          'Full-width image at the bottom of /cv (above the long artist statement).',
+          'Full-width images below the artist statement on /statement and /cv. Drag rows to reorder.',
       },
+      fields: [
+        {
+          name: 'image',
+          type: 'upload',
+          relationTo: 'media',
+          required: true,
+        },
+      ],
     },
     {
       name: 'bioPhotos',
