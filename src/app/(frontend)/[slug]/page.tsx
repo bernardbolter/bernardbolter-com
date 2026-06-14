@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
 import Info from '@/components/info/Info'
+import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
+import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
 import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import {
@@ -53,10 +55,12 @@ export default async function Page({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="artwork-page__layout">
-        <Info />
-        <ArtworkPage artwork={artwork} artist={artist} />
-      </div>
+      <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
+        <div className="artwork-page__layout">
+          <Info />
+          <ArtworkPage artwork={artwork} artist={artist} />
+        </div>
+      </ArtworkPageChromeProvider>
     </>
   )
 }

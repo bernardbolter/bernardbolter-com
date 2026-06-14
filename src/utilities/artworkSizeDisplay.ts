@@ -18,6 +18,8 @@ export type CalculateArtworkDisplaySizeInput = {
   useImageFactors?: boolean
   /** When set, used instead of deriving orientation from image dimensions. */
   orientation?: ArtworkOrientation | null
+  /** Masonry grid cells — xs portrait renders at half column width. */
+  gridView?: boolean
 }
 
 const DEFAULT_MEDIA_DIMENSION = 800
@@ -98,7 +100,11 @@ export function getSizeFactor(
   sizeTier: ArtworkSizeTier,
   orientation: ArtworkOrientation,
   useImageFactors = false,
+  gridView = false,
 ): number {
+  if (gridView && sizeTier === 'xs' && orientation === 'portrait') {
+    return 0.5
+  }
   if (useImageFactors) {
     return SIZE_FACTORS.imageCommon[sizeTier]
   }
@@ -127,7 +133,12 @@ export function calculateArtworkDisplaySize(
   const aspectRatio = mediaWidth / mediaHeight
   const orientation =
     input.orientation ?? resolveOrientationFromDimensions(mediaWidth, mediaHeight)
-  const factor = getSizeFactor(sizeTier, orientation, input.useImageFactors)
+  const factor = getSizeFactor(
+    sizeTier,
+    orientation,
+    input.useImageFactors,
+    input.gridView,
+  )
 
   let maxW: number
   let maxH: number

@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
 import Info from '@/components/info/Info'
+import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { getArtworkForPreview } from '@/lib/payload/artworkPage'
+import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
 import { getArtistRecord } from '@/lib/payload/siteDocuments'
 
 export const dynamic = 'force-dynamic'
@@ -29,9 +31,11 @@ export default async function PreviewArtworkPage({ params }: Props) {
   if (!artwork) notFound()
 
   return (
-    <div className="artwork-page__layout">
-      <Info />
-      <ArtworkPage artwork={artwork} artist={artist} />
-    </div>
+    <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
+      <div className="artwork-page__layout">
+        <Info />
+        <ArtworkPage artwork={artwork} artist={artist} />
+      </div>
+    </ArtworkPageChromeProvider>
   )
 }

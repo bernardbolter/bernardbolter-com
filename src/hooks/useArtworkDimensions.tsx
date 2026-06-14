@@ -5,6 +5,7 @@ import { useMemo } from 'react'
 import {
   calculateArtworkDisplaySize,
   type ArtworkDisplayDimensions,
+  type ArtworkOrientation,
 } from '@/utilities/artworkSizeDisplay'
 
 interface UseArtworkDimensionsProps {
@@ -14,6 +15,8 @@ interface UseArtworkDimensionsProps {
   artworkContainerHeight: number
   artworkSize: string
   useImageFactors?: boolean
+  orientation?: ArtworkOrientation | null
+  gridView?: boolean
 }
 
 /**
@@ -26,6 +29,8 @@ export const useArtworkDimensions = ({
   imageWidth,
   imageHeight,
   artworkSize,
+  orientation,
+  gridView = false,
 }: UseArtworkDimensionsProps): ArtworkDisplayDimensions => {
   return useMemo(
     () =>
@@ -36,6 +41,8 @@ export const useArtworkDimensions = ({
         containerHeight: artworkContainerHeight,
         sizeTier: artworkSize,
         useImageFactors,
+        orientation,
+        gridView,
       }),
     [
       artworkContainerWidth,
@@ -44,6 +51,8 @@ export const useArtworkDimensions = ({
       imageWidth,
       imageHeight,
       artworkSize,
+      orientation,
+      gridView,
     ],
   )
 }

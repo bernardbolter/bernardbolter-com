@@ -55,7 +55,7 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
           <div className="artwork-image__info--details">
             <Layer1ObjectRecord artwork={artwork} />
             <Layer2WorldPresence artwork={artwork} artist={artist} hideEditions />
-            <Layer4History artwork={artwork} />
+            <Layer4History artwork={artwork} artist={artist} />
           </div>
         </div>
       </div>

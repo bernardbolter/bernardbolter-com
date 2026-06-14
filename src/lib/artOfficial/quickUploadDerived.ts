@@ -1,11 +1,20 @@
+import {
+  resolvePhysicalDimension,
+  resolvePhysicalDimensionMm,
+} from '@/lib/artOfficial/physicalDimensions'
+
 import { inferSizeTierFromDimensions, type SizeTier } from './inferSizeTier'
 
 export type Orientation = 'landscape' | 'portrait' | 'square'
 
-export function deriveOrientation(
-  width: number,
-  height: number,
-): Orientation {
+export function deriveOrientation(args: {
+  widthWhole: number
+  heightWhole: number
+  widthFraction?: string | null
+  heightFraction?: string | null
+}): Orientation {
+  const width = resolvePhysicalDimension(args.widthWhole, args.widthFraction) ?? 0
+  const height = resolvePhysicalDimension(args.heightWhole, args.heightFraction) ?? 0
   if (width > height) return 'landscape'
   if (height > width) return 'portrait'
   return 'square'
@@ -15,25 +24,24 @@ export function deriveSizeTier(args: {
   widthWhole: number
   heightWhole: number
   depthWhole?: number | null
+  widthFraction?: string | null
+  heightFraction?: string | null
+  depthFraction?: string | null
   dimensionUnit: 'cm' | 'in'
 }): SizeTier | null {
-  return inferSizeTierFromDimensions({
-    widthWhole: args.widthWhole,
-    heightWhole: args.heightWhole,
-    depthWhole: args.depthWhole,
-    dimensionUnit: args.dimensionUnit,
-  })
+  return inferSizeTierFromDimensions(args)
 }
 
-export function deriveAspectRatio(
-  width: number,
-  height: number,
-  dimensionUnit: 'cm' | 'in',
-): number | null {
-  if (!width || !height) return null
-  const wMm = dimensionUnit === 'in' ? width * 25.4 : width * 10
-  const hMm = dimensionUnit === 'in' ? height * 25.4 : height * 10
-  if (!hMm) return null
+export function deriveAspectRatio(args: {
+  widthWhole: number
+  heightWhole: number
+  widthFraction?: string | null
+  heightFraction?: string | null
+  dimensionUnit: 'cm' | 'in'
+}): number | null {
+  const wMm = resolvePhysicalDimensionMm(args.widthWhole, args.widthFraction, args.dimensionUnit)
+  const hMm = resolvePhysicalDimensionMm(args.heightWhole, args.heightFraction, args.dimensionUnit)
+  if (!wMm || !hMm) return null
   return Math.round((wMm / hMm) * 10_000) / 10_000
 }
 

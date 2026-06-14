@@ -847,6 +847,7 @@
   }
 }
 
+.artwork-image__info--ownership-wrapper h2,
 .artwork-image__info--provenance-wrapper h2,
 .artwork-image__info--exhibition-history-wrapper h2 {
   width: 100%;
@@ -895,4 +896,58 @@
 .artwork-image__info--provenance li:nth-child(even),
 .artwork-image__info--exhibition-history li:nth-child(even) {
   background: var(--surface-panel-even);
+}
+
+.artwork-page__ownership {
+  width: 100%;
+  padding: 12px 9px 8px;
+  text-align: left;
+}
+
+.artwork-page__ownership-current {
+  margin: 0 0 10px;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.artwork-page__ownership-honesty {
+  margin: 0 0 10px;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+.artwork-page__ownership-timeline {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0 0 0 12px;
+  border-left: 2px solid var(--ownership-timeline-color, rgba(0, 0, 0, 0.15));
+}
+
+.artwork-page__ownership-timeline-row {
+  position: relative;
+  margin: 0 0 8px;
+  padding-left: 4px;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.artwork-page__ownership-timeline-row:last-child {
+  margin-bottom: 0;
+}
+
+.artwork-page__ownership-appeal {
+  margin: 10px 0 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
 }

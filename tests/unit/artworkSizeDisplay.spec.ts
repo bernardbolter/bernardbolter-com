@@ -54,6 +54,28 @@ describe('artworkSizeDisplay', () => {
     expect(getSizeFactor('sm', 'landscape', false)).toBe(0.65)
   })
 
+  it('uses half column width for xs portrait in the grid', () => {
+    expect(getSizeFactor('xs', 'portrait', true, true)).toBe(0.5)
+    expect(getSizeFactor('xs', 'portrait', true, false)).toBe(0.75)
+    expect(getSizeFactor('xs', 'landscape', true, true)).toBe(0.75)
+  })
+
+  it('scales xs portrait grid cells to 50% of column width', () => {
+    const result = calculateArtworkDisplaySize({
+      imageWidth: 900,
+      imageHeight: 1200,
+      containerWidth: 320,
+      containerHeight: 5000,
+      sizeTier: 'xs',
+      useImageFactors: true,
+      orientation: 'portrait',
+      gridView: true,
+    })
+
+    expect(result.displayWidth).toBe(160)
+    expect(result.displayHeight).toBe(213)
+  })
+
   it('scales landscape artwork within container using size tier', () => {
     const result = calculateArtworkDisplaySize({
       imageWidth: 1600,

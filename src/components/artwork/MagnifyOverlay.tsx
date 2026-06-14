@@ -140,13 +140,6 @@ export default function MagnifyOverlay({
                           setErrorIndex(null)
                         }
                       }}
-                      onLoadingComplete={() => {
-                        onImageLoaded?.(index)
-                        if (index === activeIndex) {
-                          setLoadingIndex(null)
-                          setErrorIndex(null)
-                        }
-                      }}
                       onError={() => {
                         if (index === activeIndex) {
                           setLoadingIndex(null)

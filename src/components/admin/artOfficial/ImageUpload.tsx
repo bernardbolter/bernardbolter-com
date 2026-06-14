@@ -10,7 +10,7 @@ export function ImageUpload({
   accept = 'image/jpeg,image/png,image/webp',
   altLabel,
 }: {
-  onUploaded: (mediaId: number) => void
+  onUploaded: (mediaId: number, meta?: { filename: string }) => void
   disabled?: boolean
   accept?: string
   altLabel?: string
@@ -36,7 +36,7 @@ export function ImageUpload({
     try {
       const id = await uploadMediaFile(file, altLabel)
       if (!mountedRef.current) return
-      onUploaded(id)
+      onUploaded(id, { filename: file.name })
     } catch (err) {
       if (!mountedRef.current) return
       setError(err instanceof Error ? err.message : 'Upload failed')

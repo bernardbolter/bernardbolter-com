@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 import { CloseCircleSvg } from '@/components/icons'
 import HeaderTitle from '@/components/info/HeaderTitle'
@@ -39,7 +40,9 @@ export default function Contact({ artist }: Props) {
       <ContactStatus artist={artist} />
       <ContactProvenance artist={artist} />
       <ContactSocials artist={artist} />
-      <ContactForm enquiryIntro={artist.contactEnquiryIntro} />
+      <Suspense fallback={null}>
+        <ContactForm enquiryIntro={artist.contactEnquiryIntro} />
+      </Suspense>
 
       {artist.contactCorrectionsText ? (
         <section className="mx-auto w-full max-w-[34.375rem] pt-[1.875rem]">

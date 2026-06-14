@@ -4,6 +4,7 @@ import { slugifyArtworkTitle } from '@/lib/artOfficial/quickUploadDerived'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 import { localizedText } from '@/lib/artOfficial/seriesLabel'
 
+/** Quick Upload series picker — not Payload's `/api/series` collection REST. */
 export async function GET() {
   const { ok, payload, user } = await requireStaff()
   if (!ok || !user) {

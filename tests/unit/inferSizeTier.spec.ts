@@ -13,6 +13,17 @@ describe('inferSizeTierFromDimensions', () => {
     ).toBe('lg')
   })
 
+  it('includes imperial fractions when inferring size tier', () => {
+    expect(
+      inferSizeTierFromDimensions({
+        widthWhole: 47,
+        widthFraction: '1/2',
+        heightWhole: 36,
+        dimensionUnit: 'in',
+      }),
+    ).toBe('lg')
+  })
+
   it('maps very small cm work to xs', () => {
     expect(
       inferSizeTierFromDimensions({

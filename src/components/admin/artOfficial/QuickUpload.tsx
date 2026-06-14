@@ -9,6 +9,10 @@ import {
   DCS_ROOT_SERIES_SLUG,
 } from '@/lib/artOfficial/catalogScope'
 import {
+  isValidDimensionFraction,
+  resolvePhysicalDimension,
+} from '@/lib/artOfficial/physicalDimensions'
+import {
   deriveAspectRatio,
   deriveOrientation,
   deriveSizeTier,
@@ -20,6 +24,7 @@ import {
   formatWpImportLabel,
   type WordpressImportEntry,
 } from '@/lib/artOfficial/wordpressImport.shared'
+import { matchWpImportEntryByFilename } from '@/lib/artOfficial/wpFieldParsers'
 
 import { ImageUpload } from './ImageUpload'
 import { MediaThumbnail } from './MediaThumbnail'
@@ -42,6 +47,9 @@ type QuickUploadDraft = {
   width: string
   height: string
   depth: string
+  widthFraction: string
+  heightFraction: string
+  depthFraction: string
   dimensionUnit: 'cm' | 'in'
   availabilityStatus: string
   primaryMediaId: number | null
@@ -50,6 +58,14 @@ type QuickUploadDraft = {
   achSourceIds: number[]
   orientationOverride: string
   sizeTierOverride: string
+  wpId: number | null
+  city: string
+  country: string
+  streetPhotoCaption: string
+  cityPopulation: number | null
+  cityAreaKm2: number | null
+  cityPopulationDensity: number | null
+  cityElevationM: number | null
 }
 
 function readQuickUploadDraft(): QuickUploadDraft | null {
@@ -81,7 +97,7 @@ function UploadWithThumbnail({
   disabled?: boolean
   accept?: string
   altLabel?: string
-  onUploaded: (id: number) => void
+  onUploaded: (id: number, meta?: { filename: string }) => void
 }) {
   return (
     <div className="art-official-upload__file-row">
@@ -177,12 +193,25 @@ export function QuickUpload() {
   const [width, setWidth] = useState('')
   const [height, setHeight] = useState('')
   const [depth, setDepth] = useState('')
+  const [widthFraction, setWidthFraction] = useState('')
+  const [heightFraction, setHeightFraction] = useState('')
+  const [depthFraction, setDepthFraction] = useState('')
   const [dimensionUnit, setDimensionUnit] = useState<'cm' | 'in'>('cm')
   const [availabilityStatus, setAvailabilityStatus] = useState('not-for-sale')
   const [primaryMediaId, setPrimaryMediaId] = useState<number | null>(null)
   const [dcsStreetId, setDcsStreetId] = useState<number | null>(null)
   const [dcsSatelliteId, setDcsSatelliteId] = useState<number | null>(null)
   const [achSourceIds, setAchSourceIds] = useState<number[]>([])
+  const [wpId, setWpId] = useState<number | null>(null)
+  const [city, setCity] = useState('')
+  const [country, setCountry] = useState('')
+  const [streetPhotoCaption, setStreetPhotoCaption] = useState('')
+  const [cityPopulation, setCityPopulation] = useState<number | null>(null)
+  const [cityAreaKm2, setCityAreaKm2] = useState<number | null>(null)
+  const [cityPopulationDensity, setCityPopulationDensity] = useState<number | null>(null)
+  const [cityElevationM, setCityElevationM] = useState<number | null>(null)
+  const [wpRefImageUrl, setWpRefImageUrl] = useState<string | null>(null)
+  const [wpAutoMatched, setWpAutoMatched] = useState(false)
 
   const [orientationOverride, setOrientationOverride] = useState<Orientation | ''>('')
   const [sizeTierOverride, setSizeTierOverride] = useState('')
@@ -199,7 +228,7 @@ export function QuickUpload() {
     setSeriesLoading(true)
     setSeriesLoadError(null)
     try {
-      const res = await fetch('/api/series', { credentials: 'include' })
+      const res = await fetch('/api/art-official/series', { credentials: 'include' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
         throw new Error(
@@ -265,6 +294,9 @@ export function QuickUpload() {
     setWidth(draft.width)
     setHeight(draft.height)
     setDepth(draft.depth)
+    setWidthFraction(draft.widthFraction ?? '')
+    setHeightFraction(draft.heightFraction ?? '')
+    setDepthFraction(draft.depthFraction ?? '')
     setDimensionUnit(draft.dimensionUnit)
     setAvailabilityStatus(draft.availabilityStatus)
     setPrimaryMediaId(draft.primaryMediaId)
@@ -273,6 +305,14 @@ export function QuickUpload() {
     setAchSourceIds(draft.achSourceIds ?? [])
     setOrientationOverride((draft.orientationOverride as Orientation | '') || '')
     setSizeTierOverride(draft.sizeTierOverride)
+    setWpId(draft.wpId ?? null)
+    setCity(draft.city ?? '')
+    setCountry(draft.country ?? '')
+    setStreetPhotoCaption(draft.streetPhotoCaption ?? '')
+    setCityPopulation(draft.cityPopulation ?? null)
+    setCityAreaKm2(draft.cityAreaKm2 ?? null)
+    setCityPopulationDensity(draft.cityPopulationDensity ?? null)
+    setCityElevationM(draft.cityElevationM ?? null)
   }, [])
 
   useEffect(() => {
@@ -289,6 +329,9 @@ export function QuickUpload() {
       width,
       height,
       depth,
+      widthFraction,
+      heightFraction,
+      depthFraction,
       dimensionUnit,
       availabilityStatus,
       primaryMediaId,
@@ -297,6 +340,14 @@ export function QuickUpload() {
       achSourceIds,
       orientationOverride,
       sizeTierOverride,
+      wpId,
+      city,
+      country,
+      streetPhotoCaption,
+      cityPopulation,
+      cityAreaKm2,
+      cityPopulationDensity,
+      cityElevationM,
     }
     const id = window.setTimeout(() => {
       sessionStorage.setItem(QUICK_UPLOAD_DRAFT_KEY, JSON.stringify(draft))
@@ -314,6 +365,9 @@ export function QuickUpload() {
     width,
     height,
     depth,
+    widthFraction,
+    heightFraction,
+    depthFraction,
     dimensionUnit,
     availabilityStatus,
     primaryMediaId,
@@ -322,6 +376,14 @@ export function QuickUpload() {
     achSourceIds,
     orientationOverride,
     sizeTierOverride,
+    wpId,
+    city,
+    country,
+    streetPhotoCaption,
+    cityPopulation,
+    cityAreaKm2,
+    cityPopulationDensity,
+    cityElevationM,
   ])
 
   async function addCustomMediumToList() {
@@ -363,7 +425,7 @@ export function QuickUpload() {
     setCreatingSeries(true)
     setSeriesLoadError(null)
     try {
-      const res = await fetch('/api/series', {
+      const res = await fetch('/api/art-official/series', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -392,7 +454,7 @@ export function QuickUpload() {
   }
 
   useEffect(() => {
-    if (!useWp) return
+    if (!useWp && !isDcs) return
     setWpLoading(true)
     setWpLoadError(null)
     void (async () => {
@@ -412,38 +474,56 @@ export function QuickUpload() {
         setWpLoading(false)
       }
     })()
-  }, [useWp])
+  }, [useWp, isDcs])
 
   const filteredWpEntries = useMemo(() => {
+    const seriesSlug = selectedSeries?.slug
+    let rows = seriesSlug
+      ? wpEntries.filter((row) => row.seriesSlug === seriesSlug)
+      : wpEntries
     const q = wpFilter.trim().toLowerCase()
-    if (!q) return wpEntries
-    return wpEntries.filter((row) => {
+    if (!q) return rows
+    return rows.filter((row) => {
       const haystack = [
         row.title,
         row.year != null ? String(row.year) : '',
         row.seriesName ?? '',
         row.seriesSlug ?? '',
         row.wpSlug ?? '',
+        row.city ?? '',
+        row.country ?? '',
       ]
         .join(' ')
         .toLowerCase()
       return haystack.includes(q)
     })
-  }, [wpEntries, wpFilter])
+  }, [wpEntries, wpFilter, selectedSeries?.slug])
 
   const applyWpEntry = useCallback(
-    (entry: WordpressImportEntry) => {
+    (entry: WordpressImportEntry, autoMatched = false) => {
       setTitle(entry.title)
       setSlugTouched(false)
       setSlug(entry.wpSlug?.trim() || slugifyArtworkTitle(entry.title))
       setYearCreated(entry.year != null ? String(entry.year) : '')
       setMedium(entry.medium ?? '')
-      setWidth(entry.widthCm != null ? String(entry.widthCm) : '')
-      setHeight(entry.heightCm != null ? String(entry.heightCm) : '')
+      setWidth(entry.widthWhole != null ? String(entry.widthWhole) : '')
+      setHeight(entry.heightWhole != null ? String(entry.heightWhole) : '')
+      setWidthFraction(entry.widthFraction ?? '')
+      setHeightFraction(entry.heightFraction ?? '')
       setDepth('')
-      setDimensionUnit('cm')
+      setDepthFraction('')
+      setDimensionUnit(entry.dimensionUnit ?? 'cm')
       setSpansYears(false)
       setYearCompleted('')
+      setCity(entry.city ?? '')
+      setCountry(entry.country ?? '')
+      setStreetPhotoCaption(entry.streetPhotoCaption ?? '')
+      setCityPopulation(entry.cityPopulation)
+      setCityAreaKm2(entry.cityAreaKm2)
+      setCityPopulationDensity(entry.cityPopulationDensity)
+      setCityElevationM(entry.cityElevationM)
+      setWpId(entry.id)
+      setWpRefImageUrl(entry.artworkImageUrl)
       if (entry.availabilityStatus) {
         setAvailabilityStatus(entry.availabilityStatus)
       }
@@ -453,11 +533,9 @@ export function QuickUpload() {
         const match = seriesList.find((s) => s.slug === entry.seriesSlug)
         if (match) setSeriesId(String(match.id))
       }
-      setPrimaryMediaId(null)
-      setDcsStreetId(null)
-      setDcsSatelliteId(null)
-      setAchSourceIds([])
+      setWpPick(String(entry.id))
       setWpLoadedLabel(formatWpImportLabel(entry))
+      setWpAutoMatched(autoMatched)
       setError(null)
     },
     [seriesList],
@@ -465,12 +543,30 @@ export function QuickUpload() {
 
   function onWpSelect(id: string) {
     setWpPick(id)
+    setWpAutoMatched(false)
     if (!id) {
       setWpLoadedLabel(null)
+      setWpRefImageUrl(null)
+      setWpId(null)
       return
     }
     const entry = wpEntries.find((e) => String(e.id) === id)
     if (entry) applyWpEntry(entry)
+  }
+
+  function handlePrimaryUploaded(mediaId: number, meta?: { filename: string }) {
+    setPrimaryMediaId(mediaId)
+    if (!meta?.filename || wpPick || !wpEntries.length) return
+    if (!useWp && !isDcs) return
+    const match = matchWpImportEntryByFilename(
+      meta.filename,
+      wpEntries,
+      selectedSeries?.slug,
+    )
+    if (match) {
+      if (!useWp) setUseWp(true)
+      applyWpEntry(match, true)
+    }
   }
 
   useEffect(() => {
@@ -481,24 +577,53 @@ export function QuickUpload() {
     if (match) setSeriesId(String(match.id))
   }, [wpPick, seriesId, seriesList, wpEntries])
 
-  const widthNum = parseFloat(width)
-  const heightNum = parseFloat(height)
-  const depthNum = depth ? parseFloat(depth) : undefined
+  const isInches = dimensionUnit === 'in'
+  const widthWholeNum = isInches ?
+    width.trim() === '' ? NaN : Number.parseInt(width, 10)
+  : Number.parseFloat(width)
+  const heightWholeNum = isInches ?
+    height.trim() === '' ? NaN : Number.parseInt(height, 10)
+  : Number.parseFloat(height)
+  const depthWholeNum =
+    depth.trim() === '' ? undefined
+    : isInches ? Number.parseInt(depth, 10)
+    : Number.parseFloat(depth)
 
   const derived = useMemo(() => {
-    if (!Number.isFinite(widthNum) || !Number.isFinite(heightNum) || widthNum <= 0 || heightNum <= 0) {
-      return null
-    }
-    const orientation = deriveOrientation(widthNum, heightNum)
+    const orientation = deriveOrientation({
+      widthWhole: Number.isFinite(widthWholeNum) ? widthWholeNum : 0,
+      heightWhole: Number.isFinite(heightWholeNum) ? heightWholeNum : 0,
+      widthFraction: isInches ? widthFraction : undefined,
+      heightFraction: isInches ? heightFraction : undefined,
+    })
     const sizeTier = deriveSizeTier({
-      widthWhole: widthNum,
-      heightWhole: heightNum,
-      depthWhole: depthNum,
+      widthWhole: Number.isFinite(widthWholeNum) ? widthWholeNum : 0,
+      heightWhole: Number.isFinite(heightWholeNum) ? heightWholeNum : 0,
+      depthWhole: depthWholeNum,
+      widthFraction: isInches ? widthFraction : undefined,
+      heightFraction: isInches ? heightFraction : undefined,
+      depthFraction: isInches ? depthFraction : undefined,
       dimensionUnit,
     })
-    const aspectRatio = deriveAspectRatio(widthNum, heightNum, dimensionUnit)
+    const aspectRatio = deriveAspectRatio({
+      widthWhole: Number.isFinite(widthWholeNum) ? widthWholeNum : 0,
+      heightWhole: Number.isFinite(heightWholeNum) ? heightWholeNum : 0,
+      widthFraction: isInches ? widthFraction : undefined,
+      heightFraction: isInches ? heightFraction : undefined,
+      dimensionUnit,
+    })
+    if (!sizeTier || !aspectRatio) return null
     return { orientation, sizeTier, aspectRatio }
-  }, [widthNum, heightNum, depthNum, dimensionUnit])
+  }, [
+    widthWholeNum,
+    heightWholeNum,
+    depthWholeNum,
+    widthFraction,
+    heightFraction,
+    depthFraction,
+    dimensionUnit,
+    isInches,
+  ])
 
   const orientation =
     orientationOverride || derived?.orientation || 'landscape'
@@ -522,8 +647,32 @@ export function QuickUpload() {
       setError('Click “Add to list” for the new medium before submitting.')
       return
     }
-    if (!Number.isFinite(widthNum) || !Number.isFinite(heightNum)) {
+    if (!Number.isFinite(widthWholeNum) || !Number.isFinite(heightWholeNum)) {
       setError('Width and height are required.')
+      return
+    }
+    if (isInches) {
+      for (const [label, fraction] of [
+        ['Width', widthFraction],
+        ['Height', heightFraction],
+        ['Depth', depthFraction],
+      ] as const) {
+        if (!isValidDimensionFraction(fraction)) {
+          setError(`${label} fraction must look like 3/16.`)
+          return
+        }
+      }
+    }
+    const widthQty = resolvePhysicalDimension(
+      widthWholeNum,
+      isInches ? widthFraction : undefined,
+    )
+    const heightQty = resolvePhysicalDimension(
+      heightWholeNum,
+      isInches ? heightFraction : undefined,
+    )
+    if (widthQty == null || widthQty <= 0 || heightQty == null || heightQty <= 0) {
+      setError('Width and height must be greater than zero.')
       return
     }
 
@@ -540,14 +689,25 @@ export function QuickUpload() {
           seriesId: Number(seriesId),
           medium,
           mediumOther: medium === 'other' ? mediumOther.trim() : undefined,
-          widthWhole: widthNum,
-          heightWhole: heightNum,
-          depthWhole: depthNum,
+          widthWhole: widthWholeNum,
+          widthFraction: isInches ? widthFraction.trim() || undefined : undefined,
+          heightWhole: heightWholeNum,
+          heightFraction: isInches ? heightFraction.trim() || undefined : undefined,
+          depthWhole: depthWholeNum,
+          depthFraction: isInches ? depthFraction.trim() || undefined : undefined,
           dimensionUnit,
           orientation,
           sizeTier,
           availabilityStatus,
           primaryImageMediaId: primaryMediaId,
+          wpId: wpId ?? undefined,
+          city: city.trim() || undefined,
+          country: country.trim() || undefined,
+          streetPhotoCaption: isDcs ? streetPhotoCaption.trim() || undefined : undefined,
+          cityPopulation: isDcs ? cityPopulation ?? undefined : undefined,
+          cityAreaKm2: isDcs ? cityAreaKm2 ?? undefined : undefined,
+          cityPopulationDensity: isDcs ? cityPopulationDensity ?? undefined : undefined,
+          cityElevationM: isDcs ? cityElevationM ?? undefined : undefined,
           dcsStreetMediaId: isDcs ? dcsStreetId ?? undefined : undefined,
           dcsSatelliteMediaId: isDcs ? dcsSatelliteId ?? undefined : undefined,
           achSourceMediaIds: isAch && achSourceIds.length ? achSourceIds : undefined,
@@ -607,6 +767,16 @@ export function QuickUpload() {
     setWpPick('')
     setWpFilter('')
     setWpLoadedLabel(null)
+    setWpRefImageUrl(null)
+    setWpId(null)
+    setWpAutoMatched(false)
+    setCity('')
+    setCountry('')
+    setStreetPhotoCaption('')
+    setCityPopulation(null)
+    setCityAreaKm2(null)
+    setCityPopulationDensity(null)
+    setCityElevationM(null)
     setError(null)
     setSuccess(null)
     sessionStorage.removeItem(QUICK_UPLOAD_DRAFT_KEY)
@@ -631,20 +801,30 @@ export function QuickUpload() {
               setWpPick('')
               setWpFilter('')
               setWpLoadedLabel(null)
+              setWpRefImageUrl(null)
+              setWpAutoMatched(false)
               setWpLoadError(null)
             }
           }}
         />
-        Pre-populate text fields from WordPress export
+        Pre-populate fields from WordPress export
       </label>
+      {isDcs && !useWp ? (
+        <p className="art-official-upload__hint">
+          Digital City Series: select the series first, then upload an image — matching
+          legacy records auto-fills title, city, dimensions, and city stats when the
+          filename matches.
+        </p>
+      ) : null}
 
-      {useWp ? (
+      {useWp || (isDcs && wpEntries.length > 0) ? (
         <fieldset className="art-official-upload__legacy">
           <legend>Legacy WordPress export</legend>
           <p className="art-official-upload__legacy-hint">
-            Loads text fields from <code>data/legacy/wp-artworks.json</code>. You still
-            upload a new primary image (and any series media) below — old image URLs are
-            not imported.
+            Loads matching fields from <code>data/legacy/wp-artworks.json</code> — title,
+            slug, year, city, country, dimensions, medium, series, DCS city stats, and
+            street-photo caption. You still upload new images below; old URLs are reference
+            only.
           </p>
           {wpLoading ? (
             <p className="art-official-upload__hint">Loading legacy list…</p>
@@ -686,8 +866,17 @@ export function QuickUpload() {
               </label>
               {wpLoadedLabel ? (
                 <p className="art-official-upload__legacy-loaded">
-                  Loaded: <strong>{wpLoadedLabel}</strong> — review fields, then add your
-                  photos.
+                  Loaded: <strong>{wpLoadedLabel}</strong>
+                  {wpAutoMatched ? ' (matched from filename)' : ''} — review fields, then
+                  add your photos.
+                </p>
+              ) : null}
+              {wpRefImageUrl ? (
+                <p className="art-official-upload__legacy-ref">
+                  Legacy primary image:{' '}
+                  <a href={wpRefImageUrl} target="_blank" rel="noreferrer">
+                    {wpRefImageUrl.split('/').pop()}
+                  </a>
                 </p>
               ) : null}
             </>
@@ -714,7 +903,7 @@ export function QuickUpload() {
             mediaId={primaryMediaId}
             disabled={submitting}
             accept="image/jpeg,image/png,image/tiff,image/webp"
-            onUploaded={setPrimaryMediaId}
+            onUploaded={handlePrimaryUploaded}
           />
         </label>
 
@@ -786,6 +975,25 @@ export function QuickUpload() {
           </label>
         ) : null}
 
+        <div className="art-official-upload__dims-row">
+          <label className="art-official-upload__field">
+            City
+            <input
+              value={city}
+              disabled={submitting}
+              onChange={(e) => setCity(e.target.value)}
+            />
+          </label>
+          <label className="art-official-upload__field">
+            Country
+            <input
+              value={country}
+              disabled={submitting}
+              onChange={(e) => setCountry(e.target.value)}
+            />
+          </label>
+        </div>
+
         <div className="art-official-upload__field">
           <label htmlFor="quick-upload-series">Series</label>
           {seriesLoading ? (
@@ -852,6 +1060,38 @@ export function QuickUpload() {
         {isDcs ? (
           <fieldset className="art-official-upload__series-media">
             <legend>Digital City Series — composition layers</legend>
+            <label className="art-official-upload__field">
+              Street photo caption
+              <input
+                value={streetPhotoCaption}
+                disabled={submitting}
+                placeholder="e.g. Wat Saket"
+                onChange={(e) => setStreetPhotoCaption(e.target.value)}
+              />
+              <p className="art-official-upload__hint">
+                Saved to street photo caption when you upload the Micro image.
+              </p>
+            </label>
+            {cityPopulation != null ||
+            cityAreaKm2 != null ||
+            cityPopulationDensity != null ||
+            cityElevationM != null ? (
+              <p className="art-official-upload__legacy-stats">
+                Legacy city data:{' '}
+                {[
+                  cityPopulation != null ?
+                    `Population ${cityPopulation.toLocaleString()}`
+                  : null,
+                  cityAreaKm2 != null ? `Area ${cityAreaKm2} km²` : null,
+                  cityPopulationDensity != null ?
+                    `Density ${cityPopulationDensity.toLocaleString()}/km²`
+                  : null,
+                  cityElevationM != null ? `Elevation ${cityElevationM} m` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            ) : null}
             <label className="art-official-upload__field">
               Street photo (Micro)
               <UploadWithThumbnail
@@ -950,48 +1190,96 @@ export function QuickUpload() {
 
         <div className="art-official-upload__dims">
           <label>
-            Width
-            <input
-              required
-              type="number"
-              min={0}
-              step="any"
-              value={width}
-              onChange={(e) => setWidth(e.target.value)}
-            />
-          </label>
-          <label>
-            Height
-            <input
-              required
-              type="number"
-              min={0}
-              step="any"
-              value={height}
-              onChange={(e) => setHeight(e.target.value)}
-            />
-          </label>
-          <label>
-            Depth (optional)
-            <input
-              type="number"
-              min={0}
-              step="any"
-              value={depth}
-              onChange={(e) => setDepth(e.target.value)}
-            />
-          </label>
-          <label>
             Unit
             <select
               value={dimensionUnit}
-              onChange={(e) => setDimensionUnit(e.target.value as 'cm' | 'in')}
+              onChange={(e) => {
+                const next = e.target.value as 'cm' | 'in'
+                setDimensionUnit(next)
+                if (next === 'cm') {
+                  setWidthFraction('')
+                  setHeightFraction('')
+                  setDepthFraction('')
+                }
+              }}
             >
               <option value="cm">cm</option>
               <option value="in">in</option>
             </select>
           </label>
+          <label>
+            Width {isInches ? '(in)' : '(cm)'}
+            <div className="art-official-upload__dim-pair">
+              <input
+                required
+                type="number"
+                min={0}
+                step={isInches ? 1 : 'any'}
+                value={width}
+                onChange={(e) => setWidth(e.target.value)}
+                placeholder={isInches ? '48' : '90'}
+              />
+              {isInches ? (
+                <input
+                  type="text"
+                  value={widthFraction}
+                  onChange={(e) => setWidthFraction(e.target.value)}
+                  placeholder="3/16"
+                  aria-label="Width fraction"
+                />
+              ) : null}
+            </div>
+          </label>
+          <label>
+            Height {isInches ? '(in)' : '(cm)'}
+            <div className="art-official-upload__dim-pair">
+              <input
+                required
+                type="number"
+                min={0}
+                step={isInches ? 1 : 'any'}
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                placeholder={isInches ? '36' : '120'}
+              />
+              {isInches ? (
+                <input
+                  type="text"
+                  value={heightFraction}
+                  onChange={(e) => setHeightFraction(e.target.value)}
+                  placeholder="3/16"
+                  aria-label="Height fraction"
+                />
+              ) : null}
+            </div>
+          </label>
+          <label>
+            Depth (optional) {isInches ? '(in)' : '(cm)'}
+            <div className="art-official-upload__dim-pair">
+              <input
+                type="number"
+                min={0}
+                step={isInches ? 1 : 'any'}
+                value={depth}
+                onChange={(e) => setDepth(e.target.value)}
+              />
+              {isInches ? (
+                <input
+                  type="text"
+                  value={depthFraction}
+                  onChange={(e) => setDepthFraction(e.target.value)}
+                  placeholder="3/16"
+                  aria-label="Depth fraction"
+                />
+              ) : null}
+            </div>
+          </label>
         </div>
+        {isInches ? (
+          <p className="art-official-upload__hint">
+            Inches use a whole number plus an optional fraction (e.g. 48 and 3/16).
+          </p>
+        ) : null}
 
         {derived ? (
           <div className="art-official-upload__derived">

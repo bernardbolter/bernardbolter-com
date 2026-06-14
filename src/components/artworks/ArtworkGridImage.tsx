@@ -15,6 +15,7 @@ import { seriesColorBlurDataURLs } from '@/helpers/blurURLs'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { useArtworkDimensions } from '@/hooks/useArtworkDimensions'
 import type { Artwork } from '@/payload-types'
+import { resolveArtworkOrientation } from '@/utilities/artworkSizeDisplay'
 
 interface ArtworkGridImageProps {
   artwork: Artwork
@@ -61,6 +62,8 @@ export default function ArtworkGridImage({ artwork, itemSize }: ArtworkGridImage
   const imageSrc = getDisplayImageUrl(artwork) ?? ''
   const { width: imageWidth, height: imageHeight } = getPrimaryMediaDimensions(artwork)
 
+  const orientation = resolveArtworkOrientation(artwork, imageWidth, imageHeight)
+
   const { displayWidth, displayHeight } = useArtworkDimensions({
     artworkContainerWidth: itemSize.width,
     artworkContainerHeight: 5000,
@@ -68,6 +71,8 @@ export default function ArtworkGridImage({ artwork, itemSize }: ArtworkGridImage
     imageHeight,
     artworkSize: getSizeTier(artwork),
     useImageFactors: !isVideo,
+    orientation,
+    gridView: true,
   })
 
   const blurDataURL = seriesColorBlurDataURLs[seriesSlug] ?? seriesColorBlurDataURLs.default
@@ -108,13 +113,11 @@ export default function ArtworkGridImage({ artwork, itemSize }: ArtworkGridImage
 
         {imageSrc ? (
           <Image
-            className="artwork-grid__image"
+            className="artwork-grid__image object-contain"
             src={imageSrc}
             alt={artwork.title ?? 'Artwork'}
-            width={displayWidth}
-            height={displayHeight}
+            fill
             style={{
-              objectFit: 'contain',
               opacity: imageFailed ? 0 : 1,
             }}
             placeholder="blur"

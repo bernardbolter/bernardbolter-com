@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { labelForSameAsUri } from '@/lib/artwork/sameAsDomainLabel'
 import { getSeriesSiteUrl } from '@/lib/artwork/seriesSiteUrl'
-import { hasUnclaimedOwnershipAppeal } from '@/lib/artwork/artworkProvenancePublic'
 import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
 import { getDocumentationVideoSource } from '@/lib/artwork/artworkGalleryImages'
 import type { Artist, Artwork, Media } from '@/payload-types'
@@ -185,12 +184,6 @@ export default function Layer2WorldPresence({ artwork, artist, hideEditions = fa
             <hr className="artwork-page__divider" />
             <p className="artwork-page__section-title">Location</p>
             <p className="artwork-page__prose">{location}</p>
-            {hasUnclaimedOwnershipAppeal(artwork) ? (
-              <p className="artwork-page__prose artwork-page__prose--secondary mt-2">
-                If you own this work, get in touch. I&apos;ll add you to the record and officially
-                connect you to its history.
-              </p>
-            ) : null}
           </>
         ) : null}
 

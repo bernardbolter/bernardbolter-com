@@ -2,6 +2,7 @@
 export function inferMediumFromWp(mediumText: string | null | undefined): string | null {
   const m = (mediumText ?? '').toLowerCase()
   if (!m.trim()) return null
+  if (m.includes('digital') && m.includes('collage')) return 'digital'
   if (m.includes('collage')) return 'photo-collage'
   if (m.includes('video') || m.includes('mp4')) return 'video'
   if (m.includes('digital')) return 'digital'

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, type KeyboardEvent } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import LexicalProse from '@/lib/contact/LexicalProse'
 
@@ -16,6 +17,8 @@ const SUBJECT_OPTIONS = [
   'Archive — corrections or additions',
   'Other',
 ] as const
+
+const OWNERSHIP_SUBJECT = 'I own one of your works' as const
 
 type SubjectOption = (typeof SUBJECT_OPTIONS)[number]
 
@@ -41,6 +44,11 @@ const fieldClass =
   'w-full border-0 border-b border-[var(--ui-icon)] bg-[#ddd] px-[0.6875rem] py-[0.375rem] font-body text-sm text-[var(--ui-icon)] outline-none focus:border-[var(--status-success)]'
 
 export default function ContactForm({ enquiryIntro }: Props) {
+  const searchParams = useSearchParams()
+  const claimSlug = searchParams.get('claim')?.trim() || ''
+  const claimTitle = searchParams.get('title')?.trim() || ''
+  const messageRef = useRef<HTMLTextAreaElement>(null)
+
   const [subject, setSubject] = useState<SubjectOption | ''>('')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -49,6 +57,23 @@ export default function ContactForm({ enquiryIntro }: Props) {
   const [submitError, setSubmitError] = useState('')
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [claimPrefillApplied, setClaimPrefillApplied] = useState(false)
+
+  useEffect(() => {
+    if (!claimSlug || claimPrefillApplied) return
+
+    const prefill = claimTitle ? `I believe I own "${claimTitle}". ` : 'I believe I own this work. '
+    setSubject(OWNERSHIP_SUBJECT)
+    setMessage(prefill)
+    setClaimPrefillApplied(true)
+
+    requestAnimationFrame(() => {
+      const textarea = messageRef.current
+      if (!textarea) return
+      textarea.focus()
+      textarea.setSelectionRange(prefill.length, prefill.length)
+    })
+  }, [claimSlug, claimTitle, claimPrefillApplied])
 
   const runValidation = (): ContactErrors => {
     const nextErrors: ContactErrors = {}
@@ -84,7 +109,13 @@ export default function ContactForm({ enquiryIntro }: Props) {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ subject, name, email, message }),
+        body: JSON.stringify({
+          subject,
+          name,
+          email,
+          message,
+          ...(claimSlug ? { artworkSlug: claimSlug } : {}),
+        }),
       })
 
       const json = (await response.json()) as { code?: number }
@@ -121,6 +152,12 @@ export default function ContactForm({ enquiryIntro }: Props) {
   return (
     <section className="mx-auto w-full max-w-[34.375rem]">
       {enquiryIntro ? <LexicalProse content={enquiryIntro} className={INTRO_CLASS} /> : null}
+
+      {claimSlug && claimTitle ? (
+        <p className="mx-auto mb-2 w-full max-w-[34.375rem] font-body text-sm text-[var(--text-muted)]">
+          Regarding: {claimTitle}
+        </p>
+      ) : null}
 
       <div
         className="contact-form-block mx-auto mb-[0.9375rem] mt-[1.875rem] w-full max-w-[34.375rem] rounded-[0.375rem] border border-[var(--ui-icon)] bg-white px-[5%] pb-[0.9375rem] pt-[1.875rem]"
@@ -202,6 +239,7 @@ export default function ContactForm({ enquiryIntro }: Props) {
             message
           </label>
           <textarea
+            ref={messageRef}
             id="contact-message"
             value={message}
             onChange={(event) => {

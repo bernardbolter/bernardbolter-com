@@ -1,17 +1,34 @@
 import { readFile } from 'fs/promises'
 import path from 'path'
 
+import { slugDerivedTitle } from './normalizeLegacyRecord'
 import { inferMediumFromWp } from './wordpressMediumMap'
 import type { WordpressImportEntry } from './wordpressImport.shared'
+import {
+  parseWpAreaKm2,
+  parseWpDensityPerKm2,
+  parseWpDimension,
+  parseWpElevationM,
+  parseWpPopulation,
+} from './wpFieldParsers'
 
 export type { WordpressImportEntry } from './wordpressImport.shared'
+
+type WpImageNode = {
+  node?: { sourceUrl?: string | null } | null
+} | null
 
 type WpArtworkNode = {
   databaseId?: number
   slug?: string
-  title?: string
+  title?: string | null
+  featuredImage?: WpImageNode
   artworkFields?: {
     year?: string | null
+    city?: string | null
+    country?: string | null
+    lat?: string | null
+    lng?: string | null
     medium?: string | null
     width?: string | null
     height?: string | null
@@ -20,6 +37,13 @@ type WpArtworkNode = {
     size?: string[] | null
     forsale?: boolean | null
     units?: string[] | null
+    area?: string | null
+    coordinates?: string | null
+    density?: string | null
+    elevation?: string | null
+    population?: string | null
+    dcsPhotoTitle?: string | null
+    artworkImage?: WpImageNode
   } | null
   categories?: { nodes?: Array<{ name?: string; slug?: string }> } | null
 }
@@ -50,13 +74,19 @@ export async function loadWordpressImportEntries(): Promise<WordpressImportEntry
 
 function mapWpNode(node: WpArtworkNode): WordpressImportEntry | null {
   const id = node.databaseId
-  const title = typeof node.title === 'string' ? node.title.trim() : ''
-  if (!id || !title) return null
+  if (!id) return null
+
+  const titleRaw = typeof node.title === 'string' ? node.title.trim() : ''
+  const slug = typeof node.slug === 'string' ? node.slug.trim() : ''
+  const title =
+    titleRaw ||
+    (slug ? slugDerivedTitle(slug) : '')
+  if (!title) return null
 
   const f = node.artworkFields ?? {}
   const year = parseYear(f.year)
-  const widthCm = parseDimensionCm(f.width, f)
-  const heightCm = parseDimensionCm(f.height, f)
+  const width = parseWpDimension(f.width, f.units)
+  const height = parseWpDimension(f.height, f.units)
 
   const category = node.categories?.nodes?.[0]
   const seriesFromCategory = category?.name?.trim() || null
@@ -64,20 +94,38 @@ function mapWpNode(node: WpArtworkNode): WordpressImportEntry | null {
   const seriesSlugFromFields = f.series?.[0]?.trim() || null
 
   const mediumSelect = inferMediumFromWp(f.medium)
+  const artworkImageUrl =
+    node.featuredImage?.node?.sourceUrl?.trim() ||
+    f.artworkImage?.node?.sourceUrl?.trim() ||
+    null
 
   return {
     id,
     title,
-    wpSlug: typeof node.slug === 'string' ? node.slug.trim() : null,
+    wpSlug: slug || null,
     year,
     medium: mediumSelect,
-    widthCm,
-    heightCm,
+    widthWhole: width?.whole ?? null,
+    widthFraction: width?.fraction ?? null,
+    heightWhole: height?.whole ?? null,
+    heightFraction: height?.fraction ?? null,
+    dimensionUnit: width?.unit ?? height?.unit ?? null,
     seriesName: seriesFromCategory,
     seriesSlug: seriesSlugFromFields ?? seriesSlugFromCategory,
     orientation: mapWpOrientation(f.orientation?.[0]),
     sizeTier: mapWpSizeTier(f.size?.[0]),
     availabilityStatus: mapWpAvailability(f.forsale),
+    city: f.city?.trim() || null,
+    country: f.country?.trim() || null,
+    lat: parseOptionalNumber(f.lat),
+    lng: parseOptionalNumber(f.lng),
+    artworkImageUrl,
+    streetPhotoCaption: f.dcsPhotoTitle?.trim() || null,
+    cityPopulation: parseWpPopulation(f.population),
+    cityAreaKm2: parseWpAreaKm2(f.area),
+    cityPopulationDensity: parseWpDensityPerKm2(f.density),
+    cityElevationM: parseWpElevationM(f.elevation),
+    coordinatesText: f.coordinates?.trim() || null,
   }
 }
 
@@ -112,25 +160,8 @@ function parseYear(value: unknown): number | null {
   return Number.isFinite(y) ? y : null
 }
 
-function parseDimensionCm(
-  value: unknown,
-  fields: { units?: string[] | null },
-): number | null {
-  if (value == null) return null
-  const raw = String(value).trim().toLowerCase()
-  const numMatch = raw.match(/[\d.]+/)
-  if (!numMatch) return null
-  const n = parseFloat(numMatch[0].replace(',', '.'))
-  if (!Number.isFinite(n) || n <= 0) return null
-
-  const unitHint = fields.units?.[0]?.toLowerCase() ?? ''
-  const looksInches =
-    unitHint === 'imperial' ||
-    raw.includes('in') ||
-    raw.includes('"') ||
-    raw.endsWith('inches')
-  if (looksInches && !raw.includes('cm')) {
-    return Math.round(n * 2.54 * 100) / 100
-  }
-  return n
+function parseOptionalNumber(value: string | null | undefined): number | null {
+  if (value == null || value === '') return null
+  const n = Number.parseFloat(String(value))
+  return Number.isFinite(n) ? n : null
 }

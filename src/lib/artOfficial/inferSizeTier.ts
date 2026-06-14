@@ -1,3 +1,5 @@
+import { resolvePhysicalDimensionMm } from '@/lib/artOfficial/physicalDimensions'
+
 export const SIZE_TIER_VALUES = ['xs', 'sm', 'md', 'lg', 'xl'] as const
 export type SizeTier = (typeof SIZE_TIER_VALUES)[number]
 
@@ -11,16 +13,21 @@ export function inferSizeTierFromDimensions(args: {
   widthWhole?: number | null
   heightWhole?: number | null
   depthWhole?: number | null
+  widthFraction?: string | null
+  heightFraction?: string | null
+  depthFraction?: string | null
   dimensionUnit?: string | null
 }): SizeTier | null {
   const unit = args.dimensionUnit === 'in' ? 'in' : 'cm'
-  const values = [args.widthWhole, args.heightWhole, args.depthWhole].filter(
-    (n): n is number => typeof n === 'number' && Number.isFinite(n) && n > 0,
-  )
-  if (values.length === 0) return null
+  const dimensionsMm = [
+    resolvePhysicalDimensionMm(args.widthWhole, args.widthFraction, unit),
+    resolvePhysicalDimensionMm(args.heightWhole, args.heightFraction, unit),
+    resolvePhysicalDimensionMm(args.depthWhole, args.depthFraction, unit),
+  ].filter((n): n is number => n != null && n > 0)
 
-  const longest = Math.max(...values)
-  const longestMm = unit === 'in' ? longest * 25.4 : longest * 10
+  if (dimensionsMm.length === 0) return null
+
+  const longestMm = Math.max(...dimensionsMm)
 
   if (longestMm < 150) return 'xs'
   if (longestMm < 300) return 'sm'

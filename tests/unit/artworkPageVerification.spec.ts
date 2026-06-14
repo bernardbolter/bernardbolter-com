@@ -3,6 +3,7 @@ import { APIError } from 'payload'
 
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
 import {
+  buildOwnershipDisplay,
   deriveProvenanceConfidenceSummary,
   getPublicLoanHistory,
   getPublicOwnershipTimeline,
@@ -78,6 +79,10 @@ describe('artwork page verification checklist', () => {
       expect(timeline).toHaveLength(1)
       expect(timeline[0]?.displayName).toBe('Private collection')
       expect(timeline[0]).not.toHaveProperty('ownerPrivate')
+
+      const ownership = buildOwnershipDisplay(fixture as Artwork, minimalArtist())
+      expect(ownership.showSection).toBe(true)
+      expect(JSON.stringify(ownership)).not.toContain('ownerPrivate')
     })
   })
 

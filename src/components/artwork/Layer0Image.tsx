@@ -283,7 +283,6 @@ export default function Layer0Image({ artwork }: Props) {
                       blurDataURL={blurDataURL}
                       priority={index === activeIndex}
                       onLoad={() => markImageLoaded(image.url, index)}
-                      onLoadingComplete={() => markImageLoaded(image.url, index)}
                       onError={() => {
                         setImageLoadingStates((prev) => {
                           const next = [...prev]

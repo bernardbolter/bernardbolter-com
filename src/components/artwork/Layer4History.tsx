@@ -1,17 +1,18 @@
 import Link from 'next/link'
 
+import { getSeriesColor } from '@/helpers/seriesColor'
 import { getArtworkExhibitionEvents } from '@/lib/artwork/artworkExhibitionEvents'
 import {
-  deriveProvenanceConfidenceSummary,
+  buildOwnershipDisplay,
   getPublicLoanHistory,
-  getPublicOwnershipTimeline,
-  provenanceConfidenceStatement,
 } from '@/lib/artwork/artworkProvenancePublic'
 import { resolveWorkStateLabel } from '@/lib/artwork/artworkLabels'
-import type { Artwork } from '@/payload-types'
+import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
+import type { Artist, Artwork } from '@/payload-types'
 
 type Props = {
   artwork: Artwork
+  artist: Artist | null
 }
 
 function formatDateRange(start?: string, end?: string): string {
@@ -19,13 +20,14 @@ function formatDateRange(start?: string, end?: string): string {
   return start || end || ''
 }
 
-export default function Layer4History({ artwork }: Props) {
+export default function Layer4History({ artwork, artist }: Props) {
   const exhibitions = getArtworkExhibitionEvents(artwork)
-  const provenanceSummary = deriveProvenanceConfidenceSummary(artwork)
-  const ownership = getPublicOwnershipTimeline(artwork)
+  const ownership = buildOwnershipDisplay(artwork, artist)
   const loans = getPublicLoanHistory(artwork)
-  const showProvenance =
-    provenanceSummary !== null || ownership.length > 0 || artwork.provenanceOriginKnown === false
+  const seriesSlug = resolveArtworkTopLevelSeries(artwork.series)?.slug ?? ''
+  const seriesColor = getSeriesColor(seriesSlug)
+  const timelineBorderColor = `${seriesColor}40`
+
   const showWorkState =
     (artwork.workState && artwork.workState !== 'original') ||
     (Array.isArray(artwork.stateVersions) && artwork.stateVersions.length > 0)
@@ -60,36 +62,43 @@ export default function Layer4History({ artwork }: Props) {
           </div>
         ) : null}
 
-        {showProvenance ? (
-          <div className="artwork-image__info--provenance-wrapper">
-            <h2>
-              Provenance <span>(history of ownership)</span>
-            </h2>
-            <div className="artwork-image__info--provenance">
-              {provenanceSummary ? (
-                <p className="artwork-page__prose">{provenanceConfidenceStatement(provenanceSummary)}</p>
+        {ownership.showSection ? (
+          <div className="artwork-image__info--ownership-wrapper">
+            <h2>Ownership</h2>
+            <div className="artwork-page__ownership">
+              {ownership.currentHolderLine ? (
+                <p className="artwork-page__ownership-current">{ownership.currentHolderLine}</p>
               ) : null}
-              <p className="artwork-page__prose artwork-page__prose--secondary">
-                Ownership history is held privately. This statement reflects the level of documentation
-                on record.
-              </p>
+
+              {ownership.showOriginHonesty ? (
+                <p className="artwork-page__ownership-honesty">
+                  The early history of this work&apos;s ownership is not fully documented.
+                </p>
+              ) : null}
+
+              {ownership.showTimeline ? (
+                <ul
+                  className="artwork-page__ownership-timeline"
+                  style={{ ['--ownership-timeline-color' as string]: timelineBorderColor }}
+                >
+                  {ownership.timelineRows.map((row, index) => (
+                    <li key={`${row.text}-${index}`} className="artwork-page__ownership-timeline-row">
+                      {row.text}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              {ownership.showUnclaimedAppeal && ownership.claimContactHref ? (
+                <p className="artwork-page__ownership-appeal">
+                  If you own this work,{' '}
+                  <Link href={ownership.claimContactHref} className="text-dark underline">
+                    get in touch
+                  </Link>
+                  . I&apos;ll add you to the record and officially connect you to its history.
+                </p>
+              ) : null}
             </div>
-            {ownership.length > 0 ? (
-              <ul className="artwork-image__info--provenance">
-                {ownership.map((entry, index) => (
-                  <li key={`${entry.displayName}-${index}`}>
-                    <span className="font-medium">{entry.displayName}</span>
-                    {entry.city ? <span className="text-secondary"> · {entry.city}</span> : null}
-                    {entry.dateAcquired || entry.dateRelinquished ? (
-                      <span className="text-secondary">
-                        {' '}
-                        · {formatDateRange(entry.dateAcquired, entry.dateRelinquished)}
-                      </span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
           </div>
         ) : null}
 

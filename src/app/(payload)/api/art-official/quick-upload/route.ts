@@ -7,10 +7,10 @@ import {
 import { formatChatError } from '@/lib/artOfficial/formatChatError'
 import { formatPayloadValidationError } from '@/lib/artOfficial/formatPayloadValidationError'
 import {
-  deriveAspectRatio,
-  deriveOrientation,
-  slugifyArtworkTitle,
-} from '@/lib/artOfficial/quickUploadDerived'
+  isValidDimensionFraction,
+  resolvePhysicalDimension,
+} from '@/lib/artOfficial/physicalDimensions'
+import { deriveAspectRatio, slugifyArtworkTitle } from '@/lib/artOfficial/quickUploadDerived'
 import { ensureArtworkMediumEnumValue } from '@/lib/artOfficial/artworkMediumDatabase'
 import { registerCustomMedium } from '@/lib/artOfficial/artworkMediumOptions'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
@@ -23,9 +23,12 @@ const quickUploadSchema = z.object({
   seriesId: z.number().int().positive(),
   medium: z.string().min(1),
   mediumOther: z.string().optional(),
-  widthWhole: z.number().positive(),
-  heightWhole: z.number().positive(),
-  depthWhole: z.number().positive().optional(),
+  widthWhole: z.number().nonnegative(),
+  heightWhole: z.number().nonnegative(),
+  widthFraction: z.string().optional(),
+  heightFraction: z.string().optional(),
+  depthWhole: z.number().nonnegative().optional(),
+  depthFraction: z.string().optional(),
   dimensionUnit: z.enum(['cm', 'in']),
   orientation: z.enum(['landscape', 'portrait', 'square']),
   sizeTier: z.enum(['xs', 'sm', 'md', 'lg', 'xl']),
@@ -36,6 +39,14 @@ const quickUploadSchema = z.object({
     'on-loan',
   ]),
   primaryImageMediaId: z.number().int().positive(),
+  wpId: z.number().int().positive().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  streetPhotoCaption: z.string().optional(),
+  cityPopulation: z.number().positive().optional(),
+  cityAreaKm2: z.number().positive().optional(),
+  cityPopulationDensity: z.number().positive().optional(),
+  cityElevationM: z.number().optional(),
   dcsStreetMediaId: z.number().int().positive().optional(),
   dcsSatelliteMediaId: z.number().int().positive().optional(),
   achSourceMediaIds: z.array(z.number().int().positive()).optional(),
@@ -92,11 +103,36 @@ export async function POST(request: Request) {
 
   const seriesSlug = typeof series.slug === 'string' ? series.slug : null
   const slug = data.slug?.trim() || slugifyArtworkTitle(data.title)
-  const aspectRatio = deriveAspectRatio(
-    data.widthWhole,
-    data.heightWhole,
-    data.dimensionUnit,
-  )
+
+  for (const [label, fraction] of [
+    ['Width', data.widthFraction],
+    ['Height', data.heightFraction],
+    ['Depth', data.depthFraction],
+  ] as const) {
+    if (fraction && !isValidDimensionFraction(fraction)) {
+      return Response.json(
+        { error: `${label} fraction must look like 3/16.` },
+        { status: 400 },
+      )
+    }
+  }
+
+  const widthQty = resolvePhysicalDimension(data.widthWhole, data.widthFraction)
+  const heightQty = resolvePhysicalDimension(data.heightWhole, data.heightFraction)
+  if (widthQty == null || widthQty <= 0 || heightQty == null || heightQty <= 0) {
+    return Response.json(
+      { error: 'Width and height must be greater than zero.' },
+      { status: 400 },
+    )
+  }
+
+  const aspectRatio = deriveAspectRatio({
+    widthWhole: data.widthWhole,
+    heightWhole: data.heightWhole,
+    widthFraction: data.widthFraction,
+    heightFraction: data.heightFraction,
+    dimensionUnit: data.dimensionUnit,
+  })
 
   let medium = data.medium
   if (medium === 'other' && data.mediumOther?.trim()) {
@@ -118,8 +154,11 @@ export async function POST(request: Request) {
     measurementType: ['physical'],
     dimensionUnit: data.dimensionUnit,
     widthWhole: data.widthWhole,
+    widthFraction: data.widthFraction?.trim() || undefined,
     heightWhole: data.heightWhole,
+    heightFraction: data.heightFraction?.trim() || undefined,
     depthWhole: data.depthWhole,
+    depthFraction: data.depthFraction?.trim() || undefined,
     orientation: data.orientation,
     sizeTier: data.sizeTier,
     aspectRatio: aspectRatio ?? undefined,
@@ -128,6 +167,9 @@ export async function POST(request: Request) {
     status: 'published',
     reasoningStatus: 'stub',
     recordOrigin: 'artist-catalogued',
+    wp_id: data.wpId,
+    city: data.city?.trim() || undefined,
+    country: data.country?.trim() || undefined,
   }
 
   if (seriesSlug === DCS_ROOT_SERIES_SLUG) {
@@ -138,9 +180,22 @@ export async function POST(request: Request) {
     if (data.dcsSatelliteMediaId) {
       composition.satelliteViewImage = data.dcsSatelliteMediaId
     }
-    if (Object.keys(composition).length) {
-      artworkData.dcs = { composition }
+    if (data.streetPhotoCaption?.trim()) {
+      composition.streetPhotoCaption = data.streetPhotoCaption.trim()
     }
+
+    const cityContext: Record<string, unknown> = {}
+    if (data.cityPopulation != null) cityContext.cityPopulation = data.cityPopulation
+    if (data.cityAreaKm2 != null) cityContext.cityAreaKm2 = data.cityAreaKm2
+    if (data.cityPopulationDensity != null) {
+      cityContext.cityPopulationDensity = data.cityPopulationDensity
+    }
+    if (data.cityElevationM != null) cityContext.cityElevationM = data.cityElevationM
+
+    const dcs: Record<string, unknown> = {}
+    if (Object.keys(composition).length) dcs.composition = composition
+    if (Object.keys(cityContext).length) dcs.cityContext = cityContext
+    if (Object.keys(dcs).length) artworkData.dcs = dcs
   }
 
   if (seriesSlug === ACH_ROOT_SERIES_SLUG && data.achSourceMediaIds?.length) {

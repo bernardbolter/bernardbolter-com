@@ -73,9 +73,8 @@ export default function ArtworkImage({
       <Image
         src={imageUrl}
         alt={artwork.title ?? 'Artwork'}
-        width={displayWidth}
-        height={displayHeight}
-        className="h-full w-full object-contain"
+        fill
+        className="object-contain"
         placeholder="blur"
         blurDataURL={blurDataURL}
         priority={priority}
