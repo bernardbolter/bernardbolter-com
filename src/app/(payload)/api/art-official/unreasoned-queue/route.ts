@@ -44,7 +44,7 @@ export async function GET(request: Request) {
       typeof doc.series === 'object' && doc.series !== null
         ? {
             id: doc.series.id,
-            title: doc.series.title,
+            title: doc.series.name,
             slug: doc.series.slug,
           }
         : null
@@ -60,7 +60,7 @@ export async function GET(request: Request) {
           }
         : null
 
-    const missingCount = countMissingIntentFields(doc as Record<string, unknown>)
+    const missingCount = countMissingIntentFields(doc as unknown as Record<string, unknown>)
 
     return {
       id: doc.id,
@@ -101,7 +101,7 @@ export async function GET(request: Request) {
     } else {
       bySeries.set(s.id, {
         id: s.id,
-        title: typeof s.title === 'string' ? s.title : String(s.id),
+        title: typeof s.name === 'string' ? s.name : String(s.id),
         count: 1,
       })
     }

@@ -15,7 +15,9 @@
  */
 
 import payload from 'payload'
-import config from '../payload.config'
+import config from '../../src/payload.config'
+
+type DocId = string | number
 
 async function seed() {
   await payload.init({ config })
@@ -41,7 +43,10 @@ async function seed() {
   const seriesId = series.docs[0].id
 
   // Resolve or create tags
-  const tagDefs = [
+  const tagDefs: Array<{
+    label: string
+    type: 'movement' | 'period' | 'style' | 'subject' | 'genre'
+  }> = [
     { label: 'Post-internet', type: 'movement' },
     { label: 'Contemporary', type: 'period' },
     { label: 'Abstraction', type: 'style' },
@@ -53,7 +58,7 @@ async function seed() {
     { label: 'Painting', type: 'genre' },
   ]
 
-  const tagIds: Record<string, string> = {}
+  const tagIds: Record<string, DocId> = {}
   for (const def of tagDefs) {
     const existing = await payload.find({
       collection: 'tags',
@@ -81,7 +86,7 @@ async function seed() {
       institution: 'Wadsworth Atheneum Museum of Art',
       referenceUrl: 'https://www.wikidata.org/wiki/Q27987985',
       notes:
-        'The photographic layer present but never fully legible — the transfer logic is the same, but here the painted field explicitly interrupts rather than integrates. Rauschenberg's transfer work is the clearest precedent for treating the photograph as a surface to be worked against rather than a subject to be reproduced.',
+        "The photographic layer present but never fully legible — the transfer logic is the same, but here the painted field explicitly interrupts rather than integrates. Rauschenberg's transfer work is the clearest precedent for treating the photograph as a surface to be worked against rather than a subject to be reproduced.",
     },
     {
       artworkTitle: 'Photo Paintings (Fotobilder)',
@@ -95,7 +100,7 @@ async function seed() {
     },
   ]
 
-  const refIds: string[] = []
+  const refIds: DocId[] = []
   for (const ref of refDefs) {
     const existing = await payload.find({
       collection: 'artHistoricalReferences',
@@ -114,7 +119,7 @@ async function seed() {
   }
 
   // Resolve or create a fixture event
-  let eventId: string | null = null
+  let eventId: DocId | null = null
   const existingEvent = await payload.find({
     collection: 'events',
     where: { slug: { equals: '__fixture-signals-noise' } },
@@ -196,7 +201,7 @@ async function seed() {
     conceptualKeywords: ['mediation', 'erasure', 'threshold', 'accumulation', 'the photographic index'],
     artHistoricalReferences: refIds,
     artHistoricalContext:
-      'This work sits most directly in dialogue with Rauschenberg's transfer works of the early 1960s, where the photographic layer was treated as a surface to be interrupted rather than a subject to be reproduced. The conditional legibility it shares with Richter's photo paintings is produced differently — through the transfer process itself rather than through the brush — but the epistemological position is similar: the photograph is allowed to be present only partially, only provisionally.',
+      "This work sits most directly in dialogue with Rauschenberg's transfer works of the early 1960s, where the photographic layer was treated as a surface to be interrupted rather than a subject to be reproduced. The conditional legibility it shares with Richter's photo paintings is produced differently — through the transfer process itself rather than through the brush — but the epistemological position is similar: the photograph is allowed to be present only partially, only provisionally.",
     seriesContext:
       'This is the third work in the Gates of Perception sub-series and the point where the restraint logic becomes explicit. In the first two works, the painted field was expansive — it washed across the transfer. Here it contracts. The field becomes a pressure rather than a flood. In retrospect this is the hinge point of the whole sub-series: the works before it were building toward this contraction, and the works after are working out what it means.',
     consciousRejections:
