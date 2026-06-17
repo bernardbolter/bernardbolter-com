@@ -2,6 +2,7 @@ import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistGlobal } from '@/lib/payload/siteDocuments'
 
 export const revalidate = 3600
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   const artist = await getArtistGlobal()

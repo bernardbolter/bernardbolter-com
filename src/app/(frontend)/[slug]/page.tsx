@@ -19,8 +19,13 @@ export const revalidate = 3600
 type Props = { params: Promise<{ slug: string }> }
 
 export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
-  const slugs = await getPublishedArtworkSlugs()
-  return slugs.map((slug) => ({ slug }))
+  try {
+    const slugs = await getPublishedArtworkSlugs()
+    return slugs.map((slug) => ({ slug }))
+  } catch {
+    // Allow builds to proceed when DB is unavailable; pages will render on demand.
+    return []
+  }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

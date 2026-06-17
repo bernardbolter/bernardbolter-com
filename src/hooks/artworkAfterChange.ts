@@ -48,7 +48,7 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
   }
 
   try {
-    revalidateTag('artworks')
+    revalidateTag('artworks', 'max')
     revalidatePath('/', 'layout')
     if (typeof doc.slug === 'string' && doc.slug.trim()) {
       const path = `/${doc.slug.trim()}`

@@ -2,7 +2,7 @@ import type { CollectionAfterChangeHook } from 'payload'
 import { revalidatePath, revalidateTag } from 'next/cache'
 
 function revalidateFrontendArtworkPaths(slugs: string[]) {
-  revalidateTag('artworks')
+  revalidateTag('artworks', 'max')
   revalidatePath('/', 'layout')
 
   for (const slug of slugs) {

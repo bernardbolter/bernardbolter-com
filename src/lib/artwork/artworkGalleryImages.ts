@@ -9,13 +9,15 @@ export type ArtworkGalleryImage = {
 }
 
 function readMedia(media: number | Media | null | undefined): ArtworkGalleryImage | null {
-  const url = media && typeof media === 'object' ? mediaPublicUrl(media) : null
+  const mediaDoc = media && typeof media === 'object' ? media : null
+  if (!mediaDoc) return null
+  const url = mediaPublicUrl(mediaDoc)
   if (!url) return null
   return {
     url,
-    alt: media.alt?.trim() || '',
-    width: media.width && media.width > 0 ? media.width : 1200,
-    height: media.height && media.height > 0 ? media.height : 900,
+    alt: mediaDoc.alt?.trim() || '',
+    width: mediaDoc.width && mediaDoc.width > 0 ? mediaDoc.width : 1200,
+    height: mediaDoc.height && mediaDoc.height > 0 ? mediaDoc.height : 900,
   }
 }
 

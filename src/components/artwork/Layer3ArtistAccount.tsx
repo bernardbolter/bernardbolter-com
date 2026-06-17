@@ -73,20 +73,22 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
     { label: 'Source material', value: artwork.sourceMaterials },
   ]
 
-  const tagGroups: Array<{ type: Tag['type']; tags: Tag[] }> = [
+  const tagGroups = [
     { type: 'movement', tags: tagList(artwork.movementTags) },
     { type: 'style', tags: tagList(artwork.styleTags) },
     { type: 'subject', tags: tagList(artwork.subjectTags) },
     { type: 'genre', tags: tagList(artwork.genreTags) },
     { type: 'period', tags: tagList(artwork.periodTags) },
-  ].filter((group) => group.tags.length > 0)
+  ] satisfies Array<{ type: Tag['type']; tags: Tag[] }>
+
+  const populatedTagGroups = tagGroups.filter((group) => group.tags.length > 0)
 
   const references = (artwork.artHistoricalReferences ?? []).filter(
     (ref): ref is ArtHistoricalReference => typeof ref === 'object' && ref !== null,
   )
 
   const hasClassification =
-    tagGroups.length > 0 || (artwork.conceptualKeywords ?? []).some((row) => row.keyword?.trim())
+    populatedTagGroups.length > 0 || (artwork.conceptualKeywords ?? []).some((row) => row.keyword?.trim())
 
   return (
     <section className="artwork-page__layer">
@@ -101,7 +103,7 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
           <>
             <hr className="artwork-page__divider" />
             <div className="flex flex-wrap gap-1">
-              {tagGroups.map((group) =>
+              {populatedTagGroups.map((group) =>
                 group.tags.map((tag) => (
                   <span
                     key={`${group.type}-${tag.id}`}
