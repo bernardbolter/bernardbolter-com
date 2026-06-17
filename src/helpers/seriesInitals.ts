@@ -3,7 +3,7 @@ const seriesInitialsMap: Record<string, string> = {
     'art-collision': 'col',           // col
     'digital-city-series': 'dcs',     // dcs
     'megacities': 'meg',              // meg
-    'breaking-down-art': 'war',       // war
+    'breaking-down-art': 'bda',       // bda
     'vanishing-landscapes': 'van',    // van
     'og-oil-paintings': 'ogp',        // og
     'installations': 'ins',           // ins

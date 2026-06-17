@@ -253,7 +253,8 @@
   height: 19px;
   border-radius: 50%;
   position: absolute;
-  top: 4px;
+  top: 13px;
+  z-index: 2;
 }
 
 .artwork-image__info--details-container {

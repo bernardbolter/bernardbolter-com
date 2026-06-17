@@ -311,8 +311,11 @@ h6 {
 .artwork-title__series-box {
   width: 15px;
   height: 15px;
-  position: absolute;
+  position: relative;
   border-radius: 50%;
+  z-index: 2;
+  flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .artwork-title__inside--desktop {
@@ -356,6 +359,15 @@ h6 {
 
 .artwork-title__medium {
   padding-bottom: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.artwork-title__medium-row {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .artwork-title__size--converted {

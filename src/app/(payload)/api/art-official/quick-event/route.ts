@@ -112,7 +112,8 @@ export async function POST(request: Request) {
   }
 
   const startDate = `${data.yearStart}-01-01`
-  const slug = buildEventSlug(data.title.trim(), data.yearStart)
+  const venueCity = data.venueCity?.trim() || undefined
+  const slug = buildEventSlug(data.title.trim(), data.yearStart, venueCity)
 
   const eventData: Record<string, unknown> = {
     title: data.title.trim(),
@@ -124,7 +125,7 @@ export async function POST(request: Request) {
     enrichmentStatus: 'stub',
     hasPage: false,
     venueName: data.venueName?.trim() || undefined,
-    venueCity: data.venueCity?.trim() || undefined,
+    venueCity,
     venueCountry: data.venueCountry?.trim() || undefined,
     eventTypeCustom: data.eventTypeCustom?.trim() || undefined,
     awardGrantingOrganisation: data.awardGrantingOrganisation?.trim() || undefined,

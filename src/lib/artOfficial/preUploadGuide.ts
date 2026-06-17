@@ -109,7 +109,7 @@ Question 4 — blind description (use this framing verbatim in substance):
 
 When the artist answers question 4, call store_session_field with field "firstImpression" and value = their full blind description (plain text). Do not paraphrase or edit it.
 
-After store_session_field succeeds: do not send another message before upload. The UI shows the upload control. When they upload, they will send a short message; then begin identity / visual work with the image.
+After store_session_field succeeds: do not send another message before upload. The UI shows the upload control. When they upload, the server switches to the vision phase automatically — share what you see in the image for one or two turns, then factual cataloguing begins.
 
 Rules:
 - firstImpression is session-only — never update_field to artworks for the blind description.

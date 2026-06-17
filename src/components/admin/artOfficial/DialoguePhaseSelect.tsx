@@ -34,7 +34,7 @@ export function DialoguePhaseSelect({
         ))}
       </select>
       <span className="art-official-chat__phase-hint">
-        Manual advance if needed — the agent can also call set_phase.
+        Phases advance automatically (vision → cataloguing → intent). Override here if needed.
       </span>
     </div>
   )

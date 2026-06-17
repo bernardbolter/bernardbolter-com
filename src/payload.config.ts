@@ -122,6 +122,11 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: databaseUrl,
+      // Neon drops idle connections; keep the pool small in local dev.
+      max: process.env.NODE_ENV === 'development' ? 5 : 10,
+      idleTimeoutMillis: 20_000,
+      connectionTimeoutMillis: 10_000,
+      allowExitOnIdle: process.env.NODE_ENV === 'development',
     },
     /** Set `PAYLOAD_DATABASE_PUSH=true` locally to sync Drizzle schema without interactive migrate:create. */
     push: process.env.PAYLOAD_DATABASE_PUSH === 'true',

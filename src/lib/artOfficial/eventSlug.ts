@@ -6,9 +6,12 @@ export function slugifyEventTitle(title: string): string {
     .replace(/^-+|-+$/g, '')
 }
 
-export function buildEventSlug(title: string, year: number): string {
+export function buildEventSlug(title: string, year: number, city?: string | null): string {
   const base = slugifyEventTitle(title)
+  const cityPart = city ? slugifyEventTitle(city) : ''
   const yearPart = String(year)
-  if (!base) return yearPart
-  return `${base}-${yearPart}`
+  if (!base && !cityPart) return yearPart
+  if (!cityPart) return `${base}-${yearPart}`
+  if (!base) return `${cityPart}-${yearPart}`
+  return `${base}-${cityPart}-${yearPart}`
 }

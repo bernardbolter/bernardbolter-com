@@ -17,6 +17,14 @@ export function parseWpDimension(
   const raw = String(value).trim()
   if (!raw) return null
 
+  const meterMatch = raw.match(/^([\d,.]+)\s*m\b/i)
+  if (meterMatch) {
+    const meters = Number.parseFloat(meterMatch[1].replace(',', '.'))
+    if (Number.isFinite(meters) && meters > 0) {
+      return { whole: Math.round(meters * 100), unit: 'cm' }
+    }
+  }
+
   const unitHint = Array.isArray(units) ? units[0] : units
   const hint = unitHint?.toLowerCase() ?? ''
   const hasInchMark = raw.includes('"') || /\bin(?:ch(?:es)?)?\b/i.test(raw)
@@ -159,5 +167,44 @@ export function matchWpImportEntryByFilename(
     }
   }
 
+  return null
+}
+
+export type MegacitiesSeriesType =
+  | 'composite_country'
+  | 'skate_city'
+  | 'cultural_composite'
+  | 'exhibition_origin'
+
+/** Infer Megacities series type from legacy WP style, medium, and country labels. */
+export function mapMegacitiesSeriesType(args: {
+  style?: string | null
+  medium?: string | null
+  country?: string | null
+}): MegacitiesSeriesType | null {
+  const hay = [args.style, args.medium, args.country]
+    .filter((part): part is string => Boolean(part?.trim()))
+    .join(' ')
+    .toLowerCase()
+
+  if (!hay) return null
+  if (hay.includes('skate')) return 'skate_city'
+  if (
+    hay.includes('arab league') ||
+    hay.includes('yugoslav') ||
+    hay.includes('cultural composite')
+  ) {
+    return 'cultural_composite'
+  }
+  if (hay.includes('exhibition') || hay.includes('documentary')) {
+    return 'exhibition_origin'
+  }
+  if (
+    hay.includes('composite country') ||
+    hay.includes('country portrait') ||
+    hay.includes('digital collage')
+  ) {
+    return 'composite_country'
+  }
   return null
 }

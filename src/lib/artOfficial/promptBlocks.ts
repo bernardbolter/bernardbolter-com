@@ -691,3 +691,54 @@ When the close-gate passes:
 
 6. If a tool returns ok: false, read the error, fix the arguments, and retry — do not apologize for a "system error" unless the artist must refresh.`
 }
+
+export function buildVisionPhaseBlock(): string {
+  return `VISION PHASE — FIRST SIGHT (automatic; typically two turns, then server advances to factual cataloguing)
+
+The primary image is in the room. Background vision analysis has already run — staged fields may include orientation, dominantColors, subjectTags, compositionalNotes, paintedFieldColors.
+
+Your job for the next one or two turns ONLY:
+- Offer 2–3 specific observations from the image (composition, colour relationships, material, surprising details). Reference what you actually see.
+- Ask ONE question that invites the artist to correct, extend, or contrast your reading — not catalogue metadata yet.
+- You may stage subjectTags when the artist confirms or refines vision inference (confidence "confirmed", source "conversation").
+- Do NOT ask title, year, dimensions, medium, series, or location yet.
+
+Do NOT call set_phase — the server advances to identity/physical cataloguing automatically after this phase.
+Do NOT repeat pre-upload questions.`
+}
+
+export function buildCataloguingPhaseBlock(phase: string): string {
+  return `CATALOGUING PHASE (${phase}) — factual fields (Haiku tier)
+
+Stage every confirmed artist answer immediately via update_field (confidence "confirmed", source "conversation"). Do not wait for wrap-up.
+
+Work through in order when possible: title, yearCreated, series, city/country, medium, support, dimensions (widthWhole, heightWhole, dimensionUnit), sizeTier (MUST ask — never infer silently), framing, tags after primary fields.
+
+The server automatically advances to intent (reflective Sonnet dialogue) once core catalogue fields are staged — you do not need set_phase for that transition.
+Continue staging missing factual fields even while weaving occasional light reflection — but defer deep intent/makingNote questions until intent phase.`
+}
+
+export function buildDialoguePhaseBlock(
+  phase: string,
+  preUpload?: { hasPrimaryImage: boolean; hasFirstImpression: boolean },
+): string | null {
+  if (phase === 'vision') return buildVisionPhaseBlock()
+  if (phase === 'identity' || phase === 'physical' || phase === 'classification') {
+    return buildCataloguingPhaseBlock(phase)
+  }
+  if (phase === 'pre-upload' && preUpload && !preUpload.hasPrimaryImage) {
+    return null
+  }
+  if (
+    phase === 'intent' ||
+    phase === 'art-historical' ||
+    phase === 'late' ||
+    phase === 'confirmation'
+  ) {
+    return `REFLECTIVE PHASE (${phase}) — interpretive dialogue (Sonnet tier)
+
+Ask about specific choices, process, and meaning — never "what is your intent" directly. Stage reflective fields (intent, makingNote, directInspiration, artHistoricalContext, etc.) via update_field as they emerge.
+Weave practical and reflective questions; follow DIALOGUE RULES and REFLECTIVE CORE.`
+  }
+  return null
+}

@@ -42,3 +42,11 @@ export function appendTokenLog(
     : []
   return [...prior, entry]
 }
+
+export function countTurnsInPhase(
+  tokenLog: unknown,
+  phase: SessionPhase,
+): number {
+  if (!Array.isArray(tokenLog)) return 0
+  return (tokenLog as TokenLogEntry[]).filter((row) => row?.phase === phase).length
+}

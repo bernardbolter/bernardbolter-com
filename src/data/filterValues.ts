@@ -3,8 +3,8 @@ import type { FilterCategory } from '@/types/frontend'
 
 /** Series filter chips — slugs match Payload `series.slug` / `artworks.seriesSlug`. */
 export const filterValues: FilterCategory[] = [
-  { id: '01', slug: 'breaking-down-art', name: 'Mediums of War', color: getSeriesColor('breaking-down-art') },
-  { id: '02', slug: 'a-colorful-history', name: 'A Colorful History', color: getSeriesColor('a-colorful-history') },
+  { id: '01', slug: 'a-colorful-history', name: 'A Colorful History', color: getSeriesColor('a-colorful-history') },
+  { id: '02', slug: 'breaking-down-art', name: 'Breaking Down Art', color: getSeriesColor('breaking-down-art') },
   { id: '03', slug: 'megacities', name: 'Megacities', color: getSeriesColor('megacities') },
   { id: '04', slug: 'digital-city-series', name: 'Digital City Series', color: getSeriesColor('digital-city-series') },
   { id: '05', slug: 'art-collision', name: 'Art Collision', color: getSeriesColor('art-collision') },

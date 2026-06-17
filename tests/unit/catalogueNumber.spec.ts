@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   formatCatalogueNumber,
   seriesCodeFromSlug,
+  seriesIdsInTopLevelTree,
+  type SeriesTreeRow,
 } from '@/lib/artwork/catalogueNumber'
 
 describe('formatCatalogueNumber', () => {
@@ -35,5 +37,21 @@ describe('seriesCodeFromSlug', () => {
 
   it('falls back to first letters of hyphenated slug', () => {
     expect(seriesCodeFromSlug('some-new-series')).toBe('SNS')
+  })
+})
+
+describe('seriesIdsInTopLevelTree', () => {
+  const rows: SeriesTreeRow[] = [
+    { id: 1, slug: 'a-colorful-history', parentSeriesId: null },
+    { id: 2, slug: 'mediums-of-perception', parentSeriesId: 1 },
+    { id: 15, slug: 'gates-of-perception', parentSeriesId: 1 },
+  ]
+
+  it('includes sibling sub-series under the same ACH root', () => {
+    expect(seriesIdsInTopLevelTree(rows, 15).sort((a, b) => a - b)).toEqual([1, 2, 15])
+  })
+
+  it('includes only the root when querying the parent series', () => {
+    expect(seriesIdsInTopLevelTree(rows, 1).sort((a, b) => a - b)).toEqual([1, 2, 15])
   })
 })

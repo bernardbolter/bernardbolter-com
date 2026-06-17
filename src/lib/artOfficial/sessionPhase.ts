@@ -2,6 +2,7 @@ import { ART_OFFICIAL_MODEL } from './anthropic'
 
 export const SESSION_PHASES = [
   'pre-upload',
+  'vision',
   'identity',
   'physical',
   'classification',
@@ -15,6 +16,7 @@ export type SessionPhase = (typeof SESSION_PHASES)[number]
 
 export const SESSION_PHASE_LABELS: Record<SessionPhase, string> = {
   'pre-upload': 'Pre-upload',
+  vision: 'First sight',
   identity: 'Identity',
   physical: 'Physical',
   classification: 'Classification',
@@ -24,6 +26,7 @@ export const SESSION_PHASE_LABELS: Record<SessionPhase, string> = {
   confirmation: 'Confirmation',
 }
 
+/** Factual / lightweight dialogue — Haiku. */
 export const HAIKU_PHASES: SessionPhase[] = [
   'pre-upload',
   'identity',
@@ -32,16 +35,27 @@ export const HAIKU_PHASES: SessionPhase[] = [
 ]
 
 export const ART_OFFICIAL_MODEL_HAIKU =
-  process.env.ART_OFFICIAL_MODEL_HAIKU ?? 'claude-haiku-4-5-20251022'
+  process.env.ART_OFFICIAL_MODEL_HAIKU ?? 'claude-haiku-4-5'
 
 export const ART_OFFICIAL_MODEL_SONNET = ART_OFFICIAL_MODEL
 
-/** Haiku for factual cataloguing phases; Sonnet for interpretive phases and all other session types. */
+/** Vision chat + image analysis dialogue — defaults to Sonnet. */
+export const ART_OFFICIAL_MODEL_VISION =
+  process.env.ART_OFFICIAL_MODEL_VISION ?? ART_OFFICIAL_MODEL_SONNET
+
+/**
+ * artwork-cataloguing model tiers:
+ * - pre-upload + identity/physical/classification → Haiku (factual fields)
+ * - vision → vision model (first-sight dialogue with image)
+ * - intent+ → Sonnet (reflective / reasoning)
+ */
 export function resolveModel(phase: SessionPhase, sessionType: string): string {
   if (sessionType !== 'artwork-cataloguing') {
     return ART_OFFICIAL_MODEL_SONNET
   }
-  return HAIKU_PHASES.includes(phase) ? ART_OFFICIAL_MODEL_HAIKU : ART_OFFICIAL_MODEL_SONNET
+  if (phase === 'vision') return ART_OFFICIAL_MODEL_VISION
+  if (HAIKU_PHASES.includes(phase)) return ART_OFFICIAL_MODEL_HAIKU
+  return ART_OFFICIAL_MODEL_SONNET
 }
 
 export function defaultSessionPhase(

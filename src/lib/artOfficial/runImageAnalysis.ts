@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 
-import { requireAnthropic, ART_OFFICIAL_MODEL } from './anthropic'
+import { requireAnthropic } from './anthropic'
+import { ART_OFFICIAL_MODEL_VISION } from './sessionPhase'
 export type ImageAnalysisResult = {
   dominantColors: string[]
   aspectRatio: 'landscape' | 'portrait' | 'square'
@@ -78,7 +79,7 @@ export async function runImageAnalysis(args: {
 
   const anthropic = requireAnthropic()
   const response = await anthropic.messages.create({
-    model: ART_OFFICIAL_MODEL,
+    model: ART_OFFICIAL_MODEL_VISION,
     max_tokens: 1024,
     messages: [
       {

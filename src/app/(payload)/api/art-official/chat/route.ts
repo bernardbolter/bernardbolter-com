@@ -7,6 +7,7 @@ import {
   nextPreUploadStepAfterAnswer,
   sessionHasPrimaryImage,
 } from '@/lib/artOfficial/preUploadGuide'
+import { resolveAutoPhase } from '@/lib/artOfficial/phaseAutoAdvance'
 import { isSessionKickoffMessage } from '@/lib/artOfficial/sessionKickoff'
 import {
   buildAnthropicMessageHistory,
@@ -160,11 +161,32 @@ export async function POST(request: Request) {
         : (session.eventRecord as number | undefined)
 
     const sessionType = session.sessionType as string
+    const primaryUploadThisTurn = Boolean(
+      mediaUpload?.mediaId != null &&
+        (mediaUpload.slotId === 'primary' || imageMediaId != null),
+    )
+    const effectiveHasPrimaryImage = hasPrimaryImage || primaryUploadThisTurn
+
     const defaultPhase = defaultSessionPhase(sessionType, Boolean(artworkRecordId))
     let currentPhase = normalizeSessionPhase(
       body.currentPhase ?? session.currentPhase,
       defaultPhase,
     )
+
+    const autoPhase = resolveAutoPhase({
+      sessionType,
+      currentPhase,
+      hasPrimaryImage: effectiveHasPrimaryImage,
+      primaryUploadThisTurn,
+      tokenLog: session.tokenLog,
+      fieldUpdateTimeline: session.fieldUpdateTimeline,
+    })
+
+    let autoPhaseTransition: SessionPhase | undefined
+    if (autoPhase.transitioned && autoPhase.phase !== currentPhase) {
+      currentPhase = autoPhase.phase
+      autoPhaseTransition = currentPhase
+    }
 
     if (currentPhase !== session.currentPhase) {
       await payload.update({
@@ -195,8 +217,9 @@ export async function POST(request: Request) {
         preUpload: {
           preUploadStep: session.preUploadStep,
           hasFirstImpression,
-          hasPrimaryImage,
+          hasPrimaryImage: effectiveHasPrimaryImage,
         },
+        currentPhase,
       })
     } catch (err) {
       console.error('[art-official/chat] buildSystemPromptParts', err)
@@ -231,6 +254,14 @@ export async function POST(request: Request) {
         try {
           if (advancedStep != null) {
             send('pre-upload-step', { preUploadStep: advancedStep })
+          }
+
+          if (autoPhaseTransition) {
+            send('phase-transition', {
+              phase: autoPhaseTransition,
+              reason: autoPhase.reason,
+              automatic: true,
+            })
           }
 
           if (mediaUpload && session.sessionType === 'artwork-cataloguing') {
@@ -382,13 +413,15 @@ export async function POST(request: Request) {
             timestamp: new Date().toISOString(),
           })
 
+          const finalPhase = phaseTransition ?? currentPhase
+
           await payload.update({
             collection: 'sessions',
             id: session.id,
             data: {
               messages: [...priorMessages, userTurn, ...newStored],
               tokenLog,
-              ...(phaseTransition ? { currentPhase: phaseTransition } : {}),
+              currentPhase: finalPhase,
             },
             overrideAccess: false,
             user,
@@ -397,7 +430,7 @@ export async function POST(request: Request) {
 
           send('done', {
             sessionId: session.sessionId,
-            phaseTransition,
+            phaseTransition: phaseTransition ?? autoPhaseTransition,
             model,
             promptCache: isPromptCacheEnabled() ? {} : undefined,
           })

@@ -1,5 +1,6 @@
 import type { Artwork, Media } from '@/payload-types'
 import { SIZE_TIER_VALUES } from '@/lib/artOfficial/inferSizeTier'
+import { mediaPublicUrl } from '@/lib/media/publicUrl'
 import type { ArtworkSizeTier } from '@/types/frontend'
 
 const DEFAULT_SIZE_TIER: ArtworkSizeTier = 'lg'
@@ -23,12 +24,12 @@ export function getDisplayImageUrl(
   artwork: Pick<Artwork, 'primaryImage' | 'posterImage'>,
 ): string | null {
   const primary = artwork.primaryImage
-  if (primary && typeof primary === 'object' && primary.url) {
-    return String(primary.url)
+  if (primary && typeof primary === 'object') {
+    return mediaPublicUrl(primary)
   }
   const poster = artwork.posterImage
-  if (poster && typeof poster === 'object' && poster.url) {
-    return String(poster.url)
+  if (poster && typeof poster === 'object') {
+    return mediaPublicUrl(poster)
   }
   return null
 }

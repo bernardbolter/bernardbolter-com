@@ -4,7 +4,7 @@ export const SERIES_COLOR_MAP: Record<string, string> = {
   'art-collision': '#99C2A2',           // col
   'digital-city-series': '#F6BD60',     // dcs
   'megacities': '#FC7753',              // meg
-  'breaking-down-art': '#6D2E46',       // war
+  'breaking-down-art': '#6D2E46',       // bda — analytical / deconstruction
   'vanishing-landscapes': '#7B8CDE',    // van
   'og-oil-paintings': '#395B0E',        // og
   'installations': '#A27E8E',           // ins

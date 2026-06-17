@@ -16,6 +16,7 @@ import {
   buildLegacyLookupBlock,
   buildPreUploadSessionBlock,
   buildReflectiveWeaveBlock,
+  buildDialoguePhaseBlock,
   buildSequencingBlock,
   buildSessionCloseBlock,
   buildTagClassificationBlock,
@@ -27,6 +28,7 @@ import {
 } from './promptBlocks'
 import { buildPreUploadStateBlock, type PreUploadSessionState } from './preUploadGuide'
 import type { SystemPromptParts } from './promptCache'
+import type { SessionPhase } from './sessionPhase'
 import type { SessionType } from './routing'
 import { buildSeriesSlugPromptBlock, listSeriesWithParents, isSlugDescendantOf } from './seriesSlugs'
 import { buildArtworkRefinementBlock } from './artworkRefinement'
@@ -44,6 +46,7 @@ export type BuildSystemPromptArgs = {
   weakPhases?: string[] | null
   isRefinement?: boolean
   preUpload?: PreUploadSessionState
+  currentPhase?: SessionPhase
 }
 
 const SITE_URL = 'https://bernardbolter.com'
@@ -51,7 +54,7 @@ const SITE_URL = 'https://bernardbolter.com'
 export async function buildSystemPromptParts(
   args: BuildSystemPromptArgs,
 ): Promise<SystemPromptParts> {
-  const { payload, user, sessionType, artistId, episodeId, artworkRecordId, weakPhases, isRefinement, preUpload } =
+  const { payload, user, sessionType, artistId, episodeId, artworkRecordId, weakPhases, isRefinement, preUpload, currentPhase } =
     args
 
   const artist = await payload.findByID({
@@ -172,8 +175,14 @@ export async function buildSystemPromptParts(
         // Non-fatal — continue without the note
       }
     } else {
-      const stateBlock = preUpload ? buildPreUploadStateBlock(preUpload) : null
-      if (stateBlock) dynamicParts.push(stateBlock)
+      const phase = currentPhase ?? 'pre-upload'
+      const phaseBlock = buildDialoguePhaseBlock(phase, preUpload)
+      if (phaseBlock) {
+        dynamicParts.push(phaseBlock)
+      } else {
+        const stateBlock = preUpload ? buildPreUploadStateBlock(preUpload) : null
+        if (stateBlock) dynamicParts.push(stateBlock)
+      }
     }
   }
   if (sessionType === 'event-enrichment' && args.eventRecordId) {

@@ -1,5 +1,5 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import type { Media } from '@/payload-types'
 
 import { generateClipEmbedding } from '@/utilities/generateClipEmbedding'
@@ -47,14 +47,16 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
     return doc
   }
 
-  if (typeof doc.slug === 'string' && doc.slug.trim()) {
-    const path = `/${doc.slug.trim()}`
-    try {
+  try {
+    revalidateTag('artworks')
+    revalidatePath('/', 'layout')
+    if (typeof doc.slug === 'string' && doc.slug.trim()) {
+      const path = `/${doc.slug.trim()}`
       revalidatePath(path)
       revalidatePath(`${path}/embedding`)
-    } catch {
-      // No Next.js static generation store (seed scripts, tests)
     }
+  } catch {
+    // No Next.js static generation store (seed scripts, tests)
   }
   if (!process.env.CLIP_EMBEDDING_URL) {
     return doc

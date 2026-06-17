@@ -230,8 +230,9 @@ export function ArtOfficialInstructions({
 
       <InstructionBlock title="After commit">
         <p style={{ marginTop: 0 }}>
-          Open the new or updated record in the CMS collections, check draft status, add or fix media,
-          and publish when ready. Practice Knowledge and artist texts can be edited manually anytime
+          Open the new or updated record in the CMS collections to review fields and media. Artworks
+          commit as <strong>published</strong> — add or fix anything in admin before the record is
+          live on the site. Practice Knowledge and artist texts can be edited manually anytime
           without running another session.
         </p>
         <p style={{ marginBottom: 0 }}>

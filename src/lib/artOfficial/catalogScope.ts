@@ -7,6 +7,26 @@ export const ACH_ROOT_SERIES_SLUG = 'a-colorful-history'
 export const DCS_ROOT_SERIES_SLUG = 'digital-city-series'
 export const MEGACITIES_ROOT_SERIES_SLUG = 'megacities'
 
+export function isMegacitiesSeriesSlug(slug: string | null | undefined): boolean {
+  return slug === MEGACITIES_ROOT_SERIES_SLUG
+}
+
+/** ACH sub-series slugs in WP export (parent is always `a-colorful-history`). */
+export const GATES_OF_PERCEPTION_SERIES_SLUG = 'gates-of-perception'
+export const GATES_OF_PERCEPTION_GROUP_TITLE = 'Gates of Perception'
+
+export const ACH_CHILD_SERIES_SLUGS = [
+  'mediums-of-perception',
+  'mediums-of-war',
+  GATES_OF_PERCEPTION_SERIES_SLUG,
+] as const
+
+export function isAchSeriesSlug(slug: string | null | undefined): boolean {
+  if (!slug) return false
+  if (slug === ACH_ROOT_SERIES_SLUG) return true
+  return (ACH_CHILD_SERIES_SLUGS as readonly string[]).includes(slug)
+}
+
 export type CatalogSeriesScope = 'ach' | 'dcs' | 'megacities'
 export type CatalogMediumScope = 'physical'
 
@@ -132,7 +152,7 @@ export function seriesScopeForField(
 export function artworkMatchesAchSeries(ctx: ArtworkCoverageContext): boolean {
   const slug = ctx.seriesSlug
   if (!slug) return false
-  if (slug === ACH_ROOT_SERIES_SLUG) return true
+  if (isAchSeriesSlug(slug)) return true
   if (ctx.seriesRecords?.length) {
     return isSlugDescendantOf(ctx.seriesRecords, slug, ACH_ROOT_SERIES_SLUG)
   }

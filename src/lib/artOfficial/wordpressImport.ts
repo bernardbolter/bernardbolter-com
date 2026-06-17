@@ -1,10 +1,11 @@
 import { readFile } from 'fs/promises'
 import path from 'path'
 
-import { slugDerivedTitle } from './normalizeLegacyRecord'
+import { slugDerivedTitle, stripHtml } from './normalizeLegacyRecord'
 import { inferMediumFromWp } from './wordpressMediumMap'
 import type { WordpressImportEntry } from './wordpressImport.shared'
 import {
+  mapMegacitiesSeriesType,
   parseWpAreaKm2,
   parseWpDensityPerKm2,
   parseWpDimension,
@@ -18,34 +19,50 @@ type WpImageNode = {
   node?: { sourceUrl?: string | null } | null
 } | null
 
+type WpArtworkFields = {
+  year?: string | null
+  city?: string | null
+  country?: string | null
+  lat?: string | null
+  lng?: string | null
+  location?: string | null
+  medium?: string | null
+  width?: string | null
+  height?: string | null
+  series?: string[] | null
+  orientation?: string[] | null
+  size?: string[] | null
+  style?: string | null
+  forsale?: boolean | null
+  units?: string[] | null
+  area?: string | null
+  coordinates?: string | null
+  density?: string | null
+  elevation?: string | null
+  population?: string | null
+  dcsPhotoTitle?: string | null
+  exhibitionHistory?: string | null
+  provenance?: string | null
+  printEditions?: string | null
+  artworkImage?: WpImageNode
+  artworkImage2?: WpImageNode
+  artworkImage3?: WpImageNode
+  artworkImage4?: WpImageNode
+  artworkImage5?: WpImageNode
+}
+
 type WpArtworkNode = {
   databaseId?: number
   slug?: string
-  title?: string | null
+  title?: string
   featuredImage?: WpImageNode
-  artworkFields?: {
-    year?: string | null
-    city?: string | null
-    country?: string | null
-    lat?: string | null
-    lng?: string | null
-    medium?: string | null
-    width?: string | null
-    height?: string | null
-    series?: string[] | null
-    orientation?: string[] | null
-    size?: string[] | null
-    forsale?: boolean | null
-    units?: string[] | null
-    area?: string | null
-    coordinates?: string | null
-    density?: string | null
-    elevation?: string | null
-    population?: string | null
-    dcsPhotoTitle?: string | null
-    artworkImage?: WpImageNode
-  } | null
+  artworkFields?: WpArtworkFields | null
   categories?: { nodes?: Array<{ name?: string; slug?: string }> } | null
+  colorfulFields?: {
+    storyEn?: string | null
+    wikiLinkEn?: string | null
+    ar?: boolean | null
+  } | null
 }
 
 export function resolveWordpressExportPath(): string {
@@ -72,6 +89,104 @@ export async function loadWordpressImportEntries(): Promise<WordpressImportEntry
     .sort((a, b) => a.title.localeCompare(b.title))
 }
 
+function imageUrl(node: WpImageNode | undefined): string | null {
+  const url = node?.node?.sourceUrl?.trim()
+  return url || null
+}
+
+function collectSourceImageUrls(f: WpArtworkFields): string[] {
+  const urls = [
+    imageUrl(f.artworkImage2),
+    imageUrl(f.artworkImage3),
+    imageUrl(f.artworkImage4),
+    imageUrl(f.artworkImage5),
+  ].filter((url): url is string => Boolean(url))
+  return [...new Set(urls)]
+}
+
+function buildLegacyProvenanceNotes(f: WpArtworkFields): string | null {
+  const sections: string[] = []
+  const provenance = stripHtml(f.provenance)
+  const exhibition = stripHtml(f.exhibitionHistory)
+  const prints = stripHtml(f.printEditions)
+  if (provenance) sections.push(provenance)
+  if (exhibition) sections.push(`Exhibition history:\n${exhibition}`)
+  if (prints) sections.push(`Print editions:\n${prints}`)
+  return sections.length ? sections.join('\n\n') : null
+}
+
+function inferGatesOfPerception(slug: string, title: string): boolean {
+  const slugHay = slug.toLowerCase()
+  const titleHay = title.toLowerCase()
+  return (
+    slugHay.includes('gates-of-perception') ||
+    titleHay.includes('gates of perception') ||
+    slugHay.startsWith('gates-') ||
+    slugHay.startsWith('gates-of-')
+  )
+}
+
+function mapAchImportFields(
+  f: WpArtworkFields,
+  node: WpArtworkNode,
+): Pick<
+  WordpressImportEntry,
+  | 'locationCreatedLabel'
+  | 'achMapLat'
+  | 'achMapLng'
+  | 'achMapPresence'
+  | 'provenanceNotes'
+  | 'sourceImageUrls'
+  | 'storyEn'
+  | 'gatesOfPerception'
+> {
+  const lat = parseOptionalNumber(f.lat)
+  const lng = parseOptionalNumber(f.lng)
+  const storyRaw = node.colorfulFields?.storyEn
+  const slug = typeof node.slug === 'string' ? node.slug.trim() : ''
+  const titleForInfer =
+    typeof node.title === 'string' ? node.title.trim() : slugDerivedTitle(slug)
+  return {
+    locationCreatedLabel: stripHtml(f.location),
+    achMapLat: lat,
+    achMapLng: lng,
+    achMapPresence: lat != null && lng != null,
+    provenanceNotes: buildLegacyProvenanceNotes(f),
+    sourceImageUrls: collectSourceImageUrls(f),
+    storyEn: storyRaw ? stripHtml(storyRaw) : null,
+    gatesOfPerception: inferGatesOfPerception(slug, titleForInfer),
+  }
+}
+
+function mapMegacitiesImportFields(
+  f: WpArtworkFields,
+  seriesSlug: string | null,
+): Pick<
+  WordpressImportEntry,
+  'megacitiesSeriesType' | 'megacitiesStyleLabel' | 'megacitiesCoverageArea'
+> {
+  if (seriesSlug !== 'megacities') {
+    return {
+      megacitiesSeriesType: null,
+      megacitiesStyleLabel: null,
+      megacitiesCoverageArea: null,
+    }
+  }
+
+  const styleLabel = f.style?.trim() || null
+  const country = f.country?.trim() || null
+
+  return {
+    megacitiesSeriesType: mapMegacitiesSeriesType({
+      style: styleLabel,
+      medium: f.medium,
+      country,
+    }),
+    megacitiesStyleLabel: styleLabel,
+    megacitiesCoverageArea: country,
+  }
+}
+
 function mapWpNode(node: WpArtworkNode): WordpressImportEntry | null {
   const id = node.databaseId
   if (!id) return null
@@ -92,6 +207,7 @@ function mapWpNode(node: WpArtworkNode): WordpressImportEntry | null {
   const seriesFromCategory = category?.name?.trim() || null
   const seriesSlugFromCategory = category?.slug?.trim() || null
   const seriesSlugFromFields = f.series?.[0]?.trim() || null
+  const resolvedSeriesSlug = seriesSlugFromFields ?? seriesSlugFromCategory
 
   const mediumSelect = inferMediumFromWp(f.medium)
   const artworkImageUrl =
@@ -111,7 +227,7 @@ function mapWpNode(node: WpArtworkNode): WordpressImportEntry | null {
     heightFraction: height?.fraction ?? null,
     dimensionUnit: width?.unit ?? height?.unit ?? null,
     seriesName: seriesFromCategory,
-    seriesSlug: seriesSlugFromFields ?? seriesSlugFromCategory,
+    seriesSlug: resolvedSeriesSlug,
     orientation: mapWpOrientation(f.orientation?.[0]),
     sizeTier: mapWpSizeTier(f.size?.[0]),
     availabilityStatus: mapWpAvailability(f.forsale),
@@ -126,6 +242,8 @@ function mapWpNode(node: WpArtworkNode): WordpressImportEntry | null {
     cityPopulationDensity: parseWpDensityPerKm2(f.density),
     cityElevationM: parseWpElevationM(f.elevation),
     coordinatesText: f.coordinates?.trim() || null,
+    ...mapAchImportFields(f, node),
+    ...mapMegacitiesImportFields(f, resolvedSeriesSlug),
   }
 }
 

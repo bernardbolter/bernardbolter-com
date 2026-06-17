@@ -64,6 +64,31 @@ const ARTWORK_NODE_FIELDS = `
         sourceUrl
       }
     }
+    artworkImage2 {
+      node {
+        sourceUrl
+      }
+    }
+    artworkImage3 {
+      node {
+        sourceUrl
+      }
+    }
+    artworkImage4 {
+      node {
+        sourceUrl
+      }
+    }
+    artworkImage5 {
+      node {
+        sourceUrl
+      }
+    }
+  }
+  colorfulFields {
+    storyEn
+    wikiLinkEn
+    ar
   }
 `
 

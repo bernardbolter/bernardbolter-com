@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { mediaAfterChange } from '@/hooks/mediaAfterChange'
 import { normalizeVideoMimeType } from '@/lib/artOfficial/mediaMime'
 
 export const Media: CollectionConfig = {
@@ -43,6 +44,7 @@ export const Media: CollectionConfig = {
         return data
       },
     ],
+    afterChange: [mediaAfterChange],
   },
   fields: [
     {

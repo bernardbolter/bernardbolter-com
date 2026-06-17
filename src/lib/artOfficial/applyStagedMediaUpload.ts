@@ -4,7 +4,7 @@ import type { Session, User } from '@/payload-types'
 
 import { getMediaSlot } from './artworkMediaSlots'
 import { runImageAnalysis } from './runImageAnalysis'
-import { ART_OFFICIAL_MODEL } from './anthropic'
+import { ART_OFFICIAL_MODEL_VISION } from './sessionPhase'
 import {
   stageArtworkMediaUpload,
   type MediaUploadPayload,
@@ -82,7 +82,7 @@ export async function applyStagedMediaUpload(args: {
       {
         targetCollection: 'artworks',
         field: 'analysisModelVersion',
-        value: ART_OFFICIAL_MODEL,
+        value: ART_OFFICIAL_MODEL_VISION,
         confidence: 'inferred',
         source: 'image-analysis',
         timestamp: new Date().toISOString(),

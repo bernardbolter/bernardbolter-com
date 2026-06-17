@@ -3,6 +3,10 @@ import { z } from 'zod'
 import {
   ACH_ROOT_SERIES_SLUG,
   DCS_ROOT_SERIES_SLUG,
+  GATES_OF_PERCEPTION_GROUP_TITLE,
+  GATES_OF_PERCEPTION_SERIES_SLUG,
+  isAchSeriesSlug,
+  isMegacitiesSeriesSlug,
 } from '@/lib/artOfficial/catalogScope'
 import { formatChatError } from '@/lib/artOfficial/formatChatError'
 import { formatPayloadValidationError } from '@/lib/artOfficial/formatPayloadValidationError'
@@ -13,6 +17,7 @@ import {
 import { deriveAspectRatio, slugifyArtworkTitle } from '@/lib/artOfficial/quickUploadDerived'
 import { ensureArtworkMediumEnumValue } from '@/lib/artOfficial/artworkMediumDatabase'
 import { registerCustomMedium } from '@/lib/artOfficial/artworkMediumOptions'
+import { plainToLexical } from '@/lib/artOfficial/plainToLexical'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 
 const quickUploadSchema = z.object({
@@ -50,6 +55,18 @@ const quickUploadSchema = z.object({
   dcsStreetMediaId: z.number().int().positive().optional(),
   dcsSatelliteMediaId: z.number().int().positive().optional(),
   achSourceMediaIds: z.array(z.number().int().positive()).optional(),
+  locationCreatedLabel: z.string().optional(),
+  achMapLat: z.number().optional(),
+  achMapLng: z.number().optional(),
+  achMapPresence: z.boolean().optional(),
+  provenanceNotes: z.string().optional(),
+  gatesOfPerception: z.boolean().optional(),
+  megacitiesSeriesType: z
+    .enum(['composite_country', 'skate_city', 'cultural_composite', 'exhibition_origin'])
+    .optional(),
+  megacitiesCoverageArea: z.string().optional(),
+  megacitiesClassificationNote: z.string().optional(),
+  megacitiesReferenceCollageMediaId: z.number().int().positive().optional(),
 })
 
 export async function POST(request: Request) {
@@ -101,7 +118,25 @@ export async function POST(request: Request) {
     user,
   })
 
-  const seriesSlug = typeof series.slug === 'string' ? series.slug : null
+  let seriesSlug = typeof series.slug === 'string' ? series.slug : null
+  let seriesId = data.seriesId
+
+  if (data.gatesOfPerception && isAchSeriesSlug(seriesSlug)) {
+    const gop = await payload.find({
+      collection: 'series',
+      where: { slug: { equals: GATES_OF_PERCEPTION_SERIES_SLUG } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: false,
+      user,
+    })
+    const gopDoc = gop.docs[0]
+    if (gopDoc) {
+      seriesId = gopDoc.id
+      seriesSlug = GATES_OF_PERCEPTION_SERIES_SLUG
+    }
+  }
+
   const slug = data.slug?.trim() || slugifyArtworkTitle(data.title)
 
   for (const [label, fraction] of [
@@ -146,7 +181,7 @@ export async function POST(request: Request) {
     title: data.title.trim(),
     slug,
     creator: artist.id,
-    series: data.seriesId,
+    series: seriesId,
     seriesSlug,
     yearCreated: data.yearCreated,
     yearCompleted: data.yearCompleted ?? undefined,
@@ -170,6 +205,21 @@ export async function POST(request: Request) {
     wp_id: data.wpId,
     city: data.city?.trim() || undefined,
     country: data.country?.trim() || undefined,
+  }
+
+  const locationLabel = data.locationCreatedLabel?.trim()
+  if (locationLabel || data.achMapLat != null || data.achMapLng != null) {
+    artworkData.locationCreated = {
+      ...(locationLabel ? { label: locationLabel } : {}),
+      ...(data.city?.trim() ? { city: data.city.trim() } : {}),
+      ...(data.country?.trim() ? { country: data.country.trim() } : {}),
+      ...(data.achMapLat != null ? { lat: data.achMapLat } : {}),
+      ...(data.achMapLng != null ? { lng: data.achMapLng } : {}),
+    }
+  }
+
+  if (data.provenanceNotes?.trim()) {
+    artworkData.provenanceNotes = plainToLexical(data.provenanceNotes.trim())
   }
 
   if (seriesSlug === DCS_ROOT_SERIES_SLUG) {
@@ -198,12 +248,54 @@ export async function POST(request: Request) {
     if (Object.keys(dcs).length) artworkData.dcs = dcs
   }
 
-  if (seriesSlug === ACH_ROOT_SERIES_SLUG && data.achSourceMediaIds?.length) {
-    const rows = data.achSourceMediaIds.map((mediaId) => ({ sourceImage: mediaId }))
-    artworkData.ach = {
-      sourcePhotographs: rows,
-      sourcePhotograph: { sourceImage: data.achSourceMediaIds[0] },
+  if (isAchSeriesSlug(seriesSlug)) {
+    const ach: Record<string, unknown> = {}
+    const mapAndTour: Record<string, unknown> = {}
+
+    if (data.achMapPresence === true) {
+      mapAndTour.mapPresence = true
+    } else if (data.achMapLat != null && data.achMapLng != null) {
+      mapAndTour.mapPresence = true
     }
+    if (data.achMapLat != null) mapAndTour.lat = data.achMapLat
+    if (data.achMapLng != null) mapAndTour.lng = data.achMapLng
+    if (Object.keys(mapAndTour).length) ach.mapAndTour = mapAndTour
+
+    if (data.achSourceMediaIds?.length) {
+      const rows = data.achSourceMediaIds.map((mediaId) => ({ sourceImage: mediaId }))
+      ach.sourcePhotographs = rows
+      ach.sourcePhotograph = { sourceImage: data.achSourceMediaIds[0] }
+    }
+
+    if (data.gatesOfPerception) {
+      ach.internalGroupTitle = GATES_OF_PERCEPTION_GROUP_TITLE
+    }
+
+    if (Object.keys(ach).length) artworkData.ach = ach
+  }
+
+  if (isMegacitiesSeriesSlug(seriesSlug)) {
+    const megacities: Record<string, unknown> = {}
+    const series: Record<string, unknown> = {}
+
+    if (data.megacitiesSeriesType) {
+      series.seriesType = data.megacitiesSeriesType
+    }
+    if (data.megacitiesClassificationNote?.trim()) {
+      series.classificationNote = data.megacitiesClassificationNote.trim()
+    }
+    if (Object.keys(series).length) megacities.series = series
+
+    const composition: Record<string, unknown> = {}
+    if (data.megacitiesCoverageArea?.trim()) {
+      composition.coverageArea = data.megacitiesCoverageArea.trim()
+    }
+    if (data.megacitiesReferenceCollageMediaId) {
+      composition.referenceCollageImage = data.megacitiesReferenceCollageMediaId
+    }
+    if (Object.keys(composition).length) megacities.composition = composition
+
+    if (Object.keys(megacities).length) artworkData.megacities = megacities
   }
 
   try {

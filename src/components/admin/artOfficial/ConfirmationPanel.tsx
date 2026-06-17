@@ -15,7 +15,7 @@ import './artOfficialChat.scss'
 
 function buildArtworkDataFromTimeline(timeline: TimelineEntry[]): Record<string, unknown> {
   return {
-    status: 'draft',
+    status: 'published',
     ...buildArtworkPatchFromTimeline(collapseTimelineToLatest(timeline)),
   }
 }

@@ -1,3 +1,11 @@
+function modelNotFoundMessage(model: string): string {
+  const envVar = model.includes('haiku')
+    ? 'ART_OFFICIAL_MODEL_HAIKU'
+    : 'ART_OFFICIAL_MODEL'
+  const example = model.includes('haiku') ? 'claude-haiku-4-5' : 'claude-sonnet-4-6'
+  return `Anthropic model not found: "${model}". Set ${envVar} in .env (e.g. ${example}) and restart npm run dev.`
+}
+
 /** Turn Anthropic / fetch errors into a short admin-friendly message. */
 export function formatChatError(err: unknown): string {
   if (!(err instanceof Error)) {
@@ -13,7 +21,7 @@ export function formatChatError(err: unknown): string {
     if (parsed.error?.message) {
       if (parsed.error.message.includes('model:')) {
         const model = parsed.error.message.replace(/^model:\s*/, '')
-        return `Anthropic model not found: "${model}". Set ART_OFFICIAL_MODEL in .env to a current model (e.g. claude-sonnet-4-6) and restart the dev server.`
+        return modelNotFoundMessage(model)
       }
       return parsed.error.message
     }
@@ -24,7 +32,7 @@ export function formatChatError(err: unknown): string {
   if (raw.includes('model:')) {
     const match = raw.match(/model:\s*([^\s"}]+)/)
     const model = match?.[1] ?? 'unknown'
-    return `Anthropic model not found: "${model}". Update ART_OFFICIAL_MODEL in .env (try claude-sonnet-4-6) and restart npm run dev.`
+    return modelNotFoundMessage(model)
   }
 
   const lower = raw.toLowerCase()

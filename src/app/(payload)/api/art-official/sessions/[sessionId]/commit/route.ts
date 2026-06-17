@@ -108,7 +108,7 @@ export async function POST(request: Request, context: RouteContext) {
 
       const artworkData = {
         ...merged,
-        status: 'draft' as const,
+        status: 'published' as const,
       }
       const existingId =
         body.artworkId ??

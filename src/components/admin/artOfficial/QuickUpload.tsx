@@ -7,6 +7,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ACH_ROOT_SERIES_SLUG,
   DCS_ROOT_SERIES_SLUG,
+  GATES_OF_PERCEPTION_SERIES_SLUG,
+  isAchSeriesSlug,
+  isMegacitiesSeriesSlug,
 } from '@/lib/artOfficial/catalogScope'
 import {
   isValidDimensionFraction,
@@ -25,6 +28,7 @@ import {
   type WordpressImportEntry,
 } from '@/lib/artOfficial/wordpressImport.shared'
 import { matchWpImportEntryByFilename } from '@/lib/artOfficial/wpFieldParsers'
+import type { MegacitiesSeriesType } from '@/lib/artOfficial/wpFieldParsers'
 
 import { ImageUpload } from './ImageUpload'
 import { MediaThumbnail } from './MediaThumbnail'
@@ -66,6 +70,18 @@ type QuickUploadDraft = {
   cityAreaKm2: number | null
   cityPopulationDensity: number | null
   cityElevationM: number | null
+  locationCreatedLabel: string
+  achMapLat: number | null
+  achMapLng: number | null
+  achMapPresence: boolean
+  provenanceNotesPlain: string
+  sourceImageUrls: string[]
+  storyEn: string
+  gatesOfPerception: boolean
+  megacitiesSeriesType: MegacitiesSeriesType | ''
+  megacitiesStyleLabel: string
+  megacitiesCoverageArea: string
+  megacitiesReferenceCollageId: number | null
 }
 
 function readQuickUploadDraft(): QuickUploadDraft | null {
@@ -210,6 +226,20 @@ export function QuickUpload() {
   const [cityAreaKm2, setCityAreaKm2] = useState<number | null>(null)
   const [cityPopulationDensity, setCityPopulationDensity] = useState<number | null>(null)
   const [cityElevationM, setCityElevationM] = useState<number | null>(null)
+  const [locationCreatedLabel, setLocationCreatedLabel] = useState('')
+  const [achMapLat, setAchMapLat] = useState<number | null>(null)
+  const [achMapLng, setAchMapLng] = useState<number | null>(null)
+  const [achMapPresence, setAchMapPresence] = useState(false)
+  const [provenanceNotesPlain, setProvenanceNotesPlain] = useState('')
+  const [sourceImageUrls, setSourceImageUrls] = useState<string[]>([])
+  const [storyEn, setStoryEn] = useState('')
+  const [gatesOfPerception, setGatesOfPerception] = useState(false)
+  const [megacitiesSeriesType, setMegacitiesSeriesType] = useState<MegacitiesSeriesType | ''>('')
+  const [megacitiesStyleLabel, setMegacitiesStyleLabel] = useState('')
+  const [megacitiesCoverageArea, setMegacitiesCoverageArea] = useState('')
+  const [megacitiesReferenceCollageId, setMegacitiesReferenceCollageId] = useState<number | null>(
+    null,
+  )
   const [wpRefImageUrl, setWpRefImageUrl] = useState<string | null>(null)
   const [wpAutoMatched, setWpAutoMatched] = useState(false)
 
@@ -222,7 +252,9 @@ export function QuickUpload() {
 
   const selectedSeries = seriesList.find((s) => String(s.id) === seriesId)
   const isDcs = selectedSeries?.slug === DCS_ROOT_SERIES_SLUG
-  const isAch = selectedSeries?.slug === ACH_ROOT_SERIES_SLUG
+  const isAch = isAchSeriesSlug(selectedSeries?.slug)
+  const isMegacities = isMegacitiesSeriesSlug(selectedSeries?.slug)
+  const gatesSeries = seriesList.find((s) => s.slug === GATES_OF_PERCEPTION_SERIES_SLUG)
 
   const loadSeries = useCallback(async () => {
     setSeriesLoading(true)
@@ -313,7 +345,25 @@ export function QuickUpload() {
     setCityAreaKm2(draft.cityAreaKm2 ?? null)
     setCityPopulationDensity(draft.cityPopulationDensity ?? null)
     setCityElevationM(draft.cityElevationM ?? null)
+    setLocationCreatedLabel(draft.locationCreatedLabel ?? '')
+    setAchMapLat(draft.achMapLat ?? null)
+    setAchMapLng(draft.achMapLng ?? null)
+    setAchMapPresence(draft.achMapPresence ?? false)
+    setProvenanceNotesPlain(draft.provenanceNotesPlain ?? '')
+    setSourceImageUrls(draft.sourceImageUrls ?? [])
+    setStoryEn(draft.storyEn ?? '')
+    setGatesOfPerception(draft.gatesOfPerception ?? false)
+    setMegacitiesSeriesType(draft.megacitiesSeriesType ?? '')
+    setMegacitiesStyleLabel(draft.megacitiesStyleLabel ?? '')
+    setMegacitiesCoverageArea(draft.megacitiesCoverageArea ?? '')
+    setMegacitiesReferenceCollageId(draft.megacitiesReferenceCollageId ?? null)
   }, [])
+
+  useEffect(() => {
+    if (selectedSeries?.slug === GATES_OF_PERCEPTION_SERIES_SLUG) {
+      setGatesOfPerception(true)
+    }
+  }, [selectedSeries?.slug])
 
   useEffect(() => {
     if (typeof sessionStorage === 'undefined') return
@@ -348,6 +398,18 @@ export function QuickUpload() {
       cityAreaKm2,
       cityPopulationDensity,
       cityElevationM,
+      locationCreatedLabel,
+      achMapLat,
+      achMapLng,
+      achMapPresence,
+      provenanceNotesPlain,
+      sourceImageUrls,
+      storyEn,
+      gatesOfPerception,
+      megacitiesSeriesType,
+      megacitiesStyleLabel,
+      megacitiesCoverageArea,
+      megacitiesReferenceCollageId,
     }
     const id = window.setTimeout(() => {
       sessionStorage.setItem(QUICK_UPLOAD_DRAFT_KEY, JSON.stringify(draft))
@@ -384,6 +446,18 @@ export function QuickUpload() {
     cityAreaKm2,
     cityPopulationDensity,
     cityElevationM,
+    locationCreatedLabel,
+    achMapLat,
+    achMapLng,
+    achMapPresence,
+    provenanceNotesPlain,
+    sourceImageUrls,
+    storyEn,
+    gatesOfPerception,
+    megacitiesSeriesType,
+    megacitiesStyleLabel,
+    megacitiesCoverageArea,
+    megacitiesReferenceCollageId,
   ])
 
   async function addCustomMediumToList() {
@@ -454,7 +528,7 @@ export function QuickUpload() {
   }
 
   useEffect(() => {
-    if (!useWp && !isDcs) return
+    if (!useWp && !isDcs && !isAch && !isMegacities) return
     setWpLoading(true)
     setWpLoadError(null)
     void (async () => {
@@ -474,12 +548,21 @@ export function QuickUpload() {
         setWpLoading(false)
       }
     })()
-  }, [useWp, isDcs])
+  }, [useWp, isDcs, isAch, isMegacities])
 
   const filteredWpEntries = useMemo(() => {
     const seriesSlug = selectedSeries?.slug
     let rows = seriesSlug
-      ? wpEntries.filter((row) => row.seriesSlug === seriesSlug)
+      ? wpEntries.filter((row) => {
+          if (row.seriesSlug === seriesSlug) return true
+          if (
+            row.seriesSlug === ACH_ROOT_SERIES_SLUG &&
+            isAchSeriesSlug(seriesSlug)
+          ) {
+            return true
+          }
+          return false
+        })
       : wpEntries
     const q = wpFilter.trim().toLowerCase()
     if (!q) return rows
@@ -522,6 +605,17 @@ export function QuickUpload() {
       setCityAreaKm2(entry.cityAreaKm2)
       setCityPopulationDensity(entry.cityPopulationDensity)
       setCityElevationM(entry.cityElevationM)
+      setLocationCreatedLabel(entry.locationCreatedLabel ?? '')
+      setAchMapLat(entry.achMapLat)
+      setAchMapLng(entry.achMapLng)
+      setAchMapPresence(entry.achMapPresence)
+      setProvenanceNotesPlain(entry.provenanceNotes ?? '')
+      setSourceImageUrls(entry.sourceImageUrls ?? [])
+      setStoryEn(entry.storyEn ?? '')
+      setGatesOfPerception(entry.gatesOfPerception)
+      setMegacitiesSeriesType(entry.megacitiesSeriesType ?? '')
+      setMegacitiesStyleLabel(entry.megacitiesStyleLabel ?? '')
+      setMegacitiesCoverageArea(entry.megacitiesCoverageArea ?? '')
       setWpId(entry.id)
       setWpRefImageUrl(entry.artworkImageUrl)
       if (entry.availabilityStatus) {
@@ -557,11 +651,13 @@ export function QuickUpload() {
   function handlePrimaryUploaded(mediaId: number, meta?: { filename: string }) {
     setPrimaryMediaId(mediaId)
     if (!meta?.filename || wpPick || !wpEntries.length) return
-    if (!useWp && !isDcs) return
+    if (!useWp && !isDcs && !isAch && !isMegacities) return
     const match = matchWpImportEntryByFilename(
       meta.filename,
       wpEntries,
-      selectedSeries?.slug,
+      isAchSeriesSlug(selectedSeries?.slug)
+        ? ACH_ROOT_SERIES_SLUG
+        : selectedSeries?.slug,
     )
     if (match) {
       if (!useWp) setUseWp(true)
@@ -711,6 +807,28 @@ export function QuickUpload() {
           dcsStreetMediaId: isDcs ? dcsStreetId ?? undefined : undefined,
           dcsSatelliteMediaId: isDcs ? dcsSatelliteId ?? undefined : undefined,
           achSourceMediaIds: isAch && achSourceIds.length ? achSourceIds : undefined,
+          locationCreatedLabel:
+            isAch && locationCreatedLabel.trim() ? locationCreatedLabel.trim() : undefined,
+          achMapLat: isAch && achMapLat != null ? achMapLat : undefined,
+          achMapLng: isAch && achMapLng != null ? achMapLng : undefined,
+          achMapPresence: isAch && achMapPresence ? true : undefined,
+          provenanceNotes:
+            provenanceNotesPlain.trim() ? provenanceNotesPlain.trim() : undefined,
+          gatesOfPerception: isAch && gatesOfPerception ? true : undefined,
+          megacitiesSeriesType:
+            isMegacities && megacitiesSeriesType ? megacitiesSeriesType : undefined,
+          megacitiesCoverageArea:
+            isMegacities && megacitiesCoverageArea.trim()
+              ? megacitiesCoverageArea.trim()
+              : undefined,
+          megacitiesClassificationNote:
+            isMegacities && megacitiesStyleLabel.trim()
+              ? megacitiesStyleLabel.trim()
+              : undefined,
+          megacitiesReferenceCollageMediaId:
+            isMegacities && megacitiesReferenceCollageId
+              ? megacitiesReferenceCollageId
+              : undefined,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -777,6 +895,18 @@ export function QuickUpload() {
     setCityAreaKm2(null)
     setCityPopulationDensity(null)
     setCityElevationM(null)
+    setLocationCreatedLabel('')
+    setAchMapLat(null)
+    setAchMapLng(null)
+    setAchMapPresence(false)
+    setProvenanceNotesPlain('')
+    setSourceImageUrls([])
+    setStoryEn('')
+    setGatesOfPerception(false)
+    setMegacitiesSeriesType('')
+    setMegacitiesStyleLabel('')
+    setMegacitiesCoverageArea('')
+    setMegacitiesReferenceCollageId(null)
     setError(null)
     setSuccess(null)
     sessionStorage.removeItem(QUICK_UPLOAD_DRAFT_KEY)
@@ -816,14 +946,32 @@ export function QuickUpload() {
           filename matches.
         </p>
       ) : null}
+      {isAch && !useWp ? (
+        <p className="art-official-upload__hint">
+          A Colorful History: select the series first, then upload an image — matching
+          legacy records auto-fills title, studio location, dimensions, and map coordinates
+          when the filename matches.
+        </p>
+      ) : null}
+      {isMegacities && !useWp ? (
+        <p className="art-official-upload__hint">
+          Megacities: select the series first, then upload an image — matching legacy
+          records auto-fills title, country scope, dimensions (including 1.5m × 2m sizes),
+          series type, and provenance when the filename matches.
+        </p>
+      ) : null}
 
-      {useWp || (isDcs && wpEntries.length > 0) ? (
+      {useWp ||
+      (isDcs && wpEntries.length > 0) ||
+      (isAch && wpEntries.length > 0) ||
+      (isMegacities && wpEntries.length > 0) ? (
         <fieldset className="art-official-upload__legacy">
           <legend>Legacy WordPress export</legend>
           <p className="art-official-upload__legacy-hint">
             Loads matching fields from <code>data/legacy/wp-artworks.json</code> — title,
-            slug, year, city, country, dimensions, medium, series, DCS city stats, and
-            street-photo caption. You still upload new images below; old URLs are reference
+            slug, year, city, country, dimensions, medium, series, and series-specific
+            fields (DCS city stats · ACH studio location, map coords, provenance · Megacities
+            series type and coverage). You still upload new images below; old URLs are reference
             only.
           </p>
           {wpLoading ? (
@@ -1114,6 +1262,66 @@ export function QuickUpload() {
         {isAch ? (
           <fieldset className="art-official-upload__series-media">
             <legend>A Colorful History — source photographs</legend>
+            <label className="art-official-upload__checkbox">
+              <input
+                type="checkbox"
+                checked={gatesOfPerception}
+                disabled={
+                  submitting ||
+                  selectedSeries?.slug === GATES_OF_PERCEPTION_SERIES_SLUG
+                }
+                onChange={(e) => setGatesOfPerception(e.target.checked)}
+              />
+              Part of the <strong>Gates of Perception</strong> sub-series
+            </label>
+            {gatesOfPerception ? (
+              <p className="art-official-upload__hint">
+                Saves as series{' '}
+                <code>{GATES_OF_PERCEPTION_SERIES_SLUG}</code>
+                {gatesSeries ? '' : ' (run seed-series if missing in CMS)'}
+                {' '}and sets <code>ach.internalGroupTitle</code>.
+              </p>
+            ) : null}
+            {locationCreatedLabel ? (
+              <label className="art-official-upload__field">
+                Studio / making location (legacy)
+                <input
+                  value={locationCreatedLabel}
+                  disabled={submitting}
+                  onChange={(e) => setLocationCreatedLabel(e.target.value)}
+                />
+              </label>
+            ) : null}
+            {achMapLat != null && achMapLng != null ? (
+              <p className="art-official-upload__hint">
+                Legacy map coordinates: {achMapLat}, {achMapLng}
+                {achMapPresence ? ' · will appear on ACH map' : ''}
+              </p>
+            ) : null}
+            {storyEn ? (
+              <p className="art-official-upload__hint">
+                Legacy story on file (not imported — use Art/Official session for narrative).
+              </p>
+            ) : null}
+            {provenanceNotesPlain ? (
+              <p className="art-official-upload__hint">
+                Legacy provenance imported on submit (staff-only field).
+              </p>
+            ) : null}
+            {sourceImageUrls.length > 0 ? (
+              <div className="art-official-upload__legacy-ref">
+                <p>Legacy source photograph URLs (re-upload below):</p>
+                <ul>
+                  {sourceImageUrls.map((url) => (
+                    <li key={url}>
+                      <a href={url} target="_blank" rel="noreferrer">
+                        {url.split('/').pop()}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             <MultiImageUpload
               label="Original photograph(s)"
               mediaIds={achSourceIds}
@@ -1123,6 +1331,70 @@ export function QuickUpload() {
                 setAchSourceIds((prev) => prev.filter((x) => x !== id))
               }
             />
+          </fieldset>
+        ) : null}
+
+        {isMegacities ? (
+          <fieldset className="art-official-upload__series-media">
+            <legend>Megacities — composition</legend>
+            <label className="art-official-upload__field">
+              Series type
+              <select
+                value={megacitiesSeriesType}
+                disabled={submitting}
+                onChange={(e) =>
+                  setMegacitiesSeriesType(e.target.value as MegacitiesSeriesType | '')
+                }
+              >
+                <option value="">Select type…</option>
+                <option value="composite_country">Composite country</option>
+                <option value="skate_city">Skate City</option>
+                <option value="cultural_composite">Cultural composite</option>
+                <option value="exhibition_origin">Exhibition origin</option>
+              </select>
+              {megacitiesStyleLabel ? (
+                <p className="art-official-upload__hint">
+                  Legacy WP style: {megacitiesStyleLabel}
+                </p>
+              ) : null}
+            </label>
+            <label className="art-official-upload__field">
+              Coverage area
+              <input
+                value={megacitiesCoverageArea}
+                disabled={submitting}
+                placeholder="e.g. China, Arab League, USA"
+                onChange={(e) => setMegacitiesCoverageArea(e.target.value)}
+              />
+            </label>
+            {provenanceNotesPlain ? (
+              <p className="art-official-upload__hint">
+                Legacy provenance imported on submit (staff-only field).
+              </p>
+            ) : null}
+            {sourceImageUrls.length > 0 ? (
+              <div className="art-official-upload__legacy-ref">
+                <p>Legacy reference image URLs (re-upload below):</p>
+                <ul>
+                  {sourceImageUrls.map((url) => (
+                    <li key={url}>
+                      <a href={url} target="_blank" rel="noreferrer">
+                        {url.split('/').pop()}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <label className="art-official-upload__field">
+              Reference collage (optional)
+              <UploadWithThumbnail
+                mediaId={megacitiesReferenceCollageId}
+                disabled={submitting}
+                altLabel="Megacities reference collage"
+                onUploaded={setMegacitiesReferenceCollageId}
+              />
+            </label>
           </fieldset>
         ) : null}
 

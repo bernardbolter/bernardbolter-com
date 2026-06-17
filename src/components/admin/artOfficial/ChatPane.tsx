@@ -299,6 +299,27 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
                   input.agentDraftFormalContributionAssessment,
               }))
             }
+            if (type === 'done') {
+              const phase = data.phaseTransition
+              if (typeof phase === 'string') {
+                setCurrentPhase((prev) => normalizeSessionPhase(phase, prev))
+                setSession((s) => ({
+                  ...s,
+                  currentPhase: normalizeSessionPhase(
+                    phase,
+                    normalizeSessionPhase(
+                      s.currentPhase,
+                      defaultSessionPhase(
+                        s.sessionType ?? '',
+                        typeof s.artworkRecord === 'number'
+                          ? s.artworkRecord > 0
+                          : typeof s.artworkRecord === 'object' && s.artworkRecord !== null,
+                      ),
+                    ),
+                  ),
+                }))
+              }
+            }
           }
         }
 

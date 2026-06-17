@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   matchWpImportEntryByFilename,
+  mapMegacitiesSeriesType,
   parseWpAreaKm2,
   parseWpDensityPerKm2,
   parseWpDimension,
@@ -31,6 +32,31 @@ describe('parseWpDimension', () => {
       fraction: '3/16',
       unit: 'in',
     })
+  })
+
+  it('parses meter dimensions as centimeters', () => {
+    expect(parseWpDimension('1.5m', ['metric'])).toEqual({
+      whole: 150,
+      unit: 'cm',
+    })
+    expect(parseWpDimension('2m', ['metric'])).toEqual({
+      whole: 200,
+      unit: 'cm',
+    })
+  })
+})
+
+describe('mapMegacitiesSeriesType', () => {
+  it('maps legacy style labels', () => {
+    expect(
+      mapMegacitiesSeriesType({ style: 'composite country portrait' }),
+    ).toBe('composite_country')
+    expect(
+      mapMegacitiesSeriesType({ style: 'composite skateboarding portrait' }),
+    ).toBe('skate_city')
+    expect(
+      mapMegacitiesSeriesType({ country: 'Arab League', medium: 'composite country portrait' }),
+    ).toBe('cultural_composite')
   })
 })
 
@@ -72,6 +98,17 @@ describe('matchWpImportEntryByFilename', () => {
     cityPopulationDensity: 5500,
     cityElevationM: 650,
     coordinatesText: null,
+    locationCreatedLabel: null,
+    achMapLat: null,
+    achMapLng: null,
+    achMapPresence: false,
+    provenanceNotes: null,
+    sourceImageUrls: [],
+    storyEn: null,
+    gatesOfPerception: false,
+    megacitiesSeriesType: null,
+    megacitiesStyleLabel: null,
+    megacitiesCoverageArea: null,
   }
 
   it('matches by legacy image filename', () => {

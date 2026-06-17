@@ -27,6 +27,31 @@ export type WordpressImportEntry = {
   cityPopulationDensity: number | null
   cityElevationM: number | null
   coordinatesText: string | null
+  /** ACH — studio / making location (WP `location`). */
+  locationCreatedLabel: string | null
+  /** ACH map & tour — from WP lat/lng when present. */
+  achMapLat: number | null
+  achMapLng: number | null
+  achMapPresence: boolean
+  /** Plain-text provenance bundle (WP provenance + exhibition + print editions). */
+  provenanceNotes: string | null
+  /** Legacy source photograph URLs for reference (not imported as media). */
+  sourceImageUrls: string[]
+  /** ACH story copy from WP colorfulFields.storyEn when export includes it. */
+  storyEn: string | null
+  /** True when slug/title indicates the Gates of Perception sub-series. */
+  gatesOfPerception: boolean
+  /** Megacities — mapped from WP `style` / medium / country hints. */
+  megacitiesSeriesType:
+    | 'composite_country'
+    | 'skate_city'
+    | 'cultural_composite'
+    | 'exhibition_origin'
+    | null
+  /** Raw WP `style` string for display / classification notes. */
+  megacitiesStyleLabel: string | null
+  /** Megacities geographic scope — usually WP `country` on country composites. */
+  megacitiesCoverageArea: string | null
 }
 
 export function formatWpImportLabel(entry: WordpressImportEntry): string {

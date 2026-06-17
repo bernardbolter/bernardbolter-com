@@ -42,6 +42,7 @@ export const eventBeforeChange: CollectionBeforeChangeHook<Event> = ({
   }
 
   const title = typeof d.title === 'string' ? d.title.trim() : ''
+  const venueCity = typeof d.venueCity === 'string' ? d.venueCity.trim() : ''
   const year =
     typeof d.yearStart === 'number' && !Number.isNaN(d.yearStart) ?
       d.yearStart
@@ -50,7 +51,7 @@ export const eventBeforeChange: CollectionBeforeChangeHook<Event> = ({
     : null
   const slug = typeof d.slug === 'string' ? d.slug.trim() : ''
   if (!slug && title && year) {
-    d.slug = buildEventSlug(title, year)
+    d.slug = buildEventSlug(title, year, venueCity)
   }
 
   syncJsonLdSameAs(d)

@@ -3319,6 +3319,7 @@ export interface Session {
   currentPhase?:
     | (
         | 'pre-upload'
+        | 'vision'
         | 'identity'
         | 'physical'
         | 'classification'
@@ -3387,6 +3388,7 @@ export interface Session {
   weakPhases?:
     | (
         | 'pre-upload'
+        | 'vision'
         | 'identity'
         | 'physical'
         | 'intent'

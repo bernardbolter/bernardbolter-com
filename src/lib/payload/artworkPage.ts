@@ -2,6 +2,8 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Artwork } from '@/payload-types'
 
+import { withDbRetry } from '@/lib/payload/withDbRetry'
+
 const defaultLocale = 'en' as const
 
 /** Depth for series parent chain + populated events and tags on the artwork page. */
@@ -40,18 +42,20 @@ export async function getPublishedArtworkSlugs(): Promise<string[]> {
 }
 
 export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
-  const payload = await getPayload({ config })
-  const result = await payload.find({
-    collection: 'artworks',
-    locale: defaultLocale,
-    where: {
-      and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
-    },
-    limit: 1,
-    depth: ARTWORK_PAGE_DEPTH,
-    overrideAccess: false,
+  return withDbRetry(async () => {
+    const payload = await getPayload({ config })
+    const result = await payload.find({
+      collection: 'artworks',
+      locale: defaultLocale,
+      where: {
+        and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
+      },
+      limit: 1,
+      depth: ARTWORK_PAGE_DEPTH,
+      overrideAccess: false,
+    })
+    return result.docs[0] ?? null
   })
-  return result.docs[0] ?? null
 }
 
 /**
@@ -59,16 +63,18 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
  * Production callers must guard with `NODE_ENV === 'development'`.
  */
 export async function getArtworkForPreview(slug: string): Promise<Artwork | null> {
-  const payload = await getPayload({ config })
-  const result = await payload.find({
-    collection: 'artworks',
-    locale: defaultLocale,
-    where: { slug: { equals: slug } },
-    limit: 1,
-    depth: ARTWORK_PAGE_DEPTH,
-    overrideAccess: true,
+  return withDbRetry(async () => {
+    const payload = await getPayload({ config })
+    const result = await payload.find({
+      collection: 'artworks',
+      locale: defaultLocale,
+      where: { slug: { equals: slug } },
+      limit: 1,
+      depth: ARTWORK_PAGE_DEPTH,
+      overrideAccess: true,
+    })
+    return result.docs[0] ?? null
   })
-  return result.docs[0] ?? null
 }
 
 /** Published artwork for the public page; drafts visible in local dev only. */

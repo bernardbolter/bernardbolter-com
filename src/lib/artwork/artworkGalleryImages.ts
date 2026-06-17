@@ -1,4 +1,5 @@
 import type { Artwork, Media } from '@/payload-types'
+import { mediaPublicUrl } from '@/lib/media/publicUrl'
 
 export type ArtworkGalleryImage = {
   url: string
@@ -8,9 +9,10 @@ export type ArtworkGalleryImage = {
 }
 
 function readMedia(media: number | Media | null | undefined): ArtworkGalleryImage | null {
-  if (!media || typeof media !== 'object' || !media.url) return null
+  const url = media && typeof media === 'object' ? mediaPublicUrl(media) : null
+  if (!url) return null
   return {
-    url: media.url,
+    url,
     alt: media.alt?.trim() || '',
     width: media.width && media.width > 0 ? media.width : 1200,
     height: media.height && media.height > 0 ? media.height : 900,

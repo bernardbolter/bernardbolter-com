@@ -119,6 +119,7 @@ export const Sessions: CollectionConfig = {
       type: 'select',
       options: [
         { label: 'Pre-upload', value: 'pre-upload' },
+        { label: 'First sight', value: 'vision' },
         { label: 'Identity', value: 'identity' },
         { label: 'Physical', value: 'physical' },
         { label: 'Classification', value: 'classification' },
@@ -192,6 +193,7 @@ export const Sessions: CollectionConfig = {
       hasMany: true,
       options: [
         { label: 'Pre-upload', value: 'pre-upload' },
+        { label: 'First sight', value: 'vision' },
         { label: 'Identity', value: 'identity' },
         { label: 'Physical', value: 'physical' },
         { label: 'Intent', value: 'intent' },
