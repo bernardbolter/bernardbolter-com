@@ -49,6 +49,9 @@ if (!payloadSecret) {
   throw new Error('PAYLOAD_SECRET is not set in environment variables')
 }
 
+const databasePush = process.env.PAYLOAD_DATABASE_PUSH === 'true'
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -122,14 +125,15 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: databaseUrl,
-      // Neon drops idle connections; keep the pool small in local dev.
-      max: process.env.NODE_ENV === 'development' ? 5 : 10,
+      // Schema push introspects hundreds of tables in parallel. A small pool +
+      // short connect timeout causes "timeout exceeded when trying to connect".
+      max: databasePush && isDevelopment ? 20 : isDevelopment ? 5 : 10,
       idleTimeoutMillis: 20_000,
-      connectionTimeoutMillis: 10_000,
-      allowExitOnIdle: process.env.NODE_ENV === 'development',
+      connectionTimeoutMillis: databasePush && isDevelopment ? 60_000 : 30_000,
+      allowExitOnIdle: isDevelopment,
     },
     /** Set `PAYLOAD_DATABASE_PUSH=true` locally to sync Drizzle schema without interactive migrate:create. */
-    push: process.env.PAYLOAD_DATABASE_PUSH === 'true',
+    push: databasePush,
   }),
   sharp,
   plugins: [

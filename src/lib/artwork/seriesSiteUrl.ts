@@ -1,15 +1,12 @@
-/** Dedicated series sites — keyed by top-level series slug. */
-const SERIES_SITE_URLS: Record<string, string> = {
-  'a-colorful-history': 'https://acolorfulhistory.com',
-  'digital-city-series': 'https://digitalcityseries.com',
-  'megacities': 'https://megacities.com',
-  'art-collision': 'https://artcollision.com',
-  'vanishing-landscapes': 'https://vanishinglandscapes.com',
-  'breaking-down-art': 'https://breakingdownart.com',
-  'smoothism': 'https://smoothism.com',
+import type { Artwork } from '@/payload-types'
+
+type ArtworkWithSeriesSite = Artwork & {
+  /** Full URL to this work on its series site — set on the artwork when live. */
+  seriesSiteUrl?: string | null
 }
 
-export function getSeriesSiteUrl(seriesSlug: string | null | undefined): string | null {
-  if (!seriesSlug?.trim()) return null
-  return SERIES_SITE_URLS[seriesSlug.toLowerCase()] ?? null
+/** Per-artwork series site page URL from the artwork record (not inferred from series slug). */
+export function getArtworkSeriesSiteUrl(artwork: Artwork): string | null {
+  const url = (artwork as ArtworkWithSeriesSite).seriesSiteUrl?.trim()
+  return url || null
 }

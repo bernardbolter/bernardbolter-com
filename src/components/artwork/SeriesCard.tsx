@@ -2,7 +2,7 @@ import { getSeriesInitials } from '@/helpers/seriesInitals'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
-import { getSeriesSiteUrl } from '@/lib/artwork/seriesSiteUrl'
+import { getArtworkSeriesSiteUrl } from '@/lib/artwork/seriesSiteUrl'
 import type { Artwork, Series } from '@/payload-types'
 
 type Props = {
@@ -20,11 +20,7 @@ export default function SeriesCard({ artwork }: Props) {
   if (!topSeries) return null
 
   const seriesColor = getSeriesColor(topSeries.slug)
-  const siteBase = getSeriesSiteUrl(topSeries.slug)
-  const artworkSiteUrl =
-    siteBase && artwork.slug?.trim()
-      ? `${siteBase.replace(/\/$/, '')}/${artwork.slug.trim()}`
-      : null
+  const artworkSiteUrl = getArtworkSeriesSiteUrl(artwork)
   const swatchLabel = getSeriesInitials(topSeries.slug).toUpperCase() || topSeries.name.slice(0, 3).toUpperCase()
   const description = seriesDescriptionShort(topSeries.description)
 

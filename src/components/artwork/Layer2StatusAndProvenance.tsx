@@ -14,7 +14,7 @@ import {
 } from '@/lib/artwork/artworkProvenancePublic'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { labelForSameAsUri } from '@/lib/artwork/sameAsDomainLabel'
-import { getSeriesSiteUrl } from '@/lib/artwork/seriesSiteUrl'
+import { getArtworkSeriesSiteUrl } from '@/lib/artwork/seriesSiteUrl'
 import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
 import type { Artist, Artwork, Media } from '@/payload-types'
 
@@ -28,13 +28,8 @@ function mediaUrl(media: number | Media | null | undefined): string | null {
   return media.url
 }
 
-function collectExternalLinks(artwork: Artwork, artist: Artist | null): string[] {
-  const links = new Set<string>()
-  collectArtworkSameAsUris(artwork).forEach((uri) => links.add(uri))
-  ;(artist?.otherLinks ?? []).forEach((entry) => {
-    if (entry?.url) links.add(entry.url)
-  })
-  return [...links]
+function collectExternalLinks(artwork: Artwork): string[] {
+  return collectArtworkSameAsUris(artwork)
 }
 
 function formatDateRange(start?: string, end?: string): string {
@@ -50,8 +45,8 @@ export default function Layer2StatusAndProvenance({ artwork, artist }: Props) {
   const documentationVideo = getDocumentationVideoSource(artwork)
   const installationShots = artwork.installationShots ?? []
   const topSeries = resolveArtworkTopLevelSeries(artwork.series)
-  const seriesSite = topSeries ? getSeriesSiteUrl(topSeries.slug) : null
-  const externalLinks = collectExternalLinks(artwork, artist)
+  const seriesSiteUrl = getArtworkSeriesSiteUrl(artwork)
+  const externalLinks = collectExternalLinks(artwork)
   const ownership = buildOwnershipDisplay(artwork, artist)
   const provenanceSummary = deriveProvenanceConfidenceSummary(artwork)
   const loans = getPublicLoanHistory(artwork)
@@ -77,9 +72,9 @@ export default function Layer2StatusAndProvenance({ artwork, artist }: Props) {
                   ▶ Documentation video
                 </a>
               ) : null}
-              {artwork.arEnabled && seriesSite ? (
+              {artwork.arEnabled && seriesSiteUrl ? (
                 <a
-                  href={seriesSite}
+                  href={seriesSiteUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="series-card__cta inline-block w-fit"

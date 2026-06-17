@@ -1309,7 +1309,7 @@ export interface Artwork {
   insuranceValue?: number | null;
   insuranceValueDate?: string | null;
   /**
-   * Gallery inventory / stock id (private).
+   * Public gallery name when on consignment; otherwise internal reference.
    */
   galleryReference?: string | null;
   /**

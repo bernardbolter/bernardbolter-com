@@ -35,7 +35,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: #1a1a1a;
 }
 
 .artwork-image__container--magnify-hidden {
