@@ -4,6 +4,7 @@ import { adminOnlyFieldAccess, privateFieldAccess, publicReadStaffWriteAccess, i
 import { artworkAchBeforeChange, artworkAchValidateAr } from '@/hooks/artworkAch'
 import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
+import { artworkAfterRead } from '@/hooks/artworkAfterRead'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
 import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
 
@@ -47,6 +48,7 @@ export const Artworks: CollectionConfig = {
     beforeValidate: [artworkAchValidateAr],
     beforeChange: [artworkBeforeChange, artworkAchBeforeChange],
     afterChange: [artworkAfterChange, artworkAfterChangeAr],
+    afterRead: [artworkAfterRead],
   },
   admin: {
     useAsTitle: 'title',
@@ -1381,7 +1383,7 @@ export const Artworks: CollectionConfig = {
             {
               name: 'currentLocation',
               type: 'group',
-              access: privateFieldAccess,
+              access: publicReadStaffWriteAccess,
               fields: [
                 {
                   name: 'category',
@@ -1403,7 +1405,7 @@ export const Artworks: CollectionConfig = {
             {
               name: 'ownershipHistory',
               type: 'json',
-              access: privateFieldAccess,
+              access: publicReadStaffWriteAccess,
               admin: {
                 description:
                   'JSON array: { transactionId, ownerPrivate, displayName, city, dateAcquired, dateRelinquished, claimStatus, collectorVisible, notes }. Link sales via transactionId.',
@@ -1413,7 +1415,7 @@ export const Artworks: CollectionConfig = {
               name: 'provenanceOriginKnown',
               type: 'checkbox',
               defaultValue: true,
-              access: privateFieldAccess,
+              access: publicReadStaffWriteAccess,
               admin: {
                 description:
                   'Uncheck when the studio-to-first-owner chain is not traceable.',
@@ -1422,7 +1424,7 @@ export const Artworks: CollectionConfig = {
             {
               name: 'loanHistory',
               type: 'json',
-              access: privateFieldAccess,
+              access: publicReadStaffWriteAccess,
               admin: {
                 description:
                   'JSON array: { institution, dateOut, dateReturned, eventId (numeric id → events), notes }.',
@@ -1431,7 +1433,7 @@ export const Artworks: CollectionConfig = {
             {
               name: 'provenanceConfidenceLayer',
               type: 'json',
-              access: privateFieldAccess,
+              access: publicReadStaffWriteAccess,
               admin: {
                 description:
                   'JSON array: { claim, evidenceBasis, confidenceLevel: documented-fact | credible-inference | institutional-assertion | speculation }.',
@@ -1557,7 +1559,7 @@ export const Artworks: CollectionConfig = {
             {
               name: 'availabilityStatus',
               type: 'select',
-              access: privateFieldAccess,
+              access: publicReadStaffWriteAccess,
               options: [
                 { label: 'Available', value: 'available' },
                 { label: 'Sold', value: 'sold' },
@@ -1618,8 +1620,8 @@ export const Artworks: CollectionConfig = {
             {
               name: 'galleryReference',
               type: 'text',
-              access: privateFieldAccess,
-              admin: { description: "Gallery inventory / stock id (private)." },
+              access: publicReadStaffWriteAccess,
+              admin: { description: 'Public gallery name when on consignment; otherwise internal reference.' },
             },
             {
               name: 'galleryText',

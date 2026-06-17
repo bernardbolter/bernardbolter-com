@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { APIError } from 'payload'
 
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
+import { artworkAfterRead } from '@/hooks/artworkAfterRead'
 import {
   buildOwnershipDisplay,
   deriveProvenanceConfidenceSummary,
@@ -11,6 +12,7 @@ import {
 } from '@/lib/artwork/artworkProvenancePublic'
 import { getArtworkExhibitionEvents } from '@/lib/artwork/artworkExhibitionEvents'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
+import { buildEditionClaimSummary } from '@/lib/artwork/ownershipRegistryPublic'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import {
   ARTWORK_FIXTURE_SLUG,
@@ -175,6 +177,12 @@ describe('artwork page verification checklist', () => {
       expect(jsonLd['artism:reasoningStatus']).toBe('complete')
       expect(jsonLd['artism:provenanceConfidenceLevel']).toBe('partial')
     })
+
+    it('includes edition claim summary when ownership registry is populated', () => {
+      const summaries = buildEditionClaimSummary(fixture as Artwork)
+      expect(summaries.length).toBeGreaterThan(0)
+      expect(jsonLd['artism:editionClaimSummary']).toEqual(summaries)
+    })
   })
 
   describe('exhibition history filtering', () => {
@@ -226,6 +234,47 @@ describe('artwork page verification checklist', () => {
       const slugs = ['gates-iii', '__fixture-gates-iii', 'another-work']
       const publicSlugs = slugs.filter((slug) => slug.trim() && !slug.startsWith('__'))
       expect(publicSlugs).toEqual(['gates-iii', 'another-work'])
+    })
+  })
+
+  describe('public artwork read sanitization', () => {
+    it('strips private commerce and ownership detail for anonymous reads', async () => {
+      const sanitized = await artworkAfterRead({
+        doc: {
+          id: 1,
+          title: 'Test',
+          askingPrice: 5000,
+          salesRecord: [{ netToArtist: 1000 }],
+          ownershipHistory: [
+            {
+              ownerPrivate: 'secret',
+              displayName: 'Private collection',
+              collectorVisible: true,
+              notes: 'private note',
+            },
+          ],
+          provenanceConfidenceLayer: [
+            {
+              claim: 'secret claim',
+              confidenceLevel: 'documented-fact',
+            },
+          ],
+          currentLocation: {
+            category: 'private-collection',
+            locationDetail: 'secret address',
+          },
+        },
+        req: { user: null } as never,
+        collection: { slug: 'artworks' } as never,
+        context: {},
+      })
+
+      expect(sanitized.askingPrice).toBeUndefined()
+      expect(sanitized.salesRecord).toBeUndefined()
+      expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('secret')
+      expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('private note')
+      expect(JSON.stringify(sanitized.provenanceConfidenceLayer)).not.toContain('secret claim')
+      expect(sanitized.currentLocation).toEqual({ category: 'private-collection' })
     })
   })
 })

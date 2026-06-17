@@ -127,6 +127,7 @@ export function buildPublicEditionTiers(artwork: Artwork): PublicEditionTier[] {
         .filter((row): row is PublicEditionTierRow => row !== null)
 
       const params = new URLSearchParams({ claim: slug, tier: tierLabel })
+      if (artwork.title?.trim()) params.set('title', artwork.title.trim())
 
       return {
         tierLabel,

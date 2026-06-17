@@ -3,12 +3,12 @@
 import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
+import ArtworkSize, { getArtworkSizeInput } from '@/components/artworks/ArtworkSize'
 import { CloseCircleSvg } from '@/components/icons'
 import YoutubePlainSvg from '@/components/icons/YoutubePlainSvg'
 import useWindowSize from '@/hooks/useWindowSize'
 import { getPrimaryVideoSource } from '@/lib/artwork/artworkGalleryImages'
 import { formatArtworkYearRange, resolveWallLabelMedium } from '@/lib/artwork/artworkLabels'
-import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import type { Artwork, Media } from '@/payload-types'
 
 type Props = {
@@ -117,7 +117,7 @@ export default function Layer0Video({ artwork }: Props) {
 
   if (!videoSource || !youtubeId) return null
 
-  const about = artwork.descriptionShort?.trim() || lexicalToPlain(artwork.descriptionLong)
+  const sizeInput = getArtworkSizeInput(artwork)
 
   return (
     <>
@@ -168,11 +168,19 @@ export default function Layer0Video({ artwork }: Props) {
         </div>
 
         <div className="artwork-video__info-container">
-          <h2 className="artwork-grid__info--title">
-            {artwork.title} <span>| {formatArtworkYearRange(artwork)}</span>
-          </h2>
-          <p className="artwork-video__medium">{resolveWallLabelMedium(artwork)}</p>
-          {about ? <div className="artwork-video__info-content"><p>{about}</p></div> : null}
+          <h1 className="artwork-image__title">{artwork.title}</h1>
+          {artwork.altTitle?.trim() ? (
+            <p className="artwork-image__alt-title">also known as {artwork.altTitle.trim()}</p>
+          ) : null}
+          <h2 className="artwork-image__year">{formatArtworkYearRange(artwork)}</h2>
+          <h3 className="artwork-image__medium">{resolveWallLabelMedium(artwork)}</h3>
+          {sizeInput ? (
+            <ArtworkSize
+              width={sizeInput.width}
+              height={sizeInput.height}
+              units={sizeInput.units}
+            />
+          ) : null}
         </div>
       </div>
     </>

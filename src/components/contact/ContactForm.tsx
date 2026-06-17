@@ -47,6 +47,7 @@ export default function ContactForm({ enquiryIntro }: Props) {
   const searchParams = useSearchParams()
   const claimSlug = searchParams.get('claim')?.trim() || ''
   const claimTitle = searchParams.get('title')?.trim() || ''
+  const claimTier = searchParams.get('tier')?.trim() || ''
   const messageRef = useRef<HTMLTextAreaElement>(null)
 
   const [subject, setSubject] = useState<SubjectOption | ''>('')
@@ -62,7 +63,15 @@ export default function ContactForm({ enquiryIntro }: Props) {
   useEffect(() => {
     if (!claimSlug || claimPrefillApplied) return
 
-    const prefill = claimTitle ? `I believe I own "${claimTitle}". ` : 'I believe I own this work. '
+    let prefill = 'I believe I own this work. '
+    if (claimTier && claimTitle) {
+      prefill = `I believe I own a ${claimTier} print of "${claimTitle}". `
+    } else if (claimTier) {
+      prefill = `I believe I own a ${claimTier} print of this work. `
+    } else if (claimTitle) {
+      prefill = `I believe I own "${claimTitle}". `
+    }
+
     setSubject(OWNERSHIP_SUBJECT)
     setMessage(prefill)
     setClaimPrefillApplied(true)
@@ -73,7 +82,7 @@ export default function ContactForm({ enquiryIntro }: Props) {
       textarea.focus()
       textarea.setSelectionRange(prefill.length, prefill.length)
     })
-  }, [claimSlug, claimTitle, claimPrefillApplied])
+  }, [claimSlug, claimTitle, claimTier, claimPrefillApplied])
 
   const runValidation = (): ContactErrors => {
     const nextErrors: ContactErrors = {}
@@ -115,6 +124,7 @@ export default function ContactForm({ enquiryIntro }: Props) {
           email,
           message,
           ...(claimSlug ? { artworkSlug: claimSlug } : {}),
+          ...(claimTier ? { editionTier: claimTier } : {}),
         }),
       })
 
@@ -153,9 +163,11 @@ export default function ContactForm({ enquiryIntro }: Props) {
     <section className="mx-auto w-full max-w-[34.375rem]">
       {enquiryIntro ? <LexicalProse content={enquiryIntro} className={INTRO_CLASS} /> : null}
 
-      {claimSlug && claimTitle ? (
+      {claimSlug ? (
         <p className="mx-auto mb-2 w-full max-w-[34.375rem] font-body text-sm text-[var(--text-muted)]">
-          Regarding: {claimTitle}
+          Regarding:
+          {claimTitle ? ` ${claimTitle}` : ' this work'}
+          {claimTier ? ` · ${claimTier}` : ''}
         </p>
       ) : null}
 
