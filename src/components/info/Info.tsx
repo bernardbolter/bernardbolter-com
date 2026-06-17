@@ -38,6 +38,7 @@ function SocialIconLink({ href, Icon }: { href: string; Icon: SocialIconComponen
     >
       <span className="absolute inset-0 opacity-100 transition-opacity duration-300 group-hover:opacity-0">
         <Icon muted />
+        
       </span>
       <span className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         <Icon />
