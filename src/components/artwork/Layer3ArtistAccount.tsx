@@ -59,7 +59,7 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
   const seriesColor = getSeriesColor(seriesSlug)
 
   const intentFields: IntentField[] = [
-    { label: 'About the Artwork', value: aboutText(artwork) },
+    { label: 'About the work', value: aboutText(artwork) },
     { label: 'Intent', value: artwork.intent },
     { label: 'Direct inspiration', value: artwork.directInspiration },
     { label: 'Making', value: artwork.makingNote },
@@ -99,6 +99,34 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
           <IntentBlock key={field.label} {...field} />
         ))}
 
+        {artwork.artHistoricalContext || references.length > 0 ? (
+          <>
+            <hr className="artwork-page__divider" />
+            {artwork.artHistoricalContext ? (
+              <p className="artwork-page__prose mb-4">{artwork.artHistoricalContext}</p>
+            ) : null}
+            {references.map((ref) => (
+              <div key={ref.id} className="mb-4 text-sm">
+                <p className="font-medium">
+                  {[ref.artistName, ref.artworkTitle, ref.yearCreated].filter(Boolean).join(' · ')}
+                </p>
+                {ref.notes ? <p className="artwork-page__prose mt-1">{ref.notes}</p> : null}
+                {ref.referenceUrl ? (
+                  <a
+                    href={ref.referenceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-secondary text-xs"
+                  >
+                    Reference ↗
+                  </a>
+                ) : null}
+              </div>
+            ))}
+          </>
+        ) : null}
+
+        <div className="artwork-page__classification-cluster">
         {hasClassification ? (
           <>
             <hr className="artwork-page__divider" />
@@ -140,33 +168,6 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
           </>
         ) : null}
 
-        {artwork.artHistoricalContext || references.length > 0 ? (
-          <>
-            <hr className="artwork-page__divider" />
-            {artwork.artHistoricalContext ? (
-              <p className="artwork-page__prose mb-4">{artwork.artHistoricalContext}</p>
-            ) : null}
-            {references.map((ref) => (
-              <div key={ref.id} className="mb-4 text-sm">
-                <p className="font-medium">
-                  {[ref.artistName, ref.artworkTitle, ref.yearCreated].filter(Boolean).join(' · ')}
-                </p>
-                {ref.notes ? <p className="artwork-page__prose mt-1">{ref.notes}</p> : null}
-                {ref.referenceUrl ? (
-                  <a
-                    href={ref.referenceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-secondary text-xs"
-                  >
-                    Reference ↗
-                  </a>
-                ) : null}
-              </div>
-            ))}
-          </>
-        ) : null}
-
         {hasClipEmbedding && similarWorks.length > 0 ? (
           <>
             <hr className="artwork-page__divider" />
@@ -196,6 +197,7 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
 
         <ClipEmbeddingNote slug={artwork.slug} hasClipEmbedding={hasClipEmbedding} />
         <ReasoningStatusBadge status={artwork.reasoningStatus} />
+        </div>
       </div>
     </section>
   )

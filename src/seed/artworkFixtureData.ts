@@ -190,6 +190,32 @@ export function buildArtworkFixtureData(
     ],
     editionNotes:
       'All giclée editions are printed to order on Hahnemühle Photo Rag archival paper. Each print is signed and numbered by the artist and includes a certificate of authenticity. No open editions will be produced.',
+    ownershipRegistry: [
+      {
+        tierLabel: 'Small giclée',
+        tierOrder: 1,
+        editionSize: 10,
+        apCount: 2,
+        copies: [
+          {
+            copyNumber: '3/10',
+            isArtistProof: false,
+            owner: 'Private collection',
+            claimStatus: 'claimed-confirmed',
+            collectorVisible: true,
+            dateAcquired: '2021-03',
+            claimedCopyNumberKnown: true,
+          },
+        ],
+      },
+      {
+        tierLabel: 'Medium giclée',
+        tierOrder: 2,
+        editionSize: 10,
+        apCount: 2,
+        copies: [],
+      },
+    ],
     workState: 'original',
     workStateDate: '2024-01-15',
     provenanceOriginKnown: true,

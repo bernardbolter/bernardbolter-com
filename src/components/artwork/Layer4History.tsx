@@ -1,36 +1,21 @@
 import Link from 'next/link'
 
-import { getSeriesColor } from '@/helpers/seriesColor'
 import { getArtworkExhibitionEvents } from '@/lib/artwork/artworkExhibitionEvents'
-import {
-  buildOwnershipDisplay,
-  getPublicLoanHistory,
-} from '@/lib/artwork/artworkProvenancePublic'
 import { resolveWorkStateLabel } from '@/lib/artwork/artworkLabels'
-import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
-import type { Artist, Artwork } from '@/payload-types'
+import type { Artwork } from '@/payload-types'
 
 type Props = {
   artwork: Artwork
-  artist: Artist | null
 }
 
-function formatDateRange(start?: string, end?: string): string {
-  if (start && end) return `${start} – ${end}`
-  return start || end || ''
-}
-
-export default function Layer4History({ artwork, artist }: Props) {
+export default function Layer4History({ artwork }: Props) {
   const exhibitions = getArtworkExhibitionEvents(artwork)
-  const ownership = buildOwnershipDisplay(artwork, artist)
-  const loans = getPublicLoanHistory(artwork)
-  const seriesSlug = resolveArtworkTopLevelSeries(artwork.series)?.slug ?? ''
-  const seriesColor = getSeriesColor(seriesSlug)
-  const timelineBorderColor = `${seriesColor}40`
 
   const showWorkState =
     (artwork.workState && artwork.workState !== 'original') ||
     (Array.isArray(artwork.stateVersions) && artwork.stateVersions.length > 0)
+
+  if (exhibitions.length === 0 && !showWorkState) return null
 
   return (
     <section className="artwork-page__layer artwork-page__layer--secondary">
@@ -62,72 +47,9 @@ export default function Layer4History({ artwork, artist }: Props) {
           </div>
         ) : null}
 
-        {ownership.showSection ? (
-          <div className="artwork-image__info--ownership-wrapper">
-            <h2>Ownership</h2>
-            <div className="artwork-page__ownership">
-              {ownership.currentHolderLine ? (
-                <p className="artwork-page__ownership-current">{ownership.currentHolderLine}</p>
-              ) : null}
-
-              {ownership.showOriginHonesty ? (
-                <p className="artwork-page__ownership-honesty">
-                  The early history of this work&apos;s ownership is not fully documented.
-                </p>
-              ) : null}
-
-              {ownership.showTimeline ? (
-                <ul
-                  className="artwork-page__ownership-timeline"
-                  style={{ ['--ownership-timeline-color' as string]: timelineBorderColor }}
-                >
-                  {ownership.timelineRows.map((row, index) => (
-                    <li key={`${row.text}-${index}`} className="artwork-page__ownership-timeline-row">
-                      {row.text}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-
-              {ownership.showUnclaimedAppeal && ownership.claimContactHref ? (
-                <p className="artwork-page__ownership-appeal">
-                  If you own this work,{' '}
-                  <Link href={ownership.claimContactHref} className="text-dark underline">
-                    get in touch
-                  </Link>
-                  . I&apos;ll add you to the record and officially connect you to its history.
-                </p>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-
-        {loans.length > 0 ? (
-          <>
-            <hr className="artwork-page__divider" />
-            <p className="artwork-page__section-title">Loan history</p>
-            <ul className="space-y-2 text-sm">
-              {loans.map((loan, index) => (
-                <li key={`${loan.institution}-${index}`}>
-                  <span className="font-medium">{loan.institution}</span>
-                  {loan.dateOut || loan.dateReturned ? (
-                    <span className="text-secondary">
-                      {' '}
-                      · {formatDateRange(loan.dateOut, loan.dateReturned)}
-                    </span>
-                  ) : null}
-                  {loan.eventId ? (
-                    <span className="text-secondary"> · linked to event #{loan.eventId}</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : null}
-
         {showWorkState ? (
           <>
-            <hr className="artwork-page__divider" />
+            {exhibitions.length > 0 ? <hr className="artwork-page__divider" /> : null}
             <p className="artwork-page__section-title">Work state record</p>
             {resolveWorkStateLabel(artwork.workState) ? (
               <p className="artwork-page__prose">

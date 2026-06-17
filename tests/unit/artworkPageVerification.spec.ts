@@ -90,6 +90,7 @@ describe('artwork page verification checklist', () => {
     it('rejects publishing __ slugs', async () => {
       await expect(
         artworkBeforeChange({
+          collection: { slug: 'artworks' } as never,
           data: { slug: ARTWORK_FIXTURE_SLUG, status: 'published' },
           operation: 'update',
           originalDoc: { slug: ARTWORK_FIXTURE_SLUG, status: 'draft' },

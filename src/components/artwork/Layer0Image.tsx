@@ -319,6 +319,9 @@ export default function Layer0Image({ artwork }: Props) {
             style={{ paddingRight: marginWidth }}
           >
             <h1 className="artwork-image__title">{artwork.title}</h1>
+            {artwork.altTitle?.trim() ? (
+              <p className="artwork-image__alt-title">also known as {artwork.altTitle.trim()}</p>
+            ) : null}
             <h2 className="artwork-image__year">{formatArtworkYearRange(artwork)}</h2>
             <h3 className="artwork-image__medium">{resolveWallLabelMedium(artwork)}</h3>
             {sizeInput ? (

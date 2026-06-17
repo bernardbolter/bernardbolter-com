@@ -1249,6 +1249,41 @@ export interface Artwork {
     | boolean
     | null;
   /**
+   * Per-copy ownership claims by edition tier. Independent of commercial stock systems.
+   */
+  ownershipRegistry?:
+    | {
+        tierLabel: string;
+        tierOrder: number;
+        editionSize: number;
+        apCount?: number | null;
+        copies?:
+          | {
+              copyNumber: string;
+              isArtistProof?: boolean | null;
+              owner?: string | null;
+              claimStatus?:
+                | ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary')
+                | null;
+              collectorVisible?: boolean | null;
+              dateAcquired?: string | null;
+              claimedCopyNumberKnown?: boolean | null;
+              notes?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Public prose for informal/unnumbered print runs not tracked in ownershipRegistry.
+   */
+  untrackedEditionsNote?: string | null;
+  /**
+   * Physical components sold as one unit (e.g. triptych). Affects gallery panel labels only.
+   */
+  componentCount?: number | null;
+  /**
    * Optional manual cross-links; prefer assigning works on the Event document.
    */
   exhibitionHistory?:
@@ -4364,6 +4399,30 @@ export interface ArtworksSelect<T extends boolean = true> {
   provenanceOriginKnown?: T;
   loanHistory?: T;
   provenanceConfidenceLayer?: T;
+  ownershipRegistry?:
+    | T
+    | {
+        tierLabel?: T;
+        tierOrder?: T;
+        editionSize?: T;
+        apCount?: T;
+        copies?:
+          | T
+          | {
+              copyNumber?: T;
+              isArtistProof?: T;
+              owner?: T;
+              claimStatus?: T;
+              collectorVisible?: T;
+              dateAcquired?: T;
+              claimedCopyNumberKnown?: T;
+              notes?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  untrackedEditionsNote?: T;
+  componentCount?: T;
   exhibitionHistory?:
     | T
     | {

@@ -29,14 +29,23 @@ function RecordRow({ label, children }: { label: string; children: ReactNode }) 
   )
 }
 
+function madeInLabel(artwork: Artwork): string | null {
+  const city = artwork.city?.trim()
+  if (!city) return null
+  const country = artwork.country?.trim()
+  if (!country || country === 'Germany') return city
+  return `${city}, ${country}`
+}
+
 export default function Layer1ObjectRecord({ artwork }: Props) {
   const topSeries = resolveArtworkTopLevelSeries(artwork.series)
   const seriesSlug = resolveSeriesSlug(artwork) ?? topSeries?.slug
   const seriesColor = seriesSlug ? getSeriesColor(seriesSlug) : '#999'
   const showFraming = !isDigitalOnlyMeasurement(artwork.measurementType)
+  const madeIn = madeInLabel(artwork)
 
   return (
-    <section className="artwork-page__layer">
+    <section className="artwork-page__layer artwork-page__layer--object-record">
       <div className="artwork-page__inner">
         <div className="artwork-page__grid-2">
           <div>
@@ -54,6 +63,7 @@ export default function Layer1ObjectRecord({ artwork }: Props) {
           </div>
           <div>
             <RecordRow label="Year">{formatArtworkYearRange(artwork)}</RecordRow>
+            {madeIn ? <RecordRow label="Made in">{madeIn}</RecordRow> : null}
             {topSeries ? (
               <RecordRow label="Series">
                 <span className="inline-flex items-center gap-2">

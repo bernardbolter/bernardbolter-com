@@ -1437,6 +1437,79 @@ export const Artworks: CollectionConfig = {
                   'JSON array: { claim, evidenceBasis, confidenceLevel: documented-fact | credible-inference | institutional-assertion | speculation }.',
               },
             },
+            {
+              name: 'ownershipRegistry',
+              type: 'array',
+              labels: { singular: 'Edition tier', plural: 'Ownership registry' },
+              admin: {
+                description:
+                  'Per-copy ownership claims by edition tier. Independent of commercial stock systems.',
+              },
+              fields: [
+                { name: 'tierLabel', type: 'text', required: true },
+                { name: 'tierOrder', type: 'number', required: true },
+                { name: 'editionSize', type: 'number', required: true },
+                { name: 'apCount', type: 'number', defaultValue: 0 },
+                {
+                  name: 'copies',
+                  type: 'array',
+                  fields: [
+                    { name: 'copyNumber', type: 'text', required: true },
+                    { name: 'isArtistProof', type: 'checkbox', defaultValue: false },
+                    {
+                      name: 'owner',
+                      type: 'text',
+                      access: {
+                        read: ({ siblingData, req: { user } }) =>
+                          siblingData?.collectorVisible === true || isArtistOrAdmin(user),
+                      },
+                    },
+                    {
+                      name: 'claimStatus',
+                      type: 'select',
+                      defaultValue: 'unclaimed',
+                      options: [
+                        { label: 'Unclaimed', value: 'unclaimed' },
+                        { label: 'Claim pending', value: 'claimed-pending' },
+                        { label: 'Claim confirmed', value: 'claimed-confirmed' },
+                        { label: 'Artist held', value: 'artist-held' },
+                        { label: 'Sold secondary', value: 'sold-secondary' },
+                      ],
+                    },
+                    { name: 'collectorVisible', type: 'checkbox', defaultValue: false },
+                    { name: 'dateAcquired', type: 'text' },
+                    {
+                      name: 'claimedCopyNumberKnown',
+                      type: 'checkbox',
+                      defaultValue: false,
+                    },
+                    {
+                      name: 'notes',
+                      type: 'textarea',
+                      access: privateFieldAccess,
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'untrackedEditionsNote',
+              type: 'textarea',
+              localized: true,
+              admin: {
+                description:
+                  'Public prose for informal/unnumbered print runs not tracked in ownershipRegistry.',
+              },
+            },
+            {
+              name: 'componentCount',
+              type: 'number',
+              min: 1,
+              admin: {
+                description:
+                  'Physical components sold as one unit (e.g. triptych). Affects gallery panel labels only.',
+              },
+            },
           ],
         },
 

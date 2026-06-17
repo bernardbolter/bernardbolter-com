@@ -9,6 +9,7 @@ import type {
 
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { buildArtMediumJsonLdValue } from '@/lib/artwork/mediumVocabulary'
+import { buildEditionClaimSummary } from '@/lib/artwork/ownershipRegistryPublic'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
@@ -303,6 +304,16 @@ export function generateArtworkJsonLd(
 
   if (artwork.workState) {
     setArtismField(doc, 'workState', artwork.workState)
+  }
+
+  const editionClaimSummary = buildEditionClaimSummary(artwork)
+  if (editionClaimSummary.length) {
+    setArtismField(doc, 'editionClaimSummary', editionClaimSummary)
+  }
+
+  const componentCount = (artwork as { componentCount?: number | null }).componentCount
+  if (typeof componentCount === 'number' && componentCount > 1) {
+    setArtismField(doc, 'componentCount', componentCount)
   }
 
   return JSON.parse(JSON.stringify(doc)) as Record<string, unknown>

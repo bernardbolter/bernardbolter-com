@@ -1,16 +1,16 @@
 import Layer0Image from '@/components/artwork/Layer0Image'
 import Layer0Video from '@/components/artwork/Layer0Video'
 import Layer1ObjectRecord from '@/components/artwork/Layer1ObjectRecord'
-import Layer2WorldPresence from '@/components/artwork/Layer2WorldPresence'
+import Layer2StatusAndProvenance from '@/components/artwork/Layer2StatusAndProvenance'
 import Layer3ArtistAccount from '@/components/artwork/Layer3ArtistAccount'
 import Layer4History from '@/components/artwork/Layer4History'
-import PrintEditionsSection from '@/components/artwork/PrintEditionsSection'
 import SeriesCard from '@/components/artwork/SeriesCard'
 import {
   artworkHasClipEmbedding,
   getSimilarArtworksForPage,
 } from '@/lib/payload/similarArtworksPage'
 import { collectArtworkGalleryImages, artworkHasVideo } from '@/lib/artwork/artworkGalleryImages'
+import { artworkHasArtistAccountProse } from '@/lib/artwork/layer3Prose'
 import type { Artist, Artwork } from '@/payload-types'
 
 import './artwork-page.css'
@@ -32,30 +32,30 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
   ])
 
   const showVideo = isVideoPrimaryArtwork(artwork)
+  const hasProseColumn = artworkHasArtistAccountProse(artwork)
 
   return (
-    <article className="artwork-page artwork-image__main-scroll-wrapper">
+    <article
+      className={`artwork-page artwork-image__main-scroll-wrapper${hasProseColumn ? '' : ' artwork-page--single-column'}`}
+    >
       {showVideo ? <Layer0Video artwork={artwork} /> : <Layer0Image artwork={artwork} />}
 
       <div className="artwork-image__info-container artwork-image__info-container--layers">
         <SeriesCard artwork={artwork} />
 
-        <div className="artwork-image__info--details-container">
-          <div className="artwork-image__info--line" />
+        <div className="artwork-image__info--details-container artwork-page__columns">
+          <div className="artwork-page__column artwork-page__column--record">
+            <Layer1ObjectRecord artwork={artwork} />
+            <Layer2StatusAndProvenance artwork={artwork} artist={artist} />
+            <Layer4History artwork={artwork} />
+          </div>
 
-          <div className="artwork-image__info--about-section">
+          <div className="artwork-page__column artwork-page__column--prose">
             <Layer3ArtistAccount
               artwork={artwork}
               similarWorks={similarWorks}
               hasClipEmbedding={hasClipEmbedding}
             />
-            <PrintEditionsSection artwork={artwork} />
-          </div>
-
-          <div className="artwork-image__info--details">
-            <Layer1ObjectRecord artwork={artwork} />
-            <Layer2WorldPresence artwork={artwork} artist={artist} hideEditions />
-            <Layer4History artwork={artwork} artist={artist} />
           </div>
         </div>
       </div>

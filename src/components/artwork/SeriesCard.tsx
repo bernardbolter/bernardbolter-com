@@ -20,7 +20,11 @@ export default function SeriesCard({ artwork }: Props) {
   if (!topSeries) return null
 
   const seriesColor = getSeriesColor(topSeries.slug)
-  const siteUrl = getSeriesSiteUrl(topSeries.slug)
+  const siteBase = getSeriesSiteUrl(topSeries.slug)
+  const artworkSiteUrl =
+    siteBase && artwork.slug?.trim()
+      ? `${siteBase.replace(/\/$/, '')}/${artwork.slug.trim()}`
+      : null
   const swatchLabel = getSeriesInitials(topSeries.slug).toUpperCase() || topSeries.name.slice(0, 3).toUpperCase()
   const description = seriesDescriptionShort(topSeries.description)
 
@@ -46,15 +50,20 @@ export default function SeriesCard({ artwork }: Props) {
               ◈ AR experience available on the series page
             </p>
           ) : null}
-          {siteUrl ? (
-            <a
-              href={siteUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="series-card__cta"
-            >
-              Go to {topSeries.name} →
-            </a>
+          {artworkSiteUrl ? (
+            <>
+              <p className="series-card__framing">
+                See this work in full scale, with AR where available, on the {topSeries.name} site.
+              </p>
+              <a
+                href={artworkSiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="series-card__cta"
+              >
+                View on {topSeries.name} →
+              </a>
+            </>
           ) : null}
         </div>
       </div>
