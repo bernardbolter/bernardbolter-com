@@ -3,12 +3,16 @@
 import Link from 'next/link'
 
 import { CloseSvg } from '@/components/icons'
+import { closeSearchNavState } from '@/helpers/navSearch'
+import { getSearchDrawerTop } from '@/helpers/navLayout'
 import useWindowSize from '@/hooks/useWindowSize'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
 export default function SearchNav() {
   const [state, setState] = useArtworks()
   const size = useWindowSize()
+
+  const drawerTop = getSearchDrawerTop(state, size)
 
   return (
     <div
@@ -18,8 +22,8 @@ export default function SearchNav() {
           : 'search-nav__container'
       }
       style={{
-        display: state.showSlideshow ? 'none' : '',
-        top: size.width && size.width < 768 ? 9 : state.artworkViewTimeline ? 135 : 9,
+        display: state.showSlideshow ? 'none' : undefined,
+        top: drawerTop,
       }}
     >
       <input
@@ -31,13 +35,7 @@ export default function SearchNav() {
       />
       <div
         className="search-nav__close"
-        onClick={() =>
-          setState((prev) => ({
-            ...prev,
-            searchValue: '',
-            searchNavOpen: false,
-          }))
-        }
+        onClick={() => setState((prev) => closeSearchNavState(prev))}
         role="button"
         tabIndex={0}
       >
@@ -46,7 +44,7 @@ export default function SearchNav() {
       <div
         className="search-nav__matched-container"
         style={{
-          top: 24,
+          top: 27,
           right: 0,
           maxHeight:
             size.width && size.height && size.width < 768

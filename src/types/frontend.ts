@@ -49,6 +49,7 @@ export interface ArtistInfoData {
 }
 
 export interface ArtworksState {
+  filterSeries: FilterCategory[]
   original: CatalogueArtwork[]
   filtered: CatalogueArtwork[]
   formattedArtworks: TimelineResult | null
@@ -91,8 +92,10 @@ export const DEFAULT_ARTIST_INFO: ArtistInfoData = {}
 export function createInitialArtworksState(
   artworks: CatalogueArtwork[],
   artist: ArtistInfoData = DEFAULT_ARTIST_INFO,
+  filterSeries: FilterCategory[] = [],
 ): ArtworksState {
   return {
+    filterSeries,
     original: artworks,
     filtered: artworks,
     formattedArtworks: null,

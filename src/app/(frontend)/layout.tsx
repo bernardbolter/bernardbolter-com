@@ -7,6 +7,7 @@ import GoogleAnalytics from '@/components/common/GoogleAnalytics'
 import KlaroComponent from '@/components/common/Klaro'
 import ArtworksProvider from '@/providers/ArtworkProvider'
 import { getArtworks } from '@/lib/payload/artworks'
+import { getFilterSeries } from '@/lib/payload/series'
 import { getPerson } from '@/lib/payload/person'
 import { mapArtistToInfoData } from '@/helpers/mapArtistInfo'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
@@ -84,9 +85,10 @@ export const revalidate = 3600;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   
-  const [artworks, person] = await Promise.all([
+  const [artworks, person, filterSeries] = await Promise.all([
     getArtworks(),
     getPerson(),
+    getFilterSeries(),
   ])
 
   const artworksData = artworks
@@ -119,7 +121,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           ${barlow.className}
         `}
       >
-          <ArtworksProvider artworks={artworksData} artist={artistInfo}>
+          <ArtworksProvider artworks={artworksData} artist={artistInfo} filterSeries={filterSeries}>
             <AnimationWrapper>
               <KlaroComponent />
               <Suspense fallback={null}>

@@ -23,9 +23,9 @@ const MAX_GRID_WIDTH = 1500; // From your SCSS
  * @param windowWidth The current window width from useWindowSize.
  * @returns The calculated size (width and height) for the square container AND the gap size.
  */
-export const getGridItemContainerSize = (windowWidth: number | undefined): { width: number, height: number, gap: number } => {
+export const getGridItemContainerSize = (windowWidth: number | undefined): { width: number, height: number, gap: number, columns: number } => {
     if (windowWidth === undefined) {
-        return { width: 300, height: 300, gap: 5 }; // Fallback size and gap
+        return { width: 300, height: 300, gap: 5, columns: 1 }; // Fallback size and gap
     }
 
     let columns = 1;
@@ -65,6 +65,7 @@ export const getGridItemContainerSize = (windowWidth: number | undefined): { wid
     return {
         width: itemWidth,
         height: itemHeight,
-        gap: gap
+        gap: gap,
+        columns,
     };
 };

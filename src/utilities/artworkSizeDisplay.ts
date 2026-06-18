@@ -25,6 +25,9 @@ export type CalculateArtworkDisplaySizeInput = {
 const DEFAULT_MEDIA_DIMENSION = 800
 const DEFAULT_SIZE_TIER: ArtworkSizeTier = 'lg'
 
+/** Grid masonry: landscape works at or above this ratio span two columns (m: and above). */
+export const GRID_SPAN_ASPECT_RATIO_THRESHOLD = 1.8
+
 const SIZE_FACTORS = {
   common: {
     xl: 0.95,

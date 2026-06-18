@@ -1,4 +1,6 @@
-import { CollectionConfig } from 'payload'
+import type { CollectionConfig } from 'payload'
+
+import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 
 export const Series: CollectionConfig = {
   slug: 'series',
@@ -6,6 +8,15 @@ export const Series: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'slug', 'parentSeries', 'status', 'yearStart', 'yearEnd'],
     description: 'Practice series definitions used by artworks and public series pages.',
+  },
+  access: {
+    read: ({ req: { user } }) => {
+      if (isArtistOrAdmin(user)) return true
+      return { status: { equals: 'published' } }
+    },
+    create: ({ req: { user } }) => isArtistOrAdmin(user),
+    update: ({ req: { user } }) => isArtistOrAdmin(user),
+    delete: ({ req: { user } }) => isArtistOrAdmin(user),
   },
   fields: [
     {

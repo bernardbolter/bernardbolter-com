@@ -7,6 +7,7 @@ import {
   SearchSvg,
   TimerSvg,
 } from '@/components/icons'
+import { closeSearchNavState } from '@/helpers/navSearch'
 import useWindowSize from '@/hooks/useWindowSize'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
@@ -39,6 +40,29 @@ export default function Nav() {
       >
         <TimerSvg />
       </div>
+
+      <div
+        className={
+          state.filterNavOpen
+            ? 'nav-button filter-button filter-button--open'
+            : 'nav-button filter-button'
+        }
+        role="button"
+        tabIndex={0}
+        onClick={() =>
+          setState((prev) => {
+            const opening = !prev.filterNavOpen
+            if (opening) {
+              return { ...closeSearchNavState(prev), filterNavOpen: true }
+            }
+            return { ...prev, filterNavOpen: false }
+          })
+        }
+        style={{ display: state.showSlideshow ? 'none' : 'block' }}
+      >
+        <FilterSvg filterNavOpen={state.filterNavOpen} />
+      </div>
+      <FilterNav />
 
       <div
         className={
@@ -79,21 +103,6 @@ export default function Nav() {
       >
         <PlaySvg showSlideshow={state.showSlideshow} />
       </div>
-
-      <div
-        className={
-          state.filterNavOpen
-            ? 'nav-button filter-button filter-button--open'
-            : 'nav-button filter-button'
-        }
-        role="button"
-        tabIndex={0}
-        onClick={() => setState((prev) => ({ ...prev, filterNavOpen: !prev.filterNavOpen }))}
-        style={{ display: state.showSlideshow ? 'none' : 'block' }}
-      >
-        <FilterSvg filterNavOpen={state.filterNavOpen} />
-      </div>
-      <FilterNav />
 
       <div
         className="nav-button"

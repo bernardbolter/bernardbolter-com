@@ -62,6 +62,7 @@ All tokens follow a consistent naming structure:
 | `$ui-highlight` | `#b9b9b9` | `$nav-highlight` | Hover states on nav links |
 | `$ui-timeline` | `#878585` | `$timeline` | Timeline line, tick marks, year labels, switcher ball |
 | `$ui-filter-text` | `#454565` | `$filter-text` | Filter/sort nav labels |
+| `$ui-filter-active` | `#FBE3C4` | — | Filter icon face when filters are active (closed drawer) |
 
 ### Status
 
@@ -364,11 +365,11 @@ Grid is hidden on mobile (<550px) — only timeline view is available at that wi
   - Timeline view mobile: `top: 4px`
 
 **Filter nav:**
-- `top` position: `79px` mobile, `204px` desktop timeline view (pushed down further)
+- Drawer is `position: fixed`; `top` = nav container top + (stack index × 34px) — filter is index 0, search is index 1
 - `max-height` is viewport-relative to prevent overflow
 
 **Search nav:**
-- `top: 9px` mobile, `135px` desktop timeline view
+- Same `top` rule as filter nav, with stack index 1 (below the filter button)
 
 **Close buttons** — top position per page per breakpoint (these are all fixed-position):
 
@@ -515,11 +516,11 @@ All nav buttons stack vertically on the right edge.
 ```
 [Nav container — fixed, right:0, z:5001]
   [Timer button — visible in slideshow only]
+  [Filter button — hidden in slideshow]
+  [FilterNav — slides in from right when open]
   [Search button — hidden in slideshow]
   [SearchNav — slides in from right when open]
   [Play/Pause button — always visible]
-  [Filter button — hidden in slideshow]
-  [FilterNav — slides in from right when open]
   [Pause button — visible in slideshow only]
 ```
 
@@ -619,7 +620,7 @@ Large decorative text overlaid at top-right corner of static pages.
 
 ### Filter / Sort Nav
 
-Slides in from right. Width 174px. `border-bottom-left-radius: 22px`. Background `$ui-icon-light` (#efefef). Contains Sort section (3 options) and Filters section (11 series + available toggle). Each item: flex row, label right-aligned, color dot (20×20px).
+Slides in from right. Width 174px. `border-bottom-left-radius: 22px`. Background `$ui-icon-light` (#efefef). Contains Sort section (3 options) and Filters section (published root-level series from Payload + available toggle). Each item: flex row, label right-aligned, color dot (20×20px).
 
 Active state: `font-weight: 800` (not a color change).
 
@@ -823,7 +824,7 @@ Icons swap internal paths rather than changing the button shell. The shell (laye
 
 The face fill can change to signal state:
 - `$ui-face` (#eee) — rest state
-- `#FFE6D2` (`.ui-face-fill-filtered` class) — filter is active, face tints warm
+- `$ui-filter-active` (#FBE3C4, `.svg-face-fill-filtered` class) — filter is active, face tints warm amber
 - `$ui-icon-light` (#efefef) — selected/active state on some buttons
 
 ### Rules for agents

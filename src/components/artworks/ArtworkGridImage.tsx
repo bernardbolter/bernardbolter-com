@@ -2,33 +2,31 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { PlayButtonSvg } from '@/components/icons'
 import {
   getDisplayImageUrl,
   getPrimaryMediaDimensions,
-  getSizeTier,
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
 import { seriesColorBlurDataURLs } from '@/helpers/blurURLs'
 import { getSeriesColor } from '@/helpers/seriesColor'
-import { useArtworkDimensions } from '@/hooks/useArtworkDimensions'
-import type { Artwork } from '@/payload-types'
-import { resolveArtworkOrientation } from '@/utilities/artworkSizeDisplay'
+import {
+  calculateGridItemLayout,
+  gridItemContainerWidth,
+  type GridColumnSpan,
+} from '@/lib/artwork/gridLayout'
+import type { CatalogueArtwork } from '@/types/frontend'
 
 interface ArtworkGridImageProps {
-  artwork: Artwork
-  itemSize: {
-    width: number
-    height: number
-    gap: number
-  }
+  artwork: CatalogueArtwork
+  columnWidth: number
+  gap: number
+  columnSpan?: GridColumnSpan
 }
 
-const INFO_BOX_HEIGHT = 49
-
-function isVideoArtwork(artwork: Artwork): boolean {
+function isVideoArtwork(artwork: CatalogueArtwork): boolean {
   const primary = artwork.primaryImage
   const hasPrimaryImage = Boolean(primary && typeof primary === 'object' && primary.url)
   if (hasPrimaryImage) return false
@@ -49,11 +47,18 @@ function isVideoArtwork(artwork: Artwork): boolean {
   return hasPoster || hasVideoFile || hasVideoUrl || hasClips
 }
 
-function getImageSizes(itemWidth: number): string {
-  return `(max-width: 550px) 100vw, (max-width: 768px) 50vw, (max-width: 980px) 33vw, (max-width: 1200px) 25vw, ${itemWidth}px`
+function getImageSizes(itemWidth: number, columnSpan: GridColumnSpan): string {
+  const spanFactor = columnSpan === 2 ? 2 : 1
+  const px = itemWidth * spanFactor
+  return `(max-width: 550px) 100vw, (max-width: 768px) 50vw, (max-width: 980px) 33vw, (max-width: 1200px) 25vw, ${px}px`
 }
 
-export default function ArtworkGridImage({ artwork, itemSize }: ArtworkGridImageProps) {
+export default function ArtworkGridImage({
+  artwork,
+  columnWidth,
+  gap,
+  columnSpan = 1,
+}: ArtworkGridImageProps) {
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [imageFailed, setImageFailed] = useState(false)
 
@@ -62,30 +67,21 @@ export default function ArtworkGridImage({ artwork, itemSize }: ArtworkGridImage
   const imageSrc = getDisplayImageUrl(artwork) ?? ''
   const { width: imageWidth, height: imageHeight } = getPrimaryMediaDimensions(artwork)
 
-  const orientation = resolveArtworkOrientation(artwork, imageWidth, imageHeight)
+  const { dimensions } = useMemo(
+    () => calculateGridItemLayout(artwork, columnWidth, gap, columnSpan),
+    [artwork, columnWidth, gap, columnSpan],
+  )
 
-  const { displayWidth, displayHeight } = useArtworkDimensions({
-    artworkContainerWidth: itemSize.width,
-    artworkContainerHeight: 5000,
-    imageWidth,
-    imageHeight,
-    artworkSize: getSizeTier(artwork),
-    useImageFactors: !isVideo,
-    orientation,
-    gridView: true,
-  })
-
+  const { displayWidth, displayHeight } = dimensions
+  const containerWidth = gridItemContainerWidth(columnWidth, gap, columnSpan)
+  const horizontalMargin = Math.round((containerWidth - displayWidth) / 2)
   const blurDataURL = seriesColorBlurDataURLs[seriesSlug] ?? seriesColorBlurDataURLs.default
-  const horizontalMargin = Math.round((itemSize.width - displayWidth) / 2)
 
   return (
     <Link
       href={`/${artwork.slug}`}
       className="artwork-grid__image-container"
-      style={{
-        width: itemSize.width,
-        paddingBottom: INFO_BOX_HEIGHT,
-      }}
+      style={{ width: containerWidth }}
     >
       <div
         className="artwork-grid__image-wrapper"
@@ -116,14 +112,17 @@ export default function ArtworkGridImage({ artwork, itemSize }: ArtworkGridImage
             className="artwork-grid__image object-contain"
             src={imageSrc}
             alt={artwork.title ?? 'Artwork'}
-            fill
+            width={imageWidth}
+            height={imageHeight}
             style={{
+              width: displayWidth,
+              height: displayHeight,
               opacity: imageFailed ? 0 : 1,
             }}
             placeholder="blur"
             blurDataURL={blurDataURL}
             loading="lazy"
-            sizes={getImageSizes(itemSize.width)}
+            sizes={getImageSizes(columnWidth, columnSpan)}
             onLoad={() => setIsImageLoading(false)}
             onError={() => {
               setIsImageLoading(false)
@@ -131,14 +130,14 @@ export default function ArtworkGridImage({ artwork, itemSize }: ArtworkGridImage
             }}
           />
         ) : null}
+      </div>
 
-        <div className="artwork-grid__info">
-          <div
-            className="artwork-grid__info--series-box"
-            style={{ backgroundColor: getSeriesColor(seriesSlug) }}
-          />
-          <h3>{artwork.title}</h3>
-        </div>
+      <div className="artwork-grid__info">
+        <div
+          className="artwork-grid__info--series-box"
+          style={{ backgroundColor: getSeriesColor(seriesSlug) }}
+        />
+        <h3>{artwork.title}</h3>
       </div>
     </Link>
   )

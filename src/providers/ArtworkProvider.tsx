@@ -11,6 +11,7 @@ import {
   type ArtworksContextType,
   type ArtworksState,
   type CatalogueArtwork,
+  type FilterCategory,
 } from '@/types/frontend'
 
 const ArtworksContext = createContext<ArtworksContextType>([createInitialArtworksState([]), () => {}])
@@ -19,9 +20,10 @@ interface ArtworksProviderProps {
   children: ReactNode
   artworks: CatalogueArtwork[]
   artist: ArtistInfoData | null
+  filterSeries: FilterCategory[]
 }
 
-export const ArtworksProvider = ({ children, artworks, artist }: ArtworksProviderProps) => {
+export const ArtworksProvider = ({ children, artworks, artist, filterSeries }: ArtworksProviderProps) => {
   const catalogue = artworks ?? []
   const artworksWithImages = useMemo(
     () => catalogue.filter((artwork) => artworkHasDisplayImage(artwork)),
@@ -29,7 +31,7 @@ export const ArtworksProvider = ({ children, artworks, artist }: ArtworksProvide
   )
 
   const [state, setState] = useState<ArtworksState>(() => ({
-    ...createInitialArtworksState(artworksWithImages, artist ?? DEFAULT_ARTIST_INFO),
+    ...createInitialArtworksState(artworksWithImages, artist ?? DEFAULT_ARTIST_INFO, filterSeries),
     totalCount: catalogue.length,
     withImagesCount: artworksWithImages.length,
   }))
@@ -37,13 +39,14 @@ export const ArtworksProvider = ({ children, artworks, artist }: ArtworksProvide
   useEffect(() => {
     setState((prev) => ({
       ...prev,
+      filterSeries,
       original: artworksWithImages,
       filtered: artworksWithImages,
       artistData: artist ?? DEFAULT_ARTIST_INFO,
       totalCount: catalogue.length,
       withImagesCount: artworksWithImages.length,
     }))
-  }, [artist, artworksWithImages, catalogue.length])
+  }, [artist, artworksWithImages, catalogue.length, filterSeries])
 
   // Keep viewport and artwork container sizing in provider state.
   useEffect(() => {

@@ -5,8 +5,8 @@ import {
   FilterLightSvg,
   SortSvg,
 } from '@/components/icons'
-import { filterValues } from '@/data/filterValues'
 import { sortValues } from '@/data/sortValues'
+import { getFilterDrawerTop } from '@/helpers/navLayout'
 import useWindowSize from '@/hooks/useWindowSize'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
@@ -17,6 +17,8 @@ export default function FilterNav() {
   const [state, setState] = useArtworks()
   const size = useWindowSize()
 
+  const drawerTop = getFilterDrawerTop(state, size)
+
   return (
     <div
       className={
@@ -25,19 +27,9 @@ export default function FilterNav() {
           : 'filter-nav__container'
       }
       style={{
-        top:
-          size.width && size.width < 768
-            ? 79
-            : state.artworkViewTimeline
-              ? 204
-              : 79,
-        display: state.showSlideshow ? 'none' : '',
-        maxHeight:
-          size.width && size.width < 768
-            ? (size.height || 500) - 83
-            : state.artworkViewTimeline
-              ? (size.height || 400) - 210
-              : (size.height || 500) - 83,
+        top: drawerTop,
+        display: state.showSlideshow ? 'none' : undefined,
+        maxHeight: (size.height || 500) - drawerTop - 12,
       }}
     >
       <div className="filter-nav__container--inner">
@@ -107,7 +99,7 @@ export default function FilterNav() {
         <div className="filter-nav__line" />
 
         <div className="filter-nav__content">
-          {filterValues.map((value) => (
+          {state.filterSeries.map((value) => (
             <FilterItem key={value.id} {...value} />
           ))}
         </div>
