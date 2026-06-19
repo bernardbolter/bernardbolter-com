@@ -1,6 +1,57 @@
-import type { Field } from 'payload'
+import type { Field, Validate } from 'payload'
 
 import { isArtistOrAdmin, privateFieldAccess } from '@/access/isArtistOrAdmin'
+
+function hasSeriesEditionTier(siblingData: Record<string, unknown> | undefined): boolean {
+  const rel = siblingData?.seriesEditionTier
+  return rel != null && rel !== ''
+}
+
+function hasFallbackTierIdentity(siblingData: Record<string, unknown> | undefined): boolean {
+  const tierName = siblingData?.tierName
+  const totalEditionSize = siblingData?.totalEditionSize
+  return (
+    tierName != null &&
+    tierName !== '' &&
+    totalEditionSize != null &&
+    totalEditionSize !== ''
+  )
+}
+
+/** Each row must link a series tier or specify local fallback name + size. */
+export const editionTierRowIdentityValidate: Validate<unknown[] | null | undefined> = (value) => {
+  if (!Array.isArray(value)) return true
+
+  for (let i = 0; i < value.length; i++) {
+    const row = value[i]
+    if (!row || typeof row !== 'object') continue
+    const sibling = row as Record<string, unknown>
+    if (hasSeriesEditionTier(sibling) || hasFallbackTierIdentity(sibling)) continue
+    return `Edition tier ${i + 1}: link a series edition tier or set tierName and totalEditionSize.`
+  }
+
+  return true
+}
+
+/** Fallback tierName is required only when the shared series tier relation is unset. */
+export const editionTierLocalNameValidate: Validate<string | null | undefined> = (
+  value,
+  { siblingData },
+) => {
+  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null || value === '') return 'Required when no series edition tier is linked'
+  return true
+}
+
+/** Fallback totalEditionSize is required only when the shared series tier relation is unset. */
+export const editionTierLocalSizeValidate: Validate<number | null | undefined> = (
+  value,
+  { siblingData },
+) => {
+  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null) return 'Required when no series edition tier is linked'
+  return true
+}
 
 export const editionTierSeriesRelationField: Field = {
   name: 'seriesEditionTier',

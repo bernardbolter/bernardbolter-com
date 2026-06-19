@@ -6,6 +6,7 @@ import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkAfterRead } from '@/hooks/artworkAfterRead'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
+import { artworkDcsEditionTiersBeforeChange } from '@/hooks/artworkDcsEditionTiersBeforeChange'
 import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
 
 import { artworkPrimaryMediaFields } from './artworks/artworkPrimaryMediaFields'
@@ -47,7 +48,7 @@ export const Artworks: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [artworkAchValidateAr],
-    beforeChange: [artworkBeforeChange, artworkAchBeforeChange],
+    beforeChange: [artworkBeforeChange, artworkDcsEditionTiersBeforeChange, artworkAchBeforeChange],
     afterChange: [artworkAfterChange, artworkAfterChangeAr],
     afterRead: [artworkAfterRead],
   },

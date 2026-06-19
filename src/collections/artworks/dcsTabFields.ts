@@ -4,6 +4,9 @@ import { privateFieldAccess } from '@/access/isArtistOrAdmin'
 import {
   editionTierCopiesField,
   editionTierIsOriginalTierField,
+  editionTierLocalNameValidate,
+  editionTierLocalSizeValidate,
+  editionTierRowIdentityValidate,
   editionTierSeriesRelationField,
   editionTierVendureVariantIdField,
 } from '@/collections/artworks/editionTierOwnershipFields'
@@ -227,6 +230,7 @@ export const dcsTab: Tab = {
           name: 'editionTiers',
           type: 'array',
           labels: { singular: 'Edition tier', plural: 'Edition tiers' },
+          validate: editionTierRowIdentityValidate,
           admin: {
             description:
               'Archival record of edition tiers. Vendure is source of truth for pricing; webhook maintains remaining counts.',
@@ -237,7 +241,7 @@ export const dcsTab: Tab = {
             {
               name: 'tierName',
               type: 'select',
-              required: true,
+              validate: editionTierLocalNameValidate,
               admin: {
                 description:
                   'Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.',
@@ -252,7 +256,7 @@ export const dcsTab: Tab = {
             {
               name: 'totalEditionSize',
               type: 'number',
-              required: true,
+              validate: editionTierLocalSizeValidate,
               admin: { description: 'Fixed edition size — never changes after publication.' },
             },
             {
