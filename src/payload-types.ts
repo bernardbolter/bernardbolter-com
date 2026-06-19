@@ -72,6 +72,7 @@ export interface Config {
     artists: Artist;
     'practice-knowledge': PracticeKnowledge;
     series: Series;
+    'series-edition-tiers': SeriesEditionTier;
     lines: Line;
     'studio-conversations': StudioConversation;
     'pattern-reports': PatternReport;
@@ -104,6 +105,7 @@ export interface Config {
     artists: ArtistsSelect<false> | ArtistsSelect<true>;
     'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
+    'series-edition-tiers': SeriesEditionTiersSelect<false> | SeriesEditionTiersSelect<true>;
     lines: LinesSelect<false> | LinesSelect<true>;
     'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     'pattern-reports': PatternReportsSelect<false> | PatternReportsSelect<true>;
@@ -999,7 +1001,7 @@ export interface Artwork {
     | boolean
     | null;
   /**
-   * CLIP embedding stored as vector(1536); use SQL/API for similarity, not this cell.
+   * CLIP embedding stored as vector(768) — CLIP ViT-L/14 output. Use SQL/API for similarity, not this cell.
    */
   clipEmbedding?:
     | {
@@ -1010,6 +1012,10 @@ export interface Artwork {
     | number
     | boolean
     | null;
+  /**
+   * When the CLIP embedding was last generated for this artwork.
+   */
+  clipEmbeddingGeneratedAt?: string | null;
   /**
    * Legacy JSON embedding placeholder — migrate to clipEmbedding / drop after cutover.
    */
@@ -1249,14 +1255,35 @@ export interface Artwork {
     | boolean
     | null;
   /**
-   * Per-copy ownership claims by edition tier. Independent of commercial stock systems.
+   * Whether this work has tracked edition tiers in ownershipRegistry. Independent of commercial stock systems.
+   */
+  hasEditions?: ('none' | 'limited' | 'open') | null;
+  /**
+   * Per-copy ownership claims by edition tier. Use seriesEditionTier for series-structured works; inline tier fields for others.
    */
   ownershipRegistry?:
     | {
-        tierLabel: string;
-        tierOrder: number;
-        editionSize: number;
+        /**
+         * Series-level tier definition. When set, tier metadata is read from this record instead of inline fields below.
+         */
+        seriesEditionTier?: (number | null) | SeriesEditionTier;
+        /**
+         * Fallback display label when seriesEditionTier is not used (e.g. giclée tiers on A Colorful History works).
+         */
+        tierLabel?: string | null;
+        /**
+         * Fallback display order when seriesEditionTier is not used.
+         */
+        tierOrder?: number | null;
+        /**
+         * Fallback numbered edition size when seriesEditionTier is not used.
+         */
+        editionSize?: number | null;
         apCount?: number | null;
+        /**
+         * Fallback flag when seriesEditionTier is not used. On series tiers, set isOriginalTier on the SeriesEditionTiers record instead.
+         */
+        isOriginalTier?: boolean | null;
         copies?:
           | {
               copyNumber: string;
@@ -2454,6 +2481,10 @@ export interface Series {
   coverImage?: (number | null) | Media;
   status: 'draft' | 'published';
   /**
+   * Series-level prose for informal or unnumbered print runs not tracked per artwork in ownershipRegistry.
+   */
+  seriesUntrackedEditionsNote?: string | null;
+  /**
    * Computed JSON-LD snapshot for series pages.
    */
   jsonldOutput?:
@@ -2920,6 +2951,58 @@ export interface Line {
    * Who introduced this line (manual or model suggestion).
    */
   recordOrigin: 'user' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Series-level edition tier definitions (size, substrate, edition counts). Referenced by artwork ownershipRegistry for series-structured works.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series-edition-tiers".
+ */
+export interface SeriesEditionTier {
+  id: number;
+  /**
+   * Top-level series or sub-series this tier belongs to (e.g. Digital City Series).
+   */
+  series: number | Series;
+  /**
+   * Display label, e.g. "Original edition", "Collectors print".
+   */
+  tierName: string;
+  /**
+   * 1 = most exclusive; ascending display order only.
+   */
+  tierOrder: number;
+  /**
+   * True when this tier IS the original artwork (e.g. DCS monumental 3+1AP), not a print of it.
+   */
+  isOriginalTier?: boolean | null;
+  /**
+   * Numbered copies only — excludes AP count.
+   */
+  editionSize: number;
+  /**
+   * Artist's proof count. 0 when none.
+   */
+  apCount?: number | null;
+  /**
+   * Print width in centimetres.
+   */
+  widthCm?: number | null;
+  /**
+   * Print height in centimetres.
+   */
+  heightCm?: number | null;
+  /**
+   * Physical support, e.g. Aluminium dibond, Hahnemühle Photo Rag.
+   */
+  substrate?: string | null;
+  printTechnique?: ('giclee' | 'screenprint' | 'lithograph' | 'etching' | 'other') | null;
+  /**
+   * Internal or public notes on this tier definition.
+   */
+  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3496,6 +3579,10 @@ export interface PayloadLockedDocument {
         value: number | Series;
       } | null)
     | ({
+        relationTo: 'series-edition-tiers';
+        value: number | SeriesEditionTier;
+      } | null)
+    | ({
         relationTo: 'lines';
         value: number | Line;
       } | null)
@@ -3807,7 +3894,27 @@ export interface SeriesSelect<T extends boolean = true> {
   country?: T;
   coverImage?: T;
   status?: T;
+  seriesUntrackedEditionsNote?: T;
   jsonldOutput?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series-edition-tiers_select".
+ */
+export interface SeriesEditionTiersSelect<T extends boolean = true> {
+  series?: T;
+  tierName?: T;
+  tierOrder?: T;
+  isOriginalTier?: T;
+  editionSize?: T;
+  apCount?: T;
+  widthCm?: T;
+  heightCm?: T;
+  substrate?: T;
+  printTechnique?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4289,6 +4396,7 @@ export interface ArtworksSelect<T extends boolean = true> {
   analysisModelVersion?: T;
   recognitionTimeline?: T;
   clipEmbedding?: T;
+  clipEmbeddingGeneratedAt?: T;
   embedding?: T;
   keywords?:
     | T
@@ -4399,13 +4507,16 @@ export interface ArtworksSelect<T extends boolean = true> {
   provenanceOriginKnown?: T;
   loanHistory?: T;
   provenanceConfidenceLayer?: T;
+  hasEditions?: T;
   ownershipRegistry?:
     | T
     | {
+        seriesEditionTier?: T;
         tierLabel?: T;
         tierOrder?: T;
         editionSize?: T;
         apCount?: T;
+        isOriginalTier?: T;
         copies?:
           | T
           | {

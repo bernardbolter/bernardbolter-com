@@ -1,6 +1,7 @@
 import type { CollectionAfterReadHook } from 'payload'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { resolveOwnershipRegistryTier } from '@/lib/artwork/ownershipRegistryPublic'
 
 type JsonRow = Record<string, unknown>
 
@@ -21,6 +22,7 @@ function sanitizeOwnershipHistory(rows: unknown): JsonRow[] {
 
 function sanitizeProvenanceConfidenceLayer(rows: unknown): JsonRow[] {
   return asRows(rows).map((row) => ({
+    claim: row.claim,
     confidenceLevel: row.confidenceLevel,
   }))
 }
@@ -35,21 +37,44 @@ function sanitizeLoanHistory(rows: unknown): JsonRow[] {
 }
 
 function sanitizeOwnershipRegistry(rows: unknown): JsonRow[] {
-  return asRows(rows).map((tier) => ({
-    tierLabel: tier.tierLabel,
-    tierOrder: tier.tierOrder,
-    editionSize: tier.editionSize,
-    apCount: tier.apCount,
-    copies: asRows(tier.copies).map((copy) => ({
-      copyNumber: copy.copyNumber,
-      isArtistProof: copy.isArtistProof,
-      claimStatus: copy.claimStatus,
-      collectorVisible: copy.collectorVisible,
-      dateAcquired: copy.dateAcquired,
-      claimedCopyNumberKnown: copy.claimedCopyNumberKnown,
-      ...(copy.collectorVisible === true && copy.owner ? { owner: copy.owner } : {}),
-    })),
-  }))
+  return asRows(rows).map((tier) => {
+    const resolved = resolveOwnershipRegistryTier(tier as Parameters<typeof resolveOwnershipRegistryTier>[0])
+    const seriesTier =
+      typeof tier.seriesEditionTier === 'object' && tier.seriesEditionTier !== null
+        ? (tier.seriesEditionTier as JsonRow)
+        : null
+
+    return {
+      seriesEditionTier: seriesTier
+        ? {
+            id: seriesTier.id,
+            tierName: seriesTier.tierName,
+            tierOrder: seriesTier.tierOrder,
+            editionSize: seriesTier.editionSize,
+            apCount: seriesTier.apCount,
+            isOriginalTier: seriesTier.isOriginalTier,
+            widthCm: seriesTier.widthCm,
+            heightCm: seriesTier.heightCm,
+            substrate: seriesTier.substrate,
+            printTechnique: seriesTier.printTechnique,
+          }
+        : tier.seriesEditionTier,
+      tierLabel: resolved.tierLabel,
+      tierOrder: resolved.tierOrder,
+      editionSize: resolved.editionSize,
+      apCount: resolved.apCount,
+      isOriginalTier: resolved.isOriginalTier,
+      copies: asRows(tier.copies).map((copy) => ({
+        copyNumber: copy.copyNumber,
+        isArtistProof: copy.isArtistProof,
+        claimStatus: copy.claimStatus,
+        collectorVisible: copy.collectorVisible,
+        dateAcquired: copy.dateAcquired,
+        claimedCopyNumberKnown: copy.claimedCopyNumberKnown,
+        ...(copy.collectorVisible === true && copy.owner ? { owner: copy.owner } : {}),
+      })),
+    }
+  })
 }
 
 function sanitizeCurrentLocation(location: unknown): JsonRow | null {

@@ -1010,9 +1010,19 @@ export const Artworks: CollectionConfig = {
               admin: {
                 hidden: true,
                 readOnly: true,
-                description: 'CLIP embedding stored as vector(1536); use SQL/API for similarity, not this cell.',
+                description:
+                  'CLIP embedding stored as vector(768) — CLIP ViT-L/14 output. Use SQL/API for similarity, not this cell.',
               },
-              custom: { dbType: 'vector(1536)' },
+              custom: { dbType: 'vector(768)' },
+            },
+            {
+              name: 'clipEmbeddingGeneratedAt',
+              type: 'date',
+              admin: {
+                hidden: true,
+                readOnly: true,
+                description: 'When the CLIP embedding was last generated for this artwork.',
+              },
             },
             {
               name: 'embedding',
@@ -1440,18 +1450,70 @@ export const Artworks: CollectionConfig = {
               },
             },
             {
+              name: 'hasEditions',
+              type: 'select',
+              defaultValue: 'none',
+              options: [
+                { label: 'None', value: 'none' },
+                { label: 'Limited', value: 'limited' },
+                { label: 'Open', value: 'open' },
+              ],
+              admin: {
+                description:
+                  'Whether this work has tracked edition tiers in ownershipRegistry. Independent of commercial stock systems.',
+              },
+            },
+            {
               name: 'ownershipRegistry',
               type: 'array',
               labels: { singular: 'Edition tier', plural: 'Ownership registry' },
               admin: {
                 description:
-                  'Per-copy ownership claims by edition tier. Independent of commercial stock systems.',
+                  'Per-copy ownership claims by edition tier. Use seriesEditionTier for series-structured works; inline tier fields for others.',
               },
               fields: [
-                { name: 'tierLabel', type: 'text', required: true },
-                { name: 'tierOrder', type: 'number', required: true },
-                { name: 'editionSize', type: 'number', required: true },
+                {
+                  name: 'seriesEditionTier',
+                  type: 'relationship',
+                  relationTo: 'series-edition-tiers',
+                  admin: {
+                    description:
+                      'Series-level tier definition. When set, tier metadata is read from this record instead of inline fields below.',
+                  },
+                },
+                {
+                  name: 'tierLabel',
+                  type: 'text',
+                  admin: {
+                    description:
+                      'Fallback display label when seriesEditionTier is not used (e.g. giclée tiers on A Colorful History works).',
+                  },
+                },
+                {
+                  name: 'tierOrder',
+                  type: 'number',
+                  admin: {
+                    description: 'Fallback display order when seriesEditionTier is not used.',
+                  },
+                },
+                {
+                  name: 'editionSize',
+                  type: 'number',
+                  admin: {
+                    description:
+                      'Fallback numbered edition size when seriesEditionTier is not used.',
+                  },
+                },
                 { name: 'apCount', type: 'number', defaultValue: 0 },
+                {
+                  name: 'isOriginalTier',
+                  type: 'checkbox',
+                  defaultValue: false,
+                  admin: {
+                    description:
+                      'Fallback flag when seriesEditionTier is not used. On series tiers, set isOriginalTier on the SeriesEditionTiers record instead.',
+                  },
+                },
                 {
                   name: 'copies',
                   type: 'array',

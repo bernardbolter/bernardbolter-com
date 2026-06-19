@@ -16,6 +16,7 @@ import { Media } from './collections/Media'
 import { Artists } from './collections/Artists'
 import { PracticeKnowledge } from './collections/PracticeKnowledge'
 import { Series } from './collections/Series'
+import { SeriesEditionTiers } from './collections/SeriesEditionTiers'
 import { Lines } from './collections/Lines'
 import { StudioConversations } from './collections/StudioConversations'
 import { PatternReports } from './collections/PatternReports'
@@ -101,6 +102,7 @@ export default buildConfig({
     Artists,
     PracticeKnowledge,
     Series,
+    SeriesEditionTiers,
     Lines,
     StudioConversations,
     PatternReports,

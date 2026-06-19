@@ -1,4 +1,4 @@
-import type { Artwork } from '@/payload-types'
+import type { Artwork, SeriesEditionTier } from '@/payload-types'
 
 export type OwnershipRegistryCopy = {
   copyNumber?: string | null
@@ -17,16 +17,18 @@ export type OwnershipRegistryCopy = {
 }
 
 export type OwnershipRegistryTier = {
+  seriesEditionTier?: number | SeriesEditionTier | null
   tierLabel?: string | null
   tierOrder?: number | null
   editionSize?: number | null
   apCount?: number | null
+  isOriginalTier?: boolean | null
   copies?: OwnershipRegistryCopy[] | null
 }
 
 export type PublicEditionTierRow = {
   copyNumber: string
-  displayLine: string
+  ownerLabel: string
   isArtistProof: boolean
 }
 
@@ -40,10 +42,36 @@ export type PublicEditionTier = {
   claimHref: string
 }
 
+function isPopulatedSeriesEditionTier(
+  value: number | SeriesEditionTier | null | undefined,
+): value is SeriesEditionTier {
+  return typeof value === 'object' && value !== null && 'tierName' in value
+}
+
+/** Merge seriesEditionTier metadata with inline fallback fields on each registry row. */
+export function resolveOwnershipRegistryTier(
+  tier: OwnershipRegistryTier,
+): OwnershipRegistryTier {
+  const seriesTier = isPopulatedSeriesEditionTier(tier.seriesEditionTier)
+    ? tier.seriesEditionTier
+    : null
+
+  if (!seriesTier) return tier
+
+  return {
+    ...tier,
+    tierLabel: seriesTier.tierName,
+    tierOrder: seriesTier.tierOrder,
+    editionSize: seriesTier.editionSize,
+    apCount: seriesTier.apCount ?? 0,
+    isOriginalTier: seriesTier.isOriginalTier ?? false,
+  }
+}
+
 function asTiers(artwork: Artwork): OwnershipRegistryTier[] {
   const raw = (artwork as Artwork & { ownershipRegistry?: OwnershipRegistryTier[] })
     .ownershipRegistry
-  return Array.isArray(raw) ? raw : []
+  return Array.isArray(raw) ? raw.map(resolveOwnershipRegistryTier) : []
 }
 
 function numberedCopies(tier: OwnershipRegistryTier): OwnershipRegistryCopy[] {
@@ -58,10 +86,10 @@ function countClaimedConfirmed(copies: OwnershipRegistryCopy[]): number {
   return copies.filter((copy) => copy.claimStatus === 'claimed-confirmed').length
 }
 
-function allNumberedClaimed(tier: OwnershipRegistryTier): boolean {
-  const numbered = numberedCopies(tier)
-  if (numbered.length === 0) return false
-  return numbered.every((copy) => copy.claimStatus === 'claimed-confirmed')
+export function allNumberedClaimed(tier: OwnershipRegistryTier): boolean {
+  const editionSize = tier.editionSize ?? 0
+  if (editionSize <= 0) return false
+  return countClaimedConfirmed(numberedCopies(tier)) >= editionSize
 }
 
 function buildHeaderSummary(tier: OwnershipRegistryTier): string {
@@ -71,16 +99,15 @@ function buildHeaderSummary(tier: OwnershipRegistryTier): string {
   if (editionSize <= 0) return tier.tierLabel?.trim() || 'Edition'
   if (claimed === 0) return `Edition of ${editionSize} — available`
   if (claimed >= editionSize) return `${editionSize} of ${editionSize} claimed — edition complete`
-  return `${claimed} of ${editionSize} prints claimed`
+  return `${claimed} of ${editionSize} claimed`
 }
 
 function buildClaimedRow(copy: OwnershipRegistryCopy): PublicEditionTierRow | null {
-  if (copy.claimStatus !== 'claimed-confirmed' || !copy.collectorVisible) return null
+  if (copy.claimStatus !== 'claimed-confirmed' || copy.isArtistProof) return null
+  if (copy.collectorVisible !== true) return null
   const copyNumber = copy.copyNumber?.trim() || '—'
   const owner = copy.owner?.trim() || 'Private collection'
-  const date = copy.dateAcquired?.trim()
-  const displayLine = date ? `${copyNumber} · ${owner} · ${date}` : `${copyNumber} · ${owner}`
-  return { copyNumber, displayLine, isArtistProof: false }
+  return { copyNumber, ownerLabel: owner, isArtistProof: false }
 }
 
 function buildApRow(tier: OwnershipRegistryTier): PublicEditionTierRow | null {
@@ -90,17 +117,17 @@ function buildApRow(tier: OwnershipRegistryTier): PublicEditionTierRow | null {
   if (!ap) return null
 
   if (ap.claimStatus === 'sold-secondary') {
-    if (ap.collectorVisible && ap.owner?.trim()) {
+    if (ap.collectorVisible === true && ap.owner?.trim()) {
       return {
         copyNumber: 'AP',
-        displayLine: `AP — ${ap.owner.trim()}`,
+        ownerLabel: ap.owner.trim(),
         isArtistProof: true,
       }
     }
-    return { copyNumber: 'AP', displayLine: 'AP — sold by the artist', isArtistProof: true }
+    return { copyNumber: 'AP', ownerLabel: 'Sold by the artist', isArtistProof: true }
   }
 
-  return { copyNumber: 'AP', displayLine: 'AP — held by the artist', isArtistProof: true }
+  return { copyNumber: 'AP', ownerLabel: 'Held by the artist', isArtistProof: true }
 }
 
 export function buildEditionClaimSummary(artwork: Artwork): string[] {
@@ -113,11 +140,70 @@ export function buildEditionClaimSummary(artwork: Artwork): string[] {
   })
 }
 
+export function getOriginalTier(artwork: Artwork): OwnershipRegistryTier | null {
+  return asTiers(artwork).find((tier) => tier.isOriginalTier === true) ?? null
+}
+
+/** Fills missing numbered slots as unclaimed — unlike Editions accordion, unclaimed copies are shown here. */
+export function buildOriginalTierDisplayCopies(tier: OwnershipRegistryTier): OwnershipRegistryCopy[] {
+  const editionSize = tier.editionSize ?? 0
+  const byNumber = new Map<string, OwnershipRegistryCopy>()
+
+  for (const copy of tier.copies ?? []) {
+    if (copy?.copyNumber?.trim()) {
+      byNumber.set(copy.copyNumber.trim(), copy)
+    }
+  }
+
+  const rows: OwnershipRegistryCopy[] = []
+  for (let index = 1; index <= editionSize; index += 1) {
+    const copyNumber = `${index}/${editionSize}`
+    rows.push(
+      byNumber.get(copyNumber) ?? {
+        copyNumber,
+        isArtistProof: false,
+        claimStatus: 'unclaimed',
+        collectorVisible: false,
+      },
+    )
+  }
+
+  if (allNumberedClaimed(tier)) {
+    rows.push(...apCopies(tier))
+  }
+
+  return rows.filter((copy) => !copy.isArtistProof || allNumberedClaimed(tier))
+}
+
+export function buildOriginalCopyClaimHref(
+  artwork: Pick<Artwork, 'slug'>,
+  copyNumber: string,
+): string {
+  const slug = artwork.slug?.trim() || ''
+  const params = new URLSearchParams({ claim: slug, copy: copyNumber })
+  return `/contact?${params.toString()}`
+}
+
+export function isOriginalCopyPubliclyClaimed(copy: OwnershipRegistryCopy): boolean {
+  return (
+    copy.claimStatus === 'claimed-confirmed' ||
+    copy.claimStatus === 'artist-held' ||
+    copy.claimStatus === 'sold-secondary'
+  )
+}
+
+export function originalCopyOwnerLabel(copy: OwnershipRegistryCopy): string {
+  if (copy.isArtistProof) {
+    return copy.claimStatus === 'sold-secondary' ? 'Sold by the artist' : 'Held by the artist'
+  }
+  return copy.owner?.trim() || 'Private collection'
+}
+
 export function buildPublicEditionTiers(artwork: Artwork): PublicEditionTier[] {
   const slug = artwork.slug?.trim() || ''
 
   return asTiers(artwork)
-    .filter((tier) => tier.tierLabel?.trim())
+    .filter((tier) => tier.tierLabel?.trim() && tier.isOriginalTier !== true)
     .slice()
     .sort((a, b) => (a.tierOrder ?? 0) - (b.tierOrder ?? 0))
     .map((tier) => {

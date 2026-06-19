@@ -88,6 +88,15 @@ export const Series: CollectionConfig = {
       },
     },
     {
+      name: 'seriesUntrackedEditionsNote',
+      type: 'textarea',
+      localized: true,
+      admin: {
+        description:
+          'Series-level prose for informal or unnumbered print runs not tracked per artwork in ownershipRegistry.',
+      },
+    },
+    {
       name: 'jsonldOutput',
       type: 'json',
       admin: {

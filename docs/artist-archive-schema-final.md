@@ -63,7 +63,7 @@ These rules apply to every collection in this document without exception. They a
 
 ## 0. Collection overview and data relationships
 
-The Artist Archive data model consists of two primary collections and four dependent collections.
+The Artist Archive data model consists of two primary collections and five dependent collections.
 
 | Collection | Type | Purpose |
 |---|---|---|
@@ -71,6 +71,7 @@ The Artist Archive data model consists of two primary collections and four depen
 | **Events** | Primary | All professional events — exhibitions, fairs, prizes, residencies, publications, commissions, talks, screenings. Drives CV page and exhibition history on artwork pages. |
 | Tags | Dependent | Classification vocabulary for Artworks and Events. Typed by category. Carries optional authority URIs. |
 | Series | Dependent | Practice series. Each artwork belongs to exactly one series. |
+| SeriesEditionTiers | Dependent | Series-level edition tier definitions (size, substrate, counts). Referenced by artwork `ownershipRegistry`. |
 | ArtHistoricalReferences | Dependent | Structured records for artworks and artists the practice is in dialogue with. |
 | Artist | Singleton | The single artist record. Holds all biographical, statement, contact, and identity fields. |
 
@@ -321,6 +322,10 @@ All fields in this section are private and role-restricted. Never visible to edi
 | `loanHistory` | array of objects | private | TEMPORAL | EXISTING | Each: `{ institution, dateOut, dateReturned, eventId (relation → Events, optional), notes }`. |
 | `provenanceOriginKnown` | boolean | private | TEMPORAL | NEW | Default `true`. Set `false` when studio-to-first-owner chain is not traceable. Makes uncertainty explicit. |
 | `provenanceConfidenceLayer` | array of objects | private | GAP FILLER | NEW | Evidence basis for provenance claims. Each: `{ claim, evidenceBasis, confidenceLevel (documented-fact\|credible-inference\|institutional-assertion\|speculation) }`. |
+| `hasEditions` | select | artist | CORE | NEW | Values: `none` \| `limited` \| `open`. Whether this work has tracked edition tiers in `ownershipRegistry`. |
+| `ownershipRegistry` | array of objects | mixed | NEW | Per-copy ownership claims by edition tier. Each tier: `{ seriesEditionTier (relation → SeriesEditionTiers, optional), tierLabel, tierOrder, editionSize, apCount, isOriginalTier (inline fallback when no relation), copies[] }`. Use `seriesEditionTier` for series-structured works; inline fields for non-series-structured works (e.g. giclée tiers on A Colorful History). Each copy: `{ copyNumber, isArtistProof, owner (private unless collectorVisible), claimStatus, collectorVisible, dateAcquired, claimedCopyNumberKnown, notes (private) }`. |
+| `untrackedEditionsNote` | text, localized | artist | NEW | Artwork-level prose for informal/unnumbered print runs not tracked in `ownershipRegistry`. |
+| `componentCount` | number | artist | NEW | Physical components sold as one unit (e.g. triptych). Descriptive only. |
 | `provenanceAndExhibitionTimeline` | computed display | agent | TEMPORAL | NEW | Timeline assembled from `ownershipHistory` + `loanHistory` + `events`. Computed presentation — not a stored field. |
 
 ### 1.10 Schema.org / JSON-LD
@@ -638,8 +643,25 @@ Agent receives 10 most recent events per section. Older events summarised as a c
 | `country` | text | artist | NEW | Primary country. |
 | `coverImage` | upload | artist | NEW | Series cover image. |
 | `status` | select | artist | NEW | Values: `draft` \| `published`. |
+| `seriesUntrackedEditionsNote` | text, localized | artist | NEW | Series-level prose for informal or unnumbered print runs not tracked per artwork in `ownershipRegistry`. |
 
-### 3.2 Tags
+### 3.2 SeriesEditionTiers
+
+| Field | Type | Layer | Status | Definition |
+|---|---|---|---|---|
+| `series` | relation → Series | artist | NEW | Required. Top-level series or sub-series this tier belongs to. |
+| `tierName` | text | artist | NEW | Display label, e.g. "Original edition", "Collectors print". |
+| `tierOrder` | number | artist | NEW | Display order (1 = most exclusive). |
+| `isOriginalTier` | checkbox | artist | NEW | True when this tier IS the original artwork (e.g. DCS monumental 3+1AP), not a print of it. |
+| `editionSize` | number | artist | NEW | Numbered copies only — excludes AP count. |
+| `apCount` | number | artist | NEW | Artist's proof count. Default 0. |
+| `widthCm` | number | artist | NEW | Print width in centimetres. |
+| `heightCm` | number | artist | NEW | Print height in centimetres. |
+| `substrate` | text | artist | NEW | Physical support, e.g. Aluminium dibond. |
+| `printTechnique` | select | artist | NEW | Values: `giclee` \| `screenprint` \| `lithograph` \| `etching` \| `other`. |
+| `notes` | textarea | artist | NEW | Notes on this tier definition. |
+
+### 3.3 Tags
 
 | Field | Type | Layer | Status | Definition |
 |---|---|---|---|---|
@@ -650,7 +672,7 @@ Agent receives 10 most recent events per section. Older events summarised as a c
 | `lcshUri` | text (URI) | agent | NEW | Library of Congress URI. |
 | `description` | text | artist | EXISTING | How this tag is used in this archive. |
 
-### 3.3 ArtHistoricalReferences
+### 3.4 ArtHistoricalReferences
 
 | Field | Type | Layer | Status | Definition |
 |---|---|---|---|---|
