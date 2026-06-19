@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildOriginalTierDisplayCopies,
   buildPublicEditionTiers,
+  getOriginalTier,
 } from '@/lib/artwork/ownershipRegistryPublic'
 import type { Artwork } from '@/payload-types'
 
@@ -151,6 +152,125 @@ describe('ownershipRegistryPublic', () => {
 
     expect(tiers[0]?.tierLabel).toBe("Collector's print")
     expect(tiers[0]?.headerSummary).toBe('Edition of 9 — available')
+  })
+
+  it('prefers seriesEditionTier spec over local dcs fields when relation is populated', () => {
+    const tiers = buildPublicEditionTiers(
+      artwork({
+        dcs: {
+          editionTiers: [
+            {
+              tierName: 'small-print',
+              totalEditionSize: 200,
+              printSubstrate: 'paper',
+              seriesEditionTier: {
+                id: 1,
+                tierName: "Collector's print",
+                tierOrder: 2,
+                editionSize: 6,
+                apCount: 2,
+                substrate: 'Aluminum dibond',
+                widthCm: 80,
+                heightCm: 120,
+                series: 1,
+                updatedAt: '',
+                createdAt: '',
+              },
+              copies: [
+                {
+                  copyNumber: '1/6',
+                  isArtistProof: false,
+                  owner: 'Private collection',
+                  claimStatus: 'claimed-confirmed',
+                  collectorVisible: true,
+                },
+              ],
+            },
+          ],
+        },
+      } as Artwork),
+    )
+
+    expect(tiers[0]?.tierLabel).toBe("Collector's print")
+    expect(tiers[0]?.headerSummary).toBe('1 of 6 claimed')
+    expect(tiers[0]?.claimedRows).toHaveLength(1)
+  })
+
+  it('reads isOriginalTier from seriesEditionTier and excludes that tier from the accordion', () => {
+    const tiers = buildPublicEditionTiers(
+      artwork({
+        dcs: {
+          editionTiers: [
+            {
+              tierName: 'monumental',
+              totalEditionSize: 3,
+              isOriginalTier: false,
+              seriesEditionTier: {
+                id: 2,
+                tierName: 'Monumental',
+                tierOrder: 1,
+                editionSize: 3,
+                apCount: 1,
+                isOriginalTier: true,
+                series: 1,
+                updatedAt: '',
+                createdAt: '',
+              },
+              copies: [],
+            },
+            {
+              tierName: 'small-print',
+              totalEditionSize: 200,
+              copies: [],
+            },
+          ],
+        },
+      } as Artwork),
+    )
+
+    expect(tiers).toHaveLength(1)
+    expect(tiers[0]?.tierLabel).toBe('Small print')
+    expect(getOriginalTier(artwork({
+      dcs: {
+        editionTiers: [
+          {
+            tierName: 'monumental',
+            seriesEditionTier: {
+              id: 2,
+              tierName: 'Monumental',
+              tierOrder: 1,
+              editionSize: 3,
+              apCount: 1,
+              isOriginalTier: true,
+              series: 1,
+              updatedAt: '',
+              createdAt: '',
+            },
+            copies: [],
+          },
+        ],
+      },
+    } as Artwork))?.tierLabel).toBe('Monumental')
+  })
+
+  it('computes claimed-count from copies[] only, not editionsRemaining', () => {
+    const tiers = buildPublicEditionTiers(
+      artwork({
+        dcs: {
+          editionTiers: [
+            {
+              tierName: 'collectors-print',
+              totalEditionSize: 9,
+              editionsRemaining: 8,
+              copies: [],
+            },
+          ],
+        },
+      } as Artwork),
+    )
+
+    expect(tiers[0]?.headerSummary).toBe('Edition of 9 — available')
+    expect(tiers[0]?.claimedRows).toHaveLength(0)
   })
 
   it('excludes isOriginalTier tiers from the editions accordion', () => {

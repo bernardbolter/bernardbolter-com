@@ -1,4 +1,4 @@
-import type { Artwork } from '@/payload-types'
+import type { Artwork, SeriesEditionTier } from '@/payload-types'
 
 export type OwnershipRegistryCopy = {
   copyNumber?: string | null
@@ -43,6 +43,31 @@ export type PublicEditionTier = {
   claimHref: string
 }
 
+const PRINT_SUBSTRATE_LABELS: Record<string, string> = {
+  paper: 'Paper',
+  'aluminum-mount': 'Aluminum mount',
+  canvas: 'Canvas',
+  'oil-on-canvas': 'Oil on canvas',
+}
+
+function substrateLabel(substrate: string | null | undefined): string | null {
+  const trimmed = substrate?.trim()
+  if (!trimmed) return null
+  return PRINT_SUBSTRATE_LABELS[trimmed] ?? trimmed
+}
+
+function formatDimensions(widthCm?: number | null, heightCm?: number | null): string | null {
+  if (widthCm == null || heightCm == null) return null
+  return `${widthCm} × ${heightCm} cm`
+}
+
+function resolveSeriesEditionTier(
+  value: DcsEditionTier['seriesEditionTier'],
+): SeriesEditionTier | null {
+  if (value == null || typeof value === 'number') return null
+  return value
+}
+
 const DCS_TIER_LABELS: Record<string, string> = {
   'small-print': 'Small print',
   'collectors-print': "Collector's print",
@@ -80,6 +105,21 @@ type MegacitiesEditionTier = NonNullable<
 
 function dcsTierToRegistryTier(tier: DcsEditionTier, index: number): OwnershipRegistryTier {
   const copies = normalizeCopies(tier.copies as OwnershipRegistryCopy[] | undefined)
+  const seriesTier = resolveSeriesEditionTier(tier.seriesEditionTier)
+
+  if (seriesTier) {
+    return {
+      tierLabel: seriesTier.tierName?.trim() || `Edition ${index + 1}`,
+      tierOrder: seriesTier.tierOrder ?? index + 1,
+      editionSize: seriesTier.editionSize,
+      apCount: seriesTier.apCount ?? countArtistProofs(copies),
+      isOriginalTier: seriesTier.isOriginalTier ?? tier.isOriginalTier ?? false,
+      copies,
+      printSubstrate: seriesTier.substrate?.trim() || substrateLabel(tier.printSubstrate),
+      dimensions: formatDimensions(seriesTier.widthCm, seriesTier.heightCm),
+    }
+  }
+
   const tierName = tier.tierName ?? ''
 
   return {
@@ -89,7 +129,7 @@ function dcsTierToRegistryTier(tier: DcsEditionTier, index: number): OwnershipRe
     apCount: countArtistProofs(copies),
     isOriginalTier: tier.isOriginalTier ?? false,
     copies,
-    printSubstrate: tier.printSubstrate ?? null,
+    printSubstrate: substrateLabel(tier.printSubstrate),
   }
 }
 
