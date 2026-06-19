@@ -15,6 +15,37 @@ import config from '@payload-config'
 
 const BASEL_SLUG = '__fixture-basel-dcs' as const
 
+const SERIES_TIER_NAMES = {
+  monumental: 'Monumental Edition',
+  'collectors-print': 'Collectors print',
+  'small-print': 'Small print',
+} as const
+
+async function getSeriesEditionTierIds(
+  payload: Awaited<ReturnType<typeof getPayload>>,
+  seriesId: number,
+): Promise<Record<keyof typeof SERIES_TIER_NAMES, number>> {
+  const result = await payload.find({
+    collection: 'series-edition-tiers',
+    where: { series: { equals: seriesId } },
+    limit: 20,
+    sort: 'tierOrder',
+    overrideAccess: true,
+  })
+
+  const ids = {} as Record<keyof typeof SERIES_TIER_NAMES, number>
+  for (const [key, tierName] of Object.entries(SERIES_TIER_NAMES)) {
+    const doc = result.docs.find((row) => row.tierName === tierName)
+    if (!doc) {
+      throw new Error(
+        `SeriesEditionTiers "${tierName}" not found for Digital City Series. Create in admin first.`,
+      )
+    }
+    ids[key as keyof typeof SERIES_TIER_NAMES] = doc.id
+  }
+  return ids
+}
+
 // Exact same tags as artworkFixture.ts — guaranteed to exist after that seed runs
 const TAG_DEFS = [
   { label: 'Post-internet', type: 'movement' as const },
@@ -42,6 +73,7 @@ async function seed() {
     throw new Error('Series "digital-city-series" not found. Create it in the admin first.')
   }
   const seriesId = seriesResult.docs[0].id
+  const seriesEditionTierIds = await getSeriesEditionTierIds(payload, seriesId)
 
   // --- Creator ---
   const artistResult = await payload.find({
@@ -325,11 +357,12 @@ async function seed() {
       },
     ],
 
-    // Edition tiers + ownership on dcs.editionTiers[] (per print-data-architecture-reference.md)
+    // Edition tiers — v2: seriesEditionTier relation + per-artwork copies[] (fixture test data)
     dcs: {
       editionTiers: [
         {
           tierName: 'monumental',
+          seriesEditionTier: seriesEditionTierIds.monumental,
           totalEditionSize: 3,
           printSubstrate: 'aluminum-mount',
           includesSupportingPrints: true,
@@ -356,12 +389,13 @@ async function seed() {
         },
         {
           tierName: 'collectors-print',
-          totalEditionSize: 9,
+          seriesEditionTier: seriesEditionTierIds['collectors-print'],
+          totalEditionSize: 6,
           printSubstrate: 'aluminum-mount',
           includesSupportingPrints: true,
           copies: [
             {
-              copyNumber: '2/9',
+              copyNumber: '2/6',
               isArtistProof: false,
               owner: 'K. Müller',
               claimStatus: 'claimed-confirmed',
@@ -370,7 +404,7 @@ async function seed() {
               claimedCopyNumberKnown: true,
             },
             {
-              copyNumber: '4/9',
+              copyNumber: '4/6',
               isArtistProof: false,
               owner: 'Private collection, London',
               claimStatus: 'claimed-confirmed',
@@ -379,16 +413,7 @@ async function seed() {
               claimedCopyNumberKnown: true,
             },
             {
-              copyNumber: '7/9',
-              isArtistProof: false,
-              owner: 'Private collection',
-              claimStatus: 'claimed-confirmed',
-              collectorVisible: true,
-              dateAcquired: '2024-03-01',
-              claimedCopyNumberKnown: false,
-            },
-            {
-              copyNumber: '9/9',
+              copyNumber: '6/6',
               isArtistProof: false,
               owner: 'Private collection, Amsterdam',
               claimStatus: 'claimed-confirmed',
@@ -416,6 +441,7 @@ async function seed() {
         },
         {
           tierName: 'small-print',
+          seriesEditionTier: seriesEditionTierIds['small-print'],
           totalEditionSize: 200,
           printSubstrate: 'paper',
           includesSupportingPrints: true,
@@ -480,7 +506,7 @@ async function seed() {
   console.log('  Loan hist:  Kunsthalle Basel 2015')
   console.log('  Ext links:  Artsy')
   console.log('  Registry T1 (Original 3+1AP):   1/3 claimed, AP suppressed')
-  console.log('  Registry T2 (Collectors 9+2AP): 4/9 claimed, APs suppressed')
+  console.log('  Registry T2 (Collectors 6+2AP): 3/6 claimed, APs suppressed')
   console.log('  Registry T3 (Small print 200):  0/200 — available')
   console.log('  Exhibition: Rietveld 2009 (linked), Dafen 2010 (plain text)')
 }
