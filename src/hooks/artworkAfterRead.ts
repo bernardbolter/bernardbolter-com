@@ -1,7 +1,6 @@
 import type { CollectionAfterReadHook } from 'payload'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
-import { resolveOwnershipRegistryTier } from '@/lib/artwork/ownershipRegistryPublic'
 
 type JsonRow = Record<string, unknown>
 
@@ -36,45 +35,51 @@ function sanitizeLoanHistory(rows: unknown): JsonRow[] {
   }))
 }
 
-function sanitizeOwnershipRegistry(rows: unknown): JsonRow[] {
-  return asRows(rows).map((tier) => {
-    const resolved = resolveOwnershipRegistryTier(tier as Parameters<typeof resolveOwnershipRegistryTier>[0])
-    const seriesTier =
-      typeof tier.seriesEditionTier === 'object' && tier.seriesEditionTier !== null
-        ? (tier.seriesEditionTier as JsonRow)
-        : null
+function sanitizeEditionTierCopies(rows: unknown): JsonRow[] {
+  return asRows(rows).map((copy) => ({
+    copyNumber: copy.copyNumber,
+    isArtistProof: copy.isArtistProof,
+    claimStatus: copy.claimStatus,
+    collectorVisible: copy.collectorVisible,
+    dateAcquired: copy.dateAcquired,
+    claimedCopyNumberKnown: copy.claimedCopyNumberKnown,
+    ...(copy.collectorVisible === true && copy.owner ? { owner: copy.owner } : {}),
+  }))
+}
 
-    return {
-      seriesEditionTier: seriesTier
-        ? {
-            id: seriesTier.id,
-            tierName: seriesTier.tierName,
-            tierOrder: seriesTier.tierOrder,
-            editionSize: seriesTier.editionSize,
-            apCount: seriesTier.apCount,
-            isOriginalTier: seriesTier.isOriginalTier,
-            widthCm: seriesTier.widthCm,
-            heightCm: seriesTier.heightCm,
-            substrate: seriesTier.substrate,
-            printTechnique: seriesTier.printTechnique,
-          }
-        : tier.seriesEditionTier,
-      tierLabel: resolved.tierLabel,
-      tierOrder: resolved.tierOrder,
-      editionSize: resolved.editionSize,
-      apCount: resolved.apCount,
-      isOriginalTier: resolved.isOriginalTier,
-      copies: asRows(tier.copies).map((copy) => ({
-        copyNumber: copy.copyNumber,
-        isArtistProof: copy.isArtistProof,
-        claimStatus: copy.claimStatus,
-        collectorVisible: copy.collectorVisible,
-        dateAcquired: copy.dateAcquired,
-        claimedCopyNumberKnown: copy.claimedCopyNumberKnown,
-        ...(copy.collectorVisible === true && copy.owner ? { owner: copy.owner } : {}),
-      })),
-    }
-  })
+function sanitizeDcsEditionTiers(rows: unknown): JsonRow[] {
+  return asRows(rows).map((tier) => ({
+    tierName: tier.tierName,
+    totalEditionSize: tier.totalEditionSize,
+    printSubstrate: tier.printSubstrate,
+    includesSupportingPrints: tier.includesSupportingPrints,
+    isOriginalTier: tier.isOriginalTier,
+    copies: sanitizeEditionTierCopies(tier.copies),
+  }))
+}
+
+function sanitizeMegacitiesEditions(rows: unknown): JsonRow[] {
+  return asRows(rows).map((tier) => ({
+    tier: tier.tier,
+    dimensions: tier.dimensions,
+    editionSize: tier.editionSize,
+    arEnabled: tier.arEnabled,
+    available: tier.available,
+    notes: tier.notes,
+    isOriginalTier: tier.isOriginalTier,
+    copies: sanitizeEditionTierCopies(tier.copies),
+  }))
+}
+
+function sanitizeOwnershipRegistry(rows: unknown): JsonRow[] {
+  return asRows(rows).map((tier) => ({
+    tierLabel: tier.tierLabel,
+    tierOrder: tier.tierOrder,
+    editionSize: tier.editionSize,
+    apCount: tier.apCount,
+    isOriginalTier: tier.isOriginalTier,
+    copies: sanitizeEditionTierCopies(tier.copies),
+  }))
 }
 
 function sanitizeCurrentLocation(location: unknown): JsonRow | null {
@@ -97,6 +102,10 @@ function sanitizeCurrentLocation(location: unknown): JsonRow | null {
 export const artworkAfterRead: CollectionAfterReadHook = async ({ doc, req }) => {
   if (isArtistOrAdmin(req.user)) return doc
 
+  const dcs = doc.dcs as JsonRow | null | undefined
+  const megacities = doc.megacities as JsonRow | null | undefined
+  const megacitiesPrint = megacities?.print as JsonRow | null | undefined
+
   return {
     ...doc,
     currentLocation: sanitizeCurrentLocation(doc.currentLocation),
@@ -104,6 +113,23 @@ export const artworkAfterRead: CollectionAfterReadHook = async ({ doc, req }) =>
     provenanceConfidenceLayer: sanitizeProvenanceConfidenceLayer(doc.provenanceConfidenceLayer),
     loanHistory: sanitizeLoanHistory(doc.loanHistory),
     ownershipRegistry: sanitizeOwnershipRegistry(doc.ownershipRegistry),
+    dcs: dcs
+      ? {
+          ...dcs,
+          editionTiers: sanitizeDcsEditionTiers(dcs.editionTiers),
+        }
+      : dcs,
+    megacities: megacities
+      ? {
+          ...megacities,
+          print: megacitiesPrint
+            ? {
+                ...megacitiesPrint,
+                editions: sanitizeMegacitiesEditions(megacitiesPrint.editions),
+              }
+            : megacitiesPrint,
+        }
+      : megacities,
     askingPrice: undefined,
     salesRecord: undefined,
     consignmentDetails: undefined,

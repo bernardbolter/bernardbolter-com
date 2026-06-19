@@ -15,58 +15,6 @@ import config from '@payload-config'
 
 const BASEL_SLUG = '__fixture-basel-dcs' as const
 
-type SeriesEditionTierSeed = {
-  tierName: string
-  tierOrder: number
-  isOriginalTier: boolean
-  editionSize: number
-  apCount: number
-  widthCm: number
-  heightCm: number
-  substrate: string
-  printTechnique: 'giclee' | 'screenprint' | 'lithograph' | 'etching' | 'other'
-  notes?: string
-}
-
-const DCS_TIER_DEFS: SeriesEditionTierSeed[] = [
-  {
-    tierName: 'Original edition',
-    tierOrder: 1,
-    isOriginalTier: true,
-    editionSize: 3,
-    apCount: 1,
-    widthCm: 121,
-    heightCm: 121,
-    substrate: 'Aluminium dibond',
-    printTechnique: 'other',
-    notes: 'Monumental square composition — 48 × 48 in dye-sublimation on aluminium.',
-  },
-  {
-    tierName: 'Collectors print',
-    tierOrder: 2,
-    isOriginalTier: false,
-    editionSize: 9,
-    apCount: 2,
-    widthCm: 61,
-    heightCm: 61,
-    substrate: 'Aluminium dibond',
-    printTechnique: 'other',
-    notes: '24 × 24 in collectors format on aluminium mount.',
-  },
-  {
-    tierName: 'Small print',
-    tierOrder: 3,
-    isOriginalTier: false,
-    editionSize: 200,
-    apCount: 0,
-    widthCm: 30,
-    heightCm: 30,
-    substrate: 'Hahnemühle Photo Rag 308gsm',
-    printTechnique: 'giclee',
-    notes: 'Square small-format paper edition.',
-  },
-]
-
 // Exact same tags as artworkFixture.ts — guaranteed to exist after that seed runs
 const TAG_DEFS = [
   { label: 'Post-internet', type: 'movement' as const },
@@ -79,38 +27,6 @@ const TAG_DEFS = [
   { label: 'Archive',       type: 'subject'  as const },
   { label: 'Painting',      type: 'genre'    as const },
 ]
-
-async function ensureSeriesEditionTier(
-  payload: Awaited<ReturnType<typeof getPayload>>,
-  seriesId: number,
-  def: SeriesEditionTierSeed,
-): Promise<number> {
-  const existing = await payload.find({
-    collection: 'series-edition-tiers',
-    where: {
-      and: [{ series: { equals: seriesId } }, { tierName: { equals: def.tierName } }],
-    },
-    limit: 1,
-    overrideAccess: true,
-  })
-
-  if (existing.docs[0]) {
-    const updated = await payload.update({
-      collection: 'series-edition-tiers',
-      id: existing.docs[0].id,
-      data: { series: seriesId, ...def },
-      overrideAccess: true,
-    })
-    return updated.id
-  }
-
-  const created = await payload.create({
-    collection: 'series-edition-tiers',
-    data: { series: seriesId, ...def },
-    overrideAccess: true,
-  })
-  return created.id
-}
 
 async function seed() {
   const payload = await getPayload({ config })
@@ -126,11 +42,6 @@ async function seed() {
     throw new Error('Series "digital-city-series" not found. Create it in the admin first.')
   }
   const seriesId = seriesResult.docs[0].id
-
-  const tierIds: Record<string, number> = {}
-  for (const def of DCS_TIER_DEFS) {
-    tierIds[def.tierName] = await ensureSeriesEditionTier(payload, seriesId, def)
-  }
 
   // --- Creator ---
   const artistResult = await payload.find({
@@ -414,95 +325,106 @@ async function seed() {
       },
     ],
 
-    // Ownership registry — three tiers via seriesEditionTier relations
-    ownershipRegistry: [
-      {
-        seriesEditionTier: tierIds['Original edition'],
-        copies: [
-          {
-            copyNumber: '1/3',
-            isArtistProof: false,
-            owner: 'Private collection, Berlin',
-            claimStatus: 'claimed-confirmed',
-            collectorVisible: true,
-            dateAcquired: '2023-09',
-            claimedCopyNumberKnown: true,
-          },
-          {
-            copyNumber: 'AP',
-            isArtistProof: true,
-            owner: null,
-            claimStatus: 'artist-held',
-            collectorVisible: false,
-            dateAcquired: null,
-            claimedCopyNumberKnown: false,
-          },
-        ],
-      },
-      {
-        seriesEditionTier: tierIds['Collectors print'],
-        copies: [
-          {
-            copyNumber: '2/9',
-            isArtistProof: false,
-            owner: 'K. Müller',
-            claimStatus: 'claimed-confirmed',
-            collectorVisible: true,
-            dateAcquired: '2023-11',
-            claimedCopyNumberKnown: true,
-          },
-          {
-            copyNumber: '4/9',
-            isArtistProof: false,
-            owner: 'Private collection, London',
-            claimStatus: 'claimed-confirmed',
-            collectorVisible: true,
-            dateAcquired: '2024-01',
-            claimedCopyNumberKnown: true,
-          },
-          {
-            copyNumber: '7/9',
-            isArtistProof: false,
-            owner: 'Private collection',
-            claimStatus: 'claimed-confirmed',
-            collectorVisible: true,
-            dateAcquired: '2024-03',
-            claimedCopyNumberKnown: false,
-          },
-          {
-            copyNumber: '9/9',
-            isArtistProof: false,
-            owner: 'Private collection, Amsterdam',
-            claimStatus: 'claimed-confirmed',
-            collectorVisible: true,
-            dateAcquired: '2024-06',
-            claimedCopyNumberKnown: true,
-          },
-          {
-            copyNumber: 'AP 1/2',
-            isArtistProof: true,
-            owner: null,
-            claimStatus: 'artist-held',
-            collectorVisible: false,
-            dateAcquired: null,
-            claimedCopyNumberKnown: false,
-          },
-          {
-            copyNumber: 'AP 2/2',
-            isArtistProof: true,
-            owner: null,
-            claimStatus: 'artist-held',
-            collectorVisible: false,
-            dateAcquired: null,
-            claimedCopyNumberKnown: false,
-          },
-        ],
-      },
-      {
-        seriesEditionTier: tierIds['Small print'],
-        copies: [],
-      },
-    ],
+    // Edition tiers + ownership on dcs.editionTiers[] (per print-data-architecture-reference.md)
+    dcs: {
+      editionTiers: [
+        {
+          tierName: 'monumental',
+          totalEditionSize: 3,
+          printSubstrate: 'aluminum-mount',
+          includesSupportingPrints: true,
+          isOriginalTier: true,
+          copies: [
+            {
+              copyNumber: '1/3',
+              isArtistProof: false,
+              owner: 'Private collection, Berlin',
+              claimStatus: 'claimed-confirmed',
+              collectorVisible: true,
+              dateAcquired: '2023-09-15',
+              claimedCopyNumberKnown: true,
+            },
+            {
+              copyNumber: 'AP',
+              isArtistProof: true,
+              owner: null,
+              claimStatus: 'artist-held',
+              collectorVisible: false,
+              claimedCopyNumberKnown: false,
+            },
+          ],
+        },
+        {
+          tierName: 'collectors-print',
+          totalEditionSize: 9,
+          printSubstrate: 'aluminum-mount',
+          includesSupportingPrints: true,
+          copies: [
+            {
+              copyNumber: '2/9',
+              isArtistProof: false,
+              owner: 'K. Müller',
+              claimStatus: 'claimed-confirmed',
+              collectorVisible: true,
+              dateAcquired: '2023-11-01',
+              claimedCopyNumberKnown: true,
+            },
+            {
+              copyNumber: '4/9',
+              isArtistProof: false,
+              owner: 'Private collection, London',
+              claimStatus: 'claimed-confirmed',
+              collectorVisible: true,
+              dateAcquired: '2024-01-15',
+              claimedCopyNumberKnown: true,
+            },
+            {
+              copyNumber: '7/9',
+              isArtistProof: false,
+              owner: 'Private collection',
+              claimStatus: 'claimed-confirmed',
+              collectorVisible: true,
+              dateAcquired: '2024-03-01',
+              claimedCopyNumberKnown: false,
+            },
+            {
+              copyNumber: '9/9',
+              isArtistProof: false,
+              owner: 'Private collection, Amsterdam',
+              claimStatus: 'claimed-confirmed',
+              collectorVisible: true,
+              dateAcquired: '2024-06-01',
+              claimedCopyNumberKnown: true,
+            },
+            {
+              copyNumber: 'AP 1/2',
+              isArtistProof: true,
+              owner: null,
+              claimStatus: 'artist-held',
+              collectorVisible: false,
+              claimedCopyNumberKnown: false,
+            },
+            {
+              copyNumber: 'AP 2/2',
+              isArtistProof: true,
+              owner: null,
+              claimStatus: 'artist-held',
+              collectorVisible: false,
+              claimedCopyNumberKnown: false,
+            },
+          ],
+        },
+        {
+          tierName: 'small-print',
+          totalEditionSize: 200,
+          printSubstrate: 'paper',
+          includesSupportingPrints: true,
+          copies: [],
+        },
+      ],
+    },
+
+    ownershipRegistry: [],
 
     untrackedEditionsNote:
       'Small A3 prints were sold informally at the Rietveld graduation show in 2009. Not consistently numbered; not individually tracked.',

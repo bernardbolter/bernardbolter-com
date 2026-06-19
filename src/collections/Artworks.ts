@@ -9,6 +9,7 @@ import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
 import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
 
 import { artworkPrimaryMediaFields } from './artworks/artworkPrimaryMediaFields'
+import { editionTierIsOriginalTierField } from './artworks/editionTierOwnershipFields'
 import { dcsTab } from './artworks/dcsTabFields'
 import { fieldNotesTab } from './artworks/fieldNotesTab'
 import { megacitiesTab } from './artworks/megacitiesTabFields'
@@ -1460,7 +1461,7 @@ export const Artworks: CollectionConfig = {
               ],
               admin: {
                 description:
-                  'Whether this work has tracked edition tiers in ownershipRegistry. Independent of commercial stock systems.',
+                  'Whether this work has tracked edition tiers (DCS/Megacities editionTiers, or ownershipRegistry for other works).',
               },
             },
             {
@@ -1469,51 +1470,32 @@ export const Artworks: CollectionConfig = {
               labels: { singular: 'Edition tier', plural: 'Ownership registry' },
               admin: {
                 description:
-                  'Per-copy ownership claims by edition tier. Use seriesEditionTier for series-structured works; inline tier fields for others.',
+                  'Per-copy ownership for non-DCS/Megacities works (e.g. giclée tiers on A Colorful History). DCS and Megacities use copies[] on their edition tier tabs instead.',
               },
               fields: [
                 {
-                  name: 'seriesEditionTier',
-                  type: 'relationship',
-                  relationTo: 'series-edition-tiers',
-                  admin: {
-                    description:
-                      'Series-level tier definition. When set, tier metadata is read from this record instead of inline fields below.',
-                  },
-                },
-                {
                   name: 'tierLabel',
                   type: 'text',
+                  required: true,
                   admin: {
-                    description:
-                      'Fallback display label when seriesEditionTier is not used (e.g. giclée tiers on A Colorful History works).',
+                    description: 'Display label, e.g. "Small giclée".',
                   },
                 },
                 {
                   name: 'tierOrder',
                   type: 'number',
-                  admin: {
-                    description: 'Fallback display order when seriesEditionTier is not used.',
-                  },
+                  required: true,
                 },
                 {
                   name: 'editionSize',
                   type: 'number',
+                  required: true,
                   admin: {
-                    description:
-                      'Fallback numbered edition size when seriesEditionTier is not used.',
+                    description: 'Numbered copies only — excludes AP count.',
                   },
                 },
                 { name: 'apCount', type: 'number', defaultValue: 0 },
-                {
-                  name: 'isOriginalTier',
-                  type: 'checkbox',
-                  defaultValue: false,
-                  admin: {
-                    description:
-                      'Fallback flag when seriesEditionTier is not used. On series tiers, set isOriginalTier on the SeriesEditionTiers record instead.',
-                  },
-                },
+                editionTierIsOriginalTierField,
                 {
                   name: 'copies',
                   type: 'array',

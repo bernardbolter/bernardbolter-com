@@ -1,6 +1,10 @@
 import type { Tab } from 'payload'
 
 import { privateFieldAccess } from '@/access/isArtistOrAdmin'
+import {
+  editionTierCopiesField,
+  editionTierIsOriginalTierField,
+} from '@/collections/artworks/editionTierOwnershipFields'
 
 /** Overlay / map coordinates — optional until set in admin tooling (Art/Official does not collect x/y). */
 const xyPointFields = [
@@ -534,6 +538,8 @@ export const megacitiesTab: Tab = {
                 { name: 'arEnabled', type: 'checkbox', defaultValue: false },
                 { name: 'available', type: 'checkbox', defaultValue: true },
                 { name: 'notes', type: 'textarea' },
+                editionTierIsOriginalTierField,
+                editionTierCopiesField,
               ],
             },
             {

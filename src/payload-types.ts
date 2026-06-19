@@ -72,7 +72,6 @@ export interface Config {
     artists: Artist;
     'practice-knowledge': PracticeKnowledge;
     series: Series;
-    'series-edition-tiers': SeriesEditionTier;
     lines: Line;
     'studio-conversations': StudioConversation;
     'pattern-reports': PatternReport;
@@ -105,7 +104,6 @@ export interface Config {
     artists: ArtistsSelect<false> | ArtistsSelect<true>;
     'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
-    'series-edition-tiers': SeriesEditionTiersSelect<false> | SeriesEditionTiersSelect<true>;
     lines: LinesSelect<false> | LinesSelect<true>;
     'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     'pattern-reports': PatternReportsSelect<false> | PatternReportsSelect<true>;
@@ -1255,33 +1253,26 @@ export interface Artwork {
     | boolean
     | null;
   /**
-   * Whether this work has tracked edition tiers in ownershipRegistry. Independent of commercial stock systems.
+   * Whether this work has tracked edition tiers (DCS/Megacities editionTiers, or ownershipRegistry for other works).
    */
   hasEditions?: ('none' | 'limited' | 'open') | null;
   /**
-   * Per-copy ownership claims by edition tier. Use seriesEditionTier for series-structured works; inline tier fields for others.
+   * Per-copy ownership for non-DCS/Megacities works (e.g. giclée tiers on A Colorful History). DCS and Megacities use copies[] on their edition tier tabs instead.
    */
   ownershipRegistry?:
     | {
         /**
-         * Series-level tier definition. When set, tier metadata is read from this record instead of inline fields below.
+         * Display label, e.g. "Small giclée".
          */
-        seriesEditionTier?: (number | null) | SeriesEditionTier;
+        tierLabel: string;
+        tierOrder: number;
         /**
-         * Fallback display label when seriesEditionTier is not used (e.g. giclée tiers on A Colorful History works).
+         * Numbered copies only — excludes AP count.
          */
-        tierLabel?: string | null;
-        /**
-         * Fallback display order when seriesEditionTier is not used.
-         */
-        tierOrder?: number | null;
-        /**
-         * Fallback numbered edition size when seriesEditionTier is not used.
-         */
-        editionSize?: number | null;
+        editionSize: number;
         apCount?: number | null;
         /**
-         * Fallback flag when seriesEditionTier is not used. On series tiers, set isOriginalTier on the SeriesEditionTiers record instead.
+         * True only for the tier that IS the artwork itself — e.g. DCS/Megacities 3+1AP monumental. Renders in Status & Provenance, not in the Editions accordion.
          */
         isOriginalTier?: boolean | null;
         copies?:
@@ -2065,6 +2056,31 @@ export interface Artwork {
            */
           editionsRemainingUpdatedAt?: string | null;
           tierAvailabilityStatus?: ('available' | 'sold-out' | 'not-yet-listed' | 'not-for-sale') | null;
+          /**
+           * True only for the tier that IS the artwork itself — e.g. DCS/Megacities 3+1AP monumental. Renders in Status & Provenance, not in the Editions accordion.
+           */
+          isOriginalTier?: boolean | null;
+          /**
+           * Per-copy ownership claims for this tier. Claimed-count on the public page is always computed from here — never from editionsRemaining.
+           */
+          copies?:
+            | {
+                copyNumber: string;
+                isArtistProof?: boolean | null;
+                owner?: string | null;
+                claimStatus?:
+                  | ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary')
+                  | null;
+                collectorVisible?: boolean | null;
+                dateAcquired?: string | null;
+                claimedCopyNumberKnown?: boolean | null;
+                /**
+                 * Private — never rendered publicly.
+                 */
+                notes?: string | null;
+                id?: string | null;
+              }[]
+            | null;
           id?: string | null;
         }[]
       | null;
@@ -2378,6 +2394,31 @@ export interface Artwork {
             arEnabled?: boolean | null;
             available?: boolean | null;
             notes?: string | null;
+            /**
+             * True only for the tier that IS the artwork itself — e.g. DCS/Megacities 3+1AP monumental. Renders in Status & Provenance, not in the Editions accordion.
+             */
+            isOriginalTier?: boolean | null;
+            /**
+             * Per-copy ownership claims for this tier. Claimed-count on the public page is always computed from here — never from editionsRemaining.
+             */
+            copies?:
+              | {
+                  copyNumber: string;
+                  isArtistProof?: boolean | null;
+                  owner?: string | null;
+                  claimStatus?:
+                    | ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary')
+                    | null;
+                  collectorVisible?: boolean | null;
+                  dateAcquired?: string | null;
+                  claimedCopyNumberKnown?: boolean | null;
+                  /**
+                   * Private — never rendered publicly.
+                   */
+                  notes?: string | null;
+                  id?: string | null;
+                }[]
+              | null;
             id?: string | null;
           }[]
         | null;
@@ -2955,58 +2996,6 @@ export interface Line {
   createdAt: string;
 }
 /**
- * Series-level edition tier definitions (size, substrate, edition counts). Referenced by artwork ownershipRegistry for series-structured works.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "series-edition-tiers".
- */
-export interface SeriesEditionTier {
-  id: number;
-  /**
-   * Top-level series or sub-series this tier belongs to (e.g. Digital City Series).
-   */
-  series: number | Series;
-  /**
-   * Display label, e.g. "Original edition", "Collectors print".
-   */
-  tierName: string;
-  /**
-   * 1 = most exclusive; ascending display order only.
-   */
-  tierOrder: number;
-  /**
-   * True when this tier IS the original artwork (e.g. DCS monumental 3+1AP), not a print of it.
-   */
-  isOriginalTier?: boolean | null;
-  /**
-   * Numbered copies only — excludes AP count.
-   */
-  editionSize: number;
-  /**
-   * Artist's proof count. 0 when none.
-   */
-  apCount?: number | null;
-  /**
-   * Print width in centimetres.
-   */
-  widthCm?: number | null;
-  /**
-   * Print height in centimetres.
-   */
-  heightCm?: number | null;
-  /**
-   * Physical support, e.g. Aluminium dibond, Hahnemühle Photo Rag.
-   */
-  substrate?: string | null;
-  printTechnique?: ('giclee' | 'screenprint' | 'lithograph' | 'etching' | 'other') | null;
-  /**
-   * Internal or public notes on this tier definition.
-   */
-  notes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Photographic and image-making technologies referenced by ACH source photographs.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3579,10 +3568,6 @@ export interface PayloadLockedDocument {
         value: number | Series;
       } | null)
     | ({
-        relationTo: 'series-edition-tiers';
-        value: number | SeriesEditionTier;
-      } | null)
-    | ({
         relationTo: 'lines';
         value: number | Line;
       } | null)
@@ -3896,25 +3881,6 @@ export interface SeriesSelect<T extends boolean = true> {
   status?: T;
   seriesUntrackedEditionsNote?: T;
   jsonldOutput?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "series-edition-tiers_select".
- */
-export interface SeriesEditionTiersSelect<T extends boolean = true> {
-  series?: T;
-  tierName?: T;
-  tierOrder?: T;
-  isOriginalTier?: T;
-  editionSize?: T;
-  apCount?: T;
-  widthCm?: T;
-  heightCm?: T;
-  substrate?: T;
-  printTechnique?: T;
-  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4511,7 +4477,6 @@ export interface ArtworksSelect<T extends boolean = true> {
   ownershipRegistry?:
     | T
     | {
-        seriesEditionTier?: T;
         tierLabel?: T;
         tierOrder?: T;
         editionSize?: T;
@@ -4807,6 +4772,20 @@ export interface ArtworksSelect<T extends boolean = true> {
               editionsRemaining?: T;
               editionsRemainingUpdatedAt?: T;
               tierAvailabilityStatus?: T;
+              isOriginalTier?: T;
+              copies?:
+                | T
+                | {
+                    copyNumber?: T;
+                    isArtistProof?: T;
+                    owner?: T;
+                    claimStatus?: T;
+                    collectorVisible?: T;
+                    dateAcquired?: T;
+                    claimedCopyNumberKnown?: T;
+                    notes?: T;
+                    id?: T;
+                  };
               id?: T;
             };
         oilPainting?:
@@ -5038,6 +5017,20 @@ export interface ArtworksSelect<T extends boolean = true> {
                     arEnabled?: T;
                     available?: T;
                     notes?: T;
+                    isOriginalTier?: T;
+                    copies?:
+                      | T
+                      | {
+                          copyNumber?: T;
+                          isArtistProof?: T;
+                          owner?: T;
+                          claimStatus?: T;
+                          collectorVisible?: T;
+                          dateAcquired?: T;
+                          claimedCopyNumberKnown?: T;
+                          notes?: T;
+                          id?: T;
+                        };
                     id?: T;
                   };
               certificateOfAuthenticity?: T;

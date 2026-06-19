@@ -1,6 +1,10 @@
 import type { Tab } from 'payload'
 
 import { privateFieldAccess } from '@/access/isArtistOrAdmin'
+import {
+  editionTierCopiesField,
+  editionTierIsOriginalTierField,
+} from '@/collections/artworks/editionTierOwnershipFields'
 
 export const dcsTab: Tab = {
   label: 'Digital City Series',
@@ -300,6 +304,8 @@ export const dcsTab: Tab = {
                 { label: 'Not for sale', value: 'not-for-sale' },
               ],
             },
+            editionTierIsOriginalTierField,
+            editionTierCopiesField,
           ],
         },
 

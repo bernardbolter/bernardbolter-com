@@ -1,4 +1,4 @@
-import type { Artwork, SeriesEditionTier } from '@/payload-types'
+import type { Artwork } from '@/payload-types'
 
 export type OwnershipRegistryCopy = {
   copyNumber?: string | null
@@ -17,13 +17,14 @@ export type OwnershipRegistryCopy = {
 }
 
 export type OwnershipRegistryTier = {
-  seriesEditionTier?: number | SeriesEditionTier | null
   tierLabel?: string | null
   tierOrder?: number | null
   editionSize?: number | null
   apCount?: number | null
   isOriginalTier?: boolean | null
   copies?: OwnershipRegistryCopy[] | null
+  printSubstrate?: string | null
+  dimensions?: string | null
 }
 
 export type PublicEditionTierRow = {
@@ -42,36 +43,98 @@ export type PublicEditionTier = {
   claimHref: string
 }
 
-function isPopulatedSeriesEditionTier(
-  value: number | SeriesEditionTier | null | undefined,
-): value is SeriesEditionTier {
-  return typeof value === 'object' && value !== null && 'tierName' in value
+const DCS_TIER_LABELS: Record<string, string> = {
+  'small-print': 'Small print',
+  'collectors-print': "Collector's print",
+  monumental: 'Original edition',
+  'oil-painting': 'Oil painting',
 }
 
-/** Merge seriesEditionTier metadata with inline fallback fields on each registry row. */
-export function resolveOwnershipRegistryTier(
-  tier: OwnershipRegistryTier,
-): OwnershipRegistryTier {
-  const seriesTier = isPopulatedSeriesEditionTier(tier.seriesEditionTier)
-    ? tier.seriesEditionTier
-    : null
+const DCS_TIER_ORDER: Record<string, number> = {
+  monumental: 1,
+  'oil-painting': 1,
+  'collectors-print': 2,
+  'small-print': 3,
+}
 
-  if (!seriesTier) return tier
+const MEGACITIES_TIER_LABELS: Record<string, string> = {
+  full_size: 'Full size',
+  a0: 'A0',
+  a1: 'A1',
+}
+
+function countArtistProofs(copies: OwnershipRegistryCopy[] | null | undefined): number {
+  return (copies ?? []).filter((copy) => copy?.isArtistProof).length
+}
+
+function normalizeCopies(
+  copies: OwnershipRegistryCopy[] | null | undefined,
+): OwnershipRegistryCopy[] {
+  return Array.isArray(copies) ? copies : []
+}
+
+type DcsEditionTier = NonNullable<NonNullable<Artwork['dcs']>['editionTiers']>[number]
+type MegacitiesEditionTier = NonNullable<
+  NonNullable<NonNullable<Artwork['megacities']>['print']>['editions']
+>[number]
+
+function dcsTierToRegistryTier(tier: DcsEditionTier, index: number): OwnershipRegistryTier {
+  const copies = normalizeCopies(tier.copies as OwnershipRegistryCopy[] | undefined)
+  const tierName = tier.tierName ?? ''
 
   return {
-    ...tier,
-    tierLabel: seriesTier.tierName,
-    tierOrder: seriesTier.tierOrder,
-    editionSize: seriesTier.editionSize,
-    apCount: seriesTier.apCount ?? 0,
-    isOriginalTier: seriesTier.isOriginalTier ?? false,
+    tierLabel: DCS_TIER_LABELS[tierName] ?? tierName,
+    tierOrder: DCS_TIER_ORDER[tierName] ?? index + 1,
+    editionSize: tier.totalEditionSize,
+    apCount: countArtistProofs(copies),
+    isOriginalTier: tier.isOriginalTier ?? false,
+    copies,
+    printSubstrate: tier.printSubstrate ?? null,
   }
 }
 
-function asTiers(artwork: Artwork): OwnershipRegistryTier[] {
+function megacitiesTierToRegistryTier(
+  tier: MegacitiesEditionTier,
+  index: number,
+): OwnershipRegistryTier {
+  const copies = normalizeCopies(tier.copies as OwnershipRegistryCopy[] | undefined)
+
+  return {
+    tierLabel:
+      (tier.tier ? MEGACITIES_TIER_LABELS[tier.tier] : null) ??
+      tier.tier ??
+      `Edition ${index + 1}`,
+    tierOrder: index + 1,
+    editionSize: tier.editionSize ?? 0,
+    apCount: countArtistProofs(copies),
+    isOriginalTier: tier.isOriginalTier ?? false,
+    copies,
+    dimensions: tier.dimensions ?? null,
+  }
+}
+
+function ownershipRegistryTierToRegistryTier(tier: OwnershipRegistryTier): OwnershipRegistryTier {
+  return {
+    ...tier,
+    copies: normalizeCopies(tier.copies),
+  }
+}
+
+/** Resolve edition tiers from DCS tab, Megacities print, or ownershipRegistry fallback. */
+export function asEditionTiers(artwork: Artwork): OwnershipRegistryTier[] {
+  const dcsTiers = artwork.dcs?.editionTiers
+  if (Array.isArray(dcsTiers) && dcsTiers.length > 0) {
+    return dcsTiers.map(dcsTierToRegistryTier)
+  }
+
+  const megacitiesTiers = artwork.megacities?.print?.editions
+  if (Array.isArray(megacitiesTiers) && megacitiesTiers.length > 0) {
+    return megacitiesTiers.map(megacitiesTierToRegistryTier)
+  }
+
   const raw = (artwork as Artwork & { ownershipRegistry?: OwnershipRegistryTier[] })
     .ownershipRegistry
-  return Array.isArray(raw) ? raw.map(resolveOwnershipRegistryTier) : []
+  return Array.isArray(raw) ? raw.map(ownershipRegistryTierToRegistryTier) : []
 }
 
 function numberedCopies(tier: OwnershipRegistryTier): OwnershipRegistryCopy[] {
@@ -141,7 +204,7 @@ export function buildEditionClaimSummary(artwork: Artwork): string[] {
 }
 
 export function getOriginalTier(artwork: Artwork): OwnershipRegistryTier | null {
-  return asTiers(artwork).find((tier) => tier.isOriginalTier === true) ?? null
+  return asEditionTiers(artwork).find((tier) => tier.isOriginalTier === true) ?? null
 }
 
 /** Fills missing numbered slots as unclaimed — unlike Editions accordion, unclaimed copies are shown here. */
@@ -202,7 +265,7 @@ export function originalCopyOwnerLabel(copy: OwnershipRegistryCopy): string {
 export function buildPublicEditionTiers(artwork: Artwork): PublicEditionTier[] {
   const slug = artwork.slug?.trim() || ''
 
-  return asTiers(artwork)
+  return asEditionTiers(artwork)
     .filter((tier) => tier.tierLabel?.trim() && tier.isOriginalTier !== true)
     .slice()
     .sort((a, b) => (a.tierOrder ?? 0) - (b.tierOrder ?? 0))

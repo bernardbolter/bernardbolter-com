@@ -133,29 +133,23 @@ describe('ownershipRegistryPublic', () => {
     )
   })
 
-  it('resolves tier metadata from a populated seriesEditionTier relation', () => {
+  it('resolves tier metadata from dcs.editionTiers copies', () => {
     const tiers = buildPublicEditionTiers(
       artwork({
-        ownershipRegistry: [
-          {
-            seriesEditionTier: {
-              id: 10,
-              tierName: 'Collectors print',
-              tierOrder: 2,
-              editionSize: 9,
-              apCount: 2,
-              isOriginalTier: false,
-              series: 1,
-              updatedAt: '',
-              createdAt: '',
+        dcs: {
+          editionTiers: [
+            {
+              tierName: 'collectors-print',
+              totalEditionSize: 9,
+              printSubstrate: 'aluminum-mount',
+              copies: [],
             },
-            copies: [],
-          },
-        ],
-      }),
+          ],
+        },
+      } as Artwork),
     )
 
-    expect(tiers[0]?.tierLabel).toBe('Collectors print')
+    expect(tiers[0]?.tierLabel).toBe("Collector's print")
     expect(tiers[0]?.headerSummary).toBe('Edition of 9 — available')
   })
 
