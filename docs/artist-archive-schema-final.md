@@ -71,6 +71,7 @@ The Artist Archive data model consists of two primary collections and four depen
 | **Events** | Primary | All professional events — exhibitions, fairs, prizes, residencies, publications, commissions, talks, screenings. Drives CV page and exhibition history on artwork pages. |
 | Tags | Dependent | Classification vocabulary for Artworks and Events. Typed by category. Carries optional authority URIs. |
 | Series | Dependent | Practice series. Each artwork belongs to exactly one series. |
+| SeriesEditionTiers | Dependent | Series-level edition tier spec + one shared `vendureProductId` per tier. Artwork `dcs.editionTiers[]` entries relate here (v2 architecture). |
 | ArtHistoricalReferences | Dependent | Structured records for artworks and artists the practice is in dialogue with. |
 | Artist | Singleton | The single artist record. Holds all biographical, statement, contact, and identity fields. |
 
@@ -82,6 +83,8 @@ All relations are bidirectional in Payload — populating one side automatically
 |---|---|
 | `Artworks ↔ Events` | Many-to-many. Authority side: `Events.artworks`. Adding a work to an event auto-populates `Artworks.events`. |
 | `Artworks → Series` | Many-to-one. Every artwork belongs to exactly one series. Authority: `Artworks.series`. |
+| `SeriesEditionTiers → Series` | Many-to-one. Tier spec per series or sub-series. Authority: `SeriesEditionTiers.series`. |
+| `Artworks.dcs.editionTiers[] → SeriesEditionTiers` | Many-to-one per tier entry (optional). Shared spec + Vendure Product; artwork carries `vendureVariantId` and `copies[]`. |
 | `Artworks → Tags` | Many-to-many across five tag arrays. Authority: Artworks. |
 | `Artworks → ArtHistoricalReferences` | Many-to-many. Authority: `Artworks.artHistoricalReferences`. |
 | `Artworks → Artist` | Many-to-one. Artist record referenced in JSON-LD output. |
@@ -322,7 +325,7 @@ All fields in this section are private and role-restricted. Never visible to edi
 | `provenanceOriginKnown` | boolean | private | TEMPORAL | NEW | Default `true`. Set `false` when studio-to-first-owner chain is not traceable. Makes uncertainty explicit. |
 | `provenanceConfidenceLayer` | array of objects | private | GAP FILLER | NEW | Evidence basis for provenance claims. Each: `{ claim, evidenceBasis, confidenceLevel (documented-fact\|credible-inference\|institutional-assertion\|speculation) }`. |
 | `hasEditions` | select | artist | CORE | NEW | Values: `none` \| `limited` \| `open`. Whether this work has tracked edition tiers. |
-| `ownershipRegistry` | array of objects | mixed | NEW | Per-copy ownership for non-DCS/Megacities works (e.g. giclée tiers). DCS uses `dcs.editionTiers[].copies[]`; Megacities uses `megacities.print.editions[].copies[]`. Each tier: `{ tierLabel, tierOrder, editionSize, apCount, isOriginalTier, copies[] }`. |
+| `ownershipRegistry` | array of objects | mixed | NEW | Per-copy ownership for non-DCS/Megacities works (e.g. giclée tiers). DCS uses `dcs.editionTiers[].copies[]` with optional `seriesEditionTier` relation; Megacities uses `megacities.print.editions[].copies[]`. Each tier: `{ tierLabel, tierOrder, editionSize, apCount, isOriginalTier, copies[] }`. |
 | `untrackedEditionsNote` | text, localized | artist | NEW | Artwork-level prose for informal/unnumbered print runs not tracked in `ownershipRegistry`. |
 | `componentCount` | number | artist | NEW | Physical components sold as one unit (e.g. triptych). Descriptive only. |
 | `provenanceAndExhibitionTimeline` | computed display | agent | TEMPORAL | NEW | Timeline assembled from `ownershipHistory` + `loanHistory` + `events`. Computed presentation — not a stored field. |

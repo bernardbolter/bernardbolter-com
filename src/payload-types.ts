@@ -72,6 +72,7 @@ export interface Config {
     artists: Artist;
     'practice-knowledge': PracticeKnowledge;
     series: Series;
+    'series-edition-tiers': SeriesEditionTier;
     lines: Line;
     'studio-conversations': StudioConversation;
     'pattern-reports': PatternReport;
@@ -104,6 +105,7 @@ export interface Config {
     artists: ArtistsSelect<false> | ArtistsSelect<true>;
     'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
+    'series-edition-tiers': SeriesEditionTiersSelect<false> | SeriesEditionTiersSelect<true>;
     lines: LinesSelect<false> | LinesSelect<true>;
     'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     'pattern-reports': PatternReportsSelect<false> | PatternReportsSelect<true>;
@@ -3286,6 +3288,44 @@ export interface PracticeKnowledge {
   createdAt: string;
 }
 /**
+ * Series-level tier spec and the one shared Vendure Product per tier. Artwork entries relate here for name/size/substrate; ownership stays on each artwork.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series-edition-tiers".
+ */
+export interface SeriesEditionTier {
+  id: number;
+  /**
+   * Top-level series or sub-series (e.g. "Mediums of Perception" within A Colorful History). Tiers apply only to artworks tagged with that exact series/sub-series.
+   */
+  series: number | Series;
+  tierName: string;
+  /**
+   * 1 = top tier. Display order only.
+   */
+  tierOrder: number;
+  /**
+   * True only for the tier that IS the artwork itself (DCS/Megacities "Monumental," the 3+1AP tier) — not a reproduction of it. Renders in Status & Provenance, not the Editions accordion.
+   */
+  isOriginalTier?: boolean | null;
+  /**
+   * Numbered copies only — excludes AP count.
+   */
+  editionSize: number;
+  apCount?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
+  substrate?: string | null;
+  printTechnique?: string | null;
+  /**
+   * The ONE Vendure Product shared by every artwork using this tier. Price is set and changed directly in Vendure against this product — not duplicated here.
+   */
+  vendureProductId?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Long-form thinking captured through small-model conversation.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3566,6 +3606,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'series';
         value: number | Series;
+      } | null)
+    | ({
+        relationTo: 'series-edition-tiers';
+        value: number | SeriesEditionTier;
       } | null)
     | ({
         relationTo: 'lines';
@@ -3881,6 +3925,26 @@ export interface SeriesSelect<T extends boolean = true> {
   status?: T;
   seriesUntrackedEditionsNote?: T;
   jsonldOutput?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series-edition-tiers_select".
+ */
+export interface SeriesEditionTiersSelect<T extends boolean = true> {
+  series?: T;
+  tierName?: T;
+  tierOrder?: T;
+  isOriginalTier?: T;
+  editionSize?: T;
+  apCount?: T;
+  widthCm?: T;
+  heightCm?: T;
+  substrate?: T;
+  printTechnique?: T;
+  vendureProductId?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

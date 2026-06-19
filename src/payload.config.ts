@@ -26,6 +26,7 @@ import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
 import { ImageCaptureTechnologies } from './collections/ImageCaptureTechnologies'
 import { Artworks } from './collections/Artworks'
+import { SeriesEditionTiers } from './collections/SeriesEditionTiers'
 import { DCSCapturePhotos } from './collections/DCSCapturePhotos'
 import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
@@ -101,6 +102,7 @@ export default buildConfig({
     Artists,
     PracticeKnowledge,
     Series,
+    SeriesEditionTiers,
     Lines,
     StudioConversations,
     PatternReports,
