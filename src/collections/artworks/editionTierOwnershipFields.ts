@@ -2,6 +2,26 @@ import type { Field } from 'payload'
 
 import { isArtistOrAdmin, privateFieldAccess } from '@/access/isArtistOrAdmin'
 
+export const editionTierSeriesRelationField: Field = {
+  name: 'seriesEditionTier',
+  type: 'relationship',
+  relationTo: 'series-edition-tiers',
+  admin: {
+    description:
+      'Shared tier definition for this entry. Name, size, substrate, and the shared Vendure Product are read through this relation when populated.',
+  },
+}
+
+export const editionTierVendureVariantIdField: Field = {
+  name: 'vendureVariantId',
+  type: 'text',
+  access: privateFieldAccess,
+  admin: {
+    description:
+      "This artwork's Variant within the shared Vendure Product (see seriesEditionTier.vendureProductId). Stock is tracked per-variant.",
+  },
+}
+
 export const editionTierIsOriginalTierField: Field = {
   name: 'isOriginalTier',
   type: 'checkbox',

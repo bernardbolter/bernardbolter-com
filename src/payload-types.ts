@@ -2035,6 +2035,17 @@ export interface Artwork {
      */
     editionTiers?:
       | {
+          /**
+           * Shared tier definition for this entry. Name, size, substrate, and the shared Vendure Product are read through this relation when populated.
+           */
+          seriesEditionTier?: (number | null) | SeriesEditionTier;
+          /**
+           * This artwork's Variant within the shared Vendure Product (see seriesEditionTier.vendureProductId). Stock is tracked per-variant.
+           */
+          vendureVariantId?: string | null;
+          /**
+           * Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.
+           */
           tierName: 'small-print' | 'collectors-print' | 'monumental' | 'oil-painting';
           /**
            * Fixed edition size — never changes after publication.
@@ -2046,7 +2057,7 @@ export interface Artwork {
            */
           includesSupportingPrints?: boolean | null;
           /**
-           * Vendure product ID — immutable once set.
+           * Legacy per-artwork product ID — fallback only. After migration, vendureProductId lives on SeriesEditionTiers; use vendureVariantId here.
            */
           vendureProductId?: string | null;
           /**
@@ -3249,6 +3260,44 @@ export interface DcsCapturePhoto {
   createdAt: string;
 }
 /**
+ * Series-level tier spec and the one shared Vendure Product per tier. Artwork entries relate here for name/size/substrate; ownership stays on each artwork.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "series-edition-tiers".
+ */
+export interface SeriesEditionTier {
+  id: number;
+  /**
+   * Top-level series or sub-series (e.g. "Mediums of Perception" within A Colorful History). Tiers apply only to artworks tagged with that exact series/sub-series.
+   */
+  series: number | Series;
+  tierName: string;
+  /**
+   * 1 = top tier. Display order only.
+   */
+  tierOrder: number;
+  /**
+   * True only for the tier that IS the artwork itself (DCS/Megacities "Monumental," the 3+1AP tier) — not a reproduction of it. Renders in Status & Provenance, not the Editions accordion.
+   */
+  isOriginalTier?: boolean | null;
+  /**
+   * Numbered copies only — excludes AP count.
+   */
+  editionSize: number;
+  apCount?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
+  substrate?: string | null;
+  printTechnique?: string | null;
+  /**
+   * The ONE Vendure Product shared by every artwork using this tier. Price is set and changed directly in Vendure against this product — not duplicated here.
+   */
+  vendureProductId?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Documents that brief the Art/Official agent at session start.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3284,44 +3333,6 @@ export interface PracticeKnowledge {
    * Lower numbers appear first in the prompt.
    */
   order: number;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Series-level tier spec and the one shared Vendure Product per tier. Artwork entries relate here for name/size/substrate; ownership stays on each artwork.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "series-edition-tiers".
- */
-export interface SeriesEditionTier {
-  id: number;
-  /**
-   * Top-level series or sub-series (e.g. "Mediums of Perception" within A Colorful History). Tiers apply only to artworks tagged with that exact series/sub-series.
-   */
-  series: number | Series;
-  tierName: string;
-  /**
-   * 1 = top tier. Display order only.
-   */
-  tierOrder: number;
-  /**
-   * True only for the tier that IS the artwork itself (DCS/Megacities "Monumental," the 3+1AP tier) — not a reproduction of it. Renders in Status & Provenance, not the Editions accordion.
-   */
-  isOriginalTier?: boolean | null;
-  /**
-   * Numbered copies only — excludes AP count.
-   */
-  editionSize: number;
-  apCount?: number | null;
-  widthCm?: number | null;
-  heightCm?: number | null;
-  substrate?: string | null;
-  printTechnique?: string | null;
-  /**
-   * The ONE Vendure Product shared by every artwork using this tier. Price is set and changed directly in Vendure against this product — not duplicated here.
-   */
-  vendureProductId?: string | null;
-  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -4828,6 +4839,8 @@ export interface ArtworksSelect<T extends boolean = true> {
         editionTiers?:
           | T
           | {
+              seriesEditionTier?: T;
+              vendureVariantId?: T;
               tierName?: T;
               totalEditionSize?: T;
               printSubstrate?: T;

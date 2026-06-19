@@ -4,6 +4,8 @@ import { privateFieldAccess } from '@/access/isArtistOrAdmin'
 import {
   editionTierCopiesField,
   editionTierIsOriginalTierField,
+  editionTierSeriesRelationField,
+  editionTierVendureVariantIdField,
 } from '@/collections/artworks/editionTierOwnershipFields'
 
 export const dcsTab: Tab = {
@@ -230,10 +232,16 @@ export const dcsTab: Tab = {
               'Archival record of edition tiers. Vendure is source of truth for pricing; webhook maintains remaining counts.',
           },
           fields: [
+            editionTierSeriesRelationField,
+            editionTierVendureVariantIdField,
             {
               name: 'tierName',
               type: 'select',
               required: true,
+              admin: {
+                description:
+                  'Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.',
+              },
               options: [
                 { label: 'Small print', value: 'small-print' },
                 { label: "Collector's print", value: 'collectors-print' },
@@ -271,7 +279,8 @@ export const dcsTab: Tab = {
               type: 'text',
               access: privateFieldAccess,
               admin: {
-                description: 'Vendure product ID — immutable once set.',
+                description:
+                  'Legacy per-artwork product ID — fallback only. After migration, vendureProductId lives on SeriesEditionTiers; use vendureVariantId here.',
               },
             },
             {
