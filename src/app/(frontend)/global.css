@@ -1583,6 +1583,39 @@ h6 {
   margin: 0;
 }
 
+.bio__header {
+  margin: 0 0 1.25rem;
+}
+
+.bio__name {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.35rem;
+  color: var(--text-dark);
+}
+
+.bio__birth,
+.bio__locations {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+  margin: 0;
+  color: var(--text-dark);
+}
+
+@media screen and (min-width: 550px) {
+  .bio__name {
+    font-size: 24px;
+  }
+
+  .bio__birth,
+  .bio__locations {
+    font-size: 16px;
+  }
+}
+
 .bio__tagline {
   font-family: var(--font-barlow-condensed), sans-serif;
   font-style: italic;
@@ -1607,6 +1640,27 @@ h6 {
   padding-bottom: 30px;
   margin: 0;
   color: var(--text-dark);
+}
+
+.bio__main-content a.bio__inline-link,
+.bio__masonry-caption-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.bio__main-content a.bio__inline-link {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--text-dark) 35%, transparent);
+  text-underline-offset: 0.15em;
+}
+
+.bio__main-content a.bio__inline-link:hover,
+.bio__masonry-caption-link:hover .bio__masonry-caption {
+  opacity: 0.75;
+}
+
+.bio__masonry-caption-link {
+  display: block;
 }
 
 @media screen and (min-width: 550px) {
@@ -1637,7 +1691,16 @@ h6 {
 }
 
 .bio__masonry-item {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: visible;
+}
+
+.bio__masonry-item-image {
   position: relative;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   border-radius: 2px;
   filter: grayscale(100%);
@@ -1645,8 +1708,25 @@ h6 {
   cursor: pointer;
 }
 
-.bio__masonry-item:hover {
+.bio__masonry-item-image:hover {
   filter: grayscale(20%);
+}
+
+.bio__masonry-caption {
+  margin: 4px 0 0;
+  padding: 0 2px;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 10px;
+  line-height: 1.3;
+  font-weight: 300;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+@media screen and (min-width: 550px) {
+  .bio__masonry-caption {
+    font-size: 11px;
+  }
 }
 
 .bio__image-masonry {

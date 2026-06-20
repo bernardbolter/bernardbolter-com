@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Field } from 'payload'
 import { slugField } from 'payload'
 
 import {
@@ -8,6 +8,46 @@ import {
 } from '@/access/isArtistOrAdmin'
 import { artistAfterChange } from '@/hooks/artistAfterChange'
 import { artistBeforeChange } from '@/hooks/artistBeforeChange'
+
+function statementPhotoRowField(
+  name: string,
+  labels: { singular: string; plural: string },
+  description: string,
+): Field {
+  return {
+    name,
+    type: 'array',
+    labels,
+    admin: { description },
+    fields: [
+      {
+        name: 'image',
+        type: 'upload',
+        relationTo: 'media',
+        required: true,
+      },
+      {
+        name: 'caption',
+        type: 'text',
+        localized: true,
+      },
+      {
+        name: 'imageType',
+        type: 'select',
+        required: true,
+        defaultValue: 'photograph',
+        options: [
+          { label: 'Photograph (documentation)', value: 'photograph' },
+          { label: "Drawing / sketch (artist's own rendering)", value: 'rendering' },
+        ],
+        admin: {
+          description:
+            "Caption dot: solid = documentary photograph, hollow = the artist's own interpretive mark.",
+        },
+      },
+    ],
+  }
+}
 
 export const Artists: CollectionConfig = {
   slug: 'artists',
@@ -213,7 +253,7 @@ export const Artists: CollectionConfig = {
       labels: { singular: 'Footer image', plural: 'Statement footer images' },
       admin: {
         description:
-          'Full-width images below the artist statement on /statement and /cv. Drag rows to reorder.',
+          'Full-width images below the artist statement on /cv only. The /statement page uses statementSceneImagesFirst and statementSceneImagesSecond instead.',
       },
       fields: [
         {
@@ -229,7 +269,8 @@ export const Artists: CollectionConfig = {
       type: 'array',
       labels: { singular: 'Photo', plural: 'Bio page photos' },
       admin: {
-        description: 'Photos for the masonry grid on /bio. Drag rows to reorder.',
+        description:
+          'Photo grid on the Bio page. Order here controls display order. Mix of studio shots, install shots, and personal/origin images — captions carry the story.',
       },
       fields: [
         {
@@ -241,9 +282,68 @@ export const Artists: CollectionConfig = {
         {
           name: 'caption',
           type: 'text',
-          admin: { description: 'Optional caption shown in the bio lightbox.' },
+          localized: true,
+          admin: {
+            description:
+              'E.g. "Bernard Bolter in his studio at Markgraffendamm, Berlin" or "Digital City Series exhibition at Book & Job Gallery, San Francisco, 2013".',
+          },
+        },
+        {
+          name: 'relatedEvent',
+          type: 'relationship',
+          relationTo: 'events',
+          admin: {
+            description:
+              'Optional. When this photo documents an exhibition/event with a published page (hasPage: true), the caption links to it. Leave empty for studio/personal photos.',
+          },
         },
       ],
+    },
+    {
+      name: 'statementOpening',
+      type: 'richText',
+      localized: true,
+      admin: {
+        description:
+          "Opening section at the top of /statement. Drop cap applies to this section's first paragraph only.",
+      },
+    },
+    {
+      name: 'statementPullQuote',
+      type: 'text',
+      localized: true,
+      admin: {
+        description:
+          'Breakout pull quote after the opening section and before the first photo row.',
+      },
+    },
+    statementPhotoRowField(
+      'statementSceneImagesFirst',
+      { singular: 'Scene image', plural: 'Statement first-row photos' },
+      'First photo row on /statement — typically two images in a 2-column grid, after the pull quote.',
+    ),
+    {
+      name: 'statementMiddleBody',
+      type: 'richText',
+      localized: true,
+      admin: {
+        description:
+          'Middle prose section on /statement — rendered after the first photo row and before the second.',
+      },
+    },
+    statementPhotoRowField(
+      'statementSceneImagesSecond',
+      { singular: 'Scene image', plural: 'Statement second-row photos' },
+      'Second photo row on /statement — typically two images in a 2-column grid, after the middle body.',
+    ),
+    {
+      name: 'statementClosingBody',
+      type: 'richText',
+      localized: true,
+      admin: {
+        description:
+          'Final paragraphs on /statement — rendered after the second photo row and before the closing line.',
+      },
     },
     {
       name: 'statementFull',
@@ -260,6 +360,52 @@ export const Artists: CollectionConfig = {
       type: 'text',
       localized: true,
       admin: { description: 'One to two sentences (plain text).' },
+    },
+    {
+      name: 'statementClosingLine',
+      type: 'text',
+      localized: true,
+      admin: {
+        description:
+          'Optional. Single line rendered as a full-bleed typographic closing block on /statement. May also remain in statementFull prose intentionally.',
+      },
+    },
+    {
+      name: 'statementRelatedWorks',
+      type: 'array',
+      labels: { singular: 'Related work', plural: 'Statement related works' },
+      admin: {
+        description:
+          'Artworks referenced directly in the artist statement — e.g. a video series documenting an event described in the text. Order here is display order. Manual curation only.',
+      },
+      fields: [
+        {
+          name: 'artwork',
+          type: 'relationship',
+          relationTo: 'artworks',
+          required: true,
+          filterOptions: {
+            status: { equals: 'published' },
+          },
+        },
+        {
+          name: 'note',
+          type: 'text',
+          localized: true,
+          admin: {
+            description:
+              'Optional short context line, e.g. "Part I — the installation". Leave blank to show title and year only.',
+          },
+        },
+      ],
+    },
+    {
+      name: 'statementLastRevised',
+      type: 'date',
+      admin: {
+        description:
+          'Set manually when the artist statement text is meaningfully revised. Drives JSON-LD dateModified for /statement only — not auto-updated.',
+      },
     },
     {
       name: 'datenschutzFull',

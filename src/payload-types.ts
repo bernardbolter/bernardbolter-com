@@ -332,7 +332,7 @@ export interface Artist {
    */
   bioShort?: string | null;
   /**
-   * Full-width images below the artist statement on /statement and /cv. Drag rows to reorder.
+   * Full-width images below the artist statement on /cv only. The /statement page uses statementSceneImagesFirst and statementSceneImagesSecond instead.
    */
   statementFooterImages?:
     | {
@@ -341,18 +341,108 @@ export interface Artist {
       }[]
     | null;
   /**
-   * Photos for the masonry grid on /bio. Drag rows to reorder.
+   * Photo grid on the Bio page. Order here controls display order. Mix of studio shots, install shots, and personal/origin images — captions carry the story.
    */
   bioPhotos?:
     | {
         image: number | Media;
         /**
-         * Optional caption shown in the bio lightbox.
+         * E.g. "Bernard Bolter in his studio at Markgraffendamm, Berlin" or "Digital City Series exhibition at Book & Job Gallery, San Francisco, 2013".
          */
         caption?: string | null;
+        /**
+         * Optional. When this photo documents an exhibition/event with a published page (hasPage: true), the caption links to it. Leave empty for studio/personal photos.
+         */
+        relatedEvent?: (number | null) | Event;
         id?: string | null;
       }[]
     | null;
+  /**
+   * Opening section at the top of /statement. Drop cap applies to this section's first paragraph only.
+   */
+  statementOpening?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Breakout pull quote after the opening section and before the first photo row.
+   */
+  statementPullQuote?: string | null;
+  /**
+   * First photo row on /statement — typically two images in a 2-column grid, after the pull quote.
+   */
+  statementSceneImagesFirst?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        /**
+         * Caption dot: solid = documentary photograph, hollow = the artist's own interpretive mark.
+         */
+        imageType: 'photograph' | 'rendering';
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Middle prose section on /statement — rendered after the first photo row and before the second.
+   */
+  statementMiddleBody?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Second photo row on /statement — typically two images in a 2-column grid, after the middle body.
+   */
+  statementSceneImagesSecond?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        /**
+         * Caption dot: solid = documentary photograph, hollow = the artist's own interpretive mark.
+         */
+        imageType: 'photograph' | 'rendering';
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Final paragraphs on /statement — rendered after the second photo row and before the closing line.
+   */
+  statementClosingBody?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   statementFull?: {
     root: {
       type: string;
@@ -387,6 +477,27 @@ export interface Artist {
    * One to two sentences (plain text).
    */
   statementShort?: string | null;
+  /**
+   * Optional. Single line rendered as a full-bleed typographic closing block on /statement. May also remain in statementFull prose intentionally.
+   */
+  statementClosingLine?: string | null;
+  /**
+   * Artworks referenced directly in the artist statement — e.g. a video series documenting an event described in the text. Order here is display order. Manual curation only.
+   */
+  statementRelatedWorks?:
+    | {
+        artwork: number | Artwork;
+        /**
+         * Optional short context line, e.g. "Part I — the installation". Leave blank to show title and year only.
+         */
+        note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Set manually when the artist statement text is meaningfully revised. Drives JSON-LD dateModified for /statement only — not auto-updated.
+   */
+  statementLastRevised?: string | null;
   /**
    * Privacy policy (Datenschutz) — rendered on /datenschutz.
    */
@@ -630,6 +741,259 @@ export interface Artist {
         linkedArtworkId?: (number | null) | Artwork;
         id?: string | null;
       }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * All professional events in the artist CV and exhibition history.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "events".
+ */
+export interface Event {
+  id: number;
+  title: string;
+  slug: string;
+  /**
+   * Stable UUID for integrations.
+   */
+  eventId?: string | null;
+  eventType:
+    | 'solo-exhibition'
+    | 'group-exhibition'
+    | 'art-fair'
+    | 'residency'
+    | 'award'
+    | 'publication'
+    | 'bibliography'
+    | 'public-commission'
+    | 'talk-panel'
+    | 'screening'
+    | 'performance'
+    | 'education'
+    | 'other';
+  eventTypeCustom?: string | null;
+  status: 'draft' | 'published';
+  featured?: boolean | null;
+  /**
+   * Set automatically from enrichment progress. Complete enables the public event page.
+   */
+  enrichmentStatus?: ('stub' | 'partial' | 'complete') | null;
+  /**
+   * When true, CV title links to /events/[slug].
+   */
+  hasPage?: boolean | null;
+  startDate: string;
+  endDate?: string | null;
+  isOngoing?: boolean | null;
+  openingDate?: string | null;
+  /**
+   * Computed from startDate.
+   */
+  yearStart?: number | null;
+  venueName?: string | null;
+  venueCity?: string | null;
+  venueCountry?: string | null;
+  venueTgnUri?: string | null;
+  venueUrl?: string | null;
+  venueWikidataUri?: string | null;
+  venueAddress?: string | null;
+  venueLatLng?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  /**
+   * External URIs for this event — Wikidata, e-flux, institutional archive, etc.
+   */
+  sameAs?:
+    | {
+        uri: string;
+        id?: string | null;
+      }[]
+    | null;
+  isOnline?: boolean | null;
+  onlineEventUrl?: string | null;
+  additionalVenues?:
+    | {
+        venueName?: string | null;
+        venueCity?: string | null;
+        venueCountry?: string | null;
+        startDate?: string | null;
+        endDate?: string | null;
+        venueUrl?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Authority field for artwork ↔ event. Appears on Artwork → Classification → Events as a read-only join.
+   */
+  artworks?: (number | Artwork)[] | null;
+  /**
+   * How this work was presented in this event (optional).
+   */
+  artworkPresentationNote?: string | null;
+  organiser?: string | null;
+  curator?: string | null;
+  role?:
+    | (
+        | 'solo'
+        | 'group'
+        | 'duo'
+        | 'invited-artist'
+        | 'artist-in-residence'
+        | 'awardee'
+        | 'speaker'
+        | 'panellist'
+        | 'screened-artist'
+        | 'commissioned-artist'
+      )
+    | null;
+  /**
+   * Other artists in this show. Name is required; URIs are optional.
+   */
+  coExhibitors?:
+    | {
+        name: string;
+        /**
+         * Optional — e.g. painter, sculptor, video artist.
+         */
+        role?: string | null;
+        ulanUri?: string | null;
+        wikidataUri?: string | null;
+        sameAs?:
+          | {
+              uri?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  catalogue?: boolean | null;
+  catalogueUrl?: string | null;
+  pressUrl?: string | null;
+  installationImages?:
+    | {
+        image: number | Media;
+        caption?: string | null;
+        altText?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  mediaLinks?:
+    | {
+        url: string;
+        type?: ('video' | 'audio' | 'image-series' | 'livestream') | null;
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  descriptionShort?: string | null;
+  descriptionLong?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  artistNote?: string | null;
+  pressQuote?: string | null;
+  publicationTitle?: string | null;
+  publicationAuthor?: string | null;
+  bibliographyAuthor?: string | null;
+  publicationIssn?: string | null;
+  publicationIsbn?: string | null;
+  publicationPages?: string | null;
+  publicationUrl?: string | null;
+  awardGrantingOrganisation?: string | null;
+  awardAmount?: number | null;
+  awardAmountCurrency?: ('EUR' | 'USD' | 'GBP' | 'CHF' | 'other') | null;
+  awardOutcome?: ('winner' | 'shortlisted' | 'nominated' | 'honourable-mention') | null;
+  residencyOrganisation?: string | null;
+  residencyType?: ('studio' | 'live-work' | 'research' | 'production' | 'international') | null;
+  residencyWorksProduced?: string | null;
+  institution?: string | null;
+  degree?: string | null;
+  subject?: string | null;
+  /**
+   * Include on public CV.
+   */
+  cvVisible?: boolean | null;
+  commissionClient?: string | null;
+  commissionSite?: string | null;
+  commissionBudget?: number | null;
+  performanceType?: ('live' | 'durational' | 'participatory' | 'lecture-performance' | 'sound' | 'other') | null;
+  duration?: string | null;
+  collaborators?:
+    | {
+        name: string;
+        role: string;
+        ulanUri?: string | null;
+        wikidataUri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  programmeContext?: string | null;
+  eventFormatType?: string | null;
+  slidesUrl?: string | null;
+  coSpeakers?:
+    | {
+        name?: string | null;
+        role?: string | null;
+        ulanUri?: string | null;
+        wikidataUri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  festivalProgramme?: string | null;
+  screeningFormat?: ('35mm' | 'digital' | 'video-installation' | 'online') | null;
+  premiereStatus?: ('world' | 'european' | 'national' | 'none') | null;
+  cvSection?:
+    | (
+        | 'education'
+        | 'solo-exhibitions'
+        | 'group-exhibitions'
+        | 'art-fairs'
+        | 'awards-prizes'
+        | 'residencies'
+        | 'public-commissions'
+        | 'publications'
+        | 'bibliography'
+        | 'talks-panels'
+        | 'screenings'
+        | 'performances'
+        | 'other'
+      )
+    | null;
+  cvDisplayTitle?: string | null;
+  cvPriority?: number | null;
+  excludeFromCv?: boolean | null;
+  jsonldSameAs?:
+    | {
+        uri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Computed event JSON-LD preview.
+   */
+  jsonldPreview?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   updatedAt: string;
   createdAt: string;
@@ -2625,259 +2989,6 @@ export interface Tag {
   createdAt: string;
 }
 /**
- * All professional events in the artist CV and exhibition history.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "events".
- */
-export interface Event {
-  id: number;
-  title: string;
-  slug: string;
-  /**
-   * Stable UUID for integrations.
-   */
-  eventId?: string | null;
-  eventType:
-    | 'solo-exhibition'
-    | 'group-exhibition'
-    | 'art-fair'
-    | 'residency'
-    | 'award'
-    | 'publication'
-    | 'bibliography'
-    | 'public-commission'
-    | 'talk-panel'
-    | 'screening'
-    | 'performance'
-    | 'education'
-    | 'other';
-  eventTypeCustom?: string | null;
-  status: 'draft' | 'published';
-  featured?: boolean | null;
-  /**
-   * Set automatically from enrichment progress. Complete enables the public event page.
-   */
-  enrichmentStatus?: ('stub' | 'partial' | 'complete') | null;
-  /**
-   * When true, CV title links to /events/[slug].
-   */
-  hasPage?: boolean | null;
-  startDate: string;
-  endDate?: string | null;
-  isOngoing?: boolean | null;
-  openingDate?: string | null;
-  /**
-   * Computed from startDate.
-   */
-  yearStart?: number | null;
-  venueName?: string | null;
-  venueCity?: string | null;
-  venueCountry?: string | null;
-  venueTgnUri?: string | null;
-  venueUrl?: string | null;
-  venueWikidataUri?: string | null;
-  venueAddress?: string | null;
-  venueLatLng?: {
-    lat?: number | null;
-    lng?: number | null;
-  };
-  /**
-   * External URIs for this event — Wikidata, e-flux, institutional archive, etc.
-   */
-  sameAs?:
-    | {
-        uri: string;
-        id?: string | null;
-      }[]
-    | null;
-  isOnline?: boolean | null;
-  onlineEventUrl?: string | null;
-  additionalVenues?:
-    | {
-        venueName?: string | null;
-        venueCity?: string | null;
-        venueCountry?: string | null;
-        startDate?: string | null;
-        endDate?: string | null;
-        venueUrl?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Authority field for artwork ↔ event. Appears on Artwork → Classification → Events as a read-only join.
-   */
-  artworks?: (number | Artwork)[] | null;
-  /**
-   * How this work was presented in this event (optional).
-   */
-  artworkPresentationNote?: string | null;
-  organiser?: string | null;
-  curator?: string | null;
-  role?:
-    | (
-        | 'solo'
-        | 'group'
-        | 'duo'
-        | 'invited-artist'
-        | 'artist-in-residence'
-        | 'awardee'
-        | 'speaker'
-        | 'panellist'
-        | 'screened-artist'
-        | 'commissioned-artist'
-      )
-    | null;
-  /**
-   * Other artists in this show. Name is required; URIs are optional.
-   */
-  coExhibitors?:
-    | {
-        name: string;
-        /**
-         * Optional — e.g. painter, sculptor, video artist.
-         */
-        role?: string | null;
-        ulanUri?: string | null;
-        wikidataUri?: string | null;
-        sameAs?:
-          | {
-              uri?: string | null;
-              id?: string | null;
-            }[]
-          | null;
-        id?: string | null;
-      }[]
-    | null;
-  catalogue?: boolean | null;
-  catalogueUrl?: string | null;
-  pressUrl?: string | null;
-  installationImages?:
-    | {
-        image: number | Media;
-        caption?: string | null;
-        altText?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  mediaLinks?:
-    | {
-        url: string;
-        type?: ('video' | 'audio' | 'image-series' | 'livestream') | null;
-        label?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  descriptionShort?: string | null;
-  descriptionLong?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  artistNote?: string | null;
-  pressQuote?: string | null;
-  publicationTitle?: string | null;
-  publicationAuthor?: string | null;
-  bibliographyAuthor?: string | null;
-  publicationIssn?: string | null;
-  publicationIsbn?: string | null;
-  publicationPages?: string | null;
-  publicationUrl?: string | null;
-  awardGrantingOrganisation?: string | null;
-  awardAmount?: number | null;
-  awardAmountCurrency?: ('EUR' | 'USD' | 'GBP' | 'CHF' | 'other') | null;
-  awardOutcome?: ('winner' | 'shortlisted' | 'nominated' | 'honourable-mention') | null;
-  residencyOrganisation?: string | null;
-  residencyType?: ('studio' | 'live-work' | 'research' | 'production' | 'international') | null;
-  residencyWorksProduced?: string | null;
-  institution?: string | null;
-  degree?: string | null;
-  subject?: string | null;
-  /**
-   * Include on public CV.
-   */
-  cvVisible?: boolean | null;
-  commissionClient?: string | null;
-  commissionSite?: string | null;
-  commissionBudget?: number | null;
-  performanceType?: ('live' | 'durational' | 'participatory' | 'lecture-performance' | 'sound' | 'other') | null;
-  duration?: string | null;
-  collaborators?:
-    | {
-        name: string;
-        role: string;
-        ulanUri?: string | null;
-        wikidataUri?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  programmeContext?: string | null;
-  eventFormatType?: string | null;
-  slidesUrl?: string | null;
-  coSpeakers?:
-    | {
-        name?: string | null;
-        role?: string | null;
-        ulanUri?: string | null;
-        wikidataUri?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  festivalProgramme?: string | null;
-  screeningFormat?: ('35mm' | 'digital' | 'video-installation' | 'online') | null;
-  premiereStatus?: ('world' | 'european' | 'national' | 'none') | null;
-  cvSection?:
-    | (
-        | 'education'
-        | 'solo-exhibitions'
-        | 'group-exhibitions'
-        | 'art-fairs'
-        | 'awards-prizes'
-        | 'residencies'
-        | 'public-commissions'
-        | 'publications'
-        | 'bibliography'
-        | 'talks-panels'
-        | 'screenings'
-        | 'performances'
-        | 'other'
-      )
-    | null;
-  cvDisplayTitle?: string | null;
-  cvPriority?: number | null;
-  excludeFromCv?: boolean | null;
-  jsonldSameAs?:
-    | {
-        uri?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Computed event JSON-LD preview.
-   */
-  jsonldPreview?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Referenced artworks and artists in dialogue with Bernard's practice.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3864,11 +3975,41 @@ export interface ArtistsSelect<T extends boolean = true> {
     | {
         image?: T;
         caption?: T;
+        relatedEvent?: T;
         id?: T;
       };
+  statementOpening?: T;
+  statementPullQuote?: T;
+  statementSceneImagesFirst?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        imageType?: T;
+        id?: T;
+      };
+  statementMiddleBody?: T;
+  statementSceneImagesSecond?:
+    | T
+    | {
+        image?: T;
+        caption?: T;
+        imageType?: T;
+        id?: T;
+      };
+  statementClosingBody?: T;
   statementFull?: T;
   statementMedium?: T;
   statementShort?: T;
+  statementClosingLine?: T;
+  statementRelatedWorks?:
+    | T
+    | {
+        artwork?: T;
+        note?: T;
+        id?: T;
+      };
+  statementLastRevised?: T;
   datenschutzFull?: T;
   practiceNote?: T;
   creditLine?: T;

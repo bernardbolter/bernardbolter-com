@@ -2,19 +2,45 @@ import Link from 'next/link'
 
 import { CloseCircleSvg } from '@/components/icons'
 import HeaderTitle from '@/components/info/HeaderTitle'
-import type { StatementFooterImage } from '@/lib/payload/statementFooterImages'
+import type { StatementPhoto } from '@/helpers/statementPhotos'
+import type { StatementRelatedWork } from '@/helpers/statementRelatedWorks'
 
-import StatementFooterImages from './StatementFooterImages'
+import StatementClosingBody from './StatementClosingBody'
+import StatementClosing from './StatementClosing'
+import StatementMiddleBody from './StatementMiddleBody'
+import StatementOpening from './StatementOpening'
+import StatementPullQuote from './StatementPullQuote'
+import StatementSceneImages from './StatementSceneImages'
+import StatementRelatedWorks from './StatementRelatedWorks'
+import './statement-page.css'
 
 interface StatementProps {
-  paragraphs: string[]
-  footerImages?: StatementFooterImage[]
+  statementOpening: unknown
+  statementPullQuote?: string | null
+  statementMiddleBody: unknown
+  statementClosingBody: unknown
+  statementClosingLine?: string | null
+  sceneImagesFirst: StatementPhoto[]
+  sceneImagesSecond: StatementPhoto[]
+  relatedWorks: StatementRelatedWork[]
 }
 
-export default function Statement({ paragraphs, footerImages = [] }: StatementProps) {
+export default function Statement({
+  statementOpening,
+  statementPullQuote,
+  statementMiddleBody,
+  statementClosingBody,
+  statementClosingLine,
+  sceneImagesFirst,
+  sceneImagesSecond,
+  relatedWorks,
+}: StatementProps) {
+  const hasOpening = Boolean(statementOpening)
+  const hasClosingBody = Boolean(statementClosingBody)
+
   return (
-    <div className="bio-container">
-      <HeaderTitle title="STATE" large />
+    <div className="bio-container statement-page">
+      <HeaderTitle title="STATEMENT" large />
 
       <Link href="/" className="bio__close-container">
         <CloseCircleSvg />
@@ -22,19 +48,20 @@ export default function Statement({ paragraphs, footerImages = [] }: StatementPr
       </Link>
 
       <div className="bio__content-container">
-        {paragraphs.length > 0 ? (
-          <div className="bio__main-content">
-            {paragraphs.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
-        ) : (
-          <div className="bio__main-content">
+        {hasOpening ?
+          <StatementOpening content={statementOpening} />
+        : <div className="bio__main-content">
             <p>Statement content coming soon.</p>
           </div>
-        )}
+        }
 
-        <StatementFooterImages images={footerImages} variant="statement" />
+        <StatementPullQuote line={statementPullQuote} />
+        <StatementSceneImages photos={sceneImagesFirst} />
+        <StatementMiddleBody content={statementMiddleBody} />
+        <StatementSceneImages photos={sceneImagesSecond} />
+        {hasClosingBody ? <StatementClosingBody content={statementClosingBody} /> : null}
+        <StatementRelatedWorks items={relatedWorks} />
+        <StatementClosing line={statementClosingLine?.trim() ?? ''} />
       </div>
     </div>
   )
