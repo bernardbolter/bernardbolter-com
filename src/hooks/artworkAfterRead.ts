@@ -80,6 +80,7 @@ function sanitizeDcsEditionTiers(rows: unknown): JsonRow[] {
 
 function sanitizeMegacitiesEditions(rows: unknown): JsonRow[] {
   return asRows(rows).map((tier) => ({
+    seriesEditionTier: sanitizeSeriesEditionTier(tier.seriesEditionTier),
     tier: tier.tier,
     dimensions: tier.dimensions,
     editionSize: tier.editionSize,

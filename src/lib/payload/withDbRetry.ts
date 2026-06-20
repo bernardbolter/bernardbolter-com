@@ -24,6 +24,27 @@ function isTransientDbError(err: unknown): boolean {
   for (const token of TRANSIENT_DB_CODES) {
     if (message.includes(token)) return true
   }
+
+  const lower = message.toLowerCase()
+  if (
+    lower.includes('connection terminated') ||
+    lower.includes('connection timeout') ||
+    lower.includes('timeout exceeded')
+  ) {
+    return true
+  }
+
+  if (cause && typeof cause === 'object' && 'message' in cause && typeof cause.message === 'string') {
+    const causeMessage = cause.message.toLowerCase()
+    if (
+      causeMessage.includes('connection terminated') ||
+      causeMessage.includes('connection timeout') ||
+      causeMessage.includes('timeout exceeded')
+    ) {
+      return true
+    }
+  }
+
   return false
 }
 

@@ -1,5 +1,5 @@
 /** Expected CLIP / vision embedding width for `artworks.clip_embedding` (pgvector). */
-export const CLIP_EMBEDDING_DIMENSIONS = 1536 as const
+export const CLIP_EMBEDDING_DIMENSIONS = 768 as const
 
 export type ClipEmbeddingResponse = {
   embedding: number[]
@@ -11,7 +11,7 @@ export type ClipEmbeddingResponse = {
  * Configure `CLIP_EMBEDDING_URL` (POST). Optional `CLIP_EMBEDDING_API_KEY` is sent as
  * `Authorization: Bearer …` when set.
  *
- * The endpoint must return JSON: `{ "embedding": number[] }` with length 1536.
+ * The endpoint must return JSON: `{ "embedding": number[] }` with length 768.
  */
 export async function generateClipEmbedding(imageUrl: string): Promise<number[]> {
   const endpoint = process.env.CLIP_EMBEDDING_URL

@@ -6,7 +6,7 @@ import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkAfterRead } from '@/hooks/artworkAfterRead'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
-import { artworkDcsEditionTiersBeforeChange } from '@/hooks/artworkDcsEditionTiersBeforeChange'
+import { artworkSeriesEditionTiersBeforeChange } from '@/hooks/artworkSeriesEditionTiersBeforeChange'
 import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
 
 import { artworkPrimaryMediaFields } from './artworks/artworkPrimaryMediaFields'
@@ -48,7 +48,7 @@ export const Artworks: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [artworkAchValidateAr],
-    beforeChange: [artworkBeforeChange, artworkDcsEditionTiersBeforeChange, artworkAchBeforeChange],
+    beforeChange: [artworkBeforeChange, artworkSeriesEditionTiersBeforeChange, artworkAchBeforeChange],
     afterChange: [artworkAfterChange, artworkAfterChangeAr],
     afterRead: [artworkAfterRead],
   },
@@ -1450,6 +1450,48 @@ export const Artworks: CollectionConfig = {
                 description:
                   'JSON array: { claim, evidenceBasis, confidenceLevel: documented-fact | credible-inference | institutional-assertion | speculation }.',
               },
+            },
+            {
+              name: 'relatedWorks',
+              type: 'array',
+              labels: { singular: 'Related work', plural: 'Related works' },
+              access: publicReadStaffWriteAccess,
+              admin: {
+                description:
+                  'Links to other distinct artworks (or note-only entries). Does not merge ownership or provenance across records.',
+              },
+              fields: [
+                {
+                  name: 'relatedArtwork',
+                  type: 'relationship',
+                  relationTo: 'artworks',
+                  admin: {
+                    description:
+                      'Use when the related work has its own Artwork record. Leave empty and use relatedWorkNote if no record exists yet.',
+                  },
+                },
+                {
+                  name: 'relationshipType',
+                  type: 'select',
+                  options: [
+                    {
+                      label: 'Derivative — oil painting interpretation',
+                      value: 'derivative-oil-painting',
+                    },
+                    { label: 'Derivative — other medium', value: 'derivative-other' },
+                    { label: 'Same series, related composition', value: 'series-related' },
+                    { label: 'Other', value: 'other' },
+                  ],
+                },
+                {
+                  name: 'relatedWorkNote',
+                  type: 'textarea',
+                  admin: {
+                    description:
+                      'Short public-facing description. Required when relatedArtwork is empty; optional supplement when linked.',
+                  },
+                },
+              ],
             },
             {
               name: 'hasEditions',

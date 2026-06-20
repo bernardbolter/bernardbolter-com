@@ -1,42 +1,52 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  buildAutopopulatedDcsEditionTiers,
-  resolveEffectiveEditionTiers,
-  shouldAutopopulateDcsEditionTiers,
-} from '@/lib/artwork/dcsEditionTierAutopopulate'
+  buildAutopopulatedSeriesEditionTiers,
+  resolveDcsEffectiveEditionTiers,
+  SERIES_EDITION_TIER_AUTOPOPULATE_SLUGS,
+  shouldAutopopulateSeriesEditionTiers,
+} from '@/lib/artwork/seriesEditionTierAutopopulate'
 
-describe('shouldAutopopulateDcsEditionTiers', () => {
+describe('SERIES_EDITION_TIER_AUTOPOPULATE_SLUGS', () => {
+  it('includes DCS and Megacities only', () => {
+    expect(SERIES_EDITION_TIER_AUTOPOPULATE_SLUGS).toEqual([
+      'digital-city-series',
+      'megacities',
+    ])
+  })
+})
+
+describe('shouldAutopopulateSeriesEditionTiers', () => {
   it('returns true for DCS with empty editionTiers', () => {
     expect(
-      shouldAutopopulateDcsEditionTiers({
+      shouldAutopopulateSeriesEditionTiers({
         seriesSlug: 'digital-city-series',
         editionTiers: [],
       }),
     ).toBe(true)
   })
 
-  it('returns true when editionTiers is undefined', () => {
+  it('returns true for Megacities with empty editions', () => {
     expect(
-      shouldAutopopulateDcsEditionTiers({
-        seriesSlug: 'digital-city-series',
-        editionTiers: undefined,
+      shouldAutopopulateSeriesEditionTiers({
+        seriesSlug: 'megacities',
+        editionTiers: [],
       }),
     ).toBe(true)
   })
 
   it('returns false when editionTiers already has entries', () => {
     expect(
-      shouldAutopopulateDcsEditionTiers({
+      shouldAutopopulateSeriesEditionTiers({
         seriesSlug: 'digital-city-series',
         editionTiers: [{ seriesEditionTier: 1 }],
       }),
     ).toBe(false)
   })
 
-  it('returns false for non-DCS series', () => {
+  it('returns false for non-autopopulate series', () => {
     expect(
-      shouldAutopopulateDcsEditionTiers({
+      shouldAutopopulateSeriesEditionTiers({
         seriesSlug: 'gates-of-perception',
         editionTiers: [],
       }),
@@ -44,10 +54,10 @@ describe('shouldAutopopulateDcsEditionTiers', () => {
   })
 })
 
-describe('resolveEffectiveEditionTiers', () => {
+describe('resolveDcsEffectiveEditionTiers', () => {
   it('prefers incoming data when editionTiers is explicitly set', () => {
     expect(
-      resolveEffectiveEditionTiers(
+      resolveDcsEffectiveEditionTiers(
         { dcs: { editionTiers: [] } },
         { dcs: { editionTiers: [{ seriesEditionTier: 9 }] } },
       ),
@@ -56,7 +66,7 @@ describe('resolveEffectiveEditionTiers', () => {
 
   it('falls back to previous doc when not in incoming data', () => {
     expect(
-      resolveEffectiveEditionTiers(
+      resolveDcsEffectiveEditionTiers(
         {},
         { dcs: { editionTiers: [{ seriesEditionTier: 2 }] } },
       ),
@@ -64,13 +74,13 @@ describe('resolveEffectiveEditionTiers', () => {
   })
 
   it('returns undefined when neither side has editionTiers', () => {
-    expect(resolveEffectiveEditionTiers({}, {})).toBeUndefined()
+    expect(resolveDcsEffectiveEditionTiers({}, {})).toBeUndefined()
   })
 })
 
-describe('buildAutopopulatedDcsEditionTiers', () => {
+describe('buildAutopopulatedSeriesEditionTiers', () => {
   it('maps series tier ids to relation-only entries', () => {
-    expect(buildAutopopulatedDcsEditionTiers([1, 2, 3])).toEqual([
+    expect(buildAutopopulatedSeriesEditionTiers([1, 2, 3])).toEqual([
       { seriesEditionTier: 1 },
       { seriesEditionTier: 2 },
       { seriesEditionTier: 3 },
@@ -93,5 +103,16 @@ describe('editionTierRowIdentityValidate', () => {
       '@/collections/artworks/editionTierOwnershipFields'
     )
     expect(editionTierRowIdentityValidate([{ seriesEditionTier: 2 }], {} as never)).toBe(true)
+  })
+})
+
+describe('editionTierMegacitiesRowIdentityValidate', () => {
+  it('rejects blank Megacities edition rows', async () => {
+    const { editionTierMegacitiesRowIdentityValidate } = await import(
+      '@/collections/artworks/editionTierOwnershipFields'
+    )
+    expect(editionTierMegacitiesRowIdentityValidate([{}], {} as never)).toBe(
+      'Edition 1: link a series edition tier or set tier and editionSize.',
+    )
   })
 })

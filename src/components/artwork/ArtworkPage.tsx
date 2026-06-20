@@ -10,7 +10,7 @@ import {
   getSimilarArtworksForPage,
 } from '@/lib/payload/similarArtworksPage'
 import { collectArtworkGalleryImages, artworkHasVideo } from '@/lib/artwork/artworkGalleryImages'
-import { artworkHasArtistAccountProse } from '@/lib/artwork/layer3Prose'
+import { artworkShowsProseColumn } from '@/lib/artwork/layer3Prose'
 import type { Artist, Artwork } from '@/payload-types'
 
 import './artwork-page.css'
@@ -26,13 +26,22 @@ function isVideoPrimaryArtwork(artwork: Artwork): boolean {
 }
 
 export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps) {
-  const [similarWorks, hasClipEmbedding] = await Promise.all([
-    getSimilarArtworksForPage(artwork.id, 4),
-    artworkHasClipEmbedding(artwork.id),
+  const [similarWorksResult, hasClipEmbedding] = await Promise.all([
+    typeof artwork.id === 'number'
+      ? getSimilarArtworksForPage(artwork.id, 3)
+      : Promise.resolve([]),
+    typeof artwork.id === 'number'
+      ? artworkHasClipEmbedding(artwork.id)
+      : Promise.resolve(false),
   ])
+  const similarWorks = similarWorksResult ?? []
 
   const showVideo = isVideoPrimaryArtwork(artwork)
-  const hasProseColumn = artworkHasArtistAccountProse(artwork)
+  const hasProseColumn = artworkShowsProseColumn({
+    artwork,
+    hasClipEmbedding,
+    similarWorksCount: similarWorks.length,
+  })
 
   return (
     <article
@@ -43,7 +52,7 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
       <div className="artwork-image__info-container artwork-image__info-container--layers">
         <SeriesCard artwork={artwork} />
 
-        <div className="artwork-image__info--details-container artwork-page__columns">
+        <div className="artwork-image__info--details-container artwork-page__columns artwork-page__columns--data">
           <div className="artwork-page__column artwork-page__column--record">
             <Layer1ObjectRecord artwork={artwork} />
             <Layer2StatusAndProvenance artwork={artwork} artist={artist} />

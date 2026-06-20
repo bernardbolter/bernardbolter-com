@@ -5,21 +5,21 @@ import { useMemo } from 'react'
 import ArtworkGridImage from '@/components/artworks/ArtworkGridImage'
 import { getGridItemContainerSize } from '@/helpers/getGridItemContainerSize'
 import { packArtworksIntoColumns } from '@/lib/artwork/gridLayout'
+import { buildGridItemLayouts } from '@/lib/artwork/gridRealSize'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
 export default function ArtworksGrid() {
   const [state] = useArtworks()
   const gridMetrics = getGridItemContainerSize(state.viewportWidth)
 
+  const layouts = useMemo(
+    () => buildGridItemLayouts(state.filtered, gridMetrics.width),
+    [state.filtered, gridMetrics.width],
+  )
+
   const columns = useMemo(
-    () =>
-      packArtworksIntoColumns(
-        state.filtered,
-        gridMetrics.columns,
-        gridMetrics.width,
-        gridMetrics.gap,
-      ),
-    [state.filtered, gridMetrics.columns, gridMetrics.gap, gridMetrics.width],
+    () => packArtworksIntoColumns(layouts, gridMetrics.columns, gridMetrics.gap),
+    [layouts, gridMetrics.columns, gridMetrics.gap],
   )
 
   return (
@@ -35,28 +35,9 @@ export default function ArtworksGrid() {
           className="artwork-grid__column"
           style={{ width: gridMetrics.width, gap: gridMetrics.gap }}
         >
-          {column.map((cell, cellIndex) => {
-            if (cell.type === 'span-spacer') {
-              return (
-                <div
-                  key={`spacer-${columnIndex}-${cellIndex}`}
-                  className="artwork-grid__span-spacer"
-                  style={{ height: cell.height }}
-                  aria-hidden
-                />
-              )
-            }
-
-            return (
-              <ArtworkGridImage
-                key={cell.layout.artwork.id}
-                artwork={cell.layout.artwork}
-                columnWidth={gridMetrics.width}
-                gap={gridMetrics.gap}
-                columnSpan={cell.layout.columnSpan}
-              />
-            )
-          })}
+          {column.map((layout) => (
+            <ArtworkGridImage key={layout.artwork.id} layout={layout} />
+          ))}
         </div>
       ))}
     </div>

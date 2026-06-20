@@ -1,6 +1,10 @@
 import type { Artist, Artwork } from '@/payload-types'
 
-type ConfidenceRow = { confidenceLevel?: string | null }
+type ConfidenceRow = {
+  claim?: string | null
+  evidenceBasis?: string | null
+  confidenceLevel?: string | null
+}
 type OwnershipRow = {
   displayName?: string | null
   city?: string | null
@@ -18,7 +22,25 @@ type LoanRow = {
 }
 
 function asArray<T>(value: unknown): T[] {
-  return Array.isArray(value) ? (value as T[]) : []
+  if (Array.isArray(value)) return value as T[]
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value) as unknown
+      return Array.isArray(parsed) ? (parsed as T[]) : []
+    } catch {
+      return []
+    }
+  }
+  return []
+}
+
+function formatAcquisitionDate(value?: string | null): string | null {
+  if (!value?.trim()) return null
+  const trimmed = value.trim()
+  const yearMonth = trimmed.match(/^(\d{4})-(\d{2})/)
+  if (yearMonth) return `${yearMonth[1]}-${yearMonth[2]}`
+  const year = extractYear(trimmed)
+  return year
 }
 
 export type ProvenanceConfidenceSummary = 'documented' | 'partial' | 'undocumented'
@@ -45,6 +67,55 @@ export function provenanceConfidenceStatement(summary: ProvenanceConfidenceSumma
       return 'Provenance: partially documented'
     case 'undocumented':
       return 'Provenance: origin undocumented'
+  }
+}
+
+export type PublicProvenanceClaim = {
+  claim: string
+  confidenceLevel: 'documented-fact' | 'credible-inference' | 'institutional-assertion'
+}
+
+const PUBLIC_CONFIDENCE_LEVELS = new Set([
+  'documented-fact',
+  'credible-inference',
+  'institutional-assertion',
+])
+
+export function getPublicProvenanceClaims(
+  artwork: Pick<Artwork, 'provenanceConfidenceLayer'>,
+): {
+  prominent: PublicProvenanceClaim[]
+  demoted: PublicProvenanceClaim[]
+  hasDocumentedFact: boolean
+  hasCredibleInference: boolean
+} {
+  const layers = asArray<ConfidenceRow>(artwork.provenanceConfidenceLayer)
+  const prominent: PublicProvenanceClaim[] = []
+  const demoted: PublicProvenanceClaim[] = []
+
+  for (const row of layers) {
+    const claim = row.claim?.trim()
+    const confidenceLevel = row.confidenceLevel?.trim()
+    if (!claim || !confidenceLevel || confidenceLevel === 'speculation') continue
+    if (!PUBLIC_CONFIDENCE_LEVELS.has(confidenceLevel)) continue
+
+    const entry = {
+      claim,
+      confidenceLevel: confidenceLevel as PublicProvenanceClaim['confidenceLevel'],
+    }
+
+    if (confidenceLevel === 'institutional-assertion') {
+      demoted.push(entry)
+    } else {
+      prominent.push(entry)
+    }
+  }
+
+  return {
+    prominent,
+    demoted,
+    hasDocumentedFact: prominent.some((row) => row.confidenceLevel === 'documented-fact'),
+    hasCredibleInference: prominent.some((row) => row.confidenceLevel === 'credible-inference'),
   }
 }
 
@@ -92,81 +163,53 @@ function isInArtistsStudio(artwork: Artwork): boolean {
 }
 
 export function shouldShowOwnershipSection(artwork: Artwork): boolean {
-  const rows = getOwnershipRows(artwork)
-  if (rows.some((row) => row.collectorVisible === true)) return true
-  if (artwork.provenanceOriginKnown === false) return true
-  if (isInArtistsStudio(artwork)) return true
-  return false
+  return Boolean(artwork.currentLocation?.category)
 }
 
 export function buildCurrentHolderLine(artwork: Artwork, artist: Artist | null): string {
-  const onLoan = artwork.currentLocation?.category === 'on-loan'
-  let line: string
+  if (artwork.availabilityStatus === 'on-consignment') {
+    return `Available via ${artwork.galleryReference?.trim() || 'gallery'}`
+  }
 
-  if (isInArtistsStudio(artwork)) {
-    const detail = artwork.currentLocation?.locationDetail?.trim()
-    if (detail) {
-      line = `Currently in the artist's studio, ${detail}`
-    } else {
+  const category = artwork.currentLocation?.category
+
+  switch (category) {
+    case 'artists-studio': {
+      const detail = artwork.currentLocation?.locationDetail?.trim()
+      if (detail) return `Currently in artist's studio, ${detail}`
       const city = artist?.workCity1?.trim()
-      line = city ?
-        `Currently in the artist's studio, ${city}`
-      : "Currently in the artist's studio"
+      return city ? `Currently in artist's studio, ${city}` : "Currently in artist's studio"
     }
-  } else {
-    const current = findCurrentOwnershipEntry(getOwnershipRows(artwork))
-    if (current?.collectorVisible === true) {
-      const name = current.displayName?.trim() || 'Private collection'
-      const city = current.city?.trim()
-      const year = extractYear(current.dateAcquired)
-      const locationPart = city ? `${name}, ${city}` : name
-      line =
-        year ?
-          `Currently held by ${locationPart} · since ${year}`
-        : `Currently held by ${locationPart}`
-    } else {
-      line = 'Currently in a private collection'
+    case 'institution':
+      return artwork.currentLocation?.locationDetail?.trim() || 'Institution'
+    case 'on-loan':
+      return 'Currently on loan'
+    case 'private-collection':
+    default: {
+      const current = findCurrentOwnershipEntry(getOwnershipRows(artwork))
+      if (current?.collectorVisible === true) {
+        const name = current.displayName?.trim() || 'Private collection'
+        const city = current.city?.trim()
+        return city ? `${name}, ${city}` : name
+      }
+      return 'Private collection'
     }
   }
-
-  if (onLoan) {
-    line += ' · currently on loan'
-  }
-
-  return line
 }
 
 export function buildOwnershipTimelineRows(artwork: Artwork): OwnershipTimelineRow[] {
-  const rows = sortByDateAcquired(getOwnershipRows(artwork))
-  if (rows.length < 2) return []
+  const rows = sortByDateAcquired(getOwnershipRows(artwork)).filter(
+    (row) => row.collectorVisible === true,
+  )
+  if (rows.length === 0) return []
 
-  const result: OwnershipTimelineRow[] = []
-  const yearCreated = artwork.yearCreated
-  const first = rows[0]
-  const firstAcquired = first?.dateAcquired?.trim()
-
-  if (yearCreated && firstAcquired) {
-    const acquiredYear = extractYear(firstAcquired)
-    if (acquiredYear && acquiredYear > String(yearCreated)) {
-      result.push({
-        text: `Artist's studio · ${yearCreated}–${firstAcquired}`,
-      })
-    }
-  }
-
-  for (const row of rows) {
-    const range = `${row.dateAcquired?.trim() || '?'}–${formatTimelineEnd(row.dateRelinquished)}`
-    if (row.collectorVisible === true) {
-      const name = row.displayName?.trim() || 'Private collection'
-      const city = row.city?.trim()
-      const parts = city ? [name, city, range] : [name, range]
-      result.push({ text: parts.join(' · ') })
-    } else {
-      result.push({ text: `Private collection · ${range}` })
-    }
-  }
-
-  return result
+  return rows.map((row) => {
+    const name = row.displayName?.trim() || 'Private collection'
+    const city = row.city?.trim()
+    const acquired = formatAcquisitionDate(row.dateAcquired)
+    const parts = [name, city, acquired].filter(Boolean) as string[]
+    return { text: parts.join(' · ') }
+  })
 }
 
 export function buildOwnershipClaimHref(artwork: Pick<Artwork, 'slug' | 'title'>): string {
@@ -179,9 +222,9 @@ export function buildOwnershipClaimHref(artwork: Pick<Artwork, 'slug' | 'title'>
 export function hasUnclaimedOwnershipAppeal(artwork: Artwork): boolean {
   if (isInArtistsStudio(artwork)) return false
 
-  return getOwnershipRows(artwork).some(
-    (row) => row.claimStatus === 'unclaimed' && !row.dateRelinquished?.trim(),
-  )
+  const rows = getOwnershipRows(artwork)
+  if (rows.length === 0) return true
+  return !rows.some((row) => row.claimStatus === 'claimed-confirmed')
 }
 
 export function buildOwnershipDisplay(artwork: Artwork, artist: Artist | null): OwnershipDisplay {

@@ -18,6 +18,12 @@ function hasFallbackTierIdentity(siblingData: Record<string, unknown> | undefine
   )
 }
 
+function hasMegacitiesFallbackTierIdentity(siblingData: Record<string, unknown> | undefined): boolean {
+  const tier = siblingData?.tier
+  const editionSize = siblingData?.editionSize
+  return tier != null && tier !== '' && editionSize != null
+}
+
 /** Each row must link a series tier or specify local fallback name + size. */
 export const editionTierRowIdentityValidate: Validate<unknown[] | null | undefined> = (value) => {
   if (!Array.isArray(value)) return true
@@ -50,6 +56,43 @@ export const editionTierLocalSizeValidate: Validate<number | null | undefined> =
 ) => {
   if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
   if (value == null) return 'Required when no series edition tier is linked'
+  return true
+}
+
+/** Fallback Megacities tier select is required only when the shared series tier relation is unset. */
+export const editionTierMegacitiesTierValidate: Validate<string | null | undefined> = (
+  value,
+  { siblingData },
+) => {
+  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null || value === '') return 'Required when no series edition tier is linked'
+  return true
+}
+
+/** Fallback Megacities editionSize is required only when the shared series tier relation is unset. */
+export const editionTierMegacitiesSizeValidate: Validate<number | null | undefined> = (
+  value,
+  { siblingData },
+) => {
+  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null) return 'Required when no series edition tier is linked'
+  return true
+}
+
+/** Each Megacities print row must link a series tier or specify local tier + editionSize. */
+export const editionTierMegacitiesRowIdentityValidate: Validate<unknown[] | null | undefined> = (
+  value,
+) => {
+  if (!Array.isArray(value)) return true
+
+  for (let i = 0; i < value.length; i++) {
+    const row = value[i]
+    if (!row || typeof row !== 'object') continue
+    const sibling = row as Record<string, unknown>
+    if (hasSeriesEditionTier(sibling) || hasMegacitiesFallbackTierIdentity(sibling)) continue
+    return `Edition ${i + 1}: link a series edition tier or set tier and editionSize.`
+  }
+
   return true
 }
 

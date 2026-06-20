@@ -1,7 +1,7 @@
 /**
  * Live verification for DCS edition tier auto-populate hook.
  *
- * Usage: npx tsx src/scripts/verify-dcs-edition-tier-autopopulate.ts
+ * Usage: npx tsx src/scripts/verify-series-edition-tier-autopopulate.ts
  */
 import dotenv from 'dotenv'
 

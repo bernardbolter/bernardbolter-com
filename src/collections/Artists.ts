@@ -324,6 +324,31 @@ export const Artists: CollectionConfig = {
           type: 'row',
           fields: [
             {
+              name: 'contactPhoto',
+              type: 'upload',
+              relationTo: 'media',
+              admin: {
+                width: '50%',
+                description:
+                  'Studio portrait on the contact page (portrait orientation, 3:4 display).',
+              },
+            },
+            {
+              name: 'contactPhotoCaption',
+              type: 'text',
+              localized: true,
+              admin: {
+                width: '50%',
+                description:
+                  'Optional one-line caption under the studio photo on the contact page.',
+              },
+            },
+          ],
+        },
+        {
+          type: 'row',
+          fields: [
+            {
               name: 'whatsappNumber',
               type: 'text',
               admin: {
@@ -428,7 +453,6 @@ export const Artists: CollectionConfig = {
               type: 'textarea',
               label: 'Kleinunternehmer legal text',
             },
-            { name: 'odrText', type: 'richText', label: 'ODR platform legal text' },
           ],
         },
       ],
@@ -456,6 +480,57 @@ export const Artists: CollectionConfig = {
           name: 'startYear',
           type: 'number',
           admin: { description: 'Year this base was established (optional).' },
+        },
+        {
+          name: 'streetAddress',
+          type: 'text',
+          admin: {
+            description:
+              'Optional. Shown on the contact page for studio locations only — not for home/residence entries.',
+          },
+        },
+        {
+          name: 'postalCode',
+          type: 'text',
+          admin: {
+            description: 'Optional postal code for this location (used on the contact page and in JSON-LD).',
+          },
+        },
+        {
+          name: 'buildingName',
+          type: 'text',
+          admin: {
+            description: 'Optional. E.g. "CANK, 3rd floor". Shown on the contact page.',
+          },
+        },
+        {
+          name: 'showOnContactPage',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            condition: (_data, siblingData) => siblingData?.type !== 'residence',
+            description:
+              'When true, renders as a card with address and map on /contact. Only for Studio or Live-work locations — change the type above if this is a mappable studio.',
+          },
+        },
+        {
+          name: 'mapImage',
+          type: 'upload',
+          relationTo: 'media',
+          admin: {
+            condition: (_data, siblingData) => siblingData?.type !== 'residence',
+            description:
+              'Required when showOnContactPage is true. Pre-rendered static map image (Mapbox export, ~16:10).',
+          },
+        },
+        {
+          name: 'mapLinkUrl',
+          type: 'text',
+          admin: {
+            condition: (_data, siblingData) => siblingData?.type !== 'residence',
+            description:
+              'Optional Google Maps URL — whole card links out when set. Leave blank for a non-clickable card.',
+          },
         },
       ],
     },

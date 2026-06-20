@@ -4,6 +4,11 @@ import { privateFieldAccess } from '@/access/isArtistOrAdmin'
 import {
   editionTierCopiesField,
   editionTierIsOriginalTierField,
+  editionTierMegacitiesRowIdentityValidate,
+  editionTierMegacitiesSizeValidate,
+  editionTierMegacitiesTierValidate,
+  editionTierSeriesRelationField,
+  editionTierVendureVariantIdField,
 } from '@/collections/artworks/editionTierOwnershipFields'
 
 /** Overlay / map coordinates — optional until set in admin tooling (Art/Official does not collect x/y). */
@@ -517,11 +522,19 @@ export const megacitiesTab: Tab = {
               name: 'editions',
               type: 'array',
               labels: { singular: 'Edition', plural: 'Editions' },
+              validate: editionTierMegacitiesRowIdentityValidate,
               admin: { condition: (_, sibling) => Boolean(sibling?.printAvailable) },
               fields: [
+                editionTierSeriesRelationField,
+                editionTierVendureVariantIdField,
                 {
                   name: 'tier',
                   type: 'select',
+                  validate: editionTierMegacitiesTierValidate,
+                  admin: {
+                    description:
+                      'Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.',
+                  },
                   options: [
                     { label: 'Full size', value: 'full_size' },
                     { label: 'A0', value: 'a0' },
@@ -529,7 +542,11 @@ export const megacitiesTab: Tab = {
                   ],
                 },
                 { name: 'dimensions', type: 'text' },
-                { name: 'editionSize', type: 'number' },
+                {
+                  name: 'editionSize',
+                  type: 'number',
+                  validate: editionTierMegacitiesSizeValidate,
+                },
                 {
                   name: 'vendureProductId',
                   type: 'text',

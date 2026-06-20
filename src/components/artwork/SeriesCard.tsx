@@ -17,10 +17,10 @@ function seriesDescriptionShort(description: Series['description']): string {
 
 export default function SeriesCard({ artwork }: Props) {
   const topSeries = resolveArtworkTopLevelSeries(artwork.series)
-  if (!topSeries) return null
+  const artworkSiteUrl = getArtworkSeriesSiteUrl(artwork)
+  if (!topSeries || !artworkSiteUrl) return null
 
   const seriesColor = getSeriesColor(topSeries.slug)
-  const artworkSiteUrl = getArtworkSeriesSiteUrl(artwork)
   const swatchLabel = getSeriesInitials(topSeries.slug).toUpperCase() || topSeries.name.slice(0, 3).toUpperCase()
   const description = seriesDescriptionShort(topSeries.description)
 
@@ -43,24 +43,20 @@ export default function SeriesCard({ artwork }: Props) {
                 color: seriesColor,
               }}
             >
-              ◈ AR experience available on the series page
+              ◈ AR experience available on the series site
             </p>
           ) : null}
-          {artworkSiteUrl ? (
-            <>
-              <p className="series-card__framing">
-                See this work in full scale, with AR where available, on the {topSeries.name} site.
-              </p>
-              <a
-                href={artworkSiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="series-card__cta"
-              >
-                View on {topSeries.name} →
-              </a>
-            </>
-          ) : null}
+          <p className="series-card__framing">
+            See this work in full scale, with AR where available, on the {topSeries.name} site.
+          </p>
+          <a
+            href={artworkSiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="series-card__cta"
+          >
+            View on {topSeries.name} →
+          </a>
         </div>
       </div>
     </section>

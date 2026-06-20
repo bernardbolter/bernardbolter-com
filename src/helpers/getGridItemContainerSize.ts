@@ -1,4 +1,3 @@
-// Define the breakpoints and column/gap values from your SCSS
 /** Matches Tailwind screens in tailwind.config.js and design-system.md §4 */
 const BREAKPOINTS = {
   s: 550,
@@ -8,64 +7,49 @@ const BREAKPOINTS = {
 }
 
 const GRID_SETTINGS = [
-    { minWidth: BREAKPOINTS.xl, columns: 5, gap: 13 },
-    { minWidth: BREAKPOINTS.l, columns: 4, gap: 11 },
-    { minWidth: BREAKPOINTS.m, columns: 3, gap: 9 },
-    { minWidth: BREAKPOINTS.s, columns: 2, gap: 7 },
-    { minWidth: 0, columns: 1, gap: 5 }, // Default
-];
+  { minWidth: BREAKPOINTS.xl, columns: 5, gap: 13 },
+  { minWidth: BREAKPOINTS.l, columns: 4, gap: 11 },
+  { minWidth: BREAKPOINTS.m, columns: 3, gap: 9 },
+  { minWidth: BREAKPOINTS.s, columns: 2, gap: 7 },
+  { minWidth: 0, columns: 1, gap: 5 },
+]
 
-const MAX_GRID_WIDTH = 1500; // From your SCSS
+const MAX_GRID_WIDTH = 1500
 
-/**
- * Calculates the width and height for a square grid item container
- * based on the window width and fixed grid structure, and returns the gap.
- * @param windowWidth The current window width from useWindowSize.
- * @returns The calculated size (width and height) for the square container AND the gap size.
- */
-export const getGridItemContainerSize = (windowWidth: number | undefined): { width: number, height: number, gap: number, columns: number } => {
-    if (windowWidth === undefined) {
-        return { width: 300, height: 300, gap: 5, columns: 1 }; // Fallback size and gap
+/** 1.5rem existing + space-9 (1.5rem) per grid-return-to-column-span-spec §4 */
+export const GRID_SIDE_PADDING_PX = 48
+
+export function getGridItemContainerSize(windowWidth: number | undefined): {
+  width: number
+  height: number
+  gap: number
+  columns: number
+} {
+  if (windowWidth === undefined || windowWidth <= 0) {
+    return { width: 300, height: 300, gap: 5, columns: 1 }
+  }
+
+  let columns = 1
+  let gap = 5
+
+  for (const setting of GRID_SETTINGS) {
+    if (windowWidth >= setting.minWidth) {
+      columns = setting.columns
+      gap = setting.gap
+      break
     }
+  }
 
-    let columns = 1;
-    let gap = 5;
+  const effectiveGridElementWidth = Math.min(windowWidth, MAX_GRID_WIDTH)
+  const availableInteriorWidth = effectiveGridElementWidth - GRID_SIDE_PADDING_PX * 2
+  const totalInternalGapSpace = (columns - 1) * gap
+  const availableColumnSpace = availableInteriorWidth - totalInternalGapSpace
+  const itemWidth = Math.floor(availableColumnSpace / columns)
 
-    // Determine the current grid settings (columns and gap)
-    for (const setting of GRID_SETTINGS) {
-        if (windowWidth >= setting.minWidth) {
-            columns = setting.columns;
-            gap = setting.gap;
-            break;
-        }
-    }
-
-    // 1. Determine the effective width of the overall grid element (including padding).
-    // Use Math.min to respect the 1500px max width.
-    const effectiveGridElementWidth = Math.min(windowWidth, MAX_GRID_WIDTH);
-    
-    // 2. Calculate the total padding applied (gap on the left + gap on the right).
-    const totalPadding = 2 * gap;
-
-    // 3. Calculate the actual width AVAILABLE for columns and internal gaps.
-    // This is the interior space of the container.
-    const availableInteriorWidth = effectiveGridElementWidth - totalPadding;
-
-    // 4. Calculate the total space taken up by INTERNAL gaps (between columns).
-    const totalInternalGapSpace = (columns - 1) * gap;
-
-    // 5. Calculate the total space available for the column content.
-    const availableColumnSpace = availableInteriorWidth - totalInternalGapSpace;
-
-    // 6. Calculate the width of a single column (the item width).
-    const itemWidth = Math.floor(availableColumnSpace / columns);
-    
-    const itemHeight = itemWidth;
-
-    return {
-        width: itemWidth,
-        height: itemHeight,
-        gap: gap,
-        columns,
-    };
-};
+  return {
+    width: itemWidth,
+    height: itemWidth,
+    gap,
+    columns,
+  }
+}

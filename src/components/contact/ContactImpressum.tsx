@@ -1,7 +1,6 @@
 import Link from 'next/link'
 
 import { LinkSvg } from '@/components/icons'
-import LexicalProse from '@/lib/contact/LexicalProse'
 import type { Artist } from '@/payload-types'
 
 type Props = {
@@ -15,7 +14,7 @@ export default function ContactImpressum({ artist }: Props) {
   const year = new Date().getFullYear()
 
   return (
-    <div className="mx-auto flex w-full max-w-[50rem] flex-col pb-[1.875rem] pt-[1.875rem]">
+    <div className="flex w-full flex-col pb-[1.875rem] pt-[1.875rem]">
       <Link
         href="/datenschutz"
         className="inline-flex items-center text-[1.25rem] no-underline hover:underline"
@@ -55,13 +54,6 @@ export default function ContactImpressum({ artist }: Props) {
             {impressum.kleinunternehmerText}
           </p>
         </>
-      ) : null}
-
-      {impressum.odrText ? (
-        <LexicalProse
-          content={impressum.odrText}
-          className="font-body text-sm font-light leading-[1.4] text-secondary [&_a]:font-semibold [&_a]:text-primary [&_p]:pb-[0.3125rem]"
-        />
       ) : null}
 
       <div className="my-[0.625rem] h-px w-full bg-[var(--ui-line)]" />

@@ -5,6 +5,7 @@ import {
   buildOwnershipClaimHref,
   buildOwnershipDisplay,
   buildOwnershipTimelineRows,
+  getPublicProvenanceClaims,
   hasUnclaimedOwnershipAppeal,
   shouldShowOwnershipSection,
 } from '@/lib/artwork/artworkProvenancePublic'
@@ -25,6 +26,28 @@ function artwork(overrides: Partial<Artwork> = {}): Artwork {
   } as Artwork
 }
 
+describe('getPublicProvenanceClaims', () => {
+  it('partitions claims by confidence and excludes speculation', () => {
+    const result = getPublicProvenanceClaims(
+      artwork({
+        provenanceConfidenceLayer: [
+          { claim: 'Documented fact', confidenceLevel: 'documented-fact' },
+          { claim: 'Inferred claim', confidenceLevel: 'credible-inference' },
+          { claim: 'Institution note', confidenceLevel: 'institutional-assertion' },
+          { claim: 'Hidden guess', confidenceLevel: 'speculation' },
+        ],
+      }),
+    )
+
+    expect(result.prominent).toHaveLength(2)
+    expect(result.demoted).toHaveLength(1)
+    expect(result.hasDocumentedFact).toBe(true)
+    expect(result.hasCredibleInference).toBe(true)
+    expect(result.prominent.map((row) => row.claim)).not.toContain('Hidden guess')
+    expect(result.demoted[0]?.claim).toBe('Institution note')
+  })
+})
+
 describe('ownership display', () => {
   it('builds claim contact href with encoded params', () => {
     expect(buildOwnershipClaimHref({ slug: 'deutsche-stadt', title: 'Deutsche Stadt' })).toBe(
@@ -32,15 +55,12 @@ describe('ownership display', () => {
     )
   })
 
-  it('shows ownership section for visible entries, unknown origin, or artist studio', () => {
+  it('shows ownership section when currentLocation is present', () => {
     expect(
       shouldShowOwnershipSection(
-        artwork({
-          ownershipHistory: [{ collectorVisible: true, displayName: 'A Collector' }],
-        }),
+        artwork({ currentLocation: { category: 'private-collection' } }),
       ),
     ).toBe(true)
-    expect(shouldShowOwnershipSection(artwork({ provenanceOriginKnown: false }))).toBe(true)
     expect(
       shouldShowOwnershipSection(
         artwork({ currentLocation: { category: 'artists-studio' } }),
@@ -55,13 +75,14 @@ describe('ownership display', () => {
         artwork({ currentLocation: { category: 'artists-studio' } }),
         artist,
       ),
-    ).toBe("Currently in the artist's studio, Berlin")
+    ).toBe("Currently in artist's studio, Berlin")
   })
 
-  it('renders visible current owner with year', () => {
+  it('renders visible current owner for private collection', () => {
     expect(
       buildCurrentHolderLine(
         artwork({
+          currentLocation: { category: 'private-collection' },
           ownershipHistory: [
             {
               displayName: 'Jane Doe',
@@ -73,13 +94,14 @@ describe('ownership display', () => {
         }),
         artist,
       ),
-    ).toBe('Currently held by Jane Doe, London · since 2019')
+    ).toBe('Jane Doe, London')
   })
 
   it('renders generic private collection when current owner is not visible', () => {
     expect(
       buildCurrentHolderLine(
         artwork({
+          currentLocation: { category: 'private-collection' },
           ownershipHistory: [
             {
               displayName: 'Hidden Name',
@@ -90,25 +112,35 @@ describe('ownership display', () => {
         }),
         artist,
       ),
-    ).toBe('Currently in a private collection')
+    ).toBe('Private collection')
   })
 
-  it('appends on-loan suffix to current holder line', () => {
+  it('renders on-loan status headline', () => {
     expect(
       buildCurrentHolderLine(
         artwork({
           currentLocation: { category: 'on-loan' },
-          ownershipHistory: [{ collectorVisible: false }],
         }),
         artist,
       ),
-    ).toBe('Currently in a private collection · currently on loan')
+    ).toBe('Currently on loan')
   })
 
-  it('renders timeline only with two or more entries and hides private names', () => {
+  it('renders consignment availability headline', () => {
+    expect(
+      buildCurrentHolderLine(
+        artwork({
+          availabilityStatus: 'on-consignment',
+          galleryReference: 'Galerie Nord',
+        }),
+        artist,
+      ),
+    ).toBe('Available via Galerie Nord')
+  })
+
+  it('renders timeline only for visible entries', () => {
     const rows = buildOwnershipTimelineRows(
       artwork({
-        yearCreated: 2010,
         ownershipHistory: [
           {
             displayName: 'First Owner',
@@ -127,15 +159,13 @@ describe('ownership display', () => {
       }),
     )
 
-    expect(rows).toHaveLength(3)
-    expect(rows[0]?.text).toBe("Artist's studio · 2010–2015")
-    expect(rows[1]?.text).toBe('First Owner · Berlin · 2015–2020')
-    expect(rows[2]?.text).toBe('Private collection · 2020–present')
-    expect(rows[2]?.text).not.toContain('Secret Owner')
-    expect(rows[2]?.text).not.toContain('Paris')
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.text).toBe('First Owner · Berlin · 2015')
+    expect(rows[0]?.text).not.toContain('Secret Owner')
   })
 
-  it('shows unclaimed appeal only for open unclaimed entries outside the studio', () => {
+  it('shows unclaimed appeal only without confirmed owners outside the studio', () => {
+    expect(hasUnclaimedOwnershipAppeal(artwork())).toBe(true)
     expect(
       hasUnclaimedOwnershipAppeal(
         artwork({
@@ -154,7 +184,24 @@ describe('ownership display', () => {
     expect(
       hasUnclaimedOwnershipAppeal(
         artwork({
-          ownershipHistory: [{ claimStatus: 'unclaimed', dateRelinquished: '2020' }],
+          ownershipHistory: [
+            { claimStatus: 'unclaimed' },
+            { claimStatus: 'claimed-confirmed', displayName: 'Known Owner', collectorVisible: true },
+          ],
+        }),
+      ),
+    ).toBe(false)
+    expect(
+      hasUnclaimedOwnershipAppeal(
+        artwork({
+          currentLocation: { category: 'private-collection' },
+          ownershipHistory: [
+            {
+              claimStatus: 'claimed-confirmed',
+              displayName: 'Private collection, Zurich',
+              collectorVisible: true,
+            },
+          ],
         }),
       ),
     ).toBe(false)
@@ -163,6 +210,7 @@ describe('ownership display', () => {
   it('builds full ownership display with appeal link', () => {
     const display = buildOwnershipDisplay(
       artwork({
+        currentLocation: { category: 'private-collection' },
         provenanceOriginKnown: false,
         ownershipHistory: [{ claimStatus: 'unclaimed', collectorVisible: false }],
       }),

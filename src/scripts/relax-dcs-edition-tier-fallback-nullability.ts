@@ -2,6 +2,7 @@
  * Allow relation-only DCS edition tiers — tier_name and total_edition_size
  * may be null when series_edition_tier_id is populated (v2 architecture).
  *
+ * Superseded by relax-series-edition-tier-fallback-nullability.ts (DCS + Megacities).
  * Usage: npx tsx src/scripts/relax-dcs-edition-tier-fallback-nullability.ts
  */
 import dotenv from 'dotenv'
@@ -39,30 +40,34 @@ async function columnIsNullable(
   return rows[0].is_nullable === 'YES'
 }
 
-async function relaxNotNull(pool: PgPool, columnName: string): Promise<void> {
-  const nullable = await columnIsNullable(pool, 'artworks_dcs_edition_tiers', columnName)
+async function relaxNotNull(
+  pool: PgPool,
+  tableName: string,
+  columnName: string,
+): Promise<void> {
+  const nullable = await columnIsNullable(pool, tableName, columnName)
   if (nullable == null) {
-    console.log(`Column ${columnName} not found — skipping.`)
+    console.log(`${tableName}.${columnName} not found — skipping.`)
     return
   }
   if (nullable) {
-    console.log(`Column ${columnName} already nullable.`)
+    console.log(`${tableName}.${columnName} already nullable.`)
     return
   }
 
   await pool.query(
-    `ALTER TABLE "public"."artworks_dcs_edition_tiers"
+    `ALTER TABLE "public"."${tableName}"
      ALTER COLUMN "${columnName}" DROP NOT NULL`,
   )
-  console.log(`Relaxed NOT NULL on artworks_dcs_edition_tiers.${columnName}`)
+  console.log(`Relaxed NOT NULL on ${tableName}.${columnName}`)
 }
 
 async function main() {
   const payload = await getPayload({ config })
   const pool = getPgPool(payload)
 
-  await relaxNotNull(pool, 'tier_name')
-  await relaxNotNull(pool, 'total_edition_size')
+  await relaxNotNull(pool, 'artworks_dcs_edition_tiers', 'tier_name')
+  await relaxNotNull(pool, 'artworks_dcs_edition_tiers', 'total_edition_size')
 
   process.exit(0)
 }

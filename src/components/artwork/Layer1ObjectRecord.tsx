@@ -30,9 +30,9 @@ function RecordRow({ label, children }: { label: string; children: ReactNode }) 
 }
 
 function madeInLabel(artwork: Artwork): string | null {
-  const city = artwork.city?.trim()
+  const city = artwork.locationCreated?.city?.trim()
   if (!city) return null
-  const country = artwork.country?.trim()
+  const country = artwork.locationCreated?.country?.trim()
   if (!country || country === 'Germany') return city
   return `${city}, ${country}`
 }
@@ -62,6 +62,9 @@ export default function Layer1ObjectRecord({ artwork }: Props) {
             ) : null}
           </div>
           <div>
+            {artwork.altTitle?.trim() ? (
+              <RecordRow label="Also known as">{artwork.altTitle.trim()}</RecordRow>
+            ) : null}
             <RecordRow label="Year">{formatArtworkYearRange(artwork)}</RecordRow>
             {madeIn ? <RecordRow label="Made in">{madeIn}</RecordRow> : null}
             {topSeries ? (

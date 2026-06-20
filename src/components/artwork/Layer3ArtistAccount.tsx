@@ -1,8 +1,6 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
-import ClipEmbeddingNote from '@/components/artwork/ClipEmbeddingNote'
-import ReasoningStatusBadge from '@/components/artwork/ReasoningStatusBadge'
+import ClipEmbeddingNote, { type SimilarWorkItem } from '@/components/artwork/ClipEmbeddingNote'
 import { getDisplayImageUrl, resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
@@ -11,7 +9,7 @@ import type { Artwork, ArtHistoricalReference, Tag } from '@/payload-types'
 
 type Props = {
   artwork: Artwork
-  similarWorks: SimilarArtworkCard[]
+  similarWorks?: SimilarArtworkCard[] | null
   hasClipEmbedding: boolean
 }
 
@@ -52,6 +50,21 @@ function aboutText(artwork: Artwork): string | null {
   const long = lexicalToPlain(artwork.descriptionLong)
   if (short && long) return `${short}\n\n${long}`
   return short || long || null
+}
+
+function similarWorkItems(works: SimilarArtworkCard[] | null | undefined): SimilarWorkItem[] {
+  return (works ?? [])
+    .slice(0, 3)
+    .map((work) => {
+      const imageUrl = getDisplayImageUrl(work)
+      if (!imageUrl || !work.slug?.trim()) return null
+      return {
+        slug: work.slug.trim(),
+        title: work.title?.trim() || 'Artwork',
+        imageUrl,
+      }
+    })
+    .filter((work): work is SimilarWorkItem => work !== null)
 }
 
 export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbedding }: Props) {
@@ -168,35 +181,11 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
           </>
         ) : null}
 
-        {hasClipEmbedding && similarWorks.length > 0 ? (
-          <>
-            <hr className="artwork-page__divider" />
-            <p className="artwork-page__section-title">Similar works</p>
-            <p className="mb-3 text-xs text-secondary">via visual similarity</p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {similarWorks.map((work) => {
-                const imageUrl = getDisplayImageUrl(work)
-                return (
-                  <Link key={work.id} href={`/${work.slug}`} className="block no-underline">
-                    {imageUrl ? (
-                      <Image
-                        src={imageUrl}
-                        alt={work.title ?? 'Artwork'}
-                        width={200}
-                        height={200}
-                        className="h-auto w-full object-contain"
-                      />
-                    ) : null}
-                    <p className="mt-1 text-xs text-dark">{work.title}</p>
-                  </Link>
-                )
-              })}
-            </div>
-          </>
-        ) : null}
-
-        <ClipEmbeddingNote slug={artwork.slug} hasClipEmbedding={hasClipEmbedding} />
-        <ReasoningStatusBadge status={artwork.reasoningStatus} />
+        <ClipEmbeddingNote
+          artworkSlug={artwork.slug?.trim() || ''}
+          hasClipEmbedding={hasClipEmbedding}
+          similarWorks={similarWorkItems(similarWorks)}
+        />
         </div>
       </div>
     </section>

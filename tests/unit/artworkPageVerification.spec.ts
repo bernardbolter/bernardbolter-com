@@ -255,7 +255,8 @@ describe('artwork page verification checklist', () => {
           ],
           provenanceConfidenceLayer: [
             {
-              claim: 'secret claim',
+              claim: 'Public claim text',
+              evidenceBasis: 'secret evidence',
               confidenceLevel: 'documented-fact',
             },
           ],
@@ -273,7 +274,8 @@ describe('artwork page verification checklist', () => {
       expect(sanitized.salesRecord).toBeUndefined()
       expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('secret')
       expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('private note')
-      expect(JSON.stringify(sanitized.provenanceConfidenceLayer)).not.toContain('secret claim')
+      expect(JSON.stringify(sanitized.provenanceConfidenceLayer)).toContain('Public claim text')
+      expect(JSON.stringify(sanitized.provenanceConfidenceLayer)).not.toContain('secret evidence')
       expect(sanitized.currentLocation).toEqual({ category: 'private-collection' })
     })
   })

@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 
 import { resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
-import { isArtworkDetailPath } from '@/lib/routes/isArtworkDetailPath'
+import { artworkSlugFromPathname } from '@/lib/routes/artworkSlugFromPathname'
 import { useArtworkPageMenuPlusColor } from '@/providers/ArtworkPageChromeContext'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
@@ -23,19 +23,6 @@ const DEFAULT_PLUS_COLOR = getSeriesColor('a-colorful-history')
 function pickRandomSeriesColor(): string {
   const slug = SERIES_SLUGS[Math.floor(Math.random() * SERIES_SLUGS.length)]
   return getSeriesColor(slug)
-}
-
-function artworkSlugFromPathname(pathname: string): string | null {
-  if (pathname.startsWith('/preview/artwork/')) {
-    return pathname.split('/').filter(Boolean)[2] ?? null
-  }
-  if (pathname.startsWith('/artworks/')) {
-    return pathname.split('/').filter(Boolean)[1] ?? null
-  }
-  if (isArtworkDetailPath(pathname)) {
-    return pathname.split('/').filter(Boolean)[0] ?? null
-  }
-  return null
 }
 
 /** Series accent used by the hamburger plus and matching info-panel link icons. */

@@ -19,4 +19,18 @@ describe('withDbRetry', () => {
     await expect(withDbRetry(fn)).rejects.toThrow('slug must be unique')
     expect(fn).toHaveBeenCalledTimes(1)
   })
+
+  it('retries connection terminated timeout messages', async () => {
+    const fn = vi
+      .fn()
+      .mockRejectedValueOnce(
+        Object.assign(new Error('Failed query'), {
+          cause: new Error('Connection terminated due to connection timeout'),
+        }),
+      )
+      .mockResolvedValueOnce('ok')
+
+    await expect(withDbRetry(fn)).resolves.toBe('ok')
+    expect(fn).toHaveBeenCalledTimes(2)
+  })
 })

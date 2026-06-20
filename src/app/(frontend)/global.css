@@ -489,12 +489,13 @@ h6 {
   display: flex;
   max-width: 1500px;
   margin: 0 auto;
-  padding-top: 70px;
+  padding: 70px 3rem 1.5rem;
   max-height: 100vh;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
   align-items: flex-start;
+  box-sizing: border-box;
 }
 
 .artwork-grid__container::-webkit-scrollbar {
@@ -505,25 +506,20 @@ h6 {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  padding-bottom: 0;
-}
-
-.artwork-grid__span-spacer {
-  flex-shrink: 0;
-  pointer-events: none;
 }
 
 .artwork-grid__image-container {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  display: block;
   position: relative;
   background-color: transparent;
   text-decoration: none;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  width: auto;
+  height: auto;
+  cursor: pointer;
 }
 
-.artwork-grid__image-container svg {
+.artwork-grid__image-frame svg {
   position: absolute;
   width: 50px;
   height: 50px;
@@ -536,18 +532,16 @@ h6 {
 
 .artwork-grid__image-wrapper {
   position: relative;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.artwork-grid__image-frame {
+  position: relative;
 }
 
 .artwork-grid__image {
   display: block;
-  object-fit: contain;
-  box-shadow: rgba(0, 0, 0, 0) 3px 3px 3px;
-  transition: box-shadow 0.3s ease-in-out;
-  cursor: pointer;
-}
-
-.artwork-grid__image:hover {
-  box-shadow: rgba(0, 0, 0, 0.2) 3px 3px 3px;
 }
 
 .artwork-grid__placeholer-overlay {
@@ -574,10 +568,12 @@ h6 {
 .artwork-grid__info {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  width: 100%;
-  padding-top: 0.5rem;
+  gap: 0.375rem;
+  width: max-content;
+  max-width: var(--caption-max-width);
+  margin-top: 0.5rem;
   box-sizing: border-box;
 }
 

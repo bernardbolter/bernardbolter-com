@@ -28,7 +28,7 @@ const PROSE_INTENT_FIELDS: Array<(artwork: Artwork) => string | null | undefined
   (artwork) => artwork.formalContributionAssessment,
 ]
 
-/** Gates the single-column desktop fallback — tags/CLIP/reasoning alone do not count. */
+/** Prose/intent fields and art-historical context — excludes tags and CLIP. */
 export function artworkHasArtistAccountProse(artwork: Artwork): boolean {
   if (PROSE_INTENT_FIELDS.some((read) => hasText(read(artwork) ?? undefined))) {
     return true
@@ -40,4 +40,22 @@ export function artworkHasArtistAccountProse(artwork: Artwork): boolean {
     (ref): ref is ArtHistoricalReference => typeof ref === 'object' && ref !== null,
   )
   return references.length > 0
+}
+
+type ProseColumnOptions = {
+  artwork: Artwork
+  hasClipEmbedding: boolean
+  similarWorksCount: number
+}
+
+/** Gates the single-column desktop fallback — CLIP/similar works count; tags alone do not. */
+export function artworkShowsProseColumn({
+  artwork,
+  hasClipEmbedding,
+  similarWorksCount,
+}: ProseColumnOptions): boolean {
+  if (artworkHasArtistAccountProse(artwork)) return true
+  if (hasClipEmbedding) return true
+  if (similarWorksCount > 0) return true
+  return false
 }

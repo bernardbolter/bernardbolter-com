@@ -12,8 +12,7 @@ type Props = {
 
 export default function EditionTierRegistry({ artwork }: Props) {
   const tiers = buildPublicEditionTiers(artwork)
-  const untrackedNote = (artwork as Artwork & { untrackedEditionsNote?: string | null })
-    .untrackedEditionsNote?.trim()
+  const untrackedNote = artwork.untrackedEditionsNote?.trim()
 
   if (tiers.length === 0) {
     if (!untrackedNote) return null
@@ -22,9 +21,15 @@ export default function EditionTierRegistry({ artwork }: Props) {
 
   return (
     <div className="edition-registry">
-      {tiers.map((tier) => (
-        <EditionTierAccordion key={tier.tierLabel} tier={tier} />
-      ))}
+      <div className="edition-registry__card">
+        {tiers.map((tier, index) => (
+          <EditionTierAccordion
+            key={tier.tierLabel}
+            tier={tier}
+            isLast={index === tiers.length - 1}
+          />
+        ))}
+      </div>
       {untrackedNote ? <p className="edition-registry__untracked">{untrackedNote}</p> : null}
     </div>
   )
@@ -32,43 +37,46 @@ export default function EditionTierRegistry({ artwork }: Props) {
 
 type TierProps = {
   tier: ReturnType<typeof buildPublicEditionTiers>[number]
+  isLast: boolean
 }
 
-function EditionTierAccordion({ tier }: TierProps) {
+function EditionTierAccordion({ tier, isLast }: TierProps) {
   const [open, setOpen] = useState(false)
-  const hasOpenContent = tier.claimedRows.length > 0 || tier.apRow !== null
 
   return (
-    <div className="edition-registry__card">
+    <>
       <button
         type="button"
-        className="edition-registry__header"
+        className={`edition-registry__header${isLast && !open ? ' edition-registry__header--last' : ''}`}
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
       >
         <span className="edition-registry__label">{tier.tierLabel}</span>
         <span className="edition-registry__summary">
           <span className="edition-registry__pill">{tier.headerSummary}</span>
-          <span className="edition-registry__chevron" aria-hidden>
-            {open ? '▾' : '▸'}
-          </span>
+          <span
+            className={`edition-registry__chevron ti-chevron-${open ? 'down' : 'right'}`}
+            aria-hidden
+          />
         </span>
       </button>
 
       {open ? (
-        <div className="edition-registry__body">
+        <div className={`edition-registry__body${isLast ? ' edition-registry__body--last' : ''}`}>
           {tier.claimedRows.map((row) => (
-            <p key={`${tier.tierLabel}-${row.copyNumber}`} className="edition-registry__row">
-              {row.displayLine}
-            </p>
+            <div
+              key={`${tier.tierLabel}-${row.copyNumber}`}
+              className="edition-registry__row edition-registry__row--split"
+            >
+              <span>{row.copyNumber}</span>
+              <span>{row.ownerLabel}</span>
+            </div>
           ))}
           {tier.apRow ? (
-            <p className="edition-registry__row edition-registry__row--ap">{tier.apRow.displayLine}</p>
-          ) : null}
-          {!hasOpenContent ? (
-            <p className="edition-registry__row edition-registry__row--muted">
-              No publicly confirmed copies yet.
-            </p>
+            <div className="edition-registry__row edition-registry__row--split edition-registry__row--ap">
+              <span>{tier.apRow.copyNumber}</span>
+              <span>{tier.apRow.ownerLabel}</span>
+            </div>
           ) : null}
           <p className="edition-registry__claim">
             Do you own one of these?{' '}
@@ -78,6 +86,6 @@ function EditionTierAccordion({ tier }: TierProps) {
           </p>
         </div>
       ) : null}
-    </div>
+    </>
   )
 }

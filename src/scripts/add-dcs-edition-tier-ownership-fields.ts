@@ -1,9 +1,8 @@
 /**
- * Add isOriginalTier and copies[] nested tables for dcs.editionTiers and megacities print editions.
+ * Add isOriginalTier columns and copies[] nested tables for dcs.editionTiers
+ * and megacities.print.editions.
  *
  * Usage: npx tsx src/scripts/add-dcs-edition-tier-ownership-fields.ts
- *
- * Prefer PAYLOAD_DATABASE_PUSH=true once if nested array tables are missing entirely.
  */
 import dotenv from 'dotenv'
 
@@ -16,6 +15,14 @@ import config from '@/payload.config'
 type PgPool = {
   query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }>
 }
+
+const CLAIM_STATUS_VALUES = [
+  'unclaimed',
+  'claimed-pending',
+  'claimed-confirmed',
+  'artist-held',
+  'sold-secondary',
+] as const
 
 function getPgPool(payload: Awaited<ReturnType<typeof getPayload>>): PgPool {
   const pool = (payload.db as { pool?: PgPool } | undefined)?.pool
@@ -50,6 +57,54 @@ async function tableExists(pool: PgPool, tableName: string): Promise<boolean> {
   return rows.length > 0
 }
 
+async function enumExists(pool: PgPool, enumName: string): Promise<boolean> {
+  const { rows } = await pool.query(`SELECT 1 FROM pg_type WHERE typname = $1`, [enumName])
+  return rows.length > 0
+}
+
+async function ensureClaimStatusEnum(pool: PgPool, enumName: string): Promise<void> {
+  if (await enumExists(pool, enumName)) return
+
+  const labels = CLAIM_STATUS_VALUES.map((v) => `'${v}'`).join(', ')
+  await pool.query(`CREATE TYPE "public"."${enumName}" AS ENUM(${labels})`)
+  console.log(`Created enum ${enumName}`)
+}
+
+async function ensureCopiesTable(
+  pool: PgPool,
+  tableName: string,
+  parentTable: string,
+  enumName: string,
+): Promise<void> {
+  if (await tableExists(pool, tableName)) {
+    console.log(`Table ${tableName} already exists.`)
+    return
+  }
+
+  await ensureClaimStatusEnum(pool, enumName)
+
+  const fkName = `${tableName}_parent_id_fk`
+  await pool.query(`
+    CREATE TABLE "public"."${tableName}" (
+      "_order" integer NOT NULL,
+      "_parent_id" character varying NOT NULL,
+      "id" character varying NOT NULL,
+      "copy_number" character varying NOT NULL,
+      "is_artist_proof" boolean DEFAULT false,
+      "owner" character varying,
+      "claim_status" "public"."${enumName}" DEFAULT 'unclaimed',
+      "collector_visible" boolean DEFAULT false,
+      "date_acquired" timestamp(3) with time zone,
+      "claimed_copy_number_known" boolean DEFAULT false,
+      "notes" character varying,
+      CONSTRAINT "${tableName}_pkey" PRIMARY KEY ("id"),
+      CONSTRAINT "${fkName}" FOREIGN KEY ("_parent_id")
+        REFERENCES "public"."${parentTable}"("id") ON DELETE CASCADE
+    )
+  `)
+  console.log(`Created table ${tableName}`)
+}
+
 async function main() {
   const payload = await getPayload({ config })
   const pool = getPgPool(payload)
@@ -76,9 +131,20 @@ async function main() {
     console.log('Added artworks_megacities_print_editions.is_original_tier')
   }
 
-  console.log(
-    'If copies[] nested tables are missing, run once with PAYLOAD_DATABASE_PUSH=true pnpm dev',
+  await ensureCopiesTable(
+    pool,
+    'artworks_dcs_edition_tiers_copies',
+    'artworks_dcs_edition_tiers',
+    'enum_artworks_dcs_edition_tiers_copies_claim_status',
   )
+
+  await ensureCopiesTable(
+    pool,
+    'artworks_megacities_print_editions_copies',
+    'artworks_megacities_print_editions',
+    'enum_artworks_megacities_print_editions_copies_claim_status',
+  )
+
   process.exit(0)
 }
 

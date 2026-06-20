@@ -5,11 +5,13 @@ import { fetchArtworkClipEmbedding } from '@/lib/payload/clipEmbedding'
 import { findSimilarArtworks } from '@/lib/payload/similarity'
 import type { Artwork } from '@/payload-types'
 
-export type SimilarArtworkCard = Pick<Artwork, 'id' | 'title' | 'slug' | 'primaryImage' | 'posterImage'>
+export type SimilarArtworkCard = Pick<Artwork, 'id' | 'title' | 'slug' | 'primaryImage' | 'posterImage'> & {
+  similarity?: number
+}
 
 export async function getSimilarArtworksForPage(
   artworkId: number,
-  limit = 4,
+  limit = 3,
 ): Promise<SimilarArtworkCard[]> {
   const embedding = await fetchArtworkClipEmbedding(artworkId)
   if (!embedding) return []
@@ -27,17 +29,25 @@ export async function getSimilarArtworksForPage(
     overrideAccess: false,
   })
 
-  const byId = new Map(result.docs.map((doc) => [doc.id, doc]))
-  return neighbours
-    .map((row) => byId.get(row.id))
-    .filter((doc): doc is Artwork => Boolean(doc))
-    .map((doc) => ({
+  const byId = new Map(
+    result.docs
+      .filter((doc): doc is Artwork => Boolean(doc && typeof doc.id === 'number'))
+      .map((doc) => [doc.id, doc]),
+  )
+  const cards: SimilarArtworkCard[] = []
+  for (const row of neighbours) {
+    const doc = byId.get(row.id)
+    if (!doc) continue
+    cards.push({
       id: doc.id,
       title: doc.title,
       slug: doc.slug,
       primaryImage: doc.primaryImage,
       posterImage: doc.posterImage,
-    }))
+      similarity: row.similarity,
+    })
+  }
+  return cards
 }
 
 export async function artworkHasClipEmbedding(artworkId: number): Promise<boolean> {

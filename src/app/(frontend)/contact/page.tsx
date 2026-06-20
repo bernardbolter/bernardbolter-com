@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 
 import Contact from '@/components/contact/Contact'
 import Info from '@/components/info/Info'
+import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistForContactPage } from '@/lib/payload/contactPage'
+import { generateContactPageJsonLd } from '@/utilities/generateContactPageJsonLd'
 
 export const revalidate = 3600
 
@@ -14,9 +16,16 @@ export const metadata: Metadata = {
 
 export default async function ContactPage() {
   const artist = await getArtistForContactPage()
+  const jsonLd = artist ? generateContactPageJsonLd(artist, { baseUrl: getSiteBaseUrl() }) : null
 
   return (
     <div className="bio-page__container">
+      {jsonLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      ) : null}
       <Info />
       {artist ? (
         <Contact artist={artist} />

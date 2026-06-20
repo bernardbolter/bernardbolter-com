@@ -1,10 +1,23 @@
 'use client'
 
+import { useMenuPlusColor } from '@/hooks/useMenuPlusColor'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
 export default function ArtworkSwitcher() {
   const [state, setState] = useArtworks()
+  const plusColor = useMenuPlusColor()
   const isDesktopSwitcher = (state.viewportWidth || 0) > 767
+
+  const toggleTrack = (
+    <div className="mx-[2px] flex h-[1.125rem] w-[2.5rem] items-center rounded-full border border-ui-line bg-ui-face p-[3px]">
+      <div
+        className={`h-3 w-3 shrink-0 rounded-full transition-[transform,background-color] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+          state.artworkViewTimeline ? 'translate-x-0' : 'translate-x-[22px]'
+        }`}
+        style={{ backgroundColor: plusColor }}
+      />
+    </div>
+  )
 
   return (
     <button
@@ -28,13 +41,7 @@ export default function ArtworkSwitcher() {
       >
         Timeline
       </p>
-      <div className="relative mx-[2px] h-[1.125rem] w-[2.5rem] rounded-full border border-ui-line bg-ui-face">
-        <div
-          className={`absolute left-[2px] top-[2px] h-3 w-3 rounded-full bg-ui-timeline transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
-            state.artworkViewTimeline ? 'translate-x-0' : 'translate-x-[1.5rem]'
-          }`}
-        />
-      </div>
+      {toggleTrack}
       <p
         className={`m-0 cursor-pointer px-[2px] font-heading text-xs font-extrabold uppercase ${
           !state.artworkViewTimeline ? 'text-primary' : 'text-secondary'

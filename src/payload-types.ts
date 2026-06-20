@@ -436,6 +436,14 @@ export interface Artist {
    */
   contactStatusNote?: string | null;
   /**
+   * Studio portrait on the contact page (portrait orientation, 3:4 display).
+   */
+  contactPhoto?: (number | null) | Media;
+  /**
+   * Optional one-line caption under the studio photo on the contact page.
+   */
+  contactPhotoCaption?: string | null;
+  /**
    * WhatsApp number in international format without spaces, e.g. 49171234567.
    */
   whatsappNumber?: string | null;
@@ -538,21 +546,6 @@ export interface Artist {
     country?: string | null;
     publicEmail?: string | null;
     kleinunternehmerText?: string | null;
-    odrText?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
   };
   locations?:
     | {
@@ -565,6 +558,30 @@ export interface Artist {
          * Year this base was established (optional).
          */
         startYear?: number | null;
+        /**
+         * Optional. Shown on the contact page for studio locations only — not for home/residence entries.
+         */
+        streetAddress?: string | null;
+        /**
+         * Optional postal code for this location (used on the contact page and in JSON-LD).
+         */
+        postalCode?: string | null;
+        /**
+         * Optional. E.g. "CANK, 3rd floor". Shown on the contact page.
+         */
+        buildingName?: string | null;
+        /**
+         * When true, renders as a card with address and map on /contact. Only for Studio or Live-work locations — change the type above if this is a mappable studio.
+         */
+        showOnContactPage?: boolean | null;
+        /**
+         * Required when showOnContactPage is true. Pre-rendered static map image (Mapbox export, ~16:10).
+         */
+        mapImage?: (number | null) | Media;
+        /**
+         * Optional Google Maps URL — whole card links out when set. Leave blank for a non-clickable card.
+         */
+        mapLinkUrl?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -1253,6 +1270,23 @@ export interface Artwork {
     | string
     | number
     | boolean
+    | null;
+  /**
+   * Links to other distinct artworks (or note-only entries). Does not merge ownership or provenance across records.
+   */
+  relatedWorks?:
+    | {
+        /**
+         * Use when the related work has its own Artwork record. Leave empty and use relatedWorkNote if no record exists yet.
+         */
+        relatedArtwork?: (number | null) | Artwork;
+        relationshipType?: ('derivative-oil-painting' | 'derivative-other' | 'series-related' | 'other') | null;
+        /**
+         * Short public-facing description. Required when relatedArtwork is empty; optional supplement when linked.
+         */
+        relatedWorkNote?: string | null;
+        id?: string | null;
+      }[]
     | null;
   /**
    * Whether this work has tracked edition tiers (DCS/Megacities editionTiers, or ownershipRegistry for other works).
@@ -2046,11 +2080,11 @@ export interface Artwork {
           /**
            * Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.
            */
-          tierName: 'small-print' | 'collectors-print' | 'monumental' | 'oil-painting';
+          tierName?: ('small-print' | 'collectors-print' | 'monumental' | 'oil-painting') | null;
           /**
            * Fixed edition size — never changes after publication.
            */
-          totalEditionSize: number;
+          totalEditionSize?: number | null;
           printSubstrate?: ('paper' | 'aluminum-mount' | 'canvas' | 'oil-on-canvas') | null;
           /**
            * Ships with street photo + satellite supporting prints.
@@ -2400,6 +2434,17 @@ export interface Artwork {
       printAvailable?: boolean | null;
       editions?:
         | {
+            /**
+             * Shared tier definition for this entry. Name, size, substrate, and the shared Vendure Product are read through this relation when populated.
+             */
+            seriesEditionTier?: (number | null) | SeriesEditionTier;
+            /**
+             * This artwork's Variant within the shared Vendure Product (see seriesEditionTier.vendureProductId). Stock is tracked per-variant.
+             */
+            vendureVariantId?: string | null;
+            /**
+             * Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.
+             */
             tier?: ('full_size' | 'a0' | 'a1') | null;
             dimensions?: string | null;
             editionSize?: number | null;
@@ -3829,6 +3874,8 @@ export interface ArtistsSelect<T extends boolean = true> {
   creditLine?: T;
   contactStatus?: T;
   contactStatusNote?: T;
+  contactPhoto?: T;
+  contactPhotoCaption?: T;
   whatsappNumber?: T;
   whatsappPrefilledMessage?: T;
   socialChannels?:
@@ -3856,7 +3903,6 @@ export interface ArtistsSelect<T extends boolean = true> {
         country?: T;
         publicEmail?: T;
         kleinunternehmerText?: T;
-        odrText?: T;
       };
   locations?:
     | T
@@ -3867,6 +3913,12 @@ export interface ArtistsSelect<T extends boolean = true> {
         primary?: T;
         current?: T;
         startYear?: T;
+        streetAddress?: T;
+        postalCode?: T;
+        buildingName?: T;
+        showOnContactPage?: T;
+        mapImage?: T;
+        mapLinkUrl?: T;
         id?: T;
       };
   publicEmail?: T;
@@ -4548,6 +4600,14 @@ export interface ArtworksSelect<T extends boolean = true> {
   provenanceOriginKnown?: T;
   loanHistory?: T;
   provenanceConfidenceLayer?: T;
+  relatedWorks?:
+    | T
+    | {
+        relatedArtwork?: T;
+        relationshipType?: T;
+        relatedWorkNote?: T;
+        id?: T;
+      };
   hasEditions?: T;
   ownershipRegistry?:
     | T
@@ -5087,6 +5147,8 @@ export interface ArtworksSelect<T extends boolean = true> {
               editions?:
                 | T
                 | {
+                    seriesEditionTier?: T;
+                    vendureVariantId?: T;
                     tier?: T;
                     dimensions?: T;
                     editionSize?: T;

@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
 import { useMenuPlusColor } from '@/hooks/useMenuPlusColor'
+import { useArtworkPageNavBackLink } from '@/providers/ArtworkPageChromeContext'
 
 import AnimatedHamburgerMenu from './AnimatedHamburgerMenu'
 import {
@@ -87,7 +88,10 @@ const Info = () => {
     social?.instagram || social?.tiktok || social?.youtube || social?.linkedin,
   )
   const pathname = usePathname()
+  const navBackLink = useArtworkPageNavBackLink()
   const isDynamicRoute = !staticRoutes.includes(pathname)
+  const backLinkHref = navBackLink?.href ?? '/'
+  const backLinkLabel = navBackLink?.label ?? 'All Artwork'
 
   const closeInfo = () => setState((prev) => ({ ...prev, infoOpen: false }))
 
@@ -111,13 +115,13 @@ const Info = () => {
           </>
         ) : (
           <Link
-            href="/"
+            href={backLinkHref}
             className="flex cursor-pointer items-center pt-2 opacity-70 transition-opacity duration-500 hover:opacity-100"
           >
             <div className="h-4 w-4 fill-secondary">
               <BackArrowSvg />
             </div>
-            <p className="m-0 px-0 pb-[0.375rem] text-sm font-extrabold text-secondary">All Artwork</p>
+            <p className="m-0 px-0 pb-[0.375rem] text-sm font-extrabold text-secondary">{backLinkLabel}</p>
           </Link>
         )}
       </div>

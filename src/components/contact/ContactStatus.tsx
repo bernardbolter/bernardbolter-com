@@ -23,15 +23,19 @@ export default function ContactStatus({ artist }: Props) {
   const note = artist.contactStatusNote?.trim()
 
   return (
-    <div className="mx-auto flex w-full max-w-[34.375rem] items-center gap-[0.625rem] py-[0.625rem]">
-      <span
-        className={`h-2 w-2 shrink-0 rounded-full ${STATUS_DOT_CLASS[status]}`}
-        aria-hidden="true"
-      />
-      <p className="font-heading text-sm text-secondary">
-        <span>{STATUS_LABELS[status]}</span>
-        {note ? <span className="text-muted"> — {note}</span> : null}
-      </p>
+    <div className="mt-[1.5rem]">
+      <div className="flex items-center gap-[0.625rem]">
+        <span
+          className={`h-2 w-2 shrink-0 rounded-full ${STATUS_DOT_CLASS[status]}`}
+          aria-hidden="true"
+        />
+        <p className="font-heading text-sm font-semibold text-[var(--text-medium)]">
+          {STATUS_LABELS[status]}
+        </p>
+      </div>
+      {note ? (
+        <p className="mt-[0.25rem] font-heading text-[0.8125rem] text-muted">{note}</p>
+      ) : null}
     </div>
   )
 }

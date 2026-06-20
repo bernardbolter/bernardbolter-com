@@ -1,8 +1,34 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import type { Artist } from '@/payload-types'
+import type { Artist, Media } from '@/payload-types'
 
 const defaultLocale = 'en' as const
+
+async function populateLocationMapImages(artist: Artist, payload: Awaited<ReturnType<typeof getPayload>>): Promise<Artist> {
+  const locations = artist.locations
+  if (!locations?.length) return artist
+
+  const enriched = await Promise.all(
+    locations.map(async (location) => {
+      const mapImage = location.mapImage
+      if (!mapImage || typeof mapImage !== 'number') return location
+
+      try {
+        const media = await payload.findByID({
+          collection: 'media',
+          id: mapImage,
+          depth: 0,
+          overrideAccess: false,
+        })
+        return { ...location, mapImage: media as Media }
+      } catch {
+        return location
+      }
+    }),
+  )
+
+  return { ...artist, locations: enriched }
+}
 
 /** Artist record with contact page fields for /contact. */
 export async function getArtistForContactPage(): Promise<Artist | null> {
@@ -11,9 +37,13 @@ export async function getArtistForContactPage(): Promise<Artist | null> {
     collection: 'artists',
     locale: defaultLocale,
     limit: 1,
-    depth: 0,
+    depth: 2,
     sort: 'id',
     overrideAccess: false,
   })
-  return result.docs[0] ?? null
+
+  const artist = result.docs[0]
+  if (!artist) return null
+
+  return populateLocationMapImages(artist, payload)
 }

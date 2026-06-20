@@ -13,20 +13,94 @@
   animation: contact-slide-down 0.3s ease;
 }
 
-.contact-form-block input.error,
-.contact-form-block textarea.error,
-.contact-form-block select.error {
-  border-bottom-color: var(--status-error);
+.contact-form__group {
+  margin-bottom: 1.1rem;
 }
 
-.contact-form-block input.error:focus,
-.contact-form-block textarea.error:focus,
-.contact-form-block select.error:focus {
-  box-shadow: 0 0 0 0.1875rem rgba(217, 83, 79, 0.1);
+.contact-field.error {
+  border-color: var(--status-error);
+  box-shadow: 0 0 0 2px rgba(217, 83, 79, 0.15);
 }
 
-.contact-form-block .error-message::before {
+.contact-field.error:focus {
+  border-color: var(--status-error);
+  box-shadow: 0 0 0 2px rgba(217, 83, 79, 0.15);
+}
+
+.contact-form__error {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--status-error);
+}
+
+.contact-form__error::before {
   content: '⚠';
-  font-size: 0.5625rem;
   margin-right: 0.25rem;
+}
+
+.contact-form__submit {
+  margin-top: 0.625rem;
+  margin-bottom: 0.625rem;
+}
+
+/* Shared stack: two-column hero, full-width studios, and form share one desktop width */
+.contact-page__stack {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.contact-zone-studios,
+.contact-zone-b {
+  width: 100%;
+}
+
+.contact-zone-studios:empty {
+  display: none;
+}
+
+/* Zone A: provenance first on mobile, photo left on desktop */
+.contact-zone-a__grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.contact-zone-a__prose {
+  order: 1;
+}
+
+.contact-zone-a__photo {
+  order: 2;
+}
+
+@media screen and (min-width: 979px) {
+  .contact-page__stack {
+    /* Match photo column + gap + prose column (58ch) — keeps bottom aligned with top */
+    width: min(100%, calc(17.5rem + 3rem + 58ch));
+    margin-inline: auto;
+  }
+
+  .contact-zone-a__grid {
+    display: grid;
+    grid-template-columns: 17.5rem minmax(0, 1fr);
+    gap: 3rem;
+    align-items: start;
+    width: 100%;
+  }
+
+  .contact-zone-a__photo {
+    order: 1;
+    width: 17.5rem;
+  }
+
+  .contact-zone-a__prose {
+    order: 2;
+    min-width: 0;
+  }
+}
+
+.contact-zone-b .contact-form-section {
+  width: 100%;
 }

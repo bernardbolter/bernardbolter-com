@@ -23,7 +23,8 @@ function collectEventsFromArtwork(artwork: Artwork): Event[] {
   const seen = new Set<number>()
 
   const push = (event: number | Event | null | undefined) => {
-    if (!event || typeof event !== 'object' || seen.has(event.id)) return
+    if (!event || typeof event !== 'object' || typeof event.id !== 'number') return
+    if (seen.has(event.id)) return
     seen.add(event.id)
     events.push(event)
   }
@@ -33,6 +34,7 @@ function collectEventsFromArtwork(artwork: Artwork): Event[] {
   }
 
   for (const row of artwork.exhibitionHistory ?? []) {
+    if (!row || typeof row !== 'object') continue
     push(row.event)
   }
 
@@ -43,5 +45,9 @@ export function getArtworkExhibitionEvents(artwork: Artwork): ArtworkExhibitionE
   return collectEventsFromArtwork(artwork)
     .filter((event) => EXHIBITION_EVENT_TYPES.has(event.eventType))
     .map((event) => ({ event, year: eventYear(event) }))
-    .sort((a, b) => b.year - a.year || b.event.startDate.localeCompare(a.event.startDate))
+    .sort(
+      (a, b) =>
+        b.year - a.year ||
+        (b.event.startDate ?? '').localeCompare(a.event.startDate ?? ''),
+    )
 }

@@ -138,6 +138,23 @@ function megacitiesTierToRegistryTier(
   index: number,
 ): OwnershipRegistryTier {
   const copies = normalizeCopies(tier.copies as OwnershipRegistryCopy[] | undefined)
+  const seriesTier = resolveSeriesEditionTier(
+    tier.seriesEditionTier as DcsEditionTier['seriesEditionTier'],
+  )
+
+  if (seriesTier) {
+    return {
+      tierLabel: seriesTier.tierName?.trim() || `Edition ${index + 1}`,
+      tierOrder: seriesTier.tierOrder ?? index + 1,
+      editionSize: seriesTier.editionSize,
+      apCount: seriesTier.apCount ?? countArtistProofs(copies),
+      isOriginalTier: seriesTier.isOriginalTier ?? tier.isOriginalTier ?? false,
+      copies,
+      printSubstrate: seriesTier.substrate?.trim() || null,
+      dimensions:
+        formatDimensions(seriesTier.widthCm, seriesTier.heightCm) ?? tier.dimensions ?? null,
+    }
+  }
 
   return {
     tierLabel:

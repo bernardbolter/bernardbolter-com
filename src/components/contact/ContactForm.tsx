@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 import LexicalProse from '@/lib/contact/LexicalProse'
+import { CONTACT_INTRO_CLASS } from '@/lib/contact/contactProseClass'
 
 import './contact-page.css'
 
@@ -37,11 +38,11 @@ function validateEmail(value: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
-const INTRO_CLASS =
-  'mx-auto mb-[0.9375rem] w-full max-w-[34.375rem] font-body text-sm leading-[1.6] text-dark m:text-lg [&_p]:indent-[0.75rem] [&_p]:pb-[1.25rem]'
-
 const fieldClass =
-  'w-full border-0 border-b border-[var(--ui-icon)] bg-[#ddd] px-[0.6875rem] py-[0.375rem] font-body text-sm text-[var(--ui-icon)] outline-none focus:border-[var(--status-success)]'
+  'contact-field w-full rounded-[0.25rem] border border-[#ddd] bg-white px-[0.75rem] py-[0.625rem] font-body text-sm text-primary outline-none transition-[border-color,box-shadow] focus:border-[var(--status-success)] focus:shadow-[0_0_0_2px_rgba(86,186,90,0.15)]'
+
+const labelClass =
+  'mb-[0.375rem] block font-heading text-xs font-semibold uppercase tracking-[0.04em] text-muted'
 
 export default function ContactForm({ enquiryIntro }: Props) {
   const searchParams = useSearchParams()
@@ -160,24 +161,21 @@ export default function ContactForm({ enquiryIntro }: Props) {
   }
 
   return (
-    <section className="mx-auto w-full max-w-[34.375rem]">
-      {enquiryIntro ? <LexicalProse content={enquiryIntro} className={INTRO_CLASS} /> : null}
+    <section className="contact-form-section w-full">
+      {enquiryIntro ? <LexicalProse content={enquiryIntro} className={CONTACT_INTRO_CLASS} /> : null}
 
       {claimSlug ? (
-        <p className="mx-auto mb-2 w-full max-w-[34.375rem] font-body text-sm text-[var(--text-muted)]">
+        <p className="mb-2 font-body text-sm text-muted">
           Regarding:
           {claimTitle ? ` ${claimTitle}` : ' this work'}
           {claimTier ? ` · ${claimTier}` : ''}
         </p>
       ) : null}
 
-      <div
-        className="contact-form-block mx-auto mb-[0.9375rem] mt-[1.875rem] w-full max-w-[34.375rem] rounded-[0.375rem] border border-[var(--ui-icon)] bg-white px-[5%] pb-[0.9375rem] pt-[1.875rem]"
-        onKeyDown={handleKeyDown}
-      >
-        <div className={`contact-form-block mb-2 flex flex-col gap-2 ${errors.subject ? 'has-error' : ''}`}>
-          <label htmlFor="contact-subject" className="mt-[0.1875rem] font-heading text-xs font-medium tracking-[0.05px] text-[var(--ui-icon)]">
-            subject
+      <div className="contact-form" onKeyDown={handleKeyDown}>
+        <div className={`contact-form__group ${errors.subject ? 'has-error' : ''}`}>
+          <label htmlFor="contact-subject" className={labelClass}>
+            Subject
           </label>
           <select
             id="contact-subject"
@@ -188,23 +186,19 @@ export default function ContactForm({ enquiryIntro }: Props) {
             }}
             className={`${fieldClass} ${errors.subject ? 'error' : ''}`}
           >
-            <option value="">choose a subject</option>
+            <option value="">Choose a subject</option>
             {SUBJECT_OPTIONS.map((option) => (
               <option key={option} value={option}>
                 {option}
               </option>
             ))}
           </select>
-          {errors.subject ? (
-            <span className="error-message mb-[0.625rem] text-[0.625rem] text-[var(--status-error)]">
-              {errors.subject}
-            </span>
-          ) : null}
+          {errors.subject ? <span className="contact-form__error">{errors.subject}</span> : null}
         </div>
 
-        <div className={`contact-form-block mb-2 flex flex-col gap-2 ${errors.name ? 'has-error' : ''}`}>
-          <label htmlFor="contact-name" className="mt-[0.1875rem] font-heading text-xs font-medium tracking-[0.05px] text-[var(--ui-icon)]">
-            name
+        <div className={`contact-form__group ${errors.name ? 'has-error' : ''}`}>
+          <label htmlFor="contact-name" className={labelClass}>
+            Name
           </label>
           <input
             id="contact-name"
@@ -214,19 +208,15 @@ export default function ContactForm({ enquiryIntro }: Props) {
               setName(event.target.value)
               if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }))
             }}
-            placeholder="name"
+            placeholder="Your name"
             className={`${fieldClass} ${errors.name ? 'error' : ''}`}
           />
-          {errors.name ? (
-            <span className="error-message mb-[0.625rem] text-[0.625rem] text-[var(--status-error)]">
-              {errors.name}
-            </span>
-          ) : null}
+          {errors.name ? <span className="contact-form__error">{errors.name}</span> : null}
         </div>
 
-        <div className={`contact-form-block mb-2 flex flex-col gap-2 ${errors.email ? 'has-error' : ''}`}>
-          <label htmlFor="contact-email" className="mt-[0.1875rem] font-heading text-xs font-medium tracking-[0.05px] text-[var(--ui-icon)]">
-            email
+        <div className={`contact-form__group ${errors.email ? 'has-error' : ''}`}>
+          <label htmlFor="contact-email" className={labelClass}>
+            Email
           </label>
           <input
             id="contact-email"
@@ -236,19 +226,15 @@ export default function ContactForm({ enquiryIntro }: Props) {
               setEmail(event.target.value)
               if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }))
             }}
-            placeholder="email"
+            placeholder="you@example.com"
             className={`${fieldClass} ${errors.email ? 'error' : ''}`}
           />
-          {errors.email ? (
-            <span className="error-message mb-[0.625rem] text-[0.625rem] text-[var(--status-error)]">
-              {errors.email}
-            </span>
-          ) : null}
+          {errors.email ? <span className="contact-form__error">{errors.email}</span> : null}
         </div>
 
-        <div className={`contact-form-block mb-2 flex flex-col gap-2 ${errors.message ? 'has-error' : ''}`}>
-          <label htmlFor="contact-message" className="mt-[0.1875rem] font-heading text-xs font-medium tracking-[0.05px] text-[var(--ui-icon)]">
-            message
+        <div className={`contact-form__group ${errors.message ? 'has-error' : ''}`}>
+          <label htmlFor="contact-message" className={labelClass}>
+            Message
           </label>
           <textarea
             ref={messageRef}
@@ -258,39 +244,35 @@ export default function ContactForm({ enquiryIntro }: Props) {
               setMessage(event.target.value)
               if (errors.message) setErrors((prev) => ({ ...prev, message: undefined }))
             }}
-            placeholder="message"
+            placeholder="Your message"
             rows={5}
-            className={`min-h-[7.5rem] resize-y leading-[1.5] ${fieldClass} ${errors.message ? 'error' : ''}`}
+            className={`min-h-[6.875rem] resize-y leading-[1.5] ${fieldClass} ${errors.message ? 'error' : ''}`}
           />
-          {errors.message ? (
-            <span className="error-message mb-[0.625rem] text-[0.625rem] text-[var(--status-error)]">
-              {errors.message}
-            </span>
-          ) : null}
+          {errors.message ? <span className="contact-form__error">{errors.message}</span> : null}
         </div>
 
-        <div className="contact-form-block">
+        <div className="contact-form__submit text-right">
           <button
             type="button"
             onClick={() => void submit()}
             disabled={isSubmitting}
-            className="my-[0.625rem] flex w-[9.375rem] items-center justify-center rounded-[0.125rem] border-0 bg-[#ddd] py-[0.625rem] font-heading text-base font-semibold tracking-[0.03em] text-[var(--ui-icon)] transition-transform hover:-translate-y-px disabled:cursor-not-allowed disabled:bg-[#999] disabled:opacity-70"
+            className="inline-flex items-center justify-center rounded-[0.25rem] border-0 bg-[var(--text-dark)] px-[1.75rem] py-[0.6875rem] font-heading text-[0.9375rem] font-semibold tracking-[0.03em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {isSubmitting ? 'sending...' : 'send message'}
+            {isSubmitting ? 'Sending…' : 'Send message'}
           </button>
         </div>
 
         {submitError ? (
-          <div className="contact-alert flex items-center gap-3 rounded-[0.375rem] border border-[rgba(217,83,79,0.3)] bg-[rgba(217,83,79,0.1)] p-4 text-[var(--status-error)]">
+          <div className="contact-alert flex items-center gap-[0.75rem] rounded-[0.25rem] border border-[rgba(217,83,79,0.3)] bg-[rgba(217,83,79,0.08)] p-[1rem] text-[var(--status-error)]">
             <span className="text-xl font-bold">⚠</span>
             {submitError}
           </div>
         ) : null}
 
         {submitSuccess ? (
-          <div className="contact-alert flex items-center gap-3 rounded-[0.375rem] border border-[rgba(86,186,90,0.3)] bg-[rgba(86,186,90,0.1)] p-4 text-[var(--status-success)]">
+          <div className="contact-alert flex items-center gap-[0.75rem] rounded-[0.25rem] border border-[rgba(86,186,90,0.3)] bg-[rgba(86,186,90,0.08)] p-[1rem] text-[var(--status-success)]">
             <span className="text-xl font-bold">✓</span>
-            received your submission, thank you!
+            Received your submission, thank you!
           </div>
         ) : null}
       </div>

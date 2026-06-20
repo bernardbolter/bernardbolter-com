@@ -1,10 +1,8 @@
 'use client'
 
-import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 
 import ArtworkSize, { getArtworkSizeInput } from '@/components/artworks/ArtworkSize'
-import { CloseCircleSvg } from '@/components/icons'
 import YoutubePlainSvg from '@/components/icons/YoutubePlainSvg'
 import useWindowSize from '@/hooks/useWindowSize'
 import { getPrimaryVideoSource } from '@/lib/artwork/artworkGalleryImages'
@@ -121,11 +119,6 @@ export default function Layer0Video({ artwork }: Props) {
 
   return (
     <>
-      <Link href="/" className="artwork-image__close">
-        <CloseCircleSvg />
-        <p>close</p>
-      </Link>
-
       <div className="artwork-video__youtube-link">
         <p>visit the channel</p>
         <div className="artwork-video__youtube-svg">
@@ -169,9 +162,6 @@ export default function Layer0Video({ artwork }: Props) {
 
         <div className="artwork-video__info-container">
           <h1 className="artwork-image__title">{artwork.title}</h1>
-          {artwork.altTitle?.trim() ? (
-            <p className="artwork-image__alt-title">also known as {artwork.altTitle.trim()}</p>
-          ) : null}
           <h2 className="artwork-image__year">{formatArtworkYearRange(artwork)}</h2>
           <h3 className="artwork-image__medium">{resolveWallLabelMedium(artwork)}</h3>
           {sizeInput ? (

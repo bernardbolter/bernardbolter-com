@@ -35,6 +35,10 @@ const CATALOGUE_ARTWORK_SELECT = {
   createdAt: true,
   widthPx: true,
   heightPx: true,
+  widthMm: true,
+  heightMm: true,
+  aspectRatio: true,
+  measurementType: true,
 } as const
 
 async function fetchCatalogueArtworks(seriesSlug?: string): Promise<Artwork[]> {

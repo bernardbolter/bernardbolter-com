@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactPlayer from 'react-player'
 
@@ -10,7 +9,6 @@ import ArtworkSize, { getArtworkSizeInput } from '@/components/artworks/ArtworkS
 import {
   ArtworkPauseSvg,
   ArtworkTimerSvg,
-  CloseCircleSvg,
   LeftArrowSvg,
 } from '@/components/icons'
 import MagnifyAnimationSvg from '@/components/icons/MagnifyAnimationSvg'
@@ -205,11 +203,6 @@ export default function Layer0Image({ artwork }: Props) {
 
   return (
     <>
-      <Link href="/" className="artwork-image__close">
-        <CloseCircleSvg />
-        <p>close</p>
-      </Link>
-
       {activeImage ? (
         <button
           type="button"
@@ -319,9 +312,6 @@ export default function Layer0Image({ artwork }: Props) {
             style={{ paddingRight: marginWidth }}
           >
             <h1 className="artwork-image__title">{artwork.title}</h1>
-            {artwork.altTitle?.trim() ? (
-              <p className="artwork-image__alt-title">also known as {artwork.altTitle.trim()}</p>
-            ) : null}
             <h2 className="artwork-image__year">{formatArtworkYearRange(artwork)}</h2>
             <h3 className="artwork-image__medium">{resolveWallLabelMedium(artwork)}</h3>
             {sizeInput ? (
