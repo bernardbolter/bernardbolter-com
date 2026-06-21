@@ -23,6 +23,9 @@ export const TOOL_LIST_LEGACY_RECORDS = 'list_legacy_records'
 export const TOOL_PLACE_IN_SEQUENCE = 'place_in_sequence'
 export const TOOL_SET_DATE_ANCHOR = 'set_date_anchor'
 export const TOOL_LINK_MEDIA_TO_SLOT = 'link_media_to_slot'
+export const TOOL_PROPOSE_AUTHORITY_FIELD = 'propose_authority_field'
+export const TOOL_CONFIRM_AUTHORITY_PROPOSAL = 'confirm_authority_proposal'
+export const TOOL_TRANSITION_TO_REASONING_PHASE = 'transition_to_reasoning_phase'
 
 const targetCollectionSchema = z.enum([
   'artworks',
@@ -174,6 +177,19 @@ export const linkMediaToSlotSchema = z.object({
   slotId: z.string().min(1),
   mediaId: z.number().int().positive(),
 })
+
+export const proposeAuthorityFieldSchema = z.object({
+  fieldName: z.string().min(1),
+  value: z.string().min(1),
+  sourceUrl: z.string().url(),
+  confidence: z.enum(['high', 'medium', 'low']),
+})
+
+export const confirmAuthorityProposalSchema = z.object({
+  fieldName: z.string().min(1),
+})
+
+export const transitionToReasoningPhaseSchema = z.object({})
 
 const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_UPDATE_FIELD]: updateFieldSchema,
@@ -491,4 +507,74 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
       required: ['slotId', 'mediaId'],
     },
   },
+  {
+    name: TOOL_PROPOSE_AUTHORITY_FIELD,
+    description:
+      'Propose a candidate authority URI or field value found via lookup, pending artist confirmation. Phase A only.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        fieldName: { type: 'string' },
+        value: { type: 'string' },
+        sourceUrl: { type: 'string' },
+        confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
+      },
+      required: ['fieldName', 'value', 'sourceUrl', 'confidence'],
+    },
+  },
+  {
+    name: TOOL_CONFIRM_AUTHORITY_PROPOSAL,
+    description:
+      'After the artist confirms a Phase A proposal, stage it on the event timeline for commit.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        fieldName: { type: 'string' },
+      },
+      required: ['fieldName'],
+    },
+  },
+  {
+    name: TOOL_TRANSITION_TO_REASONING_PHASE,
+    description:
+      'Call once all Phase A proposals are confirmed or rejected. Switches to Phase B dialogue.',
+    input_schema: {
+      type: 'object',
+      properties: {},
+    },
+  },
 ]
+
+const EVENT_PHASE_A_TOOL_NAMES = new Set([
+  TOOL_SEARCH_WIKIDATA,
+  TOOL_GET_WIKIDATA_ENTITY,
+  TOOL_FETCH_WIKIPEDIA_ARTICLE,
+  TOOL_SEARCH_GETTY_TGN,
+  TOOL_PROPOSE_AUTHORITY_FIELD,
+  TOOL_CONFIRM_AUTHORITY_PROPOSAL,
+  TOOL_TRANSITION_TO_REASONING_PHASE,
+])
+
+const EVENT_PHASE_B_TOOL_NAMES = new Set([
+  TOOL_UPDATE_FIELD,
+  TOOL_STORE_SESSION_FIELD,
+  TOOL_GENERATE_CONFIRMATION_DRAFT,
+  TOOL_FLAG_WEAK_PHASE,
+  TOOL_SEARCH_WIKIDATA,
+  TOOL_GET_WIKIDATA_ENTITY,
+  TOOL_FETCH_WIKIPEDIA_ARTICLE,
+  TOOL_SEARCH_GETTY_TGN,
+])
+
+export function resolveToolsForSession(
+  sessionType: string,
+  eventDialoguePhase?: string,
+): Tool[] {
+  if (sessionType !== 'event-enrichment') {
+    return ANTHROPIC_TOOL_SCHEMAS
+  }
+
+  const phase = eventDialoguePhase === 'phase-b-reasoning' ? 'phase-b-reasoning' : 'phase-a-research'
+  const allowed = phase === 'phase-a-research' ? EVENT_PHASE_A_TOOL_NAMES : EVENT_PHASE_B_TOOL_NAMES
+  return ANTHROPIC_TOOL_SCHEMAS.filter((tool) => allowed.has(tool.name))
+}

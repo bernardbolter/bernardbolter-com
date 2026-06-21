@@ -31,12 +31,18 @@ import {
   TOOL_LOOKUP_COMMONS_FILE,
   TOOL_LOOKUP_LEGACY_RECORD,
   TOOL_PLACE_IN_SEQUENCE,
+  TOOL_PROPOSE_AUTHORITY_FIELD,
+  TOOL_CONFIRM_AUTHORITY_PROPOSAL,
+  TOOL_TRANSITION_TO_REASONING_PHASE,
   TOOL_SEARCH_GETTY_TGN,
   TOOL_SEARCH_WIKIDATA,
   TOOL_SET_DATE_ANCHOR,
   TOOL_STORE_SESSION_FIELD,
   TOOL_TRIGGER_IMAGE_ANALYSIS,
   TOOL_UPDATE_FIELD,
+  confirmAuthorityProposalSchema,
+  proposeAuthorityFieldSchema,
+  transitionToReasoningPhaseSchema,
   triggerImageAnalysisSchema,
   updateFieldSchema,
 } from './agentTools'
@@ -61,6 +67,7 @@ import { runImageAnalysis } from './runImageAnalysis'
 import { listLegacyRecords, lookupLegacyRecord } from './legacyLookup'
 import { clampPreUploadStep } from './preUploadGuide'
 import { upsertTimelineEntry } from './sessionTimeline'
+import { normalizeEventDialoguePhase } from './eventDialoguePhase'
 import { estimateTimelineDateForWork } from './sequencing/estimateTimelineDate'
 import { findArtworkBySlug, resolveTargetArtworkSlug } from './sequencing/resolveArtwork'
 
@@ -70,6 +77,27 @@ const STATEMENT_ARTIST_FIELDS = new Set([
   'statementMedium',
   'statementShort',
 ])
+
+type EventAuthorityProposal = {
+  fieldName: string
+  value: string
+  sourceUrl: string
+  confidence: 'high' | 'medium' | 'low'
+}
+
+function readEventAuthorityProposals(session: Session): EventAuthorityProposal[] {
+  const raw = session.eventAuthorityProposals
+  if (!Array.isArray(raw)) return []
+  return raw.filter(
+    (entry): entry is EventAuthorityProposal =>
+      Boolean(
+        entry &&
+          typeof entry === 'object' &&
+          typeof (entry as EventAuthorityProposal).fieldName === 'string' &&
+          typeof (entry as EventAuthorityProposal).value === 'string',
+      ),
+  )
+}
 
 export type ApplyAgentToolCtx = {
   payload: Payload
@@ -147,6 +175,15 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           const message =
             'Sequencing sessions use place_in_sequence and set_date_anchor — not update_field.'
           return failTool(tool.name, message)
+        }
+        if (session.sessionType === 'event-enrichment') {
+          const phase = normalizeEventDialoguePhase(session.eventDialoguePhase)
+          if (phase === 'phase-a-research') {
+            return failTool(
+              tool.name,
+              'Phase A uses propose_authority_field and confirm_authority_proposal — not update_field.',
+            )
+          }
         }
         if (!isFieldAllowedForAgent(args.targetCollection, args.field)) {
           const message = `Field ${args.targetCollection}.${args.field} is not writable by the agent.`
@@ -242,18 +279,21 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           return failTool(tool.name, parsed.error)
         }
         const args = generateConfirmationDraftSchema.parse(parsed.data)
+        const draftData: Record<string, unknown> = {
+          agentDraftDescriptionShort: args.agentDraftDescriptionShort,
+          agentDraftDescriptionLong: args.agentDraftDescriptionLong,
+          agentDraftConceptualKeywords: args.agentDraftConceptualKeywords.map((keyword) => ({
+            keyword,
+          })),
+        }
+        if (session.sessionType !== 'event-enrichment') {
+          draftData.agentDraftFormalContributionAssessment =
+            args.agentDraftFormalContributionAssessment
+        }
         await payload.update({
           collection: 'sessions',
           id: session.id,
-          data: {
-            agentDraftDescriptionShort: args.agentDraftDescriptionShort,
-            agentDraftDescriptionLong: args.agentDraftDescriptionLong,
-            agentDraftConceptualKeywords: args.agentDraftConceptualKeywords.map(
-              (keyword) => ({ keyword }),
-            ),
-            agentDraftFormalContributionAssessment:
-              args.agentDraftFormalContributionAssessment,
-          },
+          data: draftData,
           overrideAccess: false,
           user,
           context: { skipAgent: true },
@@ -748,6 +788,112 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           const message = err instanceof Error ? err.message : 'Could not link media to slot'
           return failTool(tool.name, message)
         }
+      }
+
+      case TOOL_PROPOSE_AUTHORITY_FIELD: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) return failTool(tool.name, parsed.error)
+        if (session.sessionType !== 'event-enrichment') {
+          return failTool(tool.name, 'propose_authority_field is for event-enrichment Phase A only.')
+        }
+        const args = proposeAuthorityFieldSchema.parse(parsed.data)
+        const proposals = readEventAuthorityProposals(session).filter(
+          (p) => p.fieldName !== args.fieldName,
+        )
+        proposals.push({
+          fieldName: args.fieldName,
+          value: args.value,
+          sourceUrl: args.sourceUrl,
+          confidence: args.confidence,
+        })
+        session.eventAuthorityProposals = proposals
+        await payload.update({
+          collection: 'sessions',
+          id: session.id,
+          data: { eventAuthorityProposals: proposals },
+          overrideAccess: false,
+          user,
+          context: { skipAgent: true },
+        })
+        send('tool-staged', { name: tool.name, input: args })
+        return toolResult({ ok: true, proposed: true, fieldName: args.fieldName })
+      }
+
+      case TOOL_CONFIRM_AUTHORITY_PROPOSAL: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) return failTool(tool.name, parsed.error)
+        if (session.sessionType !== 'event-enrichment') {
+          return failTool(tool.name, 'confirm_authority_proposal is for event-enrichment Phase A only.')
+        }
+        const args = confirmAuthorityProposalSchema.parse(parsed.data)
+        const proposals = readEventAuthorityProposals(session)
+        const match = proposals.find((p) => p.fieldName === args.fieldName)
+        if (!match) {
+          return failTool(tool.name, `No pending proposal for field ${args.fieldName}.`)
+        }
+
+        let value: unknown = match.value
+        if (args.fieldName === 'sameAs') {
+          value = [{ uri: match.value }]
+        }
+
+        const entry = {
+          targetCollection: 'events',
+          field: args.fieldName,
+          value,
+          confidence: 'confirmed' as const,
+          source: 'phase-a-haiku' as const,
+          timestamp: new Date().toISOString(),
+        }
+        const timeline = upsertTimelineEntry(
+          Array.isArray(session.fieldUpdateTimeline)
+            ? [...(session.fieldUpdateTimeline as Array<Record<string, unknown>>)]
+            : [],
+          entry,
+        )
+        session.fieldUpdateTimeline = timeline
+        const remaining = proposals.filter((p) => p.fieldName !== args.fieldName)
+        session.eventAuthorityProposals = remaining
+        await payload.update({
+          collection: 'sessions',
+          id: session.id,
+          data: {
+            fieldUpdateTimeline: timeline,
+            eventAuthorityProposals: remaining,
+          },
+          overrideAccess: false,
+          user,
+          context: { skipAgent: true },
+        })
+        send('tool-staged', { name: tool.name, input: args })
+        return toolResult({ ok: true, confirmed: true, fieldName: args.fieldName })
+      }
+
+      case TOOL_TRANSITION_TO_REASONING_PHASE: {
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) return failTool(tool.name, parsed.error)
+        if (session.sessionType !== 'event-enrichment') {
+          return failTool(tool.name, 'transition_to_reasoning_phase is for event-enrichment only.')
+        }
+        transitionToReasoningPhaseSchema.parse(parsed.data)
+        const remaining = readEventAuthorityProposals(session)
+        if (remaining.length > 0) {
+          return failTool(
+            tool.name,
+            `Still ${remaining.length} pending authority proposal(s) — confirm or reject each first.`,
+          )
+        }
+        session.eventDialoguePhase = 'phase-b-reasoning'
+        await payload.update({
+          collection: 'sessions',
+          id: session.id,
+          data: { eventDialoguePhase: 'phase-b-reasoning' },
+          overrideAccess: false,
+          user,
+          context: { skipAgent: true },
+        })
+        send('phase-transition', { phase: 'phase-b-reasoning', reason: 'Phase A complete' })
+        return toolResult({ ok: true, phase: 'phase-b-reasoning' })
       }
 
       default: {

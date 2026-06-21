@@ -95,6 +95,30 @@ export const Sessions: CollectionConfig = {
       },
     },
     {
+      name: 'eventDialoguePhase',
+      type: 'select',
+      defaultValue: 'phase-a-research',
+      options: [
+        { label: 'Phase A — Research (Haiku)', value: 'phase-a-research' },
+        { label: 'Phase B — Reasoning (Sonnet)', value: 'phase-b-reasoning' },
+      ],
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        condition: (data) => data.sessionType === 'event-enrichment',
+        description:
+          'Two-phase event dialogue. Phase A: authority lookup. Phase B: reflective questions.',
+      },
+    },
+    {
+      name: 'eventAuthorityProposals',
+      type: 'json',
+      admin: {
+        description:
+          'Pending Phase A authority URI proposals awaiting artist confirmation.',
+      },
+    },
+    {
       name: 'lines',
       type: 'relationship',
       relationTo: 'lines',

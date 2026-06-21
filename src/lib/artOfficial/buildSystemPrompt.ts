@@ -33,7 +33,14 @@ import type { SessionType } from './routing'
 import { buildSeriesSlugPromptBlock, listSeriesWithParents, isSlugDescendantOf } from './seriesSlugs'
 import { buildArtworkRefinementBlock } from './artworkRefinement'
 import { buildEventRefinementBlock } from './buildEventRefinementBlock'
-import { buildEventEnrichmentBlock } from './eventEnrichmentPrompt'
+import { assembleEventPhaseAPrompt } from './assembleEventPhaseAPrompt'
+import {
+  assembleEventPhaseBPrompt,
+  summarizeRelatedEventsForPrompt,
+} from './assembleEventPhaseBPrompt'
+import { queryRelatedCompleteEvents } from './queryRelatedCompleteEvents'
+import type { EventDialoguePhase } from './eventDialoguePhase'
+import { normalizeEventDialoguePhase } from './eventDialoguePhase'
 
 export type BuildSystemPromptArgs = {
   payload: Payload
@@ -47,6 +54,7 @@ export type BuildSystemPromptArgs = {
   isRefinement?: boolean
   preUpload?: PreUploadSessionState
   currentPhase?: SessionPhase
+  eventDialoguePhase?: EventDialoguePhase
 }
 
 const SITE_URL = 'https://bernardbolter.com'
@@ -130,7 +138,10 @@ export async function buildSystemPromptParts(
     cachedPrefixParts.push(buildSequencingBlock())
   }
   if (sessionType === 'event-enrichment') {
-    cachedPrefixParts.push(buildEventEnrichmentBlock(), buildSessionCloseBlock())
+    const eventPhase = normalizeEventDialoguePhase(args.eventDialoguePhase)
+    if (eventPhase === 'phase-a-research') {
+      cachedPrefixParts.push(assembleEventPhaseAPrompt(), buildSessionCloseBlock())
+    }
   }
 
   const cachedPrefix = cachedPrefixParts.join('\n\n---\n\n')
@@ -192,6 +203,19 @@ export async function buildSystemPromptParts(
       eventId: args.eventRecordId,
     })
     dynamicParts.push(refinementBlock)
+
+    const eventPhase = normalizeEventDialoguePhase(args.eventDialoguePhase)
+    if (eventPhase === 'phase-b-reasoning') {
+      const related = await queryRelatedCompleteEvents({
+        payload,
+        user,
+        eventId: args.eventRecordId,
+      })
+      dynamicParts.push(
+        assembleEventPhaseBPrompt(summarizeRelatedEventsForPrompt(related)),
+        buildSessionCloseBlock(),
+      )
+    }
   }
   if (sessionType === 'episode-storyboard' && episodeId) {
     const episode = await payload.findByID({

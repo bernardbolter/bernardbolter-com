@@ -1,7 +1,7 @@
 import { applyAgentTool } from '@/lib/artOfficial/applyAgentTool'
 import { formatChatError } from '@/lib/artOfficial/formatChatError'
 import { requireAnthropic } from '@/lib/artOfficial/anthropic'
-import { ANTHROPIC_TOOL_SCHEMAS } from '@/lib/artOfficial/agentTools'
+import { ANTHROPIC_TOOL_SCHEMAS, resolveToolsForSession } from '@/lib/artOfficial/agentTools'
 import { buildSystemPromptParts } from '@/lib/artOfficial/buildSystemPrompt'
 import {
   nextPreUploadStepAfterAnswer,
@@ -33,6 +33,11 @@ import {
   resolveModel,
   type SessionPhase,
 } from '@/lib/artOfficial/sessionPhase'
+import {
+  defaultEventDialoguePhase,
+  normalizeEventDialoguePhase,
+  type EventDialoguePhase,
+} from '@/lib/artOfficial/eventDialoguePhase'
 import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
 import {
   aggregateUsage,
@@ -172,6 +177,10 @@ export async function POST(request: Request) {
       body.currentPhase ?? session.currentPhase,
       defaultPhase,
     )
+    let eventDialoguePhase: EventDialoguePhase =
+      sessionType === 'event-enrichment'
+        ? normalizeEventDialoguePhase(session.eventDialoguePhase)
+        : defaultEventDialoguePhase()
 
     const autoPhase = resolveAutoPhase({
       sessionType,
@@ -200,7 +209,7 @@ export async function POST(request: Request) {
       session.currentPhase = currentPhase
     }
 
-    const model = resolveModel(currentPhase, sessionType)
+    const model = resolveModel(currentPhase, sessionType, eventDialoguePhase)
 
     let systemParts
     try {
@@ -220,6 +229,7 @@ export async function POST(request: Request) {
           hasPrimaryImage: effectiveHasPrimaryImage,
         },
         currentPhase,
+        eventDialoguePhase,
       })
     } catch (err) {
       console.error('[art-official/chat] buildSystemPromptParts', err)
@@ -231,7 +241,9 @@ export async function POST(request: Request) {
     }
 
     const system = buildAnthropicSystemBlocks(systemParts)
-    const tools = withToolCaching(ANTHROPIC_TOOL_SCHEMAS)
+    const tools = withToolCaching(
+      resolveToolsForSession(sessionType, eventDialoguePhase),
+    )
 
     const priorMessages = (Array.isArray(session.messages)
       ? session.messages
@@ -361,8 +373,12 @@ export async function POST(request: Request) {
                   if (event === 'phase-transition' && data && typeof data === 'object') {
                     const phase = (data as { phase?: unknown }).phase
                     if (typeof phase === 'string') {
-                      phaseTransition = normalizeSessionPhase(phase, currentPhase)
-                      currentPhase = phaseTransition
+                      if (phase === 'phase-b-reasoning' || phase === 'phase-a-research') {
+                        eventDialoguePhase = normalizeEventDialoguePhase(phase)
+                      } else {
+                        phaseTransition = normalizeSessionPhase(phase, currentPhase)
+                        currentPhase = phaseTransition
+                      }
                     }
                   }
                   send(event, data)
@@ -422,6 +438,7 @@ export async function POST(request: Request) {
               messages: [...priorMessages, userTurn, ...newStored],
               tokenLog,
               currentPhase: finalPhase,
+              ...(sessionType === 'event-enrichment' ? { eventDialoguePhase } : {}),
             },
             overrideAccess: false,
             user,
@@ -431,6 +448,7 @@ export async function POST(request: Request) {
           send('done', {
             sessionId: session.sessionId,
             phaseTransition: phaseTransition ?? autoPhaseTransition,
+            ...(sessionType === 'event-enrichment' ? { eventDialoguePhase } : {}),
             model,
             promptCache: isPromptCacheEnabled() ? {} : undefined,
           })

@@ -108,16 +108,16 @@ const KICKOFFS: Record<SessionType | 'artwork-cataloguing-refinement', SessionKi
   'event-enrichment': {
     title: 'Event enrichment',
     intro:
-      'Build out a CV event for its public page — description, venue details, external links, and context. The agent stages fields; commit updates the Events record.',
+      'Two-phase session: Phase A looks up authority URIs (Wikidata, TGN, institutional links). Phase B is a short dialogue to capture how the show came together and where it sits in the practice.',
     topics: [
-      'What happened at the event',
-      'Authoritative external links (institutional page, Wikidata, e-flux)',
-      'Venue address and map coordinates',
-      'Co-exhibitors, collaborators, or speakers',
+      'Phase A — confirm venue and external authority links',
+      'How the show came about and works were arranged in space',
+      'Opening night or reactions worth recording',
+      'Where this exhibition sits in the practice arc',
     ],
     buttonLabel: 'Begin event enrichment',
     message:
-      "I'd like to enrich this event for its public page. Please review the stub record, summarise what's missing, and ask your first question.",
+      "I'd like to enrich this event. Please start Phase A — review the stub record and look up authority URIs for the venue and any external links. Present each finding for me to confirm.",
   },
 }
 

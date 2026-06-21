@@ -878,6 +878,10 @@ export interface Event {
         image: number | Media;
         caption?: string | null;
         altText?: string | null;
+        /**
+         * Which specific artworks are identifiable in this photo, if any. Leave empty for wide shots, opening crowd photos, or details where individual works aren't distinguishable.
+         */
+        artworksShown?: (number | Artwork)[] | null;
         id?: string | null;
       }[]
     | null;
@@ -907,6 +911,33 @@ export interface Event {
   } | null;
   artistNote?: string | null;
   pressQuote?: string | null;
+  /**
+   * Where this event sits in the practice arc. Drawn out through Art/Official dialogue — not inferred alone.
+   */
+  practiceArcNote?: string | null;
+  /**
+   * What was deliberately pushed against or turned down. Never asked directly in dialogue.
+   */
+  consciousRejections?: string | null;
+  movementTags?: (number | Tag)[] | null;
+  styleTags?: (number | Tag)[] | null;
+  subjectTags?: (number | Tag)[] | null;
+  genreTags?: (number | Tag)[] | null;
+  periodTags?: (number | Tag)[] | null;
+  /**
+   * Abstract conceptual terms from the enrichment session.
+   */
+  conceptualKeywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  artHistoricalReferences?: (number | ArtHistoricalReference)[] | null;
+  /**
+   * Prose on art-historical connections. Agent drafts; artist confirms.
+   */
+  artHistoricalContext?: string | null;
   publicationTitle?: string | null;
   publicationAuthor?: string | null;
   bibliographyAuthor?: string | null;
@@ -977,11 +1008,27 @@ export interface Event {
   cvDisplayTitle?: string | null;
   cvPriority?: number | null;
   excludeFromCv?: boolean | null;
+  /**
+   * Manual links to related events not caught by automatic venue/year matching.
+   */
+  relatedEventsOverride?: (number | Event)[] | null;
   jsonldSameAs?:
     | {
         uri?: string | null;
         id?: string | null;
       }[]
+    | null;
+  /**
+   * Machine-generated confidence and source tracking per field. Updated on Art/Official commit.
+   */
+  fieldConfidenceMap?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
     | null;
   /**
    * Computed event JSON-LD preview.
@@ -3611,6 +3658,22 @@ export interface Session {
    */
   eventRecord?: (number | null) | Event;
   /**
+   * Two-phase event dialogue. Phase A: authority lookup. Phase B: reflective questions.
+   */
+  eventDialoguePhase?: ('phase-a-research' | 'phase-b-reasoning') | null;
+  /**
+   * Pending Phase A authority URI proposals awaiting artist confirmation.
+   */
+  eventAuthorityProposals?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Active Lines this session contributes to.
    */
   lines?: (number | Line)[] | null;
@@ -4418,6 +4481,7 @@ export interface EventsSelect<T extends boolean = true> {
         image?: T;
         caption?: T;
         altText?: T;
+        artworksShown?: T;
         id?: T;
       };
   mediaLinks?:
@@ -4432,6 +4496,21 @@ export interface EventsSelect<T extends boolean = true> {
   descriptionLong?: T;
   artistNote?: T;
   pressQuote?: T;
+  practiceArcNote?: T;
+  consciousRejections?: T;
+  movementTags?: T;
+  styleTags?: T;
+  subjectTags?: T;
+  genreTags?: T;
+  periodTags?: T;
+  conceptualKeywords?:
+    | T
+    | {
+        keyword?: T;
+        id?: T;
+      };
+  artHistoricalReferences?: T;
+  artHistoricalContext?: T;
   publicationTitle?: T;
   publicationAuthor?: T;
   bibliographyAuthor?: T;
@@ -4483,12 +4562,14 @@ export interface EventsSelect<T extends boolean = true> {
   cvDisplayTitle?: T;
   cvPriority?: T;
   excludeFromCv?: T;
+  relatedEventsOverride?: T;
   jsonldSameAs?:
     | T
     | {
         uri?: T;
         id?: T;
       };
+  fieldConfidenceMap?: T;
   jsonldPreview?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -5459,6 +5540,8 @@ export interface SessionsSelect<T extends boolean = true> {
   triptychRecord?: T;
   episodeRecord?: T;
   eventRecord?: T;
+  eventDialoguePhase?: T;
+  eventAuthorityProposals?: T;
   lines?: T;
   completedAt?: T;
   messages?: T;

@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 import { buildPracticeKnowledgePatches } from '@/lib/artOfficial/buildPracticeKnowledgePatches'
 import { buildArtworkPatchFromTimeline } from '@/lib/artOfficial/buildArtworkPatch'
-import { buildEventPatchFromTimeline } from '@/lib/artOfficial/buildEventPatch'
+import { buildEventPatchFromTimeline, buildEventDraftPatchFromSession } from '@/lib/artOfficial/buildEventPatch'
 import { collapseTimelineToLatest } from '@/lib/artOfficial/sessionTimeline'
 import { commitButtonHint, wrapUpSummary } from '@/lib/artOfficial/confirmationCopy'
 
@@ -35,7 +35,9 @@ export function ConfirmationPanel({
   const [commitNotice, setCommitNotice] = useState<string | null>(null)
 
   const sessionType = session.sessionType ?? 'artwork-cataloguing'
-  const hasDrafts = Boolean(session.agentDraftDescriptionShort)
+  const hasDrafts =
+    Boolean(session.agentDraftDescriptionShort) ||
+    (sessionType === 'event-enrichment' && Boolean(session.agentDraftDescriptionLong))
   const summary = wrapUpSummary(sessionType)
   const commitHint = commitButtonHint(sessionType)
 
@@ -85,7 +87,10 @@ export function ConfirmationPanel({
       }
     } else if (sessionType === 'event-enrichment') {
       body = {
-        eventData: buildEventPatchFromTimeline(collapseTimelineToLatest(timeline)),
+        eventData: {
+          ...buildEventPatchFromTimeline(collapseTimelineToLatest(timeline)),
+          ...buildEventDraftPatchFromSession(session),
+        },
       }
       const existingEvent =
         typeof session.eventRecord === 'object'

@@ -1,4 +1,8 @@
 import { ART_OFFICIAL_MODEL } from './anthropic'
+import {
+  type EventDialoguePhase,
+  normalizeEventDialoguePhase,
+} from './eventDialoguePhase'
 
 export const SESSION_PHASES = [
   'pre-upload',
@@ -44,12 +48,23 @@ export const ART_OFFICIAL_MODEL_VISION =
   process.env.ART_OFFICIAL_MODEL_VISION ?? ART_OFFICIAL_MODEL_SONNET
 
 /**
- * artwork-cataloguing model tiers:
- * - pre-upload + identity/physical/classification → Haiku (factual fields)
- * - vision → vision model (first-sight dialogue with image)
- * - intent+ → Sonnet (reflective / reasoning)
+ * Model tiers:
+ * - event-enrichment Phase A → Haiku
+ * - event-enrichment Phase B → Sonnet
+ * - artwork-cataloguing pre-upload + identity/physical/classification → Haiku
+ * - artwork vision → vision model
+ * - artwork intent+ → Sonnet
  */
-export function resolveModel(phase: SessionPhase, sessionType: string): string {
+export function resolveModel(
+  phase: SessionPhase,
+  sessionType: string,
+  eventDialoguePhase?: EventDialoguePhase,
+): string {
+  if (sessionType === 'event-enrichment') {
+    return normalizeEventDialoguePhase(eventDialoguePhase) === 'phase-b-reasoning'
+      ? ART_OFFICIAL_MODEL_SONNET
+      : ART_OFFICIAL_MODEL_HAIKU
+  }
   if (sessionType !== 'artwork-cataloguing') {
     return ART_OFFICIAL_MODEL_SONNET
   }
@@ -64,6 +79,9 @@ export function defaultSessionPhase(
 ): SessionPhase {
   if (sessionType === 'artwork-cataloguing') {
     return hasArtworkRecord ? 'identity' : 'pre-upload'
+  }
+  if (sessionType === 'event-enrichment') {
+    return 'intent'
   }
   return 'intent'
 }

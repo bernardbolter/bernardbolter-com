@@ -265,6 +265,16 @@ export const Events: CollectionConfig = {
                 { name: 'image', type: 'upload', relationTo: 'media', required: true },
                 { name: 'caption', type: 'text' },
                 { name: 'altText', type: 'text' },
+                {
+                  name: 'artworksShown',
+                  type: 'relationship',
+                  relationTo: 'artworks',
+                  hasMany: true,
+                  admin: {
+                    description:
+                      "Which specific artworks are identifiable in this photo, if any. Leave empty for wide shots, opening crowd photos, or details where individual works aren't distinguishable.",
+                  },
+                },
               ],
             },
             {
@@ -294,6 +304,87 @@ export const Events: CollectionConfig = {
             { name: 'descriptionLong', type: 'richText', localized: true },
             { name: 'artistNote', type: 'textarea', localized: true },
             { name: 'pressQuote', type: 'text', localized: true },
+            {
+              name: 'practiceArcNote',
+              type: 'textarea',
+              localized: true,
+              admin: {
+                description:
+                  "Where this event sits in the practice arc. Drawn out through Art/Official dialogue — not inferred alone.",
+              },
+            },
+            {
+              name: 'consciousRejections',
+              type: 'textarea',
+              localized: true,
+              admin: {
+                description:
+                  'What was deliberately pushed against or turned down. Never asked directly in dialogue.',
+              },
+            },
+          ],
+        },
+        {
+          label: 'Classification',
+          fields: [
+            {
+              name: 'movementTags',
+              type: 'relationship',
+              relationTo: 'tags',
+              hasMany: true,
+              filterOptions: { type: { equals: 'movement' } },
+            },
+            {
+              name: 'styleTags',
+              type: 'relationship',
+              relationTo: 'tags',
+              hasMany: true,
+              filterOptions: { type: { equals: 'style' } },
+            },
+            {
+              name: 'subjectTags',
+              type: 'relationship',
+              relationTo: 'tags',
+              hasMany: true,
+              filterOptions: { type: { equals: 'subject' } },
+            },
+            {
+              name: 'genreTags',
+              type: 'relationship',
+              relationTo: 'tags',
+              hasMany: true,
+              filterOptions: { type: { equals: 'genre' } },
+            },
+            {
+              name: 'periodTags',
+              type: 'relationship',
+              relationTo: 'tags',
+              hasMany: true,
+              filterOptions: { type: { equals: 'period' } },
+            },
+            {
+              name: 'conceptualKeywords',
+              type: 'array',
+              labels: { singular: 'Keyword', plural: 'Conceptual keywords' },
+              fields: [{ name: 'keyword', type: 'text', required: true }],
+              admin: {
+                description: 'Abstract conceptual terms from the enrichment session.',
+              },
+            },
+            {
+              name: 'artHistoricalReferences',
+              type: 'relationship',
+              relationTo: 'art-historical-references',
+              hasMany: true,
+            },
+            {
+              name: 'artHistoricalContext',
+              type: 'textarea',
+              localized: true,
+              admin: {
+                description: 'Prose on art-historical connections. Agent drafts; artist confirms.',
+              },
+            },
           ],
         },
         {
@@ -532,12 +623,31 @@ export const Events: CollectionConfig = {
             { name: 'cvDisplayTitle', type: 'text', localized: true },
             { name: 'cvPriority', type: 'number', defaultValue: 5 },
             { name: 'excludeFromCv', type: 'checkbox', defaultValue: false },
+            {
+              name: 'relatedEventsOverride',
+              type: 'relationship',
+              relationTo: 'events',
+              hasMany: true,
+              admin: {
+                description:
+                  'Manual links to related events not caught by automatic venue/year matching.',
+              },
+            },
           ],
         },
         {
           label: 'JSON-LD',
           fields: [
             { name: 'jsonldSameAs', type: 'array', fields: [{ name: 'uri', type: 'text' }] },
+            {
+              name: 'fieldConfidenceMap',
+              type: 'json',
+              admin: {
+                readOnly: true,
+                description:
+                  'Machine-generated confidence and source tracking per field. Updated on Art/Official commit.',
+              },
+            },
             {
               name: 'jsonldPreview',
               type: 'json',

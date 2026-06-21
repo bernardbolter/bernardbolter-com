@@ -8,7 +8,11 @@ import {
   sanitizeArtworkCommitPatch,
 } from '@/lib/artOfficial/buildArtworkPatch'
 import { mergeStagedMediaIntoArtworkPatch } from '@/lib/artOfficial/stagedMedia'
-import { buildEventPatchFromTimeline } from '@/lib/artOfficial/buildEventPatch'
+import {
+  buildEventDraftPatchFromSession,
+  buildEventFieldConfidenceMap,
+  buildEventPatchFromTimeline,
+} from '@/lib/artOfficial/buildEventPatch'
 import { buildTriptychPatchFromTimeline } from '@/lib/artOfficial/buildTriptychPatch'
 import {
   applyPracticeKnowledgePatches,
@@ -16,6 +20,7 @@ import {
 } from '@/lib/artOfficial/applyPracticeKnowledgePatches'
 import { formatPayloadValidationError } from '@/lib/artOfficial/formatPayloadValidationError'
 import { resolveArtworkCommitReferences } from '@/lib/artOfficial/resolveArtworkCommitReferences'
+import { resolveEventCommitReferences } from '@/lib/artOfficial/resolveEventCommitReferences'
 import { recomputeTimeline } from '@/lib/artOfficial/recomputeTimeline'
 import { commitTarget } from '@/lib/artOfficial/routing'
 import { collapseTimelineToLatest, type TimelineEntry } from '@/lib/artOfficial/sessionTimeline'
@@ -337,17 +342,34 @@ export async function POST(request: Request, context: RouteContext) {
       }
 
       const serverPatch = buildEventPatchFromTimeline(timeline)
+      const draftPatch = buildEventDraftPatchFromSession(session)
       const clientPatch =
         body.eventData && typeof body.eventData === 'object'
           ? (body.eventData as Record<string, unknown>)
           : {}
-      const eventPatch = { ...clientPatch, ...serverPatch }
+      let eventPatch = {
+        ...clientPatch,
+        ...serverPatch,
+        ...draftPatch,
+      }
 
       if (Object.keys(eventPatch).length === 0) {
         return Response.json(
           { error: 'No event fields were staged. Continue the chat, then commit again.' },
           { status: 412 },
         )
+      }
+
+      try {
+        eventPatch = await resolveEventCommitReferences({ payload, user }, eventPatch)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Invalid event commit data'
+        return Response.json({ error: message }, { status: 412 })
+      }
+
+      const confidenceMap = buildEventFieldConfidenceMap(timeline)
+      if (Object.keys(confidenceMap).length > 0) {
+        eventPatch.fieldConfidenceMap = confidenceMap
       }
 
       await payload.update({

@@ -62,6 +62,9 @@ export async function POST(request: Request) {
       eventRecord: parsed.data.eventRecord,
       status: 'in-progress',
       messages: [],
+      ...(parsed.data.sessionType === 'event-enrichment'
+        ? { eventDialoguePhase: 'phase-a-research' as const }
+        : {}),
       // Pre-upload questionnaire only runs for new artworks — skip when refining an existing one.
       ...(parsed.data.sessionType === 'artwork-cataloguing'
         ? {

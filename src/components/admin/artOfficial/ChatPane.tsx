@@ -122,7 +122,11 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
       setPending('')
 
       try {
-        const res = await fetch('/api/art-official/chat', {
+        const chatEndpoint =
+          session.sessionType === 'event-enrichment'
+            ? '/api/art-official/event-chat'
+            : '/api/art-official/chat'
+        const res = await fetch(chatEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
