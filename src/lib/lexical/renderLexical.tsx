@@ -1,5 +1,10 @@
 import Link from 'next/link'
-import { cloneElement, isValidElement, type ReactNode } from 'react'
+import {
+  cloneElement,
+  isValidElement,
+  type ReactElement,
+  type ReactNode,
+} from 'react'
 
 import type { SeriesMention } from '@/lib/bio/linkSeriesMentions'
 import { linkSeriesMentionsInText } from '@/lib/bio/linkSeriesMentions'
@@ -46,7 +51,7 @@ function renderInlineNodes(
 ): ReactNode[] {
   if (!nodes?.length) return []
 
-  return nodes.flatMap((node, index) => {
+  return nodes.flatMap((node, index): ReactNode[] => {
     const key = `${keyPrefix}-inline-${index}`
 
     if (node.type === 'text') {
@@ -58,14 +63,13 @@ function renderInlineNodes(
         if (typeof segment === 'string') {
           return applyTextFormat(segment, node.format)
         }
-        if (
-          isValidElement(segment) &&
-          node.format &&
-          typeof segment.props.children === 'string'
-        ) {
-          return cloneElement(segment, {
-            children: applyTextFormat(segment.props.children, node.format),
-          })
+        if (isValidElement(segment) && node.format) {
+          const children = (segment.props as { children?: unknown }).children
+          if (typeof children === 'string') {
+            return cloneElement(segment as ReactElement<{ children?: ReactNode }>, {
+              children: applyTextFormat(children, node.format),
+            })
+          }
         }
         return segment
       })
@@ -116,7 +120,7 @@ function renderBlockNodes(
 ): ReactNode[] {
   if (!nodes?.length) return []
 
-  return nodes.flatMap((node, index) => {
+  return nodes.flatMap((node, index): ReactNode[] => {
     const key = `block-${index}`
 
     if (node.type === 'paragraph') {

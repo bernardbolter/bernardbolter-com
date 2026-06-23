@@ -243,7 +243,11 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
             return failTool(tool.name, err instanceof Error ? err.message : String(err))
           }
         }
-        let entrySource = args.source
+        let entrySource:
+          | 'conversation'
+          | 'image-analysis'
+          | 'knowledge-base'
+          | 'phase-a-haiku' = args.source
         if (session.sessionType === 'event-enrichment' && args.targetCollection === 'events') {
           const eventPhase = normalizeEventDialoguePhase(session.eventDialoguePhase)
           entrySource = eventPhase === 'phase-a-research' ? 'phase-a-haiku' : 'conversation'

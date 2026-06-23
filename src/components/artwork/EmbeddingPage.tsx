@@ -94,23 +94,23 @@ function vectorPreviewLines(embedding: number[]): string[] {
 }
 
 function similarWorkItems(works: SimilarArtworkCard[]): SimilarWorkItem[] {
-  return works
-    .slice(0, 3)
-    .map((work) => {
-      const imageUrl = getDisplayImageUrl(work)
-      if (!imageUrl || !work.slug?.trim()) return null
-      const { width, height } = getPrimaryMediaDimensions(work)
-      const display = scaleToMaxWidth(width, height, SIMILAR_THUMB_MAX_WIDTH)
-      return {
-        slug: work.slug.trim(),
-        title: work.title?.trim() || 'Artwork',
-        imageUrl,
-        imageWidth: display.width,
-        imageHeight: display.height,
-        similarity: work.similarity,
-      }
-    })
-    .filter((work): work is SimilarWorkItem => work !== null)
+  return works.slice(0, 3).flatMap((work) => {
+    const imageUrl = getDisplayImageUrl(work)
+    if (!imageUrl || !work.slug?.trim()) return []
+    const { width, height } = getPrimaryMediaDimensions(work)
+    const display = scaleToMaxWidth(width, height, SIMILAR_THUMB_MAX_WIDTH)
+    const item: SimilarWorkItem = {
+      slug: work.slug.trim(),
+      title: work.title?.trim() || 'Artwork',
+      imageUrl,
+      imageWidth: display.width,
+      imageHeight: display.height,
+    }
+    if (typeof work.similarity === 'number' && Number.isFinite(work.similarity)) {
+      item.similarity = work.similarity
+    }
+    return [item]
+  })
 }
 
 export default function EmbeddingPage({

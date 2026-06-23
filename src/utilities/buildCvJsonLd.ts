@@ -16,34 +16,35 @@ function institutionName(event: Event): string {
 }
 
 function buildAlumniOf(events: Event[]): Record<string, unknown>[] {
-  return events
-    .filter((event) => sectionForEvent(event) === 'education')
-    .map((event) => {
-      const name = institutionName(event)
-      if (!name) return null
+  return events.flatMap((event) => {
+    if (sectionForEvent(event) !== 'education') return []
 
-      const addressLocality = event.venueCity?.trim()
-      const addressCountry = countryNameToIsoCode(event.venueCountry)
+    const name = institutionName(event)
+    if (!name) return []
 
-      const address =
-        addressLocality || addressCountry ?
-          {
-            '@type': 'PostalAddress',
-            ...(addressLocality ? { addressLocality } : {}),
-            ...(addressCountry ? { addressCountry } : {}),
-          }
-        : undefined
+    const addressLocality = event.venueCity?.trim()
+    const addressCountry = countryNameToIsoCode(event.venueCountry)
 
-      const wikidata = event.venueWikidataUri?.trim()
+    const address =
+      addressLocality || addressCountry ?
+        {
+          '@type': 'PostalAddress',
+          ...(addressLocality ? { addressLocality } : {}),
+          ...(addressCountry ? { addressCountry } : {}),
+        }
+      : undefined
 
-      return {
+    const wikidata = event.venueWikidataUri?.trim()
+
+    return [
+      {
         '@type': 'EducationalOrganization',
         name,
         ...(wikidata ? { sameAs: wikidata } : {}),
         ...(address ? { address } : {}),
-      }
-    })
-    .filter((entry): entry is Record<string, unknown> => Boolean(entry))
+      },
+    ]
+  })
 }
 
 function inlinePerformerEvent(event: Event, baseUrl: string): Record<string, unknown> {

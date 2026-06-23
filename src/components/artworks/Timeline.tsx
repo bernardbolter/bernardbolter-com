@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
   type MouseEvent,
-  type PointerEvent,
+  type PointerEvent as ReactPointerEvent,
 } from 'react'
 
 import { LeftArrowSvg, RightArrowSvg } from '@/components/icons'
@@ -185,18 +185,18 @@ export default function Timeline() {
   }, [])
 
   const handleCanvasPointerDown = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
+    (event: ReactPointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return
       beginPointerTracking(event.clientX, event.clientY)
 
       const pointerId = event.pointerId
 
-      const onMove = (moveEvent: PointerEvent) => {
+      const onMove = (moveEvent: globalThis.PointerEvent) => {
         if (moveEvent.pointerId !== pointerId) return
         movePointerTracking(moveEvent.clientX, moveEvent.clientY)
       }
 
-      const onEnd = (endEvent: PointerEvent) => {
+      const onEnd = (endEvent: globalThis.PointerEvent) => {
         if (endEvent.pointerId !== pointerId) return
 
         const wasDrag = didDragCanvas.current

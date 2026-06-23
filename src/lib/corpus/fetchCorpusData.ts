@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { Payload, Where } from 'payload'
 
 import { FIXTURE_SLUG_PATTERN } from '@/lib/corpus/constants'
 import type { Artist, Artwork, Series } from '@/payload-types'
@@ -6,8 +6,8 @@ import type { Artist, Artwork, Series } from '@/payload-types'
 const defaultLocale = 'en' as const
 const PAGE_SIZE = 100
 
-function publishedArtworkWhere(seriesSlug?: string | null): Record<string, unknown> {
-  const and: Record<string, unknown>[] = [
+function publishedArtworkWhere(seriesSlug?: string | null): Where {
+  const and: Where[] = [
     { status: { equals: 'published' } },
     { slug: { not_like: FIXTURE_SLUG_PATTERN } },
   ]

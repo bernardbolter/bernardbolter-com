@@ -97,21 +97,20 @@ export function seedStagedEventMediaFromEvent(
     .map((entry) => readRelationshipId(entry))
     .filter((id): id is number => id != null)
 
-  const installationImages = (event.installationImages ?? [])
-    .map((row) => {
-      const mediaId = readRelationshipId(row.image)
-      if (mediaId == null) return null
-      return {
-        id: typeof row.id === 'string' && row.id.trim() ? row.id : newRowId(),
-        mediaId,
-        caption: row.caption ?? undefined,
-        altText: row.altText ?? undefined,
-        artworksShown: (row.artworksShown ?? [])
-          .map((entry) => readRelationshipId(entry))
-          .filter((id): id is number => id != null),
-      } satisfies StagedInstallationImage
-    })
-    .filter((row): row is StagedInstallationImage => row != null)
+  const installationImages = (event.installationImages ?? []).flatMap((row) => {
+    const mediaId = readRelationshipId(row.image)
+    if (mediaId == null) return []
+    const image: StagedInstallationImage = {
+      id: typeof row.id === 'string' && row.id.trim() ? row.id : newRowId(),
+      mediaId,
+      artworksShown: (row.artworksShown ?? [])
+        .map((entry) => readRelationshipId(entry))
+        .filter((id): id is number => id != null),
+    }
+    if (row.caption) image.caption = row.caption
+    if (row.altText) image.altText = row.altText
+    return [image]
+  })
 
   return { artworkIds, installationImages }
 }

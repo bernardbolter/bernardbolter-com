@@ -69,7 +69,7 @@ async function getCustomEditionVocabulary(
       depth: 0,
     })
     const fieldName = GLOBAL_FIELD_BY_KIND[kind]
-    const rows = (global as Record<string, unknown> | null)?.[fieldName]
+    const rows = (global as unknown as Record<string, unknown> | null)?.[fieldName]
     if (!Array.isArray(rows)) return []
 
     const builtins = builtinValues(kind)

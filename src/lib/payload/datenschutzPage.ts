@@ -24,7 +24,6 @@ async function fetchDatenschutzPageData(): Promise<DatenschutzPageData> {
       collection: 'artists',
       limit: 1,
       depth: 0,
-      select: { id: true },
       overrideAccess: false,
     })
 

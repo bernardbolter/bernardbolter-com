@@ -481,7 +481,7 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             isRefinement={isArtworkRefinement}
             onStart={(message) => void sendChat(message, { showUserInThread: false })}
           />
-          {isEventSession ? (
+          {isEventSession && session.sessionId ? (
             <EventMediaPanel
               sessionId={session.sessionId}
               disabled={sending}

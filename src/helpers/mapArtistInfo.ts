@@ -52,7 +52,7 @@ function resolveWorkCities(artist: Artist): { workCity1: string; workCity2?: str
   const unique = merged.filter((city, index) => merged.indexOf(city) === index)
 
   return {
-    workCity1: unique[0] || INFO_PANEL_DEFAULTS.workCity1,
+    workCity1: unique[0] || 'Berlin',
     workCity2: unique[1],
   }
 }

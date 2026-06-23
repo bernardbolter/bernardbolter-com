@@ -17,7 +17,9 @@ const SERIES_NAV_SELECT = {
   name: true,
 } as const
 
-function mapSeriesToFilterCategory(doc: Series): FilterCategory {
+type SeriesNavDoc = Pick<Series, 'id' | 'slug' | 'name'>
+
+function mapSeriesToFilterCategory(doc: SeriesNavDoc): FilterCategory {
   return {
     id: String(doc.id),
     slug: doc.slug,

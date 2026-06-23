@@ -42,8 +42,9 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
 
-  const kind = parseKind(typeof body.kind === 'string' ? body.kind : null)
-  const label = typeof body.label === 'string' ? body.label.trim() : ''
+  const data = body as Record<string, unknown>
+  const kind = parseKind(typeof data.kind === 'string' ? data.kind : null)
+  const label = typeof data.label === 'string' ? data.label.trim() : ''
 
   if (!kind) {
     return Response.json({ error: 'kind must be substrate or printTechnique.' }, { status: 400 })

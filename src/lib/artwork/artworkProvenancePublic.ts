@@ -116,10 +116,18 @@ export function getJsonLdProvenanceClaims(
   const { prominent } = getPublicProvenanceClaims(artwork)
   if (prominent.length === 0) return undefined
 
-  return prominent.map(({ claim, confidenceLevel }) => ({
-    claim,
-    confidenceLevel,
-  }))
+  return prominent
+    .filter(
+      (
+        entry,
+      ): entry is { claim: string; confidenceLevel: 'documented-fact' | 'credible-inference' } =>
+        entry.confidenceLevel === 'documented-fact' ||
+        entry.confidenceLevel === 'credible-inference',
+    )
+    .map(({ claim, confidenceLevel }) => ({
+      claim,
+      confidenceLevel,
+    }))
 }
 
 export function getPublicProvenanceClaims(

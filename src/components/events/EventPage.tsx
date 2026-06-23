@@ -10,29 +10,30 @@ import { personDisplayName } from '@/utilities/personToJsonLd'
 import type { Event, Media } from '@/payload-types'
 
 function installationSlides(event: Event): InstallationImageSlide[] {
-  return (
-    event.installationImages
-      ?.map((row) => {
-        const media = row.image
-        if (!media || typeof media === 'number') return null
-        const url = media.url?.trim()
-        if (!url) return null
-        return {
-          url,
-          alt: row.altText?.trim() || row.caption?.trim() || event.title,
-          caption: row.caption,
-          width: media.width ?? 1000,
-          height: media.height ?? 1000,
-        }
-      })
-      .filter((slide): slide is InstallationImageSlide => Boolean(slide)) ?? []
-  )
+  const slides: InstallationImageSlide[] = []
+  for (const row of event.installationImages ?? []) {
+    const media = row.image
+    if (!media || typeof media === 'number') continue
+    const url = media.url?.trim()
+    if (!url) continue
+    slides.push({
+      url,
+      alt: row.altText?.trim() || row.caption?.trim() || event.title,
+      caption: row.caption,
+      width: media.width ?? 1000,
+      height: media.height ?? 1000,
+    })
+  }
+  return slides
 }
 
 function referenceLinks(event: Event): string[] {
   const uris = [
-    ...(event.sameAs?.map((row) => row.uri?.trim()).filter(Boolean) ?? []),
-    ...(event.jsonldSameAs?.map((row) => row.uri?.trim()).filter(Boolean) ?? []),
+    ...(event.sameAs?.map((row) => row.uri?.trim()).filter((uri): uri is string => Boolean(uri)) ??
+      []),
+    ...(event.jsonldSameAs
+      ?.map((row) => row.uri?.trim())
+      .filter((uri): uri is string => Boolean(uri)) ?? []),
   ]
   return [...new Set(uris)]
 }

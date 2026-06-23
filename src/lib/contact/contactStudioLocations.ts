@@ -47,27 +47,26 @@ export function getContactPagePublicLocations(artist: Artist): ContactPageLocati
 
 /** Studio cards — public locations that also have a resolvable map image. */
 export function getContactStudioLocations(artist: Artist): ContactStudioLocation[] {
-  return getContactPagePublicLocations(artist)
-    .map((location) => {
-      const map = resolveMapImage(location.mapImage)
-      if (!map) return null
+  return getContactPagePublicLocations(artist).flatMap((location) => {
+    const map = resolveMapImage(location.mapImage)
+    if (!map) return []
 
-      const buildingName = location.buildingName?.trim()
-      const streetAddress = location.streetAddress?.trim()
-      const mapLinkUrl = location.mapLinkUrl?.trim()
+    const buildingName = location.buildingName?.trim()
+    const streetAddress = location.streetAddress?.trim()
+    const mapLinkUrl = location.mapLinkUrl?.trim()
 
-      return {
-        id: location.id as string,
-        city: location.city,
-        country: location.country,
-        streetAddress: streetAddress || undefined,
-        buildingName: buildingName || undefined,
-        mapLinkUrl: mapLinkUrl || undefined,
-        mapImageUrl: map.url,
-        mapImageWidth: map.width,
-        mapImageHeight: map.height,
-        mapAlt: buildingName ? `Map of ${buildingName}` : `Map of ${location.city}`,
-      }
-    })
-    .filter((location): location is ContactStudioLocation => location !== null)
+    const studio: ContactStudioLocation = {
+      id: location.id as string,
+      city: location.city,
+      country: location.country,
+      mapImageUrl: map.url,
+      mapImageWidth: map.width,
+      mapImageHeight: map.height,
+      mapAlt: buildingName ? `Map of ${buildingName}` : `Map of ${location.city}`,
+    }
+    if (streetAddress) studio.streetAddress = streetAddress
+    if (buildingName) studio.buildingName = buildingName
+    if (mapLinkUrl) studio.mapLinkUrl = mapLinkUrl
+    return [studio]
+  })
 }

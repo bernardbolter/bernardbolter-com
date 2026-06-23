@@ -44,8 +44,11 @@ function eventPerformer(
 
 function eventSameAsUris(event: Event): string[] {
   const uris = [
-    ...(event.sameAs?.map((row) => row.uri?.trim()).filter(Boolean) ?? []),
-    ...(event.jsonldSameAs?.map((row) => row.uri?.trim()).filter(Boolean) ?? []),
+    ...(event.sameAs?.map((row) => row.uri?.trim()).filter((uri): uri is string => Boolean(uri)) ??
+      []),
+    ...(event.jsonldSameAs
+      ?.map((row) => row.uri?.trim())
+      .filter((uri): uri is string => Boolean(uri)) ?? []),
   ]
   return [...new Set(uris)]
 }
@@ -65,13 +68,13 @@ function eventWorkFeatured(
 ): Record<string, unknown>[] {
   if (!Array.isArray(event.artworks) || event.artworks.length === 0) return []
 
-  return event.artworks
-    .map((artwork) => {
-      if (!artwork || typeof artwork === 'number') return null
-      const slug = (artwork as Artwork).slug?.trim()
-      const title = (artwork as Artwork).title?.trim()
-      if (!slug || !title) return null
-      return {
+  return event.artworks.flatMap((artwork) => {
+    if (!artwork || typeof artwork === 'number') return []
+    const slug = (artwork as Artwork).slug?.trim()
+    const title = (artwork as Artwork).title?.trim()
+    if (!slug || !title) return []
+    return [
+      {
         '@type': 'VisualArtwork',
         '@id': `${baseUrl}/${slug}`,
         name: title,
@@ -79,9 +82,9 @@ function eventWorkFeatured(
           '@type': 'Person',
           '@id': performerId,
         },
-      }
-    })
-    .filter((item): item is Record<string, unknown> => Boolean(item))
+      },
+    ]
+  })
 }
 
 function eventInstallationImageUrls(event: Event): string[] {
