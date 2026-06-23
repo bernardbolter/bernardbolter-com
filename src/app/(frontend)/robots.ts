@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next'
 
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
+export const dynamic = 'force-static'
+
 export default function robots(): MetadataRoute.Robots {
   const isProduction = process.env.VERCEL_ENV === 'production'
   const baseUrl = getSiteBaseUrl()

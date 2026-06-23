@@ -13,7 +13,7 @@ import {
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import config from '@payload-config'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 function parseFormat(value: string | null): CorpusFormat {
   return value === 'index' ? 'index' : 'jsonld'

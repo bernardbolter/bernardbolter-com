@@ -5,10 +5,20 @@ import EventPage from '@/components/events/EventPage'
 import { buildEventJsonLd } from '@/lib/jsonld/event'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistGlobal, getPublishedEventBySlug } from '@/lib/payload/siteDocuments'
+import { getPublishedEventPageSlugs } from '@/lib/payload/staticParams'
 
 export const revalidate = 3600
 
 type Props = { params: Promise<{ slug: string }> }
+
+export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
+  try {
+    const slugs = await getPublishedEventPageSlugs()
+    return slugs.map((slug) => ({ slug }))
+  } catch {
+    return []
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
