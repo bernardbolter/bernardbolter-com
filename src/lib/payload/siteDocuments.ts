@@ -51,15 +51,17 @@ export async function getPublishedEventBySlug(slug: string): Promise<Event | nul
       collection: 'events',
       locale: defaultLocale,
       where: {
-        and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
+        and: [
+          { slug: { equals: slug } },
+          { status: { equals: 'published' } },
+          { hasPage: { equals: true } },
+        ],
       },
       limit: 1,
       depth: 2,
-      overrideAccess: false,
+      overrideAccess: true,
     })
-    const event = result.docs[0] ?? null
-    if (event && !event.hasPage) return null
-    return event
+    return result.docs[0] ?? null
   })
 }
 

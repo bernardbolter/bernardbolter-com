@@ -2,6 +2,7 @@ import type { Artist } from '@/payload-types'
 import type { ArtistInfoData, ArtistInfoLink, ArtistSocialLinks } from '@/types/frontend'
 
 import { getBioCurrentCities } from '@/lib/bio/bioHeader'
+import { normalizeSocialUrl } from '@/utilities/normalizeSocialUrl'
 
 const INFO_PANEL_DEFAULTS: ArtistInfoData = {
   name: 'Bernard Bolter',
@@ -37,10 +38,15 @@ function mapSocialLinks(artist: Artist): ArtistSocialLinks {
   const youtube = channels.youtube?.trim()
   const linkedin = channels.linkedin?.trim()
 
-  if (instagram) social.instagram = instagram
-  if (tiktok) social.tiktok = tiktok
-  if (youtube) social.youtube = youtube
-  if (linkedin) social.linkedin = linkedin
+  const instagramUrl = normalizeSocialUrl(instagram, 'instagram')
+  const tiktokUrl = normalizeSocialUrl(tiktok, 'tiktok')
+  const youtubeUrl = normalizeSocialUrl(youtube, 'youtube')
+  const linkedinUrl = normalizeSocialUrl(linkedin, 'linkedin')
+
+  if (instagramUrl) social.instagram = instagramUrl
+  if (tiktokUrl) social.tiktok = tiktokUrl
+  if (youtubeUrl) social.youtube = youtubeUrl
+  if (linkedinUrl) social.linkedin = linkedinUrl
 
   return social
 }

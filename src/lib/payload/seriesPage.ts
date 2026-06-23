@@ -2,20 +2,23 @@ import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import { withDbRetry } from '@/lib/payload/withDbRetry'
 import type { Series } from '@/payload-types'
 
 async function fetchSeriesBySlug(slug: string): Promise<Series | null> {
-  const payload = await getPayload({ config })
-  const result = await payload.find({
-    collection: 'series',
-    where: {
-      and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
-    },
-    limit: 1,
-    depth: 0,
-    overrideAccess: false,
+  return withDbRetry(async () => {
+    const payload = await getPayload({ config })
+    const result = await payload.find({
+      collection: 'series',
+      where: {
+        and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
+      },
+      limit: 1,
+      depth: 0,
+      overrideAccess: true,
+    })
+    return result.docs[0] ?? null
   })
-  return result.docs[0] ?? null
 }
 
 const getCachedSeriesBySlug = (slug: string) =>

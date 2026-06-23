@@ -1,4 +1,5 @@
 import type { Artist } from '@/payload-types'
+import { normalizeSocialUrl, type SocialPlatform } from '@/utilities/normalizeSocialUrl'
 
 export const SOCIAL_CHANNEL_KEYS = [
   'instagram',
@@ -26,10 +27,17 @@ export type PopulatedSocialChannel = {
   label: string
 }
 
+function resolveSocialChannelUrl(
+  artist: Artist,
+  key: SocialChannelKey,
+): string | null {
+  const raw = artist.socialChannels?.[key]
+  return normalizeSocialUrl(raw, key as SocialPlatform)
+}
+
 export function getPopulatedSocialChannels(artist: Artist): PopulatedSocialChannel[] {
-  const channels = artist.socialChannels ?? {}
   return SOCIAL_CHANNEL_KEYS.flatMap((key) => {
-    const url = channels[key]?.trim()
+    const url = resolveSocialChannelUrl(artist, key)
     if (!url) return []
     return [{ key, url, label: SOCIAL_CHANNEL_LABELS[key] }]
   })
@@ -40,6 +48,5 @@ export function getSocialChannelUrl(
   key: SocialChannelKey | null | undefined,
 ): string | null {
   if (!key) return null
-  const url = artist.socialChannels?.[key]?.trim()
-  return url || null
+  return resolveSocialChannelUrl(artist, key)
 }
