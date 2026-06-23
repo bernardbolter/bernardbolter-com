@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { buildPracticeKnowledgePatches } from '@/lib/artOfficial/buildPracticeKnowledgePatches'
 import { buildArtworkPatchFromTimeline } from '@/lib/artOfficial/buildArtworkPatch'
 import { buildEventPatchFromTimeline, buildEventDraftPatchFromSession } from '@/lib/artOfficial/buildEventPatch'
+import { mergeStagedEventMediaIntoEventPatch, hasStagedEventMedia } from '@/lib/artOfficial/stagedEventMedia'
 import { collapseTimelineToLatest } from '@/lib/artOfficial/sessionTimeline'
 import { commitButtonHint, wrapUpSummary } from '@/lib/artOfficial/confirmationCopy'
 
@@ -38,6 +39,8 @@ export function ConfirmationPanel({
   const hasDrafts =
     Boolean(session.agentDraftDescriptionShort) ||
     (sessionType === 'event-enrichment' && Boolean(session.agentDraftDescriptionLong))
+  const hasEventMedia =
+    sessionType === 'event-enrichment' && hasStagedEventMedia(session.stagedEventMedia)
   const summary = wrapUpSummary(sessionType)
   const commitHint = commitButtonHint(sessionType)
 
@@ -87,10 +90,13 @@ export function ConfirmationPanel({
       }
     } else if (sessionType === 'event-enrichment') {
       body = {
-        eventData: {
-          ...buildEventPatchFromTimeline(collapseTimelineToLatest(timeline)),
-          ...buildEventDraftPatchFromSession(session),
-        },
+        eventData: mergeStagedEventMediaIntoEventPatch(
+          {
+            ...buildEventPatchFromTimeline(collapseTimelineToLatest(timeline)),
+            ...buildEventDraftPatchFromSession(session),
+          },
+          session.stagedEventMedia,
+        ),
       }
       const existingEvent =
         typeof session.eventRecord === 'object'
@@ -227,6 +233,12 @@ export function ConfirmationPanel({
                 })}
               </ul>
             </>
+          ) : null}
+
+          {hasEventMedia ? (
+            <p className="art-official-confirm__note">
+              Exhibition artworks and installation photos from the media panel will be saved on commit.
+            </p>
           ) : null}
 
           {hasDrafts ? (

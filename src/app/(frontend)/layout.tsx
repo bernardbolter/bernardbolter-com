@@ -1,15 +1,10 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
 import { Barlow, Barlow_Condensed, Staatliches } from 'next/font/google'
 
-import GoogleAnalytics from '@/components/common/GoogleAnalytics'
-import KlaroComponent from '@/components/common/Klaro'
+import Info from '@/components/info/Info'
 import ArtworksProvider from '@/providers/ArtworkProvider'
-import { getArtworks } from '@/lib/payload/artworks'
-import { getFilterSeries } from '@/lib/payload/series'
-import { getPerson } from '@/lib/payload/person'
-import { mapArtistToInfoData } from '@/helpers/mapArtistInfo'
+import { getLayoutProviderData } from '@/lib/payload/layoutData'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
 import AnimationWrapper from './AnimationWrapper'
@@ -61,7 +56,7 @@ export const metadata: Metadata = {
     description: 'Timeline of cityscape artworks by Bernard Bolter.',
     url: siteBaseUrl,
     siteName: 'Bernard Bolter Art',
-    images: [{ url: '/bernard_bolter_portrait.jpeg', width: 811, height: 539, alt: 'Bernard Bolter Cityscape Artwork' }],
+    images: [{ url: '/bernard-bolter-portrait.jpeg', width: 811, height: 539, alt: 'Bernard Bolter Cityscape Artwork' }],
     locale: 'en_US',
     type: 'website',
   },
@@ -69,7 +64,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "Bernard Bolter's Art Portfolio",
     description: "Explore abstract artworks from 1980 to present.",
-    images: ['/bernard_bolter_portrait.jpeg'],
+    images: ['/bernard-bolter-portrait.jpeg'],
   },
   robots: {
     index: true,
@@ -84,15 +79,7 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  
-  const [artworks, person, filterSeries] = await Promise.all([
-    getArtworks(),
-    getPerson(),
-    getFilterSeries(),
-  ])
-
-  const artworksData = artworks
-  const artistInfo = mapArtistToInfoData(person)
+  const { artworks: artworksData, artistInfo, filterSeries } = await getLayoutProviderData()
 
   return (
     <html lang="en">
@@ -107,7 +94,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               jobTitle: 'Mixed Media and Digital Artist',
               url: siteBaseUrl,
               description: 'San Francisco born, Berlin based, mixed media and digital artist.',
-              image: `${siteBaseUrl}/bernard_bolter_portrait.jpeg`,
+              image: `${siteBaseUrl}/bernard-bolter-portrait.jpeg`,
               sameAs: ['https://instagram.com/bernardbolter'],
             }),
           }}
@@ -122,11 +109,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         `}
       >
           <ArtworksProvider artworks={artworksData} artist={artistInfo} filterSeries={filterSeries}>
+            <Info />
             <AnimationWrapper>
-              <KlaroComponent />
-              <Suspense fallback={null}>
-                <GoogleAnalytics />
-              </Suspense>
               {children}
             </AnimationWrapper>
           </ArtworksProvider>

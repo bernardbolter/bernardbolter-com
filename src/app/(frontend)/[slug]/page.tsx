@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
-import Info from '@/components/info/Info'
+import { getDisplayImageUrl } from '@/helpers/artworkCatalog'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
@@ -37,10 +37,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const base = getSiteBaseUrl()
   const seo = resolveArtworkSeo(artwork)
+  const imageUrl = getDisplayImageUrl(artwork)
+  const canonical = `${base}/${slug}`
+  const ogImages = imageUrl ? [{ url: imageUrl.startsWith('http') ? imageUrl : `${base}${imageUrl}` }] : undefined
+
   return {
     title: seo.title,
     description: seo.description,
-    alternates: { canonical: `${base}/${slug}` },
+    alternates: { canonical },
+    openGraph: {
+      title: seo.title,
+      description: seo.description,
+      url: canonical,
+      type: 'website',
+      images: ogImages,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seo.title,
+      description: seo.description,
+      images: ogImages?.map((image) => image.url),
+    },
   }
 }
 
@@ -62,7 +79,6 @@ export default async function Page({ params }: Props) {
       />
       <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
         <div className="artwork-page__layout">
-          <Info />
           <ArtworkPage artwork={artwork} artist={artist} />
         </div>
       </ArtworkPageChromeProvider>

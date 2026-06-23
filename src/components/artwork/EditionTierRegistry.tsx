@@ -3,16 +3,15 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { buildPublicEditionTiers } from '@/lib/artwork/ownershipRegistryPublic'
-import type { Artwork } from '@/payload-types'
+import type { PublicEditionTier } from '@/lib/artwork/ownershipRegistryPublic'
 
 type Props = {
-  artwork: Artwork
+  tiers: PublicEditionTier[]
+  untrackedEditionsNote?: string | null
 }
 
-export default function EditionTierRegistry({ artwork }: Props) {
-  const tiers = buildPublicEditionTiers(artwork)
-  const untrackedNote = artwork.untrackedEditionsNote?.trim()
+export default function EditionTierRegistry({ tiers, untrackedEditionsNote }: Props) {
+  const untrackedNote = untrackedEditionsNote?.trim()
 
   if (tiers.length === 0) {
     if (!untrackedNote) return null
@@ -36,7 +35,7 @@ export default function EditionTierRegistry({ artwork }: Props) {
 }
 
 type TierProps = {
-  tier: ReturnType<typeof buildPublicEditionTiers>[number]
+  tier: PublicEditionTier
   isLast: boolean
 }
 
@@ -44,48 +43,54 @@ function EditionTierAccordion({ tier, isLast }: TierProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <>
+    <div className={`edition-registry__tier${open ? ' edition-registry__tier--open' : ''}`}>
       <button
         type="button"
         className={`edition-registry__header${isLast && !open ? ' edition-registry__header--last' : ''}`}
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
       >
-        <span className="edition-registry__label">{tier.tierLabel}</span>
+        <span className="edition-registry__header-main">
+          <span className="edition-registry__label">{tier.tierLabel}</span>
+          {tier.specLine ? (
+            <span className="edition-registry__spec">{tier.specLine}</span>
+          ) : null}
+        </span>
         <span className="edition-registry__summary">
           <span className="edition-registry__pill">{tier.headerSummary}</span>
-          <span
-            className={`edition-registry__chevron ti-chevron-${open ? 'down' : 'right'}`}
-            aria-hidden
-          />
+          <span className="edition-registry__chevron" aria-hidden>
+            {open ? '−' : '+'}
+          </span>
         </span>
       </button>
 
       {open ? (
-        <div className={`edition-registry__body${isLast ? ' edition-registry__body--last' : ''}`}>
-          {tier.claimedRows.map((row) => (
-            <div
-              key={`${tier.tierLabel}-${row.copyNumber}`}
-              className="edition-registry__row edition-registry__row--split"
-            >
-              <span>{row.copyNumber}</span>
-              <span>{row.ownerLabel}</span>
-            </div>
-          ))}
+        <div className="edition-registry__body">
+          {tier.claimedRows.length > 0 ? (
+            <ul className="edition-registry__claimed-list">
+              {tier.claimedRows.map((row) => (
+                <li key={row.copyNumber} className="edition-registry__claimed-row">
+                  {row.copyNumber} — {row.ownerLabel}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="edition-registry__empty">No copies claimed yet.</p>
+          )}
+
           {tier.apRow ? (
-            <div className="edition-registry__row edition-registry__row--split edition-registry__row--ap">
-              <span>{tier.apRow.copyNumber}</span>
-              <span>{tier.apRow.ownerLabel}</span>
-            </div>
+            <p className="edition-registry__ap-row">
+              {tier.apRow.copyNumber} — {tier.apRow.ownerLabel}
+            </p>
           ) : null}
-          <p className="edition-registry__claim">
-            Do you own one of these?{' '}
+
+          <p className="edition-registry__claim-cta">
             <Link href={tier.claimHref} className="text-dark underline">
-              Claim yours →
+              Claim a copy →
             </Link>
           </p>
         </div>
       ) : null}
-    </>
+    </div>
   )
 }

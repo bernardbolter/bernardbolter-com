@@ -1,7 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useRef, type PointerEvent } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react'
 
 import { LeftArrowSvg, RightArrowSvg } from '@/components/icons'
 import { generateSmallLines } from '@/helpers/timeline'
@@ -9,13 +18,19 @@ import { useArtworks } from '@/providers/ArtworkProvider'
 
 import ArtworkImage from './ArtworkImage'
 
+const DRAG_THRESHOLD_PX = 5
+const WHEEL_SCROLL_SENSITIVITY = 0.85
+
 export default function Timeline() {
+  const router = useRouter()
   const [state, setState] = useArtworks()
   const timelineRef = useRef<HTMLDivElement>(null)
   const isProgramScroll = useRef(false)
-  const isDraggingTimeline = useRef(false)
+  const pointerActive = useRef(false)
+  const didDragCanvas = useRef(false)
   const dragStart = useRef({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 })
   const stateRef = useRef(state)
+  const [isGrabbing, setIsGrabbing] = useState(false)
 
   const viewportWidth = state.viewportWidth || 0
   const viewportHeight = state.viewportHeight || 0
@@ -129,6 +144,112 @@ export default function Timeline() {
     return () => element.removeEventListener('scroll', handleArtScroll)
   }, [handleArtScroll, timeline])
 
+  const beginPointerTracking = useCallback((clientX: number, clientY: number) => {
+    if (!timelineRef.current) return
+
+    pointerActive.current = true
+    didDragCanvas.current = false
+    dragStart.current = {
+      x: clientX,
+      y: clientY,
+      scrollLeft: timelineRef.current.scrollLeft,
+      scrollTop: timelineRef.current.scrollTop,
+    }
+  }, [])
+
+  const movePointerTracking = useCallback((clientX: number, clientY: number) => {
+    if (!pointerActive.current || !timelineRef.current) return
+
+    const mobile = (stateRef.current.viewportWidth || 0) <= 767
+    const deltaX = clientX - dragStart.current.x
+    const deltaY = clientY - dragStart.current.y
+
+    if (Math.abs(deltaX) <= DRAG_THRESHOLD_PX && Math.abs(deltaY) <= DRAG_THRESHOLD_PX) {
+      return
+    }
+
+    didDragCanvas.current = true
+    setIsGrabbing(true)
+
+    if (mobile) {
+      timelineRef.current.scrollTop = dragStart.current.scrollTop + (dragStart.current.y - clientY)
+    } else {
+      timelineRef.current.scrollLeft =
+        dragStart.current.scrollLeft + (dragStart.current.x - clientX)
+    }
+  }, [])
+
+  const endPointerTracking = useCallback(() => {
+    pointerActive.current = false
+    setIsGrabbing(false)
+  }, [])
+
+  const handleCanvasPointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return
+      beginPointerTracking(event.clientX, event.clientY)
+
+      const pointerId = event.pointerId
+
+      const onMove = (moveEvent: PointerEvent) => {
+        if (moveEvent.pointerId !== pointerId) return
+        movePointerTracking(moveEvent.clientX, moveEvent.clientY)
+      }
+
+      const onEnd = (endEvent: PointerEvent) => {
+        if (endEvent.pointerId !== pointerId) return
+
+        const wasDrag = didDragCanvas.current
+        endPointerTracking()
+
+        document.removeEventListener('pointermove', onMove)
+        document.removeEventListener('pointerup', onEnd)
+        document.removeEventListener('pointercancel', onEnd)
+
+        if (!wasDrag) {
+          const link = (endEvent.target as HTMLElement).closest('a[data-timeline-artwork-link]')
+          const href = link?.getAttribute('href')
+          if (href) {
+            router.push(href)
+          }
+        }
+
+        window.setTimeout(() => {
+          didDragCanvas.current = false
+        }, 0)
+      }
+
+      document.addEventListener('pointermove', onMove)
+      document.addEventListener('pointerup', onEnd)
+      document.addEventListener('pointercancel', onEnd)
+    },
+    [beginPointerTracking, endPointerTracking, movePointerTracking, router],
+  )
+
+  const handleArtworkLinkClick = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
+    // Navigation is handled on pointerup so drag vs tap is reliable.
+    event.preventDefault()
+  }, [])
+
+  useEffect(() => {
+    const element = timelineRef.current
+    if (!element) return
+
+    const onWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const mobile = (stateRef.current.viewportWidth || 0) <= 767
+      const delta = event.deltaX || event.deltaY
+      if (mobile) {
+        element.scrollTop += delta * WHEEL_SCROLL_SENSITIVITY
+      } else {
+        element.scrollLeft += delta * WHEEL_SCROLL_SENSITIVITY
+      }
+    }
+
+    element.addEventListener('wheel', onWheel, { passive: false })
+    return () => element.removeEventListener('wheel', onWheel)
+  }, [timeline])
+
   const smallLines = useMemo(() => {
     if (!timeline) return null
 
@@ -157,46 +278,6 @@ export default function Timeline() {
     )
   }
 
-  const handleTimelinePointerDown = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (!timelineRef.current || event.button !== 0) return
-
-    isDraggingTimeline.current = true
-    dragStart.current = {
-      x: event.clientX,
-      y: event.clientY,
-      scrollLeft: timelineRef.current.scrollLeft,
-      scrollTop: timelineRef.current.scrollTop,
-    }
-
-    event.currentTarget.setPointerCapture(event.pointerId)
-    event.currentTarget.classList.add('artworks-timeline__timeline-container--dragging')
-  }, [])
-
-  const handleTimelinePointerMove = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (!isDraggingTimeline.current || !timelineRef.current) return
-
-      const mobile = (stateRef.current.viewportWidth || 0) <= 767
-
-      if (mobile) {
-        timelineRef.current.scrollTop =
-          dragStart.current.scrollTop + (dragStart.current.y - event.clientY)
-      } else {
-        timelineRef.current.scrollLeft =
-          dragStart.current.scrollLeft + (dragStart.current.x - event.clientX)
-      }
-    },
-    [],
-  )
-
-  const endTimelineDrag = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (!isDraggingTimeline.current) return
-
-    isDraggingTimeline.current = false
-    event.currentTarget.releasePointerCapture(event.pointerId)
-    event.currentTarget.classList.remove('artworks-timeline__timeline-container--dragging')
-  }, [])
-
   const scrollPrevious = () => {
     if (isProgramScroll.current) return
     const prevIndex =
@@ -223,12 +304,15 @@ export default function Timeline() {
     <div className="artworks-timeline__container">
       <div
         ref={timelineRef}
-        className="artworks-timeline__artworks-container"
+        className={`artworks-timeline__artworks-container${
+          isGrabbing ? ' artworks-timeline__artworks-container--dragging' : ''
+        }`}
         style={{
           width: '100%',
           height: !isMobile && viewportHeight ? `${viewportHeight}px` : '100vh',
           paddingTop: isMobile ? (viewportHeight - state.artworkContainerHeight) / 2 : 0,
         }}
+        onPointerDown={handleCanvasPointerDown}
       >
         <div
           className="artworks-timeline__artworks"
@@ -243,6 +327,8 @@ export default function Timeline() {
             <div
               key={artwork.id}
               className="artworks-timeline__artwork-inside"
+              draggable={false}
+              onDragStart={(event) => event.preventDefault()}
               style={{
                 marginRight:
                   !isMobile && index < timeline.artworksArray.length - 1
@@ -258,7 +344,11 @@ export default function Timeline() {
             >
               <Link
                 href={`/${artwork.slug}`}
-                className="flex h-full w-full items-center justify-center"
+                data-timeline-artwork-link
+                className="flex h-full w-full cursor-pointer items-center justify-center"
+                draggable={false}
+                onDragStart={(event) => event.preventDefault()}
+                onClick={handleArtworkLinkClick}
               >
                 <ArtworkImage
                   artwork={artwork}
@@ -273,15 +363,8 @@ export default function Timeline() {
 
         <div
           className="artworks-timeline__timeline-container"
-          role="slider"
-          aria-label="Artwork timeline"
-          aria-valuemin={0}
-          aria-valuemax={Math.max(timeline.artworksArray.length - 1, 0)}
-          aria-valuenow={state.currentArtworkIndex}
-          onPointerDown={handleTimelinePointerDown}
-          onPointerMove={handleTimelinePointerMove}
-          onPointerUp={endTimelineDrag}
-          onPointerCancel={endTimelineDrag}
+          role="presentation"
+          aria-hidden="true"
           style={{
             width: !isMobile
               ? `${timeline.totalTimelineWidth - sideWidth * 2}px`

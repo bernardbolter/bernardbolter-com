@@ -24,9 +24,9 @@ import { FieldNotes } from './collections/FieldNotes'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
+import { People } from './collections/People'
 import { ImageCaptureTechnologies } from './collections/ImageCaptureTechnologies'
 import { Artworks } from './collections/Artworks'
-import { SeriesEditionTiers } from './collections/SeriesEditionTiers'
 import { DCSCapturePhotos } from './collections/DCSCapturePhotos'
 import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
@@ -102,7 +102,6 @@ export default buildConfig({
     Artists,
     PracticeKnowledge,
     Series,
-    SeriesEditionTiers,
     Lines,
     StudioConversations,
     PatternReports,
@@ -110,6 +109,7 @@ export default buildConfig({
     FieldNotes,
     Tags,
     ArtHistoricalReferences,
+    People,
     Events,
     ImageCaptureTechnologies,
     Artworks,
@@ -129,9 +129,9 @@ export default buildConfig({
       connectionString: databaseUrl,
       // Schema push introspects hundreds of tables in parallel. A small pool +
       // short connect timeout causes "timeout exceeded when trying to connect".
-      max: databasePush && isDevelopment ? 20 : isDevelopment ? 5 : 10,
+      max: databasePush && isDevelopment ? 20 : isDevelopment ? 10 : 10,
       idleTimeoutMillis: 20_000,
-      connectionTimeoutMillis: databasePush && isDevelopment ? 60_000 : 30_000,
+      connectionTimeoutMillis: databasePush && isDevelopment ? 60_000 : isDevelopment ? 60_000 : 30_000,
       allowExitOnIdle: isDevelopment,
     },
     /** Set `PAYLOAD_DATABASE_PUSH=true` locally to sync Drizzle schema without interactive migrate:create. */

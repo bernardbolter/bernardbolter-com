@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel Berlin, Berlin — Visual Style Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,75..125,300..700;1,75..125,300..700&display=swap" rel="stylesheet">
+<style>
+
+/*
+  FONTS
+  UI / Wordmark / Headings : Archivo (Google Fonts — regular width, variable)
+  Body / Editorial         : Laica (Colophon Foundry, commercial)
+                             Falls back to Bitstream Charter → Georgia
+*/
+
+:root {
+  /* ── Brand palette ── */
+  --silver:   #DEE1E7;  /* Pantone 303 C  — light silver */
+  --amber:    #F79B2E;  /* Pantone 130 U  — amber / gold */
+  --black:    #141414;  /* Pantone Black C */
+  --navy:     #216A95;  /* Pantone 3015 U — navy blue */
+  --green:    #347963;  /* Pantone 341 U  — forest green */
+  --coral:    #F95D62;  /* Pantone 1788 U — coral / red */
+
+  /* ── Site tokens (derived from palette + build decisions) ── */
+  --teal:         #2C6B7A;   /* /here accent, section borders  */
+  --ink:          #1A2B4A;   /* headings / wordmark             */
+  --body-text:    #2A3540;   /* body copy                       */
+  --rule:         #D8DCE0;   /* dividers                        */
+  --bg-subtle:    #F4F6F7;   /* card backgrounds                */
+
+  /* ── Card category tokens ── */
+  --cat-art:      #2C6B7A;   /* teal  — FKKB / art             */
+  --cat-sport:    #F79B2E;   /* amber — KTTK / sport           */
+  --cat-music:    #F95D62;   /* coral — music / events         */
+  --cat-food:     #B87A2E;   /* gold  — Lütze / dining         */
+  --cat-nbhd:     #347963;   /* green — neighbourhood          */
+  --cat-partner:  #6B5B8D;   /* purple — partnerships          */
+
+  --font-ui:   'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-body: 'Laica', 'Bitstream Charter', 'Charter', Georgia, serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--body-text);
+  background: #FAFAFA;
+  padding: 48px 0 96px;
+}
+
+/* ── Layout ── */
+
+.guide {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+.section {
+  margin-bottom: 72px;
+}
+
+.section-label {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 6px;
+}
+
+.section-title {
+  font-family: var(--font-ui);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 32px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+/* ── Cover ── */
+
+.cover {
+  background: var(--ink);
+  padding: 64px 64px 52px;
+  margin-bottom: 72px;
+  position: relative;
+  overflow: hidden;
+}
+.cover::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: var(--amber);
+}
+.cover-eyebrow {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 18px;
+}
+.cover-eyebrow span { margin: 0 8px; color: rgba(255,255,255,0.2); }
+.cover-title {
+  font-family: var(--font-ui);
+  font-size: 3rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+  margin-bottom: 18px;
+}
+.cover-subtitle {
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  color: rgba(255,255,255,0.6);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* ── Colour swatches ── */
+
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.swatch-grid.two-col { grid-template-columns: repeat(2, 1fr); }
+.swatch-grid.six-col { grid-template-columns: repeat(6, 1fr); }
+
+.swatch {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.swatch-block {
+  height: 88px;
+}
+.swatch-info {
+  padding: 10px 12px;
+  background: #fff;
+}
+.swatch-name {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.swatch-hex {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  color: #6B7C8D;
+  margin-bottom: 1px;
+}
+.swatch-pantone {
+  font-family: var(--font-ui);
+  font-size: 0.62rem;
+  color: #9AABB8;
+}
+
+/* ── Typography specimens ── */
+
+.type-specimen {
+  margin-bottom: 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--rule);
+}
+.type-specimen:last-child { border-bottom: none; margin-bottom: 0; }
+
+.type-meta {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #9AABB8;
+  margin-bottom: 10px;
+}
+
+.type-display {
+  font-family: var(--font-ui);
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+.type-h1 {
+  font-family: var(--font-ui);
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.type-h2 {
+  font-family: var(--font-ui);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+.type-h3 {
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.3;
+}
+.type-ui-label {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+.type-body-lg {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: var(--body-text);
+  max-width: 560px;
+}
+.type-body {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--body-text);
+  max-width: 560px;
+}
+.type-body em {
+  font-style: italic;
+}
+.type-caption {
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  color: #6B7C8D;
+  line-height: 1.5;
+}
+.type-wordmark {
+  font-family: var(--font-ui);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+}
+
+/* ── Scale table ── */
+
+.scale-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+}
+.scale-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9AABB8;
+  border-bottom: 1px solid var(--rule);
+}
+.scale-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--body-text);
+  vertical-align: middle;
+}
+.scale-table tr:last-child td { border-bottom: none; }
+.scale-table td:first-child { color: var(--ink); font-weight: 600; }
+.scale-table td code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  background: var(--bg-subtle);
+  padding: 2px 5px;
+  border-radius: 3px;
+  color: var(--teal);
+}
+
+/* ── Card category tokens ── */
+
+.cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.cat-swatch {
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.cat-block {
+  height: 52px;
+}
+.cat-info {
+  padding: 8px 10px;
+  background: #fff;
+}
+.cat-name {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 1px;
+}
+.cat-hex {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  color: #9AABB8;
+}
+
+/* ── Spacing scale ── */
+
+.spacing-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.spacing-bar {
+  background: var(--teal);
+  height: 8px;
+  border-radius: 2px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+.spacing-label {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: #6B7C8D;
+}
+.spacing-label strong {
+  color: var(--ink);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+/* ── UI components ── */
+
+.component-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.btn {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 10px 22px;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  line-height: 1;
+}
+.btn-primary   { background: var(--amber); color: #fff; }
+.btn-secondary { background: transparent; color: var(--ink); border: 1.5px solid var(--ink); }
+.btn-teal      { background: var(--teal); color: #fff; }
+.btn-ghost     { background: transparent; color: var(--teal); border: 1.5px solid var(--teal); }
+
+.badge {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.badge-amber  { background: var(--amber); color: #fff; }
+.badge-teal   { background: var(--teal); color: #fff; }
+.badge-green  { background: var(--green); color: #fff; }
+.badge-coral  { background: var(--coral); color: #fff; }
+.badge-navy   { background: var(--navy); color: #fff; }
+.badge-outline { background: transparent; color: var(--teal); border: 1px solid var(--teal); }
+
+.tag {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 99px;
+  display: inline-block;
+  border: 1px solid var(--rule);
+  color: #6B7C8D;
+  background: #fff;
+}
+
+/* ── Card previews ── */
+
+.cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.card-image {
+  height: 80px;
+  background: var(--bg-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  color: #9AABB8;
+  border-left: 3px solid var(--cat-art);
+}
+.card-image.amber { border-left-color: var(--cat-sport); }
+.card-image.coral { border-left-color: var(--cat-music); }
+.card-body { padding: 12px 14px; }
+.card-category {
+  font-family: var(--font-ui);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cat-art);
+  margin-bottom: 4px;
+}
+.card-category.amber { color: var(--cat-sport); }
+.card-category.coral { color: var(--cat-music); }
+.card-title {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+.card-meta {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  color: #6B7C8D;
+}
+
+/* ── Pullquote ── */
+
+.pullquote {
+  border-left: 3px solid var(--teal);
+  background: #EBF3F5;
+  padding: 16px 20px;
+  margin: 0;
+  max-width: 580px;
+}
+.pullquote p {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--teal);
+  line-height: 1.65;
+}
+
+/* ── Nav preview ── */
+
+.nav-preview {
+  background: #fff;
+  border: 1px solid var(--rule);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+}
+.nav-wordmark {
+  font-weight: 700;
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+.nav-links {
+  display: flex;
+  gap: 24px;
+  color: #6B7C8D;
+}
+.nav-links a { color: inherit; text-decoration: none; }
+.nav-cta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.nav-cta .chevron {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--rule);
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.6rem;
+}
+.nav-lang {
+  color: #9AABB8;
+  font-size: 0.72rem;
+}
+
+/* ── Here accent callout ── */
+
+.here-note {
+  background: #EBF3F5;
+  border: 1px solid #C2D8DE;
+  padding: 14px 18px;
+  border-radius: 3px;
+  margin-top: 16px;
+}
+.here-note p {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: var(--teal);
+  line-height: 1.5;
+}
+.here-note strong { font-weight: 700; }
+
+/* ── Motion / animation note ── */
+
+.note-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--rule);
+  padding: 14px 18px;
+  border-radius: 3px;
+  margin-top: 16px;
+}
+.note-box p {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  color: #6B7C8D;
+  line-height: 1.5;
+}
+.note-box strong { color: var(--ink); font-weight: 700; }
+
+</style>
+</head>
+<body>
+
+<div class="guide">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-eyebrow">Hotel Berlin, Berlin <span>·</span> Website Redesign</div>
+    <div class="cover-title">Visual Style Guide</div>
+    <div class="cover-subtitle">Colours, typography, spacing, and UI components for hotel&#8209;berlin.de</div>
+  </div>
+
+
+  <!-- 1. BRAND PALETTE -->
+  <div class="section">
+    <div class="section-label">01</div>
+    <div class="section-title">Brand Colour Palette</div>
+
+    <div class="swatch-grid two-col" style="margin-bottom:16px;">
+      <div class="swatch">
+        <div class="swatch-block" style="background:#DEE1E7;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Silver</div>
+          <div class="swatch-hex">#DEE1E7</div>
+          <div class="swatch-pantone">Pantone 303 C · RGB 222 225 231</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#141414;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Black</div>
+          <div class="swatch-hex">#141414</div>
+          <div class="swatch-pantone">Pantone Black C · RGB 45 42 38</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="swatch-grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="swatch">
+        <div class="swatch-block" style="background:#F79B2E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Amber</div>
+          <div class="swatch-hex">#F79B2E</div>
+          <div class="swatch-pantone">Pantone 130 U</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#216A95;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Navy</div>
+          <div class="swatch-hex">#216A95</div>
+          <div class="swatch-pantone">Pantone 3015 U</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#F95D62;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Coral</div>
+          <div class="swatch-hex">#F95D62</div>
+          <div class="swatch-pantone">Pantone 1788 U</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#347963;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Green</div>
+          <div class="swatch-hex">#347963</div>
+          <div class="swatch-pantone">Pantone 341 U</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 2. SITE TOKENS -->
+  <div class="section">
+    <div class="section-label">02</div>
+    <div class="section-title">Site Colour Tokens</div>
+
+    <div class="swatch-grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="swatch">
+        <div class="swatch-block" style="background:#1A2B4A;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Ink</div>
+          <div class="swatch-hex">#1A2B4A</div>
+          <div class="swatch-pantone">Headings · wordmark · nav</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#F79B2E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Amber</div>
+          <div class="swatch-hex">#F79B2E</div>
+          <div class="swatch-pantone">Primary CTA · map pin · accent</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#B87A2E;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Amber Dark</div>
+          <div class="swatch-hex">#B87A2E</div>
+          <div class="swatch-pantone">Amber hover / pressed state</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#2C6B7A;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Teal</div>
+          <div class="swatch-hex">#2C6B7A</div>
+          <div class="swatch-pantone">/here accent · section labels</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#2A3540;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Body Text</div>
+          <div class="swatch-hex">#2A3540</div>
+          <div class="swatch-pantone">All body copy</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#6B7C8D;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Dim</div>
+          <div class="swatch-hex">#6B7C8D</div>
+          <div class="swatch-pantone">Captions · metadata · footers</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#D8DCE0;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Rule</div>
+          <div class="swatch-hex">#D8DCE0</div>
+          <div class="swatch-pantone">Dividers · borders · outlines</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#F4F6F7;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Surface</div>
+          <div class="swatch-hex">#F4F6F7</div>
+          <div class="swatch-pantone">Card backgrounds · inputs</div>
+        </div>
+      </div>
+      <div class="swatch">
+        <div class="swatch-block" style="background:#EBF3F5;"></div>
+        <div class="swatch-info">
+          <div class="swatch-name">Teal Light</div>
+          <div class="swatch-hex">#EBF3F5</div>
+          <div class="swatch-pantone">Pullquote bg · /here highlights</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="here-note">
+      <p><strong>/here context:</strong> The guest hub uses <strong>Teal #2C6B7A</strong> as its primary accent throughout — replacing the Amber used on the main site. Same palette, different temperature.</p>
+    </div>
+  </div>
+
+
+  <!-- 3. CARD CATEGORY COLOURS -->
+  <div class="section">
+    <div class="section-label">03</div>
+    <div class="section-title">Card Category Colours</div>
+
+    <p style="font-family:var(--font-body);font-size:0.9rem;color:#6B7C8D;margin-bottom:20px;line-height:1.6;">
+      Card colour is set by the Payload category field — not chosen per card by editors. Each category maps to one token.
+    </p>
+
+    <div class="cat-grid">
+      <div class="cat-swatch">
+        <div class="cat-block" style="background:#2C6B7A;"></div>
+        <div class="cat-info">
+          <div class="cat-name">Art · FKKB</div>
+          <div class="cat-hex">#2C6B7A — Teal</div>
+        </div>
+      </div>
+      <div class="cat-swatch">
+        <div class="cat-block" style="background:#F79B2E;"></div>
+        <div class="cat-info">
+          <div class="cat-name">Sport · KTTK</div>
+          <div class="cat-hex">#F79B2E — Amber</div>
+        </div>
+      </div>
+      <div class="cat-swatch">
+        <div class="cat-block" style="background:#F95D62;"></div>
+        <div class="cat-info">
+          <div class="cat-name">Music · Events</div>
+          <div class="cat-hex">#F95D62 — Coral</div>
+        </div>
+      </div>
+      <div class="cat-swatch">
+        <div class="cat-block" style="background:#B87A2E;"></div>
+        <div class="cat-info">
+          <div class="cat-name">Food · Lütze</div>
+          <div class="cat-hex">#B87A2E — Gold</div>
+        </div>
+      </div>
+      <div class="cat-swatch">
+        <div class="cat-block" style="background:#347963;"></div>
+        <div class="cat-info">
+          <div class="cat-name">Neighbourhood</div>
+          <div class="cat-hex">#347963 — Green</div>
+        </div>
+      </div>
+      <div class="cat-swatch">
+        <div class="cat-block" style="background:#6B5B8D;"></div>
+        <div class="cat-info">
+          <div class="cat-name">Partnerships</div>
+          <div class="cat-hex">#6B5B8D — Purple</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 4. TYPOGRAPHY -->
+  <div class="section">
+    <div class="section-label">04</div>
+    <div class="section-title">Typography</div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Main font — UI · Wordmark · Headings</div>
+      <div class="type-display">Archivo</div>
+      <div class="type-caption" style="margin-top:8px;">Regular width · weights 300–700 · variable font · Google Fonts<br>Use for: wordmark, all headings, navigation, labels, buttons, captions, data</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Secondary font — Body · Editorial</div>
+      <div style="font-family:'Laica','Bitstream Charter','Charter',Georgia,serif;font-size:3.5rem;color:var(--ink);line-height:1.05;">Laica</div>
+      <div class="type-caption" style="margin-top:8px;">Colophon Foundry · commercial licence required<br>Use for: body copy, pullquotes, /here hero greetings, cover page subtitles, italic emphasis</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Wordmark</div>
+      <div class="type-wordmark">Hotel Berlin, Berlin</div>
+      <div class="type-caption" style="margin-top:6px;">Archivo Regular · always in full — never shortened · primary: Ink #1A2B4A · reverse: White</div>
+    </div>
+
+    <div style="margin-top:32px;">
+      <table class="scale-table">
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Size</th>
+            <th>Weight</th>
+            <th>Font</th>
+            <th>Token</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Display / Hero</td>
+            <td>48–56px</td>
+            <td>700</td>
+            <td>Archivo</td>
+            <td><code>text-5xl font-bold</code></td>
+          </tr>
+          <tr>
+            <td>H1 — Page title</td>
+            <td>36px</td>
+            <td>700</td>
+            <td>Archivo</td>
+            <td><code>text-4xl font-bold</code></td>
+          </tr>
+          <tr>
+            <td>H2 — Section title</td>
+            <td>24px</td>
+            <td>700</td>
+            <td>Archivo</td>
+            <td><code>text-2xl font-bold</code></td>
+          </tr>
+          <tr>
+            <td>H3 — Card title</td>
+            <td>18px</td>
+            <td>700</td>
+            <td>Archivo</td>
+            <td><code>text-lg font-bold</code></td>
+          </tr>
+          <tr>
+            <td>Section label</td>
+            <td>10.5px</td>
+            <td>700</td>
+            <td>Archivo</td>
+            <td><code>text-xs font-bold tracking-widest uppercase</code></td>
+          </tr>
+          <tr>
+            <td>Body lead</td>
+            <td>17.6px</td>
+            <td>400</td>
+            <td>Laica</td>
+            <td><code>text-lg</code></td>
+          </tr>
+          <tr>
+            <td>Body regular</td>
+            <td>15.2px</td>
+            <td>400</td>
+            <td>Laica</td>
+            <td><code>text-base</code></td>
+          </tr>
+          <tr>
+            <td>Caption / meta</td>
+            <td>12px</td>
+            <td>400</td>
+            <td>Archivo</td>
+            <td><code>text-xs</code></td>
+          </tr>
+          <tr>
+            <td>/here greeting</td>
+            <td>28–36px</td>
+            <td>400 italic</td>
+            <td>Laica</td>
+            <td><code>text-3xl italic</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- 5. TYPE SPECIMENS -->
+  <div class="section">
+    <div class="section-label">05</div>
+    <div class="section-title">Type in Use</div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Section label</div>
+      <div class="type-ui-label">Freiluft Kunst Klub Berlin</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">H1 — Page title</div>
+      <div class="type-h1">701 rooms. One hotel.</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">H2 — Section heading</div>
+      <div class="type-h2">Art is part of the building</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Body lead — Laica</div>
+      <div class="type-body-lg">Hotel Berlin, Berlin has been here since 1978. Not as a backdrop — as a participant. The gallery, the table tennis club, the bar: all of it runs because people here decided it should.</div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Body regular — Laica</div>
+      <div class="type-body">The FKKB gallery occupies the ground floor and runs a full programme of contemporary exhibitions, artist residencies, and limited-edition print releases. Entry is always free. <em>It is one of the few hotel galleries in Berlin that operates on gallery terms rather than hotel terms.</em></div>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Pullquote — Laica italic</div>
+      <blockquote class="pullquote">
+        <p>Think of it as the digital version of a good concierge handout — except it updates itself, knows what time it is, and can recognise when someone has arrived for a specific event.</p>
+      </blockquote>
+    </div>
+
+    <div class="type-specimen">
+      <div class="type-meta">Caption / metadata — Archivo</div>
+      <div class="type-caption">FKKB gallery · until 22:00 · ground floor · free entry</div>
+    </div>
+
+  </div>
+
+
+  <!-- 6. SPACING -->
+  <div class="section">
+    <div class="section-label">06</div>
+    <div class="section-title">Spacing Scale</div>
+
+    <p style="font-family:var(--font-body);font-size:0.9rem;color:#6B7C8D;margin-bottom:24px;line-height:1.6;">
+      Base unit: 4px. Tailwind default scale — all spacing in multiples of 4.
+    </p>
+
+    <div class="spacing-row"><div class="spacing-bar" style="width:4px;"></div><div class="spacing-label"><strong>1 / 4px</strong>Micro — icon gaps, tight inline</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:8px;"></div><div class="spacing-label"><strong>2 / 8px</strong>XS — between label and heading</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:12px;"></div><div class="spacing-label"><strong>3 / 12px</strong>SM — card internal padding</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:16px;"></div><div class="spacing-label"><strong>4 / 16px</strong>MD — between elements in a card</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:24px;"></div><div class="spacing-label"><strong>6 / 24px</strong>LG — section internal gap</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:32px;"></div><div class="spacing-label"><strong>8 / 32px</strong>XL — between cards in a grid</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:48px;"></div><div class="spacing-label"><strong>12 / 48px</strong>2XL — section top/bottom padding</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:64px;"></div><div class="spacing-label"><strong>16 / 64px</strong>3XL — hero padding, page margins</div></div>
+    <div class="spacing-row"><div class="spacing-bar" style="width:96px;"></div><div class="spacing-label"><strong>24 / 96px</strong>4XL — between major page sections</div></div>
+  </div>
+
+
+  <!-- 7. NAVIGATION -->
+  <div class="section">
+    <div class="section-label">07</div>
+    <div class="section-title">Navigation</div>
+
+    <p style="font-family:var(--font-body);font-size:0.9rem;color:#6B7C8D;margin-bottom:20px;line-height:1.6;">
+      Single bar. Wordmark left. Four nav links. "What's on" text is a link to /here; separate chevron opens dropdown. Language toggle far right.
+    </p>
+
+    <div class="nav-preview">
+      <div class="nav-wordmark">Hotel Berlin, Berlin</div>
+      <div class="nav-links">
+        <a href="#">Rooms</a>
+        <a href="#">Restaurant</a>
+        <a href="#">Meetings</a>
+        <a href="#">About</a>
+      </div>
+      <div class="nav-cta">
+        <span>What's on</span>
+        <span class="chevron">›</span>
+      </div>
+      <div class="nav-lang">EN &nbsp; DE</div>
+    </div>
+
+    <div class="here-note" style="margin-top:16px;">
+      <p><strong>/here nav:</strong> "The hotel" replaces the wordmark link (goes to <code>/</code>). Bridge is position 4 in the nav. Hamburger menu on mobile. Teal #2C6B7A accent throughout.</p>
+    </div>
+  </div>
+
+
+  <!-- 8. BUTTONS & BADGES -->
+  <div class="section">
+    <div class="section-label">08</div>
+    <div class="section-title">Buttons &amp; Badges</div>
+
+    <div class="type-meta" style="margin-bottom:12px;">Buttons</div>
+    <div class="component-row">
+      <a class="btn btn-primary" href="#">Book a room</a>
+      <a class="btn btn-secondary" href="#">Learn more</a>
+      <a class="btn btn-teal" href="#">See what's on</a>
+      <a class="btn btn-ghost" href="#">Explore the gallery</a>
+    </div>
+
+    <div class="type-meta" style="margin-bottom:12px;margin-top:24px;">Badges &amp; tags</div>
+    <div class="component-row">
+      <span class="badge badge-green">● Open now</span>
+      <span class="badge badge-amber">Tonight</span>
+      <span class="badge badge-coral">Free entry</span>
+      <span class="badge badge-teal">Exhibition</span>
+      <span class="badge badge-navy">Conference</span>
+      <span class="badge badge-outline">FKKB</span>
+    </div>
+    <div class="component-row" style="margin-top:8px;">
+      <span class="tag">Art</span>
+      <span class="tag">Table tennis</span>
+      <span class="tag">Vinyl night</span>
+      <span class="tag">Neighbourhood</span>
+      <span class="tag">Free</span>
+    </div>
+  </div>
+
+
+  <!-- 9. CARDS -->
+  <div class="section">
+    <div class="section-label">09</div>
+    <div class="section-title">Card Components</div>
+
+    <p style="font-family:var(--font-body);font-size:0.9rem;color:#6B7C8D;margin-bottom:20px;line-height:1.6;">
+      Left border colour is driven by the Payload category field, not set per card.
+    </p>
+
+    <div class="cards-row">
+      <div class="card">
+        <div class="card-image">Image</div>
+        <div class="card-body">
+          <div class="card-category">FKKB · Exhibition</div>
+          <div class="card-title">Anna Taut + Czarnobyl</div>
+          <div class="card-meta">Until 22:00 · ground floor · free entry</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-image amber">Image</div>
+        <div class="card-body">
+          <div class="card-category amber">KTTK · Sport</div>
+          <div class="card-title">Thursday Tournament Night</div>
+          <div class="card-meta">19:00 – 22:00 · basement · €5 entry</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-image coral">Image</div>
+        <div class="card-body">
+          <div class="card-category coral">Lütze · Music</div>
+          <div class="card-title">Vinyl Night with DJ Tove</div>
+          <div class="card-meta">21:00 – late · bar level · free</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-box">
+      <p><strong>Border box:</strong> A thin 1px amber border box is used as a unifying element in the homepage hero — it bridges the two-zone layout (teal panel + photo). Coral #F95D62 variant used in the Rooms hero.</p>
+    </div>
+  </div>
+
+
+  <!-- 10. ACCESSIBILITY -->
+  <div class="section">
+    <div class="section-label">10</div>
+    <div class="section-title">Accessibility</div>
+
+    <table class="scale-table">
+      <thead>
+        <tr><th>Pairing</th><th>Ratio</th><th>AA Normal</th><th>AA Large</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ink #1A2B4A on White</td>
+          <td>13.9:1</td>
+          <td>✓ Pass</td>
+          <td>✓ Pass</td>
+        </tr>
+        <tr>
+          <td>Body text #2A3540 on White</td>
+          <td>11.2:1</td>
+          <td>✓ Pass</td>
+          <td>✓ Pass</td>
+        </tr>
+        <tr>
+          <td>Teal #2C6B7A on White</td>
+          <td>5.0:1</td>
+          <td>✓ Pass</td>
+          <td>✓ Pass</td>
+        </tr>
+        <tr>
+          <td>White on Teal #2C6B7A</td>
+          <td>5.0:1</td>
+          <td>✓ Pass</td>
+          <td>✓ Pass</td>
+        </tr>
+        <tr>
+          <td>White on Amber #F79B2E</td>
+          <td>2.6:1</td>
+          <td>✗ Fail — use Ink text on Amber</td>
+          <td>✓ Pass</td>
+        </tr>
+        <tr>
+          <td>Ink #1A2B4A on Amber #F79B2E</td>
+          <td>5.4:1</td>
+          <td>✓ Pass</td>
+          <td>✓ Pass</td>
+        </tr>
+        <tr>
+          <td>White on Coral #F95D62</td>
+          <td>3.4:1</td>
+          <td>✗ Fail — use Ink for small text</td>
+          <td>✓ Pass</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="note-box" style="margin-top:20px;">
+      <p><strong>Standard:</strong> WCAG 2.1 AA as EAA technical baseline. Skip-to-main on all pages. Alt text is a required field in Payload CMS. Focus styles visible at all times. <code>prefers-reduced-motion</code> stops hero animation.</p>
+    </div>
+  </div>
+
+</div><!-- /guide -->
+</body>
+</html>

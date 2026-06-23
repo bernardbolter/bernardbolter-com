@@ -10,7 +10,7 @@ export const ArtOfficialSettings: GlobalConfig = {
   label: 'Art/Official settings',
   admin: {
     description:
-      'Custom medium labels added from Quick Upload appear here and in artwork medium selects.',
+      'Custom medium labels and edition vocabulary added from admin appear here and in related selects.',
   },
   access: {
     read: () => true,
@@ -45,6 +45,52 @@ export const ArtOfficialSettings: GlobalConfig = {
             description:
               'Optional Getty AAT URI for this medium — used in JSON-LD artMedium as DefinedTerm when set.',
           },
+        },
+      ],
+    },
+    {
+      name: 'customEditionSubstrates',
+      type: 'array',
+      labels: { singular: 'Custom substrate', plural: 'Custom edition substrates' },
+      admin: {
+        description:
+          'Extra substrate options for series edition tiers and ownership registry. Also managed when you add a new substrate from a tier field.',
+      },
+      fields: [
+        {
+          name: 'value',
+          type: 'text',
+          required: true,
+          admin: { description: 'Stable slug stored on edition tier records' },
+        },
+        {
+          name: 'label',
+          type: 'text',
+          required: true,
+          admin: { description: 'Label shown in dropdowns and on the artwork page' },
+        },
+      ],
+    },
+    {
+      name: 'customEditionPrintTechniques',
+      type: 'array',
+      labels: { singular: 'Custom print technique', plural: 'Custom print techniques' },
+      admin: {
+        description:
+          'Extra print technique options for series edition tiers and ownership registry. Also managed when you add a new technique from a tier field.',
+      },
+      fields: [
+        {
+          name: 'value',
+          type: 'text',
+          required: true,
+          admin: { description: 'Stable slug stored on edition tier records' },
+        },
+        {
+          name: 'label',
+          type: 'text',
+          required: true,
+          admin: { description: 'Label shown in dropdowns and on the artwork page' },
         },
       ],
     },

@@ -7,27 +7,21 @@ import { ReactNode, useEffect } from 'react';
 
 import { isArtworkDetailPath } from '@/lib/routes/isArtworkDetailPath';
 
-// 1. Rename and update the variants for a subtle opacity fade
 const subtleFadeVariants: Variants = {
-  // Page starts fully transparent (no scale applied)
   initial: { 
     opacity: 0, 
   },
-  
-  // Animates into view
   animate: { 
     opacity: 1, 
     transition: { 
-      duration: 0.5, // Slightly slower entrance for smoothness
-      ease: 'easeInOut' // Standard, reliable ease
+      duration: 0.5,
+      ease: 'easeInOut'
     } 
   },
-  
-  // Exits by fading out
   exit: { 
     opacity: 0, 
     transition: { 
-      duration: 0.2, // Quick exit is key for a non-jarring "wait" transition
+      duration: 0.2,
       ease: 'easeOut' 
     } 
   },
@@ -61,17 +55,17 @@ export default function AnimationWrapper({
 
   return (
     <AnimatePresence 
-      mode="wait" // Ensures the old page fades out before the new one fades in
+      mode="wait"
       onExitComplete={handleAnimationComplete}
     >
       <motion.div 
         key={pathname}
-        variants={subtleFadeVariants} // 2. Use the new variants
+        variants={subtleFadeVariants}
         initial="initial"
         animate="animate"
         exit="exit"
         onAnimationStart={handleAnimationStart}
-        onAnimationComplete={handleAnimationComplete} // This will fire once per animation cycle
+        onAnimationComplete={handleAnimationComplete}
         style={{
           position: 'absolute',
           width: '100%',

@@ -206,6 +206,14 @@ async function main() {
   }
 
   console.log('Event dialogue schema migration complete.')
+
+  if (!(await columnExists(pool, SESSIONS, 'staged_event_media'))) {
+    await pool.query(`ALTER TABLE "public"."${SESSIONS}" ADD COLUMN "staged_event_media" jsonb`)
+    console.log(`Added ${SESSIONS}.staged_event_media`)
+  } else {
+    console.log(`${SESSIONS}.staged_event_media already exists.`)
+  }
+
   process.exit(0)
 }
 

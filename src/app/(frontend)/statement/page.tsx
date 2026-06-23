@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 
-import Info from '@/components/info/Info'
 import Statement from '@/components/statement/Statement'
 import {
   normalizeStatementSceneImagesFirst,
@@ -41,7 +40,6 @@ export default async function StatementPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       : null}
-      <Info />
       {artist ?
         <Statement
           statementOpening={artist.statementOpening}

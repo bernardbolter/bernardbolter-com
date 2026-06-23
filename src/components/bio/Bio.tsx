@@ -1,7 +1,4 @@
-import Link from 'next/link'
-
-import { CloseCircleSvg } from '@/components/icons'
-import HeaderTitle from '@/components/info/HeaderTitle'
+import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import type { BioPageImage } from '@/helpers/bioPhotos'
 import type { SeriesMention } from '@/lib/bio/linkSeriesMentions'
 
@@ -29,21 +26,18 @@ export default function Bio({
   images,
 }: BioProps) {
   return (
-    <div className="bio-container">
-      <HeaderTitle title="BIO" large={false} />
-
-      <Link href="/" className="bio__close-container">
-        <CloseCircleSvg />
-        <p>close</p>
-      </Link>
-
+    <DocumentScrollShell
+      title="BIO"
+      closeHref="/"
+      scrollClassName="bio-container"
+      closeClassName="bio__close-container"
+    >
       <div className="bio__content-container">
         <BioHeader name={name} birthLine={birthLine} livesAndWorksLine={livesAndWorksLine} />
         {tagline ? <p className="bio__tagline">{tagline}</p> : null}
         <BioProse content={bioFull} seriesMentions={seriesMentions} />
       </div>
-
       <BioPhotoGrid images={images} />
-    </div>
+    </DocumentScrollShell>
   )
 }

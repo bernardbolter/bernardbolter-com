@@ -87,6 +87,11 @@ async function seed() {
           tierOrder: 1,
           editionSize: 10,
           apCount: 2,
+          dimensionUnit: 'cm',
+          widthWhole: 40,
+          heightWhole: 53,
+          substrate: 'paper',
+          printTechnique: 'giclee',
           copies: [
             {
               copyNumber: '3/10',
@@ -131,6 +136,11 @@ async function seed() {
           tierOrder: 2,
           editionSize: 10,
           apCount: 2,
+          dimensionUnit: 'cm',
+          widthWhole: 60,
+          heightWhole: 80,
+          substrate: 'paper',
+          printTechnique: 'giclee',
           copies: [
             {
               copyNumber: '1/10',
@@ -211,6 +221,11 @@ async function seed() {
           tierOrder: 3,
           editionSize: 5,
           apCount: 1,
+          dimensionUnit: 'cm',
+          widthWhole: 75,
+          heightWhole: 100,
+          substrate: 'paper',
+          printTechnique: 'giclee',
           copies: [],
           // Zero claimed → "Edition of 5 — available"
         },

@@ -21,6 +21,7 @@ import {
   normalizeSessionPhase,
   type SessionPhase,
 } from '@/lib/artOfficial/sessionPhase'
+import { EVENT_DIALOGUE_PHASE_LABELS, normalizeEventDialoguePhase } from '@/lib/artOfficial/eventDialoguePhase'
 import type { MediaUploadPayload } from '@/lib/artOfficial/stageArtworkMedia'
 import type { StagedMediaAttachment } from '@/lib/artOfficial/stagedMedia'
 
@@ -30,16 +31,31 @@ import { type AgentActivity, ChatAgentStatus } from './ChatAgentStatus'
 import { ChatErrorBanner } from './ChatErrorBanner'
 import { ComposerUploadBar } from './ComposerUploadBar'
 import { ConfirmationPanel } from './ConfirmationPanel'
+import { EventMediaPanel } from './EventMediaPanel'
 import { MediaUploadPanel } from './MediaUploadPanel'
 import { MessageList } from './MessageList'
 import { PreUploadPanel } from './PreUploadPanel'
 import { SessionGuidePanel } from './SessionGuidePanel'
 import { SessionSidebar } from './SessionSidebar'
-import type { ArtOfficialSession, TimelineEntry } from './types'
+import type { ArtOfficialSession, EventAuthorityProposal, TimelineEntry } from './types'
 
 import './artOfficialChat.scss'
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string }
+
+function parseAuthorityProposals(session: ArtOfficialSession): EventAuthorityProposal[] {
+  const raw = session.eventAuthorityProposals
+  if (!Array.isArray(raw)) return []
+  return raw.filter(
+    (entry): entry is EventAuthorityProposal =>
+      Boolean(
+        entry &&
+          typeof entry === 'object' &&
+          typeof (entry as EventAuthorityProposal).fieldName === 'string' &&
+          typeof (entry as EventAuthorityProposal).value === 'string',
+      ),
+  )
+}
 
 function parseTimeline(session: ArtOfficialSession): TimelineEntry[] {
   if (!Array.isArray(session.fieldUpdateTimeline)) return []
@@ -92,6 +108,7 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
   const errorRef = useRef<HTMLDivElement>(null)
 
   const isArtworkSession = session.sessionType === 'artwork-cataloguing'
+  const isEventSession = session.sessionType === 'event-enrichment'
   const isArtworkRefinement =
     isArtworkSession &&
     (typeof session.artworkRecord === 'number'
@@ -211,22 +228,29 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
               setSession((s) => ({ ...s, preUploadStep: data.preUploadStep as number }))
             }
             if (type === 'phase-transition' && typeof data.phase === 'string') {
-              setCurrentPhase((prev) => normalizeSessionPhase(data.phase, prev))
-              setSession((s) => ({
-                ...s,
-                currentPhase: normalizeSessionPhase(
-                  data.phase,
-                  normalizeSessionPhase(
-                    s.currentPhase,
-                    defaultSessionPhase(
-                      s.sessionType ?? '',
-                      typeof s.artworkRecord === 'number'
-                        ? s.artworkRecord > 0
-                        : typeof s.artworkRecord === 'object' && s.artworkRecord !== null,
+              if (data.phase === 'phase-b-reasoning' || data.phase === 'phase-a-research') {
+                setSession((s) => ({
+                  ...s,
+                  eventDialoguePhase: normalizeEventDialoguePhase(data.phase),
+                }))
+              } else {
+                setCurrentPhase((prev) => normalizeSessionPhase(data.phase, prev))
+                setSession((s) => ({
+                  ...s,
+                  currentPhase: normalizeSessionPhase(
+                    data.phase,
+                    normalizeSessionPhase(
+                      s.currentPhase,
+                      defaultSessionPhase(
+                        s.sessionType ?? '',
+                        typeof s.artworkRecord === 'number'
+                          ? s.artworkRecord > 0
+                          : typeof s.artworkRecord === 'object' && s.artworkRecord !== null,
+                      ),
                     ),
                   ),
-                ),
-              }))
+                }))
+              }
             }
             if (type === 'image-analysis') {
               setAgentActivity('analyzing')
@@ -251,7 +275,11 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
                 setImageUploaded(true)
               }
             }
-            if (type === 'tool-staged' && data.name === 'update_field' && data.input) {
+            if (
+              type === 'tool-staged' &&
+              (data.name === 'update_field' || data.name === 'confirm_authority_proposal') &&
+              data.input
+            ) {
               const input = data.input as TimelineEntry
               setTimeline((t) =>
                 upsertTimelineEntry(t, {
@@ -262,6 +290,17 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
               if (input.field === 'primaryImage') {
                 setImageUploaded(true)
               }
+            }
+            if (type === 'tool-staged' && data.name === 'propose_authority_field' && data.input) {
+              const input = data.input as EventAuthorityProposal
+              setSession((s) => {
+                const prev = parseAuthorityProposals(s)
+                const next = [
+                  ...prev.filter((p) => p.fieldName !== input.fieldName),
+                  input,
+                ]
+                return { ...s, eventAuthorityProposals: next }
+              })
             }
             if (type === 'tool-staged' && data.name === 'store_session_field') {
               const input = data.input as { field?: string; value?: string }
@@ -305,7 +344,11 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             }
             if (type === 'done') {
               const phase = data.phaseTransition
-              if (typeof phase === 'string') {
+              if (
+                typeof phase === 'string' &&
+                phase !== 'phase-b-reasoning' &&
+                phase !== 'phase-a-reasoning'
+              ) {
                 setCurrentPhase((prev) => normalizeSessionPhase(phase, prev))
                 setSession((s) => ({
                   ...s,
@@ -321,6 +364,24 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
                       ),
                     ),
                   ),
+                }))
+              }
+              if (typeof data.eventDialoguePhase === 'string') {
+                setSession((s) => ({
+                  ...s,
+                  eventDialoguePhase: normalizeEventDialoguePhase(data.eventDialoguePhase),
+                }))
+              }
+              if (Array.isArray(data.fieldUpdateTimeline)) {
+                setTimeline(
+                  collapseTimelineToLatest(data.fieldUpdateTimeline as TimelineEntry[]),
+                )
+              }
+              if (Array.isArray(data.eventAuthorityProposals)) {
+                setSession((s) => ({
+                  ...s,
+                  eventAuthorityProposals:
+                    data.eventAuthorityProposals as ArtOfficialSession['eventAuthorityProposals'],
                 }))
               }
             }
@@ -381,6 +442,10 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
       ? agentActivity
       : 'idle'
 
+  const handleEventMediaSaved = useCallback((stagedEventMedia: ArtOfficialSession['stagedEventMedia']) => {
+    setSession((current) => ({ ...current, stagedEventMedia }))
+  }, [])
+
   const refinementBanner =
     session.dialogueRefinementFlag && session.weakPhases?.length ? (
       <p className="art-official-chat__refinement-banner">
@@ -393,6 +458,12 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
       <div className="art-official-chat__layout">
         <div className="art-official-chat__main">
           {refinementBanner}
+          {isEventSession ? (
+            <p className="art-official-chat__refinement-banner">
+              Event dialogue phase:{' '}
+              {EVENT_DIALOGUE_PHASE_LABELS[normalizeEventDialoguePhase(session.eventDialoguePhase)]}
+            </p>
+          ) : null}
           {isArtworkSession ? (
             <DialoguePhaseSelect
               phase={currentPhase}
@@ -410,6 +481,13 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             isRefinement={isArtworkRefinement}
             onStart={(message) => void sendChat(message, { showUserInThread: false })}
           />
+          {isEventSession ? (
+            <EventMediaPanel
+              sessionId={session.sessionId}
+              disabled={sending}
+              onSaved={handleEventMediaSaved}
+            />
+          ) : null}
           {isArtworkSession && !isArtworkRefinement ? (
             <PreUploadPanel
               hasFirstImpression={hasFirstImpression}
@@ -490,7 +568,11 @@ export function ChatPane({ initialSession }: { initialSession: ArtOfficialSessio
             onCommitted={() => router.push('/admin/art-official')}
           />
         </div>
-        <SessionSidebar timeline={timeline} sessionType={session.sessionType ?? ''} />
+        <SessionSidebar
+          timeline={timeline}
+          sessionType={session.sessionType ?? ''}
+          pendingAuthorityProposals={parseAuthorityProposals(session)}
+        />
       </div>
     </div>
   )

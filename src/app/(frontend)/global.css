@@ -209,7 +209,7 @@ h6 {
 
 .artwork-title__container--desktop {
   top: 0;
-  right: 1px;
+  right: 0;
 }
 
 .artwork-title__container--mobile {
@@ -310,7 +310,7 @@ h6 {
   background: var(--title-light);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   position: relative;
   min-width: 110px;
 }
@@ -318,25 +318,26 @@ h6 {
 .artwork-title__series-box {
   width: 15px;
   height: 15px;
-  position: relative;
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
   border-radius: 50%;
   z-index: 2;
   flex-shrink: 0;
-  margin-top: 1px;
 }
 
 .artwork-title__inside--desktop {
-  padding: 10px 10px 0 5px;
+  padding: 10px 24px 10px 5px;
   align-items: flex-start;
 }
 
 .artwork-title__inside--mobile {
-  padding: 0 10px 10px 5px;
+  padding: 0 24px 10px 5px;
   align-items: flex-start;
 }
 
 .artwork-title__inside--slideshow {
-  padding: 0 5px 10px 5px;
+  padding: 0 24px 10px 5px;
   align-items: flex-start;
   background: var(--title-text);
 }
@@ -366,15 +367,6 @@ h6 {
 
 .artwork-title__medium {
   padding-bottom: 4px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.artwork-title__medium-row {
-  width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
 }
 
 .artwork-title__size--converted {
@@ -632,6 +624,13 @@ h6 {
   padding: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.artworks-timeline__artworks-container--dragging {
+  cursor: grabbing;
 }
 
 .artworks-timeline__artworks-container::-webkit-scrollbar {
@@ -666,6 +665,10 @@ h6 {
   flex-shrink: 0;
 }
 
+.artworks-timeline__artwork-inside a {
+  cursor: pointer;
+}
+
 @media screen and (min-width: 768px) {
   .artworks-timeline__artwork-inside {
     flex-direction: column;
@@ -678,13 +681,7 @@ h6 {
   overflow: hidden;
   position: relative;
   flex-shrink: 0;
-  cursor: grab;
-  touch-action: none;
-  user-select: none;
-}
-
-.artworks-timeline__timeline-container--dragging {
-  cursor: grabbing;
+  pointer-events: none;
 }
 
 @media screen and (min-width: 768px) {
@@ -1886,7 +1883,7 @@ h6 {
 
 .event-page__content {
   padding: 80px 20px 40px;
-  max-width: 720px;
+  max-width: 960px;
   margin: 0 auto;
   font-family: var(--font-barlow), sans-serif;
   color: var(--title-text-dark);
@@ -1908,6 +1905,61 @@ h6 {
   font-size: 16px;
   font-weight: 500;
   margin: 0 0 1rem;
+}
+
+.event-page__artworks-note {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0 0 1rem;
+}
+
+.event-page__artworks-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 1rem;
+  margin-top: 0.5rem;
+}
+
+@media screen and (min-width: 550px) {
+  .event-page__artworks-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.event-page__artwork-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.event-page__artwork-card:hover {
+  opacity: 0.72;
+}
+
+.event-page__artwork-frame {
+  position: relative;
+  width: 100%;
+  max-width: 200px;
+  height: 250px;
+  margin: 0 auto;
+  background: var(--surface-page);
+}
+
+.event-page__artwork-image {
+  object-fit: contain;
+}
+
+.event-page__artwork-title {
+  margin: 0.5rem auto 0;
+  max-width: 200px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .event-page__body p {
@@ -1938,25 +1990,135 @@ h6 {
   font-size: 14px;
 }
 
-.event-page__gallery {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 2rem;
+.event-page__header {
+  margin-bottom: 1.5rem;
 }
 
-.event-page__image {
+.event-page__type-pill {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid var(--text-secondary);
+  border-radius: 999px;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.event-page__context-block p {
+  margin: 0 0 0.35rem;
+  font-size: 14px;
+}
+
+.event-page__masonry {
+  column-count: 1;
+  column-gap: 10px;
+  margin: 0 0 2rem;
+}
+
+@media screen and (min-width: 550px) {
+  .event-page__masonry {
+    column-count: 2;
+  }
+}
+
+.event-page__masonry-item {
+  display: block;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  break-inside: avoid;
+}
+
+.event-page__masonry-image {
+  display: block;
   width: 100%;
   height: auto;
 }
 
-.event-page__figure figcaption {
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 0.5rem;
+.event-page__lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 6000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgb(0 0 0 / 0.82);
 }
 
-.event-page__map {
-  margin-top: 2rem;
-  font-size: 14px;
+.event-page__lightbox-panel {
+  position: relative;
+  max-width: min(96vw, 1100px);
+  max-height: 92vh;
+}
+
+.event-page__lightbox-image {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: calc(92vh - 4rem);
+  margin: 0 auto;
+}
+
+.event-page__lightbox-caption {
+  margin: 0.75rem 0 0;
+  color: #f4f4f4;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.event-page__lightbox-close,
+.event-page__lightbox-nav {
+  position: absolute;
+  z-index: 1;
+  border: 0;
+  background: rgb(255 255 255 / 0.12);
+  color: #fff;
+  cursor: pointer;
+}
+
+.event-page__lightbox-close {
+  top: -2.25rem;
+  right: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.event-page__lightbox-nav {
+  top: 50%;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  font-size: 1.6rem;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.event-page__lightbox-nav--prev {
+  left: -3rem;
+}
+
+.event-page__lightbox-nav--next {
+  right: -3rem;
+}
+
+@media screen and (max-width: 768px) {
+  .event-page__lightbox-nav--prev {
+    left: 0.25rem;
+  }
+
+  .event-page__lightbox-nav--next {
+    right: 0.25rem;
+  }
 }

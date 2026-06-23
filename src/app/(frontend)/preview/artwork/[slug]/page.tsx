@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
-import Info from '@/components/info/Info'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { getArtworkForPreview } from '@/lib/payload/artworkPage'
 import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
@@ -33,7 +32,6 @@ export default async function PreviewArtworkPage({ params }: Props) {
   return (
     <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
       <div className="artwork-page__layout">
-        <Info />
         <ArtworkPage artwork={artwork} artist={artist} />
       </div>
     </ArtworkPageChromeProvider>

@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 
-import Info from '@/components/info/Info'
 import {
   artworkHasDisplayImage,
   getDisplayImageUrl,
@@ -34,7 +33,6 @@ export default async function ArtworkNotFound() {
 
   return (
     <>
-      <Info />
       <section className="mx-auto flex w-[90%] flex-col items-center justify-center bg-surface-page px-[5%] pb-space-2 pt-[7.1875rem]">
         <h1 className="pb-[0.4375rem] font-heading text-[1.375rem] font-semibold tracking-wide text-dark">
           Artwork not found

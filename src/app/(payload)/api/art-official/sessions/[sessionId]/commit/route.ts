@@ -13,6 +13,7 @@ import {
   buildEventFieldConfidenceMap,
   buildEventPatchFromTimeline,
 } from '@/lib/artOfficial/buildEventPatch'
+import { mergeStagedEventMediaIntoEventPatch } from '@/lib/artOfficial/stagedEventMedia'
 import { buildTriptychPatchFromTimeline } from '@/lib/artOfficial/buildTriptychPatch'
 import {
   applyPracticeKnowledgePatches,
@@ -352,6 +353,7 @@ export async function POST(request: Request, context: RouteContext) {
         ...serverPatch,
         ...draftPatch,
       }
+      eventPatch = mergeStagedEventMediaIntoEventPatch(eventPatch, session.stagedEventMedia)
 
       if (Object.keys(eventPatch).length === 0) {
         return Response.json(

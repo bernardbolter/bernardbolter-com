@@ -5,13 +5,16 @@ type ViewportSize = {
   height?: number
 }
 
+/** Desktop timeline: clear the fixed artwork title tag (top-right). */
+export const TIMELINE_DESKTOP_NAV_TOP_PX = 152
+
 /** Matches `Nav` container `top` — keep filter/search drawers aligned with their buttons. */
 export function getNavContainerTop(
   state: Pick<ArtworksState, 'artworkViewTimeline' | 'showSlideshow'>,
   size: ViewportSize,
 ): number {
   if (!state.artworkViewTimeline || state.showSlideshow) return 4
-  if (size.width && size.width > 768) return 130
+  if (size.width && size.width > 768) return TIMELINE_DESKTOP_NAV_TOP_PX
   return 4
 }
 

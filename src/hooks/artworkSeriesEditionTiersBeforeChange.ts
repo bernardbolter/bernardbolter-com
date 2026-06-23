@@ -2,7 +2,7 @@ import type { CollectionBeforeChangeHook } from 'payload'
 
 import {
   buildAutopopulatedSeriesEditionTiers,
-  fetchSeriesEditionTierIdsForSlug,
+  fetchSeriesEditionTierKeysForSlug,
   getSeriesEditionTierAutopopulateTarget,
   resolveArtworkSeriesSlugForAutopopulate,
   shouldAutopopulateSeriesEditionTiers,
@@ -38,7 +38,7 @@ export const artworkSeriesEditionTiersBeforeChange: CollectionBeforeChangeHook =
     return data
   }
 
-  const tierIds = await fetchSeriesEditionTierIdsForSlug(req, target.seriesSlug)
+  const tierIds = await fetchSeriesEditionTierKeysForSlug(req, target.seriesSlug)
   if (tierIds.length === 0) return data
 
   target.applyAutopopulatedTiers(d, buildAutopopulatedSeriesEditionTiers(tierIds))

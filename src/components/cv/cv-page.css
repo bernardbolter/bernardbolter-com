@@ -1,0 +1,346 @@
+/* CV page — see docs/cv/cv-page-full-spec.md */
+
+.cv-page {
+  --color-border-tertiary: rgba(57, 59, 62, 0.14);
+  --cv-title-color: var(--text-secondary);
+  --cv-meta-color: var(--text-light);
+}
+
+.cv-page__scroll {
+  width: 100%;
+  height: 100vh;
+  background: var(--surface-page);
+  overflow: scroll;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.cv-page__scroll::-webkit-scrollbar {
+  background: transparent;
+  width: 0;
+}
+
+.cv-close-button {
+  position: fixed;
+  top: 49px;
+  right: 0;
+  z-index: 5001;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  opacity: 0.6;
+  transition: opacity 0.3s ease-in-out;
+  text-decoration: none;
+}
+
+@media screen and (min-width: 550px) {
+  .cv-close-button {
+    top: 65px;
+    width: 42px;
+    height: 42px;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .cv-close-button {
+    top: 88px;
+  }
+}
+
+@media screen and (min-width: 979px) {
+  .cv-close-button {
+    top: 105px;
+  }
+}
+
+.cv-close-button:hover {
+  opacity: 0.9;
+}
+
+.cv-close-button svg {
+  width: 100%;
+  fill: var(--text-muted);
+}
+
+.cv-close-button p {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 300;
+  font-family: var(--font-staatliches), sans-serif;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.print-cv-button {
+  position: fixed;
+  right: 10px;
+  top: 92px;
+  transition: all 0.5s ease-in-out;
+  cursor: pointer;
+  border: none;
+  border-radius: 2px;
+  padding: 4px 8px;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 12px;
+}
+
+@media screen and (min-width: 550px) {
+  .print-cv-button {
+    top: 115px;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .print-cv-button {
+    top: 140px;
+  }
+}
+
+@media screen and (min-width: 979px) {
+  .print-cv-button {
+    top: 156px;
+  }
+}
+
+.cv-content {
+  width: 90%;
+  margin: 135px 5% 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+@media screen and (min-width: 550px) {
+  .cv-content {
+    width: 84%;
+    margin: 120px 8%;
+  }
+}
+
+@media screen and (min-width: 768px) {
+  .cv-content {
+    width: 78%;
+    margin: 140px auto 140px 150px;
+    max-width: 800px;
+  }
+}
+
+@media screen and (min-width: 979px) {
+  .cv-content {
+    width: 78%;
+    margin: 140px 2% 100px 20%;
+    max-width: 800px;
+  }
+}
+
+.cv-print-header {
+  display: none;
+}
+
+.cv-print-name {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 900;
+  font-size: 18pt;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: #000;
+}
+
+.cv-print-meta {
+  font-size: 9pt;
+  color: #000;
+  margin-top: 2pt;
+}
+
+.cv-section {
+  margin: 0;
+}
+
+.cv-section + .cv-section {
+  margin-top: 0;
+}
+
+.cv-section-header {
+  font-family: var(--font-staatliches), sans-serif;
+  font-size: 1.75rem;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  margin: 2.5rem 0 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border-tertiary);
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+@media screen and (min-width: 768px) {
+  .cv-section-header {
+    font-size: 2rem;
+  }
+}
+
+.cv-section__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cv-row {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  column-gap: 0.75rem;
+  align-items: baseline;
+}
+
+.cv-row__year {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--cv-title-color);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cv-row__content {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 15px;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.cv-row__title {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--cv-title-color);
+}
+
+.cv-row__title--linked {
+  color: var(--cv-title-color);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cv-row__title--linked:hover {
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--cv-title-color) 40%, transparent);
+  text-underline-offset: 0.12em;
+}
+
+.cv-row__venue,
+.cv-row__quote,
+.cv-row__separator {
+  font-family: var(--font-barlow), sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+.cv-row__venue {
+  color: var(--cv-meta-color);
+}
+
+.cv-row__separator {
+  color: var(--cv-title-color);
+}
+
+.cv-row__outcome {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--cv-meta-color);
+}
+
+.ti-arrow-up-right {
+  display: inline-block;
+  vertical-align: baseline;
+  margin-left: 0.15rem;
+  color: var(--cv-meta-color);
+}
+
+.cv__empty {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 20mm 15mm;
+  }
+
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  nav,
+  header,
+  .site-header,
+  .hamburger,
+  .floating-icons,
+  .print-cv-button,
+  .cv-close-button,
+  [data-print-hide],
+  button {
+    display: none !important;
+  }
+
+  .cv-page__scroll {
+    height: auto !important;
+    overflow: visible !important;
+    background-color: #fff !important;
+  }
+
+  .cv-print-header {
+    display: block;
+    margin-bottom: 2rem;
+  }
+
+  .cv-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .cv-row a,
+  .cv-row a:visited {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+
+  .ti-arrow-up-right {
+    display: none !important;
+  }
+
+  .cv-row {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .cv-section-header {
+    page-break-after: avoid;
+    break-after: avoid;
+    font-size: 14pt !important;
+    margin-top: 10pt !important;
+    padding-top: 6pt !important;
+  }
+
+  .cv-row__year {
+    font-size: 9pt !important;
+  }
+
+  .cv-row__title,
+  .cv-row__content {
+    font-size: 8.5pt !important;
+  }
+
+  .cv-row__venue {
+    font-size: 8pt !important;
+  }
+}

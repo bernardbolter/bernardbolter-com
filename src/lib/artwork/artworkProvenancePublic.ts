@@ -81,6 +81,47 @@ const PUBLIC_CONFIDENCE_LEVELS = new Set([
   'institutional-assertion',
 ])
 
+export type JsonLdProvenanceConfidenceLevel =
+  | 'fully-documented'
+  | 'partially-documented'
+  | 'origin-undocumented'
+  | 'undocumented'
+
+export function deriveJsonLdProvenanceConfidenceLevel(
+  artwork: Pick<Artwork, 'provenanceConfidenceLayer' | 'provenanceOriginKnown'>,
+): JsonLdProvenanceConfidenceLevel | undefined {
+  if (artwork.provenanceOriginKnown === false) return 'origin-undocumented'
+
+  const layers = asArray<ConfidenceRow>(artwork.provenanceConfidenceLayer)
+  if (layers.length === 0) return undefined
+
+  const publicEntries = layers.filter((row) => {
+    const level = row.confidenceLevel?.trim()
+    return (
+      row.claim?.trim() &&
+      (level === 'documented-fact' || level === 'credible-inference')
+    )
+  })
+
+  if (publicEntries.length === 0) return 'undocumented'
+
+  const levels = publicEntries.map((row) => row.confidenceLevel!.trim())
+  if (levels.every((level) => level === 'documented-fact')) return 'fully-documented'
+  return 'partially-documented'
+}
+
+export function getJsonLdProvenanceClaims(
+  artwork: Pick<Artwork, 'provenanceConfidenceLayer'>,
+): Array<{ claim: string; confidenceLevel: 'documented-fact' | 'credible-inference' }> | undefined {
+  const { prominent } = getPublicProvenanceClaims(artwork)
+  if (prominent.length === 0) return undefined
+
+  return prominent.map(({ claim, confidenceLevel }) => ({
+    claim,
+    confidenceLevel,
+  }))
+}
+
 export function getPublicProvenanceClaims(
   artwork: Pick<Artwork, 'provenanceConfidenceLayer'>,
 ): {

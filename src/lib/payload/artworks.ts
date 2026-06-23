@@ -1,8 +1,9 @@
-import { getPayload, type Where } from 'payload'
+import { getPayload, type Payload, type Where } from 'payload'
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 
 import type { Artwork } from '@/payload-types'
+import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const getPayloadInstance = async () => getPayload({ config })
 
@@ -13,7 +14,6 @@ const CATALOGUE_ARTWORK_SELECT = {
   title: true,
   status: true,
   seriesSlug: true,
-  series: true,
   sizeTier: true,
   orientation: true,
   primaryImage: true,
@@ -41,9 +41,12 @@ const CATALOGUE_ARTWORK_SELECT = {
   measurementType: true,
 } as const
 
-async function fetchCatalogueArtworks(seriesSlug?: string): Promise<Artwork[]> {
-  const payload = await getPayloadInstance()
+export type LayoutProviderArtworks = Artwork[]
 
+export async function fetchCatalogueArtworksWithPayload(
+  payload: Payload,
+  seriesSlug?: string,
+): Promise<LayoutProviderArtworks> {
   const where: Where = seriesSlug
     ? {
         and: [
@@ -64,6 +67,13 @@ async function fetchCatalogueArtworks(seriesSlug?: string): Promise<Artwork[]> {
   })
 
   return result.docs as Artwork[]
+}
+
+async function fetchCatalogueArtworks(seriesSlug?: string): Promise<Artwork[]> {
+  return withDbRetry(async () => {
+    const payload = await getPayloadInstance()
+    return fetchCatalogueArtworksWithPayload(payload, seriesSlug)
+  })
 }
 
 const getCachedCatalogueArtworks = unstable_cache(

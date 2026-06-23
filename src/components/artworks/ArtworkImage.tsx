@@ -64,6 +64,8 @@ export default function ArtworkImage({
   return (
     <div
       className="relative overflow-hidden"
+      draggable={false}
+      onDragStart={(event) => event.preventDefault()}
       style={{
         width: displayWidth,
         height: displayHeight,
@@ -74,6 +76,7 @@ export default function ArtworkImage({
         src={imageUrl}
         alt={artwork.title ?? 'Artwork'}
         fill
+        draggable={false}
         className="object-contain"
         placeholder="blur"
         blurDataURL={blurDataURL}

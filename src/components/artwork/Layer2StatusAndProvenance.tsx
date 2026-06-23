@@ -18,11 +18,13 @@ import {
 import {
   buildOriginalCopyClaimHref,
   buildOriginalTierDisplayCopies,
+  buildOwnershipTierSpecLine,
   buildPublicEditionTiers,
   getOriginalTier,
   isOriginalCopyPubliclyClaimed,
   originalCopyOwnerLabel,
 } from '@/lib/artwork/ownershipRegistryPublic'
+import type { EditionTierLabelMaps } from '@/lib/artwork/editionTierDisplay'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { labelForSameAsUri } from '@/lib/artwork/sameAsDomainLabel'
 import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
@@ -32,6 +34,7 @@ import type { Artist, Artwork } from '@/payload-types'
 type Props = {
   artwork: Artwork
   artist: Artist | null
+  editionTierLabelMaps?: EditionTierLabelMaps
 }
 
 function formatDateRange(start?: string, end?: string): string {
@@ -138,19 +141,29 @@ function RelatedWorksList({ artwork }: { artwork: Artwork }) {
   )
 }
 
-function OriginalTierBlock({ artwork }: { artwork: Artwork }) {
+function OriginalTierBlock({
+  artwork,
+  editionTierLabelMaps,
+}: {
+  artwork: Artwork
+  editionTierLabelMaps?: EditionTierLabelMaps
+}) {
   const originalTier = getOriginalTier(artwork)
   if (!originalTier) return null
 
   const editionSize = originalTier.editionSize ?? 0
   const apCount = originalTier.apCount ?? 0
   const copies = buildOriginalTierDisplayCopies(originalTier)
+  const specLine = buildOwnershipTierSpecLine(originalTier, editionTierLabelMaps)
 
   return (
     <>
       <p className="artwork-page__original-tier-headline">
         Original edition — {editionSize + apCount} copies
       </p>
+      {specLine ? (
+        <p className="artwork-page__original-tier-spec">{specLine}</p>
+      ) : null}
       <p className="artwork-page__original-tier-intro">
         An edition of {editionSize} plus {apCount} artist&apos;s proof{apCount > 1 ? 's' : ''}.
         Each numbered copy is a complete original.
@@ -212,13 +225,17 @@ function RecordMetaFooter({ artwork }: { artwork: Artwork }) {
   )
 }
 
-export default function Layer2StatusAndProvenance({ artwork, artist }: Props) {
+export default function Layer2StatusAndProvenance({
+  artwork,
+  artist,
+  editionTierLabelMaps,
+}: Props) {
   const exhibitions = getArtworkExhibitionEvents(artwork)
   const topSeries = resolveArtworkTopLevelSeries(artwork.series)
   const externalLinks = collectArtworkSameAsUris(artwork)
   const ownership = buildOwnershipDisplay(artwork, artist)
   const loans = getPublicLoanHistory(artwork)
-  const editionTiers = buildPublicEditionTiers(artwork)
+  const editionTiers = buildPublicEditionTiers(artwork, editionTierLabelMaps)
   const originalTier = getOriginalTier(artwork)
   const relatedWorks = getPublicRelatedWorks(artwork)
   const provenanceClaims = getPublicProvenanceClaims(artwork)
@@ -275,7 +292,7 @@ export default function Layer2StatusAndProvenance({ artwork, artist }: Props) {
             <p className="artwork-page__status-section-label">Status &amp; ownership</p>
 
             {originalTier ? (
-              <OriginalTierBlock artwork={artwork} />
+              <OriginalTierBlock artwork={artwork} editionTierLabelMaps={editionTierLabelMaps} />
             ) : (
               <>
                 {ownership.currentHolderLine ? (
@@ -357,7 +374,10 @@ export default function Layer2StatusAndProvenance({ artwork, artist }: Props) {
             {showDividerBeforeEdition ? (
               <hr className="artwork-page__status-divider artwork-page__status-divider--spaced" />
             ) : null}
-            <EditionTierRegistry artwork={artwork} />
+            <EditionTierRegistry
+              tiers={editionTiers}
+              untrackedEditionsNote={artwork.untrackedEditionsNote}
+            />
           </>
         ) : null}
 

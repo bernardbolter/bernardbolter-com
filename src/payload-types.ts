@@ -72,7 +72,6 @@ export interface Config {
     artists: Artist;
     'practice-knowledge': PracticeKnowledge;
     series: Series;
-    'series-edition-tiers': SeriesEditionTier;
     lines: Line;
     'studio-conversations': StudioConversation;
     'pattern-reports': PatternReport;
@@ -80,6 +79,7 @@ export interface Config {
     'field-notes': FieldNote;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
+    people: Person;
     events: Event;
     'image-capture-technologies': ImageCaptureTechnology;
     artworks: Artwork;
@@ -105,7 +105,6 @@ export interface Config {
     artists: ArtistsSelect<false> | ArtistsSelect<true>;
     'practice-knowledge': PracticeKnowledgeSelect<false> | PracticeKnowledgeSelect<true>;
     series: SeriesSelect<false> | SeriesSelect<true>;
-    'series-edition-tiers': SeriesEditionTiersSelect<false> | SeriesEditionTiersSelect<true>;
     lines: LinesSelect<false> | LinesSelect<true>;
     'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     'pattern-reports': PatternReportsSelect<false> | PatternReportsSelect<true>;
@@ -113,6 +112,7 @@ export interface Config {
     'field-notes': FieldNotesSelect<false> | FieldNotesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
+    people: PeopleSelect<false> | PeopleSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     'image-capture-technologies': ImageCaptureTechnologiesSelect<false> | ImageCaptureTechnologiesSelect<true>;
     artworks: ArtworksSelect<false> | ArtworksSelect<true>;
@@ -833,8 +833,14 @@ export interface Event {
    * How this work was presented in this event (optional).
    */
   artworkPresentationNote?: string | null;
-  organiser?: string | null;
-  curator?: string | null;
+  /**
+   * Primary organiser of this event. Create a People record first if one doesn't exist.
+   */
+  organiser?: (number | null) | Person;
+  /**
+   * Curator, if different from organiser. Optional.
+   */
+  curator?: (number | null) | Person;
   role?:
     | (
         | 'solo'
@@ -850,23 +856,18 @@ export interface Event {
       )
     | null;
   /**
-   * Other artists in this show. Name is required; URIs are optional.
+   * Other artists in this show. Link a People record for each co-exhibitor.
    */
   coExhibitors?:
     | {
-        name: string;
+        /**
+         * Create a People record for this co-exhibitor first if one doesn't exist.
+         */
+        person?: (number | null) | Person;
         /**
          * Optional — e.g. painter, sculptor, video artist.
          */
         role?: string | null;
-        ulanUri?: string | null;
-        wikidataUri?: string | null;
-        sameAs?:
-          | {
-              uri?: string | null;
-              id?: string | null;
-            }[]
-          | null;
         id?: string | null;
       }[]
     | null;
@@ -1528,7 +1529,7 @@ export interface Artwork {
    */
   videoFile?: (number | null) | Media;
   /**
-   * Primary embeddable URL (YouTube, Vimeo, …). Cleared when videoFile is set.
+   * YouTube/Vimeo URL. When a videoFile is set, only a YouTube link is kept here as an external “watch on YouTube” link — it is not embedded.
    */
   videoUrl?: string | null;
   videoCaption?: string | null;
@@ -1722,6 +1723,28 @@ export interface Artwork {
          * True only for the tier that IS the artwork itself — e.g. DCS/Megacities 3+1AP monumental. Renders in Status & Provenance, not in the Editions accordion.
          */
         isOriginalTier?: boolean | null;
+        /**
+         * Unit for width and height below — same as artwork physical dimensions.
+         */
+        dimensionUnit?: ('cm' | 'in') | null;
+        widthWhole?: number | null;
+        /**
+         * Optional fraction, e.g. 3/16
+         */
+        widthFraction?: string | null;
+        heightWhole?: number | null;
+        /**
+         * Optional fraction, e.g. 1/2
+         */
+        heightFraction?: string | null;
+        /**
+         * What the edition is printed on. Choose from the list or add a new option — custom entries are saved to Art/Official settings.
+         */
+        substrate?: string | null;
+        /**
+         * How the edition is produced. Choose from the list or add a new option — custom entries are saved to Art/Official settings.
+         */
+        printTechnique?: string | null;
         copies?:
           | {
               copyNumber: string;
@@ -2481,15 +2504,15 @@ export interface Artwork {
     editionTiers?:
       | {
           /**
-           * Shared tier definition for this entry. Name, size, substrate, and the shared Vendure Product are read through this relation when populated.
+           * Matches editionTiers[].tierKey on this artwork's series. Name, size, substrate, and shared Vendure Product are read from there.
            */
-          seriesEditionTier?: (number | null) | SeriesEditionTier;
+          seriesTierKey?: string | null;
           /**
-           * This artwork's Variant within the shared Vendure Product (see seriesEditionTier.vendureProductId). Stock is tracked per-variant.
+           * This artwork's Variant within the shared Vendure Product (see the series tier's vendureProductId). Stock is tracked per-variant.
            */
           vendureVariantId?: string | null;
           /**
-           * Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.
+           * Fallback when seriesTierKey is not set. Deprecated once the series tier key is populated.
            */
           tierName?: ('small-print' | 'collectors-print' | 'monumental' | 'oil-painting') | null;
           /**
@@ -2846,15 +2869,15 @@ export interface Artwork {
       editions?:
         | {
             /**
-             * Shared tier definition for this entry. Name, size, substrate, and the shared Vendure Product are read through this relation when populated.
+             * Matches editionTiers[].tierKey on this artwork's series. Name, size, substrate, and shared Vendure Product are read from there.
              */
-            seriesEditionTier?: (number | null) | SeriesEditionTier;
+            seriesTierKey?: string | null;
             /**
-             * This artwork's Variant within the shared Vendure Product (see seriesEditionTier.vendureProductId). Stock is tracked per-variant.
+             * This artwork's Variant within the shared Vendure Product (see the series tier's vendureProductId). Stock is tracked per-variant.
              */
             vendureVariantId?: string | null;
             /**
-             * Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.
+             * Fallback when seriesTierKey is not set. Deprecated once the series tier key is populated.
              */
             tier?: ('full_size' | 'a0' | 'a1') | null;
             dimensions?: string | null;
@@ -2990,6 +3013,59 @@ export interface Series {
   country?: string | null;
   coverImage?: (number | null) | Media;
   status: 'draft' | 'published';
+  /**
+   * Series-wide tier definitions (size, dimensions, substrate, print technique, shared Vendure Product). Artworks link by tierKey and hold per-copy ownership in their edition tier rows.
+   */
+  editionTiers?:
+    | {
+        /**
+         * Stable key artworks reference (e.g. monumental, collectors-print, a0). Unique within this series.
+         */
+        tierKey: string;
+        tierName: string;
+        /**
+         * 1 = top tier. Display order only.
+         */
+        tierOrder: number;
+        /**
+         * True only for the tier that IS the artwork itself (DCS/Megacities "Monumental," the 3+1AP tier) — not a reproduction of it.
+         */
+        isOriginalTier?: boolean | null;
+        /**
+         * Numbered copies only — excludes AP count.
+         */
+        editionSize: number;
+        apCount?: number | null;
+        /**
+         * Unit for width and height below — same as artwork physical dimensions.
+         */
+        dimensionUnit?: ('cm' | 'in') | null;
+        widthWhole?: number | null;
+        /**
+         * Optional fraction, e.g. 3/16
+         */
+        widthFraction?: string | null;
+        heightWhole?: number | null;
+        /**
+         * Optional fraction, e.g. 1/2
+         */
+        heightFraction?: string | null;
+        /**
+         * What the edition is printed on. Choose from the list or add a new option — custom entries are saved to Art/Official settings.
+         */
+        substrate?: string | null;
+        /**
+         * How the edition is produced. Choose from the list or add a new option — custom entries are saved to Art/Official settings.
+         */
+        printTechnique?: string | null;
+        /**
+         * The ONE Vendure Product shared by every artwork using this tier. Price is set in Vendure — not duplicated here.
+         */
+        vendureProductId?: string | null;
+        notes?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Series-level prose for informal or unnumbered print runs not tracked per artwork in ownershipRegistry.
    */
@@ -3463,40 +3539,74 @@ export interface DcsCapturePhoto {
   createdAt: string;
 }
 /**
- * Series-level tier spec and the one shared Vendure Product per tier. Artwork entries relate here for name/size/substrate; ownership stays on each artwork.
+ * Curators, organisers, gallerists, co-exhibitors, collaborators, and other people connected to events or artworks. One record per person — reuse across events rather than creating duplicates.
  *
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "series-edition-tiers".
+ * via the `definition` "people".
  */
-export interface SeriesEditionTier {
+export interface Person {
   id: number;
+  name: string;
   /**
-   * Top-level series or sub-series (e.g. "Mediums of Perception" within A Colorful History). Tiers apply only to artworks tagged with that exact series/sub-series.
+   * Full legal name if different from display name. Used for JSON-LD.
    */
-  series: number | Series;
-  tierName: string;
+  nameLegal?: string | null;
   /**
-   * 1 = top tier. Display order only.
+   * One person can hold multiple roles across different contexts. Select all that apply.
    */
-  tierOrder: number;
+  role?:
+    | (
+        | 'curator'
+        | 'gallerist'
+        | 'organiser'
+        | 'artist'
+        | 'collector'
+        | 'critic'
+        | 'collaborator'
+        | 'publisher'
+        | 'educator'
+        | 'institution'
+        | 'other'
+      )[]
+    | null;
   /**
-   * True only for the tier that IS the artwork itself (DCS/Megacities "Monumental," the 3+1AP tier) — not a reproduction of it. Renders in Status & Provenance, not the Editions accordion.
+   * If role includes "Other", describe it here. Also use for context-specific role clarification.
    */
-  isOriginalTier?: boolean | null;
+  roleNote?: string | null;
   /**
-   * Numbered copies only — excludes AP count.
+   * Primary website URL.
    */
-  editionSize: number;
-  apCount?: number | null;
-  widthCm?: number | null;
-  heightCm?: number | null;
-  substrate?: string | null;
-  printTechnique?: string | null;
+  website?: string | null;
   /**
-   * The ONE Vendure Product shared by every artwork using this tier. Price is set and changed directly in Vendure against this product — not duplicated here.
+   * Handle only, e.g. @juergenbluemlein — no full URL.
    */
-  vendureProductId?: string | null;
-  notes?: string | null;
+  instagram?: string | null;
+  /**
+   * e.g. https://www.wikidata.org/entity/Q12345
+   */
+  wikidataUri?: string | null;
+  /**
+   * Getty ULAN URI — primarily for artists.
+   */
+  ulanUri?: string | null;
+  /**
+   * Any additional authority identifiers not covered above.
+   */
+  externalIdentifiers?:
+    | {
+        type?: ('isni' | 'orcid' | 'viaf' | 'loc' | 'other') | null;
+        value?: string | null;
+        /**
+         * Full URI for this identifier.
+         */
+        uri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Internal context note — who this person is, how they connect to the practice. Never exposed publicly or in JSON-LD.
+   */
+  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3741,6 +3851,18 @@ export interface Session {
     | boolean
     | null;
   /**
+   * Event enrichment: linked artworks and installation photos pending commit.
+   */
+  stagedEventMedia?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Array of { field, value, confidence, source, timestamp }.
    */
   fieldUpdateTimeline?:
@@ -3838,10 +3960,6 @@ export interface PayloadLockedDocument {
         value: number | Series;
       } | null)
     | ({
-        relationTo: 'series-edition-tiers';
-        value: number | SeriesEditionTier;
-      } | null)
-    | ({
         relationTo: 'lines';
         value: number | Line;
       } | null)
@@ -3868,6 +3986,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'art-historical-references';
         value: number | ArtHistoricalReference;
+      } | null)
+    | ({
+        relationTo: 'people';
+        value: number | Person;
       } | null)
     | ({
         relationTo: 'events';
@@ -4190,28 +4312,28 @@ export interface SeriesSelect<T extends boolean = true> {
   country?: T;
   coverImage?: T;
   status?: T;
+  editionTiers?:
+    | T
+    | {
+        tierKey?: T;
+        tierName?: T;
+        tierOrder?: T;
+        isOriginalTier?: T;
+        editionSize?: T;
+        apCount?: T;
+        dimensionUnit?: T;
+        widthWhole?: T;
+        widthFraction?: T;
+        heightWhole?: T;
+        heightFraction?: T;
+        substrate?: T;
+        printTechnique?: T;
+        vendureProductId?: T;
+        notes?: T;
+        id?: T;
+      };
   seriesUntrackedEditionsNote?: T;
   jsonldOutput?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "series-edition-tiers_select".
- */
-export interface SeriesEditionTiersSelect<T extends boolean = true> {
-  series?: T;
-  tierName?: T;
-  tierOrder?: T;
-  isOriginalTier?: T;
-  editionSize?: T;
-  apCount?: T;
-  widthCm?: T;
-  heightCm?: T;
-  substrate?: T;
-  printTechnique?: T;
-  vendureProductId?: T;
-  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4403,6 +4525,31 @@ export interface ArtHistoricalReferencesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people_select".
+ */
+export interface PeopleSelect<T extends boolean = true> {
+  name?: T;
+  nameLegal?: T;
+  role?: T;
+  roleNote?: T;
+  website?: T;
+  instagram?: T;
+  wikidataUri?: T;
+  ulanUri?: T;
+  externalIdentifiers?:
+    | T
+    | {
+        type?: T;
+        value?: T;
+        uri?: T;
+        id?: T;
+      };
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "events_select".
  */
 export interface EventsSelect<T extends boolean = true> {
@@ -4460,16 +4607,8 @@ export interface EventsSelect<T extends boolean = true> {
   coExhibitors?:
     | T
     | {
-        name?: T;
+        person?: T;
         role?: T;
-        ulanUri?: T;
-        wikidataUri?: T;
-        sameAs?:
-          | T
-          | {
-              uri?: T;
-              id?: T;
-            };
         id?: T;
       };
   catalogue?: T;
@@ -4839,6 +4978,13 @@ export interface ArtworksSelect<T extends boolean = true> {
         editionSize?: T;
         apCount?: T;
         isOriginalTier?: T;
+        dimensionUnit?: T;
+        widthWhole?: T;
+        widthFraction?: T;
+        heightWhole?: T;
+        heightFraction?: T;
+        substrate?: T;
+        printTechnique?: T;
         copies?:
           | T
           | {
@@ -5121,7 +5267,7 @@ export interface ArtworksSelect<T extends boolean = true> {
         editionTiers?:
           | T
           | {
-              seriesEditionTier?: T;
+              seriesTierKey?: T;
               vendureVariantId?: T;
               tierName?: T;
               totalEditionSize?: T;
@@ -5369,7 +5515,7 @@ export interface ArtworksSelect<T extends boolean = true> {
               editions?:
                 | T
                 | {
-                    seriesEditionTier?: T;
+                    seriesTierKey?: T;
                     vendureVariantId?: T;
                     tier?: T;
                     dimensions?: T;
@@ -5552,6 +5698,7 @@ export interface SessionsSelect<T extends boolean = true> {
   secondDescription?: T;
   highlightedMediaSlot?: T;
   stagedMedia?: T;
+  stagedEventMedia?: T;
   fieldUpdateTimeline?: T;
   agentDraftDescriptionShort?: T;
   agentDraftDescriptionLong?: T;
@@ -5659,7 +5806,7 @@ export interface PrintSetConfig {
   createdAt?: string | null;
 }
 /**
- * Custom medium labels added from Quick Upload appear here and in artwork medium selects.
+ * Custom medium labels and edition vocabulary added from admin appear here and in related selects.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "art-official-settings".
@@ -5683,6 +5830,38 @@ export interface ArtOfficialSetting {
          * Optional Getty AAT URI for this medium — used in JSON-LD artMedium as DefinedTerm when set.
          */
         aatUri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Extra substrate options for series edition tiers and ownership registry. Also managed when you add a new substrate from a tier field.
+   */
+  customEditionSubstrates?:
+    | {
+        /**
+         * Stable slug stored on edition tier records
+         */
+        value: string;
+        /**
+         * Label shown in dropdowns and on the artwork page
+         */
+        label: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Extra print technique options for series edition tiers and ownership registry. Also managed when you add a new technique from a tier field.
+   */
+  customEditionPrintTechniques?:
+    | {
+        /**
+         * Stable slug stored on edition tier records
+         */
+        value: string;
+        /**
+         * Label shown in dropdowns and on the artwork page
+         */
+        label: string;
         id?: string | null;
       }[]
     | null;
@@ -5714,6 +5893,20 @@ export interface ArtOfficialSettingsSelect<T extends boolean = true> {
         value?: T;
         label?: T;
         aatUri?: T;
+        id?: T;
+      };
+  customEditionSubstrates?:
+    | T
+    | {
+        value?: T;
+        label?: T;
+        id?: T;
+      };
+  customEditionPrintTechniques?:
+    | T
+    | {
+        value?: T;
+        label?: T;
         id?: T;
       };
   updatedAt?: T;

@@ -12,7 +12,7 @@ export function wrapUpSummary(sessionType: string | null | undefined): string {
     case 'artist-statement':
       return 'When the text is ready, commit to update your Artist record with the staged biography or statement fields.'
     case 'event-enrichment':
-      return 'When the event narrative and links are staged, commit to update the Events record. enrichmentStatus and hasPage update automatically when the page is ready.'
+      return 'When the event narrative, tags, and keywords are staged, commit to update the Events record. Complete the tag wrap-up pass before committing.'
     default:
       return 'When you are done in chat, commit to save staged fields to the CMS.'
   }

@@ -1,3 +1,4 @@
+import { searchArtworksForStaff } from '@/lib/artOfficial/searchArtworksForStaff'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 
 export async function GET(request: Request) {
@@ -11,49 +12,13 @@ export async function GET(request: Request) {
   const limit = Math.min(Number(url.searchParams.get('limit') ?? 12), 50)
   const artworkId = Number(url.searchParams.get('artworkId'))
 
-  if (!q && !Number.isFinite(artworkId)) {
-    return Response.json({ docs: [] })
-  }
-
-  const result = await payload.find({
-    collection: 'artworks',
-    where: Number.isFinite(artworkId)
-      ? { id: { equals: artworkId } }
-      : {
-          or: [
-            { title: { contains: q } },
-            { slug: { contains: q } },
-          ],
-        },
-    sort: '-updatedAt',
-    limit,
-    depth: 1,
-    overrideAccess: false,
+  const docs = await searchArtworksForStaff({
+    payload,
     user,
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      yearCreated: true,
-      primaryImage: true,
-      series: true,
-    },
+    q,
+    artworkId: Number.isFinite(artworkId) ? artworkId : undefined,
+    limit,
   })
-
-  const docs = result.docs.map((a) => ({
-    id: a.id,
-    title: a.title,
-    slug: a.slug,
-    yearCreated: a.yearCreated,
-    seriesTitle:
-      typeof a.series === 'object' && a.series !== null
-        ? (a.series as { title?: string }).title ?? null
-        : null,
-    thumbnailUrl:
-      typeof a.primaryImage === 'object' && a.primaryImage !== null
-        ? ((a.primaryImage as { url?: string }).url ?? null)
-        : null,
-  }))
 
   return Response.json({ docs })
 }

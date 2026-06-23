@@ -1,17 +1,19 @@
-'use client'
+import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { getPerson } from '@/lib/payload/person'
+import HomePage from '@/components/home/HomePage'
+import { buildHomeJsonLd } from '@/utilities/buildHomeJsonLd'
 
-import Artworks from '@/components/artworks/Artworks'
-import HomeArtworksReset from '@/components/home/HomeArtworksReset'
-import Info from '@/components/info/Info'
-import { Nav } from '@/components/navs'
+export default async function Page() {
+  const artist = await getPerson()
+  const jsonLd = buildHomeJsonLd(artist, { baseUrl: getSiteBaseUrl() })
 
-export default function HomePage() {
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-surface-page text-dark">
-      <HomeArtworksReset />
-      <Info />
-      <Nav />
-      <Artworks />
-    </main>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <HomePage />
+    </>
   )
 }

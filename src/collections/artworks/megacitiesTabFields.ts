@@ -7,7 +7,7 @@ import {
   editionTierMegacitiesRowIdentityValidate,
   editionTierMegacitiesSizeValidate,
   editionTierMegacitiesTierValidate,
-  editionTierSeriesRelationField,
+  editionTierSeriesKeyField,
   editionTierVendureVariantIdField,
 } from '@/collections/artworks/editionTierOwnershipFields'
 
@@ -525,7 +525,7 @@ export const megacitiesTab: Tab = {
               validate: editionTierMegacitiesRowIdentityValidate,
               admin: { condition: (_, sibling) => Boolean(sibling?.printAvailable) },
               fields: [
-                editionTierSeriesRelationField,
+                editionTierSeriesKeyField,
                 editionTierVendureVariantIdField,
                 {
                   name: 'tier',
@@ -533,7 +533,7 @@ export const megacitiesTab: Tab = {
                   validate: editionTierMegacitiesTierValidate,
                   admin: {
                     description:
-                      'Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.',
+                      'Fallback when seriesTierKey is not set. Deprecated once the series tier key is populated.',
                   },
                   options: [
                     { label: 'Full size', value: 'full_size' },

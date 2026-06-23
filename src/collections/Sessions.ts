@@ -195,6 +195,14 @@ export const Sessions: CollectionConfig = {
       },
     },
     {
+      name: 'stagedEventMedia',
+      type: 'json',
+      admin: {
+        description:
+          'Event enrichment: linked artworks and installation photos pending commit.',
+      },
+    },
+    {
       name: 'fieldUpdateTimeline',
       type: 'json',
       admin: {

@@ -1,0 +1,49 @@
+# Bernard Bolter — Artist Archive
+
+> A comprehensive archive of Bernard Bolter's visual art practice spanning
+> thirty years — transfer paintings, satellite image collages, and digital
+> city works. Records are structured by the artist, outside market validation
+> systems, with machine-readable JSON-LD on every page using schema.org
+> VisualArtwork extended with artism: namespace terms covering provenance
+> confidence levels, edition ownership, and formal contribution assessments.
+
+Bernard Bolter (b. 1974, San Francisco) is a Berlin-based visual artist.
+The archive covers three primary series: Digital City Series (2007–),
+Megacities (2020–), and A Colorful History (2015–). Each artwork record
+includes structured provenance claims with explicit confidence levels
+(documented-fact, credible-inference), edition tier specifications,
+per-copy ownership status, and extended art-historical context fields
+produced through a dedicated cataloguing dialogue system (Art/Official).
+
+The archive's machine-readable layer uses the artism: schema namespace,
+defined at https://artism.org/schema/ — extending schema.org/VisualArtwork
+with fields for provenance confidence, edition structure, formal contribution
+assessment, and multi-copy original editions (works that exist as a small
+numbered original edition rather than a unique object or a print run).
+
+## Artworks
+
+- [Basel Switzerland](https://bernardbolter.com/basel-switzerland): Founding work of the Digital City Series, 2007. Fully catalogued.
+- [Deutsche Stadt](https://bernardbolter.com/deutsche-stadt): First completed Megacities work, 2020. Fully catalogued.
+- [All artworks — sitemap](https://bernardbolter.com/sitemap.xml): Full index of published artworks, series, and events.
+
+## Series
+
+- [Digital City Series](https://bernardbolter.com/series/digital-city-series): Skateboard-captured city composites, 2007–. Edition of 3+1AP originals plus print tiers per work.
+- [Megacities](https://bernardbolter.com/series/megacities): Satellite image composites of Germany's largest cities by population, 2020–. Same edition structure as DCS.
+- [A Colorful History](https://bernardbolter.com/series/a-colorful-history): Acrylic photo-transfer paintings, 2015–. Unique originals with giclée editions on selected works.
+
+## Artist
+
+- [Bio](https://bernardbolter.com/bio): Bernard Bolter — life, practice, education, exhibitions.
+- [CV](https://bernardbolter.com/cv): Full exhibition and education record.
+- [Statement](https://bernardbolter.com/statement): Artist's statement on practice and intent.
+- [Contact](https://bernardbolter.com/contact): Studio contact, Berlin.
+
+## Schema
+
+- [artism: namespace](https://artism.org/schema/): Vocabulary definitions for artism: terms used in JSON-LD across the archive.
+
+## Optional
+
+- [Corpus endpoint](https://bernardbolter.com/api/corpus): Machine-readable JSON export of the full archive for AI agent traversal. Use `?format=index` for a lightweight slug/title index, or `?series=[slug]` to filter by series.

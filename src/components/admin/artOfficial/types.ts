@@ -9,4 +9,11 @@ export type TimelineEntry = {
   timestamp?: string
 }
 
+export type EventAuthorityProposal = {
+  fieldName: string
+  value: string
+  sourceUrl?: string
+  confidence?: string
+}
+
 export type ArtOfficialSession = Session

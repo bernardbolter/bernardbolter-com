@@ -52,6 +52,46 @@ export function getPublicRelatedWorks(artwork: Artwork): PublicRelatedWork[] {
   return results
 }
 
+export type JsonLdRelatedWork = {
+  relationshipType: string
+  description: string
+  url?: string
+}
+
+export function buildJsonLdRelatedWorks(
+  artwork: Artwork,
+  baseUrl: string,
+): JsonLdRelatedWork[] | undefined {
+  const rows = artwork.relatedWorks
+  if (!Array.isArray(rows) || rows.length === 0) return undefined
+
+  const results: JsonLdRelatedWork[] = []
+
+  for (const row of rows) {
+    if (!row) continue
+
+    const relationshipType = row.relationshipType ?? 'other'
+    const note = row.relatedWorkNote?.trim()
+    const linked = readRelatedArtwork(row.relatedArtwork)
+    if (!note && !linked) continue
+
+    const item: JsonLdRelatedWork = {
+      relationshipType,
+      description:
+        note ??
+        `A related ${RELATED_WORK_TYPE_LABELS[relationshipType] ?? RELATED_WORK_TYPE_LABELS.other} exists — catalogued independently of this work.`,
+    }
+
+    if (linked) {
+      item.url = `${baseUrl.replace(/\/$/, '')}/${linked.slug}`
+    }
+
+    results.push(item)
+  }
+
+  return results.length > 0 ? results : undefined
+}
+
 export function formatRelatedWorkLine(item: PublicRelatedWork): string {
   const lead = `A related ${item.relationshipLabel} exists`
   if (item.href && item.linkLabel) {

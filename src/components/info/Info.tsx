@@ -24,7 +24,9 @@ const staticRoutes = ['/', '/bio', '/cv', '/statement', '/contact']
 /** Legacy info chrome layout (fixed tops / heights in px). */
 const NAME_TOP_PX = 0
 const NAME_HEIGHT_PX = 79
+const EVENT_NAME_HEIGHT_PX = 62
 const MENU_BUTTON_TOP_PX = 79
+const EVENT_MENU_BUTTON_TOP_PX = 62
 const MENU_BUTTON_HEIGHT_PX = 50
 const MENU_CONTENT_TOP_PX = 129
 
@@ -89,17 +91,24 @@ const Info = () => {
   )
   const pathname = usePathname()
   const navBackLink = useArtworkPageNavBackLink()
+  const isEventPage = pathname.startsWith('/events/')
   const isDynamicRoute = !staticRoutes.includes(pathname)
   const backLinkHref = navBackLink?.href ?? '/'
   const backLinkLabel = navBackLink?.label ?? 'All Artwork'
+
+  const nameHeightPx = isEventPage ? EVENT_NAME_HEIGHT_PX : NAME_HEIGHT_PX
+  const menuButtonTopPx = isEventPage ? EVENT_MENU_BUTTON_TOP_PX : MENU_BUTTON_TOP_PX
+  const menuContentTopPx =
+    isEventPage ? EVENT_MENU_BUTTON_TOP_PX + MENU_BUTTON_HEIGHT_PX : MENU_CONTENT_TOP_PX
 
   const closeInfo = () => setState((prev) => ({ ...prev, infoOpen: false }))
 
   return (
     <>
       <div
+        data-print-hide
         className="fixed left-0 z-[2000] box-border w-max min-w-[10rem] rounded-br-[0.375rem] bg-surface-nav p-[7px]"
-        style={{ top: NAME_TOP_PX, height: NAME_HEIGHT_PX }}
+        style={{ top: NAME_TOP_PX, height: nameHeightPx }}
       >
         <h1 className="font-title text-[1.8125rem] leading-none tracking-[0.03em] text-dark">
           {artist?.name ?? 'Loading...'}
@@ -113,6 +122,16 @@ const Info = () => {
               {`Lives and works ${artist?.workCity1 ?? ''}${artist?.workCity1 && artist?.workCity2 ? ' and ' : ''}${artist?.workCity2 ?? ''}`}
             </h2>
           </>
+        ) : isEventPage ? (
+          <Link
+            href="/cv"
+            className="flex cursor-pointer items-center gap-1.5 pt-1 opacity-70 transition-opacity duration-500 hover:opacity-100"
+          >
+            <div className="flex h-4 w-4 shrink-0 items-center fill-secondary">
+              <BackArrowSvg />
+            </div>
+            <p className="m-0 text-sm font-extrabold leading-none text-secondary">CV</p>
+          </Link>
         ) : (
           <Link
             href={backLinkHref}
@@ -127,9 +146,10 @@ const Info = () => {
       </div>
 
       <div
+        data-print-hide
         className="fixed left-0 z-[1999] h-[50px] bg-surface-nav transition-[width,border-radius] duration-300 ease-in-out"
         style={{
-          top: MENU_BUTTON_TOP_PX,
+          top: menuButtonTopPx,
           height: MENU_BUTTON_HEIGHT_PX,
           width: state.infoOpen ? 149 : 50,
           borderBottomRightRadius: state.infoOpen ? 0 : 6,
@@ -147,10 +167,11 @@ const Info = () => {
       </div>
 
       <div
+        data-print-hide
         className={`fixed left-0 z-[2000] w-[9.3125rem] rounded-br-[0.625rem] bg-surface-nav pb-space-4 pl-space-3 transition-transform duration-500 ${
           state.infoOpen ? 'translate-x-0' : 'pointer-events-none -translate-x-[10.5625rem]'
         }`}
-        style={{ top: MENU_CONTENT_TOP_PX }}
+        style={{ top: menuContentTopPx }}
       >
         <div className="flex flex-col items-start">
           {(artist?.websiteLinks ?? []).map((link) => (

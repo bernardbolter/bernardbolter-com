@@ -5,13 +5,18 @@ import Layer2StatusAndProvenance from '@/components/artwork/Layer2StatusAndProve
 import Layer3ArtistAccount from '@/components/artwork/Layer3ArtistAccount'
 import Layer4History from '@/components/artwork/Layer4History'
 import SeriesCard from '@/components/artwork/SeriesCard'
+import { getEditionTierLabelMaps } from '@/lib/artwork/getEditionTierLabelMaps'
 import {
   artworkHasClipEmbedding,
   getSimilarArtworksForPage,
 } from '@/lib/payload/similarArtworksPage'
-import { collectArtworkGalleryImages, artworkHasVideo } from '@/lib/artwork/artworkGalleryImages'
+import {
+  isVideoPrimaryArtwork,
+} from '@/lib/artwork/artworkGalleryImages'
 import { artworkShowsProseColumn } from '@/lib/artwork/layer3Prose'
 import type { Artist, Artwork } from '@/payload-types'
+import config from '@payload-config'
+import { getPayload } from 'payload'
 
 import './artwork-page.css'
 
@@ -20,19 +25,16 @@ export type ArtworkPageProps = {
   artist: Artist | null
 }
 
-function isVideoPrimaryArtwork(artwork: Artwork): boolean {
-  const hasGalleryImages = collectArtworkGalleryImages(artwork).length > 0
-  return artworkHasVideo(artwork) && !hasGalleryImages
-}
-
 export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps) {
-  const [similarWorksResult, hasClipEmbedding] = await Promise.all([
+  const payload = await getPayload({ config })
+  const [similarWorksResult, hasClipEmbedding, editionTierLabelMaps] = await Promise.all([
     typeof artwork.id === 'number'
       ? getSimilarArtworksForPage(artwork.id, 3)
       : Promise.resolve([]),
     typeof artwork.id === 'number'
       ? artworkHasClipEmbedding(artwork.id)
       : Promise.resolve(false),
+    getEditionTierLabelMaps(payload),
   ])
   const similarWorks = similarWorksResult ?? []
 
@@ -55,7 +57,11 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
         <div className="artwork-image__info--details-container artwork-page__columns artwork-page__columns--data">
           <div className="artwork-page__column artwork-page__column--record">
             <Layer1ObjectRecord artwork={artwork} />
-            <Layer2StatusAndProvenance artwork={artwork} artist={artist} />
+            <Layer2StatusAndProvenance
+              artwork={artwork}
+              artist={artist}
+              editionTierLabelMaps={editionTierLabelMaps}
+            />
             <Layer4History artwork={artwork} />
           </div>
 

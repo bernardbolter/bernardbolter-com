@@ -78,17 +78,56 @@ export function artworkHasVideo(artwork: Artwork): boolean {
 }
 
 export function getPrimaryVideoSource(artwork: Artwork): string | null {
-  if (artwork.videoFile && typeof artwork.videoFile === 'object' && artwork.videoFile.url) {
-    return artwork.videoFile.url
+  if (artwork.videoFile && typeof artwork.videoFile === 'object') {
+    return mediaPublicUrl(artwork.videoFile as Media)
   }
   if (artwork.videoUrl?.trim()) return artwork.videoUrl.trim()
   const clips = artwork.videos ?? []
   const preferred = clips.find((clip) => clip.videoRole === 'primary') ?? clips[0]
   if (!preferred) return null
-  if (preferred.videoFile && typeof preferred.videoFile === 'object' && preferred.videoFile.url) {
-    return preferred.videoFile.url
+  if (preferred.videoFile && typeof preferred.videoFile === 'object') {
+    return mediaPublicUrl(preferred.videoFile as Media)
   }
   return preferred.videoUrl?.trim() ?? null
+}
+
+const YOUTUBE_URL_PATTERN = /(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)/
+
+export function isYoutubeVideoUrl(url: string): boolean {
+  return YOUTUBE_URL_PATTERN.test(url)
+}
+
+/** External YouTube link for access when the primary player is self-hosted (R2). */
+export function getYoutubeAccessUrl(artwork: Artwork): string | null {
+  const candidates: Array<string | null | undefined> = [artwork.videoUrl, artwork.documentationVideoUrl]
+  for (const clip of artwork.videos ?? []) {
+    candidates.push(clip.videoUrl)
+  }
+  for (const url of candidates) {
+    const trimmed = url?.trim()
+    if (trimmed && isYoutubeVideoUrl(trimmed)) return trimmed
+  }
+  return null
+}
+
+/** True when Layer 0 should render the video player instead of the image slider. */
+export function isVideoPrimaryArtwork(artwork: Artwork): boolean {
+  if (!artworkHasVideo(artwork)) return false
+
+  const hasExtraGallery =
+    (artwork.alternateViewImages?.length ?? 0) > 0 || (artwork.detailImages?.length ?? 0) > 0
+  if (hasExtraGallery) return false
+
+  const hasUploadedPrimaryVideo =
+    artwork.videoFile &&
+    typeof artwork.videoFile === 'object' &&
+    Boolean(mediaPublicUrl(artwork.videoFile as Media))
+
+  if (hasUploadedPrimaryVideo) return true
+
+  if (artwork.primaryImage) return false
+
+  return collectArtworkGalleryImages(artwork).length === 0
 }
 
 export function getDocumentationVideoSource(artwork: Artwork): string | null {

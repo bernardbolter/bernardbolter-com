@@ -47,28 +47,9 @@ function sanitizeEditionTierCopies(rows: unknown): JsonRow[] {
   }))
 }
 
-function sanitizeSeriesEditionTier(value: unknown): unknown {
-  if (value == null) return value
-  if (typeof value !== 'object') return value
-
-  const tier = value as JsonRow
-  return {
-    id: tier.id,
-    tierName: tier.tierName,
-    tierOrder: tier.tierOrder,
-    isOriginalTier: tier.isOriginalTier,
-    editionSize: tier.editionSize,
-    apCount: tier.apCount,
-    widthCm: tier.widthCm,
-    heightCm: tier.heightCm,
-    substrate: tier.substrate,
-    printTechnique: tier.printTechnique,
-  }
-}
-
 function sanitizeDcsEditionTiers(rows: unknown): JsonRow[] {
   return asRows(rows).map((tier) => ({
-    seriesEditionTier: sanitizeSeriesEditionTier(tier.seriesEditionTier),
+    seriesTierKey: tier.seriesTierKey,
     tierName: tier.tierName,
     totalEditionSize: tier.totalEditionSize,
     printSubstrate: tier.printSubstrate,
@@ -80,7 +61,7 @@ function sanitizeDcsEditionTiers(rows: unknown): JsonRow[] {
 
 function sanitizeMegacitiesEditions(rows: unknown): JsonRow[] {
   return asRows(rows).map((tier) => ({
-    seriesEditionTier: sanitizeSeriesEditionTier(tier.seriesEditionTier),
+    seriesTierKey: tier.seriesTierKey,
     tier: tier.tier,
     dimensions: tier.dimensions,
     editionSize: tier.editionSize,
@@ -99,6 +80,13 @@ function sanitizeOwnershipRegistry(rows: unknown): JsonRow[] {
     editionSize: tier.editionSize,
     apCount: tier.apCount,
     isOriginalTier: tier.isOriginalTier,
+    dimensionUnit: tier.dimensionUnit,
+    widthWhole: tier.widthWhole,
+    widthFraction: tier.widthFraction,
+    heightWhole: tier.heightWhole,
+    heightFraction: tier.heightFraction,
+    substrate: tier.substrate,
+    printTechnique: tier.printTechnique,
     copies: sanitizeEditionTierCopies(tier.copies),
   }))
 }

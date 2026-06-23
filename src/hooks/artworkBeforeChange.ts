@@ -9,6 +9,7 @@ import {
   assignArtworkCatalogueIdentity,
   syncArtworkMediumAatUri,
 } from '@/hooks/assignArtworkCatalogueIdentity'
+import { isYoutubeVideoUrl } from '@/lib/artwork/artworkGalleryImages'
 
 function hasPhysicalMeasurement(data: Record<string, unknown>): boolean {
   const mt = data.measurementType
@@ -146,9 +147,10 @@ export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
     d.durationSeconds = null
   }
 
-  // §1.5: uploaded video wins over external URL
+  // §1.5: uploaded video wins over external URL, but keep YouTube as an access link
   if (d.videoFile) {
-    d.videoUrl = null
+    const videoUrl = typeof d.videoUrl === 'string' ? d.videoUrl.trim() : ''
+    d.videoUrl = videoUrl && isYoutubeVideoUrl(videoUrl) ? videoUrl : null
   }
   if (d.documentationVideoFile) {
     d.documentationVideoUrl = null

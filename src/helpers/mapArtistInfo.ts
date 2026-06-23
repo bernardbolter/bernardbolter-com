@@ -1,6 +1,8 @@
 import type { Artist } from '@/payload-types'
 import type { ArtistInfoData, ArtistInfoLink, ArtistSocialLinks } from '@/types/frontend'
 
+import { getBioCurrentCities } from '@/lib/bio/bioHeader'
+
 const INFO_PANEL_DEFAULTS: ArtistInfoData = {
   name: 'Bernard Bolter',
   birthCity: 'San Francisco',
@@ -43,6 +45,18 @@ function mapSocialLinks(artist: Artist): ArtistSocialLinks {
   return social
 }
 
+function resolveWorkCities(artist: Artist): { workCity1: string; workCity2?: string } {
+  const fromLocations = getBioCurrentCities(artist)
+  const explicit = [artist.workCity1?.trim(), artist.workCity2?.trim()].filter(Boolean) as string[]
+  const merged = fromLocations.length > 0 ? fromLocations : explicit
+  const unique = merged.filter((city, index) => merged.indexOf(city) === index)
+
+  return {
+    workCity1: unique[0] || INFO_PANEL_DEFAULTS.workCity1,
+    workCity2: unique[1],
+  }
+}
+
 /** Maps Payload artist record to Info panel fields (with legacy fallbacks). */
 export function mapArtistToInfoData(artist: Artist | null | undefined): ArtistInfoData {
   if (!artist) {
@@ -53,16 +67,14 @@ export function mapArtistToInfoData(artist: Artist | null | undefined): ArtistIn
     }
   }
 
-  const currentCities = (artist.locations ?? [])
-    .filter((row) => row?.city && row.current !== false)
-    .map((row) => row.city.trim())
+  const workCities = resolveWorkCities(artist)
 
   return {
     name: artist.name?.trim() || INFO_PANEL_DEFAULTS.name,
     birthCity: artist.birthCity?.trim() || INFO_PANEL_DEFAULTS.birthCity,
     birthYear: artist.birthYear ?? INFO_PANEL_DEFAULTS.birthYear,
-    workCity1: artist.workCity1?.trim() || currentCities[0] || INFO_PANEL_DEFAULTS.workCity1,
-    workCity2: artist.workCity2?.trim() || currentCities[1] || INFO_PANEL_DEFAULTS.workCity2,
+    workCity1: workCities.workCity1,
+    workCity2: workCities.workCity2,
     websiteLinks: normalizeWebsiteLinks(artist),
     socialLinks: mapSocialLinks(artist),
   }

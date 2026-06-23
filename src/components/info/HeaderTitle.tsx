@@ -6,6 +6,7 @@ interface HeaderTitleProps {
 export default function HeaderTitle({ title, large = false }: HeaderTitleProps) {
   return (
     <h1
+      data-print-hide
       className={
         large
           ? 'fixed right-[-0.4375rem] top-[-0.9375rem] z-chrome font-heading text-[3.75rem] font-black uppercase leading-none opacity-60 animate-[colorChange_6s_ease-in-out_infinite] s:right-[-0.625rem] s:top-[-1.0625rem] s:text-[5rem] m:right-[-0.8125rem] m:top-[-1.8125rem] m:text-[6.875rem] l:right-[-1.375rem] l:top-[-2.5rem] l:text-[9.375rem]'

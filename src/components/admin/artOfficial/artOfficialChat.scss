@@ -1281,3 +1281,244 @@
     }
   }
 }
+
+.art-official-event-media {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: var(--border-radius-m);
+  background: var(--theme-elevation-50);
+
+  &__title {
+    margin: 0 0 6px;
+    font-size: 15px;
+  }
+
+  &__lead,
+  &__hint,
+  &__empty,
+  &__loading,
+  &__status {
+    margin: 0 0 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    opacity: 0.85;
+
+    &--saved {
+      color: var(--theme-success-500);
+      opacity: 1;
+    }
+  }
+
+  &__error {
+    margin: 0 0 12px;
+    font-size: 13px;
+    color: var(--theme-error-500);
+  }
+
+  &__section {
+    margin-top: 18px;
+  }
+
+  &__section-title {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__photos {
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    display: grid;
+    gap: 14px;
+  }
+
+  &__photo {
+    padding: 12px;
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: var(--border-radius-s);
+    background: var(--theme-bg);
+  }
+
+  &__photo-top {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
+    align-items: start;
+  }
+
+  &__photo-fields {
+    display: grid;
+    gap: 10px;
+  }
+
+  &__field {
+    display: grid;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  &__input,
+  &__textarea {
+    width: 100%;
+    font: inherit;
+    padding: 8px 10px;
+    border: 1px solid var(--theme-elevation-200);
+    border-radius: var(--border-radius-s);
+    background: var(--theme-input-bg);
+  }
+
+  &__shown {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--theme-elevation-100);
+  }
+
+  &__shown-label {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__remove,
+  &__add-btn {
+    border: 1px solid var(--theme-elevation-200);
+    background: var(--theme-elevation-100);
+    border-radius: var(--border-radius-s);
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  &__upload {
+    margin-top: 8px;
+  }
+}
+
+.art-official-artwork-picker {
+  position: relative;
+
+  &__input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--theme-elevation-200);
+    border-radius: var(--border-radius-s);
+    font: inherit;
+  }
+
+  &__results {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 4px 0;
+    list-style: none;
+    background: var(--theme-bg);
+    border: 1px solid var(--theme-elevation-200);
+    border-radius: var(--border-radius-s);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    max-height: 280px;
+    overflow: auto;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+
+    &:hover {
+      background: var(--theme-elevation-100);
+    }
+  }
+
+  &__selected {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--theme-elevation-100);
+    border-radius: var(--border-radius-s);
+    font-size: 13px;
+  }
+
+  &__thumb {
+    width: 28px;
+    height: 28px;
+    object-fit: cover;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__clear {
+    border: none;
+    background: none;
+    cursor: pointer;
+    opacity: 0.55;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 4px;
+  }
+
+  &__hint {
+    padding: 8px 10px;
+    font-size: 12px;
+    opacity: 0.7;
+
+    &--error {
+      color: var(--theme-error-500);
+      opacity: 1;
+    }
+  }
+}
+
+.art-official-artwork-multi {
+  &__list {
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
+    display: grid;
+    gap: 8px;
+  }
+
+  &__chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--theme-elevation-100);
+    border-radius: var(--border-radius-s);
+    font-size: 13px;
+  }
+
+  &__chip-label {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.art-official-artwork-shown {
+  display: grid;
+  gap: 6px;
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+}

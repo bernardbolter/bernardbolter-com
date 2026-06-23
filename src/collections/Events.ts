@@ -206,8 +206,23 @@ export const Events: CollectionConfig = {
         {
           label: 'Context',
           fields: [
-            { name: 'organiser', type: 'text' },
-            { name: 'curator', type: 'text' },
+            {
+              name: 'organiser',
+              type: 'relationship',
+              relationTo: 'people',
+              admin: {
+                description:
+                  "Primary organiser of this event. Create a People record first if one doesn't exist.",
+              },
+            },
+            {
+              name: 'curator',
+              type: 'relationship',
+              relationTo: 'people',
+              admin: {
+                description: 'Curator, if different from organiser. Optional.',
+              },
+            },
             {
               name: 'role',
               type: 'select',
@@ -228,25 +243,25 @@ export const Events: CollectionConfig = {
               name: 'coExhibitors',
               type: 'array',
               admin: {
-                description:
-                  'Other artists in this show. Name is required; URIs are optional.',
+                description: 'Other artists in this show. Link a People record for each co-exhibitor.',
                 condition: (_, sibling) =>
                   sibling?.eventType === 'group-exhibition' ||
                   sibling?.eventType === 'art-fair',
               },
               fields: [
-                { name: 'name', type: 'text', required: true },
+                {
+                  name: 'person',
+                  type: 'relationship',
+                  relationTo: 'people',
+                  admin: {
+                    description:
+                      "Create a People record for this co-exhibitor first if one doesn't exist.",
+                  },
+                },
                 {
                   name: 'role',
                   type: 'text',
                   admin: { description: 'Optional — e.g. painter, sculptor, video artist.' },
-                },
-                { name: 'ulanUri', type: 'text' },
-                { name: 'wikidataUri', type: 'text' },
-                {
-                  name: 'sameAs',
-                  type: 'array',
-                  fields: [{ name: 'uri', type: 'text' }],
                 },
               ],
             },

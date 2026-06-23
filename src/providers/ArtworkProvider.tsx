@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, createContext, useContext, type ReactNode } from 'react'
 
 import { artworkHasDisplayImage, resolveSeriesSlug } from '@/helpers/artworkCatalog'
-import { generateTimeline } from '@/helpers/timeline'
+import { generateTimeline, getArtworkSortKey } from '@/helpers/timeline'
 import {
   DEFAULT_ARTIST_INFO,
   createInitialArtworksState,
@@ -117,17 +117,9 @@ export const ArtworksProvider = ({ children, artworks, artist, filterSeries }: A
 
     const sorted = [...result]
     if (state.sorting === 'latest') {
-      sorted.sort((a, b) => {
-        const aKey = typeof a.sortIndex === 'number' ? a.sortIndex : Number.NEGATIVE_INFINITY
-        const bKey = typeof b.sortIndex === 'number' ? b.sortIndex : Number.NEGATIVE_INFINITY
-        return bKey - aKey
-      })
+      sorted.sort((a, b) => getArtworkSortKey(b) - getArtworkSortKey(a))
     } else if (state.sorting === 'oldest') {
-      sorted.sort((a, b) => {
-        const aKey = typeof a.sortIndex === 'number' ? a.sortIndex : Number.POSITIVE_INFINITY
-        const bKey = typeof b.sortIndex === 'number' ? b.sortIndex : Number.POSITIVE_INFINITY
-        return aKey - bKey
-      })
+      sorted.sort((a, b) => getArtworkSortKey(a) - getArtworkSortKey(b))
     } else if (state.sorting === 'random') {
       sorted.sort(() => Math.random() - 0.5)
     }

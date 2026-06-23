@@ -1,36 +1,36 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import ArtworkSize, { getArtworkSizeInput } from '@/components/artworks/ArtworkSize'
 import YoutubePlainSvg from '@/components/icons/YoutubePlainSvg'
 import useWindowSize from '@/hooks/useWindowSize'
-import { getPrimaryVideoSource } from '@/lib/artwork/artworkGalleryImages'
+import {
+  getPrimaryVideoSource,
+  getYoutubeAccessUrl,
+  isYoutubeVideoUrl,
+} from '@/lib/artwork/artworkGalleryImages'
 import { formatArtworkYearRange, resolveWallLabelMedium } from '@/lib/artwork/artworkLabels'
+import { mediaPublicUrl } from '@/lib/media/publicUrl'
 import type { Artwork, Media } from '@/payload-types'
 
 type Props = {
   artwork: Artwork
 }
 
-type WindowWithKlaro = Window & {
-  klaro?: { show?: () => void; getManager?: () => { show?: () => void; getConsent?: (name: string) => boolean } }
+function readPosterMedia(artwork: Artwork): Media | null {
+  const candidate = artwork.posterImage ?? artwork.primaryImage
+  if (candidate && typeof candidate === 'object') return candidate as Media
+  return null
 }
 
-function getKlaroConsent(): Record<string, boolean> {
-  try {
-    const cookie = document.cookie.split('; ').find((row) => row.startsWith('klaro='))
-    if (!cookie) return {}
-    return JSON.parse(decodeURIComponent(cookie.split('=')[1] ?? '{}')) as Record<string, boolean>
-  } catch {
-    return {}
-  }
+function readPosterUrl(artwork: Artwork): string | null {
+  return mediaPublicUrl(readPosterMedia(artwork))
 }
 
 function readPosterDimensions(artwork: Artwork): { width: number; height: number } {
-  const poster = artwork.posterImage
-  if (poster && typeof poster === 'object') {
-    const media = poster as Media
+  const media = readPosterMedia(artwork)
+  if (media) {
     return {
       width: media.width && media.width > 0 ? media.width : 1600,
       height: media.height && media.height > 0 ? media.height : 900,
@@ -63,6 +63,8 @@ function calculateVideoDisplayDimensions(
 export default function Layer0Video({ artwork }: Props) {
   const size = useWindowSize()
   const videoSource = getPrimaryVideoSource(artwork)
+  const youtubeAccessUrl = getYoutubeAccessUrl(artwork)
+  const posterUrl = readPosterUrl(artwork)
   const { width: intrinsicWidth, height: intrinsicHeight } = readPosterDimensions(artwork)
   const containerWidth = (size.width || 1200) * 0.9
   const containerHeight = (size.height || 900) * 0.9
@@ -79,85 +81,36 @@ export default function Layer0Video({ artwork }: Props) {
   )
 
   const topMargin = size.height ? (size.height - displayHeight) / 2 : 100
-  const [consentGiven, setConsentGiven] = useState(false)
-  const [klaroReady, setKlaroReady] = useState(false)
+  const isSelfHosted = Boolean(videoSource && !isYoutubeVideoUrl(videoSource))
 
-  useEffect(() => {
-    const check = () => {
-      const consents = getKlaroConsent()
-      if (consents.youtube === true) {
-        setConsentGiven(true)
-        return
-      }
-      const win = window as WindowWithKlaro
-      if (win.klaro?.getManager) {
-        try {
-          setConsentGiven(Boolean(win.klaro.getManager().getConsent?.('youtube')))
-        } catch {
-          /* ignore */
-        }
-      }
-      setKlaroReady(Boolean(win.klaro?.show || win.klaro?.getManager))
-    }
-
-    check()
-    document.addEventListener('klaro', check)
-    const interval = window.setInterval(check, 300)
-    return () => {
-      document.removeEventListener('klaro', check)
-      window.clearInterval(interval)
-    }
-  }, [])
-
-  const youtubeId = videoSource?.match(
-    /(?:youtube\.com\/(?:embed\/|watch\?v=)|youtu\.be\/)([^?&"'>]+)/,
-  )?.[1]
-
-  if (!videoSource || !youtubeId) return null
+  if (!videoSource && !youtubeAccessUrl) return null
 
   const sizeInput = getArtworkSizeInput(artwork)
 
   return (
-    <>
-      <div className="artwork-video__youtube-link">
-        <p>visit the channel</p>
-        <div className="artwork-video__youtube-svg">
-          <YoutubePlainSvg />
-        </div>
-      </div>
-
-      <div className="artwork-video__container" style={{ width: size.width, marginTop: topMargin }}>
+    <div className="artwork-video__container" style={{ width: size.width, marginTop: topMargin }}>
         <div
           className="artwork-video__player-wrapper"
           style={{ width: displayWidth, height: displayHeight, background: '#000', borderRadius: 12 }}
         >
-          {consentGiven ? (
-            <iframe
-              data-name="youtube"
-              src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=0&rel=0`}
+          {isSelfHosted && videoSource ? (
+            <video
+              controls
+              playsInline
+              preload="metadata"
+              poster={posterUrl ?? undefined}
               title={artwork.title ?? 'Artwork video'}
-              allow="accelerometer; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }}
+            >
+              <source src={videoSource} />
+            </video>
+          ) : posterUrl ? (
+            <img
+              src={posterUrl}
+              alt={artwork.title ?? 'Artwork video poster'}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }}
             />
-          ) : (
-            <div className="artwork-video__consent-block">
-              <div className="artwork-video__youtube--play">
-                <YoutubePlainSvg />
-              </div>
-              <p>Enable videos in privacy settings to watch</p>
-              <button
-                type="button"
-                disabled={!klaroReady}
-                onClick={() => {
-                  const win = window as WindowWithKlaro
-                  win.klaro?.show?.() ?? win.klaro?.getManager?.()?.show?.()
-                }}
-              >
-                {klaroReady ? 'Manage Privacy Settings' : 'Loading...'}
-              </button>
-            </div>
-          )}
+          ) : null}
         </div>
 
         <div className="artwork-video__info-container">
@@ -171,8 +124,20 @@ export default function Layer0Video({ artwork }: Props) {
               units={sizeInput.units}
             />
           ) : null}
+          {youtubeAccessUrl ? (
+            <a
+              className="artwork-video__youtube-access"
+              href={youtubeAccessUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="artwork-video__youtube-access-icon" aria-hidden="true">
+                <YoutubePlainSvg />
+              </span>
+              <span className="artwork-video__youtube-access-label">Watch on YouTube</span>
+            </a>
+          ) : null}
         </div>
-      </div>
-    </>
+    </div>
   )
 }

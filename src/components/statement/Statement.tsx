@@ -1,7 +1,4 @@
-import Link from 'next/link'
-
-import { CloseCircleSvg } from '@/components/icons'
-import HeaderTitle from '@/components/info/HeaderTitle'
+import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import type { StatementPhoto } from '@/helpers/statementPhotos'
 import type { StatementRelatedWork } from '@/helpers/statementRelatedWorks'
 
@@ -39,30 +36,28 @@ export default function Statement({
   const hasClosingBody = Boolean(statementClosingBody)
 
   return (
-    <div className="bio-container statement-page">
-      <HeaderTitle title="STATEMENT" large />
+    <DocumentScrollShell
+      title="STATEMENT"
+      titleLarge
+      closeHref="/"
+      scrollClassName="bio-container statement-page"
+      closeClassName="bio__close-container"
+      contentClassName="bio__content-container"
+    >
+      {hasOpening ?
+        <StatementOpening content={statementOpening} />
+      : <div className="bio__main-content">
+          <p>Statement content coming soon.</p>
+        </div>
+      }
 
-      <Link href="/" className="bio__close-container">
-        <CloseCircleSvg />
-        <p>close</p>
-      </Link>
-
-      <div className="bio__content-container">
-        {hasOpening ?
-          <StatementOpening content={statementOpening} />
-        : <div className="bio__main-content">
-            <p>Statement content coming soon.</p>
-          </div>
-        }
-
-        <StatementPullQuote line={statementPullQuote} />
-        <StatementSceneImages photos={sceneImagesFirst} />
-        <StatementMiddleBody content={statementMiddleBody} />
-        <StatementSceneImages photos={sceneImagesSecond} />
-        {hasClosingBody ? <StatementClosingBody content={statementClosingBody} /> : null}
-        <StatementRelatedWorks items={relatedWorks} />
-        <StatementClosing line={statementClosingLine?.trim() ?? ''} />
-      </div>
-    </div>
+      <StatementPullQuote line={statementPullQuote} />
+      <StatementSceneImages photos={sceneImagesFirst} />
+      <StatementMiddleBody content={statementMiddleBody} />
+      <StatementSceneImages photos={sceneImagesSecond} />
+      {hasClosingBody ? <StatementClosingBody content={statementClosingBody} /> : null}
+      <StatementRelatedWorks items={relatedWorks} />
+      <StatementClosing line={statementClosingLine?.trim() ?? ''} />
+    </DocumentScrollShell>
   )
 }

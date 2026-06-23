@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import Bio from '@/components/bio/Bio'
-import Info from '@/components/info/Info'
 import { normalizeBioPhotos } from '@/helpers/bioPhotos'
 import { formatBioBirthLine, formatBioLivesAndWorksLine } from '@/lib/bio/bioHeader'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
@@ -32,7 +31,6 @@ export default async function BioPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       ) : null}
-      <Info />
       {artist ? (
         <Bio
           name={artist.name}

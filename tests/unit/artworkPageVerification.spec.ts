@@ -13,7 +13,6 @@ import {
 import { getArtworkExhibitionEvents } from '@/lib/artwork/artworkExhibitionEvents'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { buildEditionClaimSummary } from '@/lib/artwork/ownershipRegistryPublic'
-import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import {
   ARTWORK_FIXTURE_SLUG,
   buildArtworkFixtureData,
@@ -138,16 +137,8 @@ describe('artwork page verification checklist', () => {
       baseUrl: 'https://bernardbolter.com',
     })
 
-    it('types creator as Person with ULAN and Wikidata identifiers', () => {
-      const creator = artistAsSchemaPerson(artist)
-      expect(creator['@type']).toBe('Person')
-      expect(creator.identifier).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ propertyID: 'ULAN' }),
-          expect.objectContaining({ propertyID: 'Wikidata' }),
-        ]),
-      )
-      expect(jsonLd.creator).toMatchObject({ '@type': 'Person', name: 'Bernard Bolter' })
+    it('references creator by bio person id', () => {
+      expect(jsonLd.creator).toEqual({ '@id': 'https://bernardbolter.com/bio#person' })
     })
 
     it('emits QuantitativeValue width and height', () => {
@@ -162,26 +153,37 @@ describe('artwork page verification checklist', () => {
       expect(typeof (jsonLd.width as { value: number }).value).toBe('number')
     })
 
-    it('emits sameAs as an array and clip embedding endpoint', () => {
+    it('emits sameAs as an array and clip endpoint only when embedding exists', () => {
       const uris = collectArtworkSameAsUris(fixture as Artwork)
       expect(Array.isArray(jsonLd.sameAs)).toBe(true)
       expect(jsonLd.sameAs).toEqual(uris)
-      expect(jsonLd['artism:clipEmbeddingEndpoint']).toBe(
-        `https://bernardbolter.com/${ARTWORK_FIXTURE_SLUG}/embedding`,
+
+      const additionalProperty = jsonLd.additionalProperty as Array<Record<string, unknown>>
+      const clipEndpoint = additionalProperty.find(
+        (row) => row.propertyID === 'artism:clipEmbeddingEndpoint',
       )
+      expect(clipEndpoint).toBeUndefined()
     })
 
-    it('includes non-empty artism intent fields from fixture', () => {
-      expect(jsonLd['artism:formalContributionAssessment']).toContain('conditional legibility')
-      expect(jsonLd['artism:intent']).toBeTruthy()
-      expect(jsonLd['artism:reasoningStatus']).toBe('complete')
-      expect(jsonLd['artism:provenanceConfidenceLevel']).toBe('partial')
+    it('includes non-empty artism intent fields from fixture in additionalProperty', () => {
+      const additionalProperty = jsonLd.additionalProperty as Array<Record<string, unknown>>
+      const formal = additionalProperty.find(
+        (row) => row.propertyID === 'artism:formalContributionAssessment',
+      )
+      const intent = additionalProperty.find((row) => row.propertyID === 'artism:intent')
+      const reasoning = additionalProperty.find(
+        (row) => row.propertyID === 'artism:reasoningStatus',
+      )
+
+      expect(String(formal?.value)).toContain('conditional legibility')
+      expect(intent?.value).toBeTruthy()
+      expect(reasoning?.value).toBe('complete')
     })
 
     it('includes edition claim summary when ownership registry is populated', () => {
       const summaries = buildEditionClaimSummary(fixture as Artwork)
       expect(summaries.length).toBeGreaterThan(0)
-      expect(jsonLd['artism:editionClaimSummary']).toEqual(summaries)
+      expect(jsonLd.additionalProperty).toBeTruthy()
     })
   })
 

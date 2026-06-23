@@ -185,9 +185,21 @@ export const proposeAuthorityFieldSchema = z.object({
   confidence: z.enum(['high', 'medium', 'low']),
 })
 
-export const confirmAuthorityProposalSchema = z.object({
-  fieldName: z.string().min(1),
-})
+export const confirmAuthorityProposalSchema = z
+  .object({
+    fieldName: z.string().min(1),
+    value: z.string().min(1).optional(),
+    sourceUrl: z.string().url().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.value && !data.sourceUrl) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['sourceUrl'],
+        message: 'sourceUrl is required when confirming with an inline value',
+      })
+    }
+  })
 
 export const transitionToReasoningPhaseSchema = z.object({})
 
@@ -510,13 +522,17 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
   {
     name: TOOL_PROPOSE_AUTHORITY_FIELD,
     description:
-      'Propose a candidate authority URI or field value found via lookup, pending artist confirmation. Phase A only.',
+      'Propose a factual event field value from research, pending artist confirmation. Phase A only. Use for venue address, coordinates, dates, venueUrl, sameAs, and authority URIs — not update_field. Field names: venueAddress, venueLatLng, venueUrl, venueCountry, endDate, sameAs, venueWikidataUri, etc.',
     input_schema: {
       type: 'object',
       properties: {
-        fieldName: { type: 'string' },
-        value: { type: 'string' },
-        sourceUrl: { type: 'string' },
+        fieldName: {
+          type: 'string',
+          description:
+            'Events field name, e.g. venueAddress, venueLatLng, venueUrl, venueCountry, endDate, sameAs, venueWikidataUri',
+        },
+        value: { type: 'string', description: 'String value (for venueLatLng use "lat, lng")' },
+        sourceUrl: { type: 'string', description: 'URL where this value was found' },
         confidence: { type: 'string', enum: ['high', 'medium', 'low'] },
       },
       required: ['fieldName', 'value', 'sourceUrl', 'confidence'],
@@ -525,11 +541,20 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
   {
     name: TOOL_CONFIRM_AUTHORITY_PROPOSAL,
     description:
-      'After the artist confirms a Phase A proposal, stage it on the event timeline for commit.',
+      'After the artist confirms a Phase A proposal, stage it on the event timeline. Call once per field; safe to batch several calls in one turn when the artist confirms multiple fields.',
     input_schema: {
       type: 'object',
       properties: {
         fieldName: { type: 'string' },
+        value: {
+          type: 'string',
+          description:
+            'Optional — use when the artist confirmed but no proposal exists yet (skips propose step)',
+        },
+        sourceUrl: {
+          type: 'string',
+          description: 'Required with value when confirming without a prior proposal',
+        },
       },
       required: ['fieldName'],
     },
@@ -546,6 +571,7 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
 ]
 
 const EVENT_PHASE_A_TOOL_NAMES = new Set([
+  TOOL_UPDATE_FIELD,
   TOOL_SEARCH_WIKIDATA,
   TOOL_GET_WIKIDATA_ENTITY,
   TOOL_FETCH_WIKIPEDIA_ARTICLE,

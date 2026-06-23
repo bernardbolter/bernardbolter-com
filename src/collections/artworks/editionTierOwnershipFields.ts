@@ -2,9 +2,9 @@ import type { Field, Validate } from 'payload'
 
 import { isArtistOrAdmin, privateFieldAccess } from '@/access/isArtistOrAdmin'
 
-function hasSeriesEditionTier(siblingData: Record<string, unknown> | undefined): boolean {
-  const rel = siblingData?.seriesEditionTier
-  return rel != null && rel !== ''
+function hasSeriesTierKey(siblingData: Record<string, unknown> | undefined): boolean {
+  const key = siblingData?.seriesTierKey
+  return typeof key === 'string' && key.trim().length > 0
 }
 
 function hasFallbackTierIdentity(siblingData: Record<string, unknown> | undefined): boolean {
@@ -32,50 +32,50 @@ export const editionTierRowIdentityValidate: Validate<unknown[] | null | undefin
     const row = value[i]
     if (!row || typeof row !== 'object') continue
     const sibling = row as Record<string, unknown>
-    if (hasSeriesEditionTier(sibling) || hasFallbackTierIdentity(sibling)) continue
-    return `Edition tier ${i + 1}: link a series edition tier or set tierName and totalEditionSize.`
+    if (hasSeriesTierKey(sibling) || hasFallbackTierIdentity(sibling)) continue
+    return `Edition tier ${i + 1}: set seriesTierKey or provide tierName and totalEditionSize.`
   }
 
   return true
 }
 
-/** Fallback tierName is required only when the shared series tier relation is unset. */
+/** Fallback tierName is required only when seriesTierKey is unset. */
 export const editionTierLocalNameValidate: Validate<string | null | undefined> = (
   value,
   { siblingData },
 ) => {
-  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
-  if (value == null || value === '') return 'Required when no series edition tier is linked'
+  if (hasSeriesTierKey(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null || value === '') return 'Required when no series tier key is set'
   return true
 }
 
-/** Fallback totalEditionSize is required only when the shared series tier relation is unset. */
+/** Fallback totalEditionSize is required only when seriesTierKey is unset. */
 export const editionTierLocalSizeValidate: Validate<number | null | undefined> = (
   value,
   { siblingData },
 ) => {
-  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
-  if (value == null) return 'Required when no series edition tier is linked'
+  if (hasSeriesTierKey(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null) return 'Required when no series tier key is set'
   return true
 }
 
-/** Fallback Megacities tier select is required only when the shared series tier relation is unset. */
+/** Fallback Megacities tier select is required only when seriesTierKey is unset. */
 export const editionTierMegacitiesTierValidate: Validate<string | null | undefined> = (
   value,
   { siblingData },
 ) => {
-  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
-  if (value == null || value === '') return 'Required when no series edition tier is linked'
+  if (hasSeriesTierKey(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null || value === '') return 'Required when no series tier key is set'
   return true
 }
 
-/** Fallback Megacities editionSize is required only when the shared series tier relation is unset. */
+/** Fallback Megacities editionSize is required only when seriesTierKey is unset. */
 export const editionTierMegacitiesSizeValidate: Validate<number | null | undefined> = (
   value,
   { siblingData },
 ) => {
-  if (hasSeriesEditionTier(siblingData as Record<string, unknown> | undefined)) return true
-  if (value == null) return 'Required when no series edition tier is linked'
+  if (hasSeriesTierKey(siblingData as Record<string, unknown> | undefined)) return true
+  if (value == null) return 'Required when no series tier key is set'
   return true
 }
 
@@ -89,20 +89,19 @@ export const editionTierMegacitiesRowIdentityValidate: Validate<unknown[] | null
     const row = value[i]
     if (!row || typeof row !== 'object') continue
     const sibling = row as Record<string, unknown>
-    if (hasSeriesEditionTier(sibling) || hasMegacitiesFallbackTierIdentity(sibling)) continue
-    return `Edition ${i + 1}: link a series edition tier or set tier and editionSize.`
+    if (hasSeriesTierKey(sibling) || hasMegacitiesFallbackTierIdentity(sibling)) continue
+    return `Edition ${i + 1}: set seriesTierKey or provide tier and editionSize.`
   }
 
   return true
 }
 
-export const editionTierSeriesRelationField: Field = {
-  name: 'seriesEditionTier',
-  type: 'relationship',
-  relationTo: 'series-edition-tiers',
+export const editionTierSeriesKeyField: Field = {
+  name: 'seriesTierKey',
+  type: 'text',
   admin: {
     description:
-      'Shared tier definition for this entry. Name, size, substrate, and the shared Vendure Product are read through this relation when populated.',
+      'Matches editionTiers[].tierKey on this artwork\'s series. Name, size, substrate, and shared Vendure Product are read from there.',
   },
 }
 
@@ -112,7 +111,7 @@ export const editionTierVendureVariantIdField: Field = {
   access: privateFieldAccess,
   admin: {
     description:
-      "This artwork's Variant within the shared Vendure Product (see seriesEditionTier.vendureProductId). Stock is tracked per-variant.",
+      "This artwork's Variant within the shared Vendure Product (see the series tier's vendureProductId). Stock is tracked per-variant.",
   },
 }
 
@@ -168,3 +167,6 @@ export const editionTierCopiesField: Field = {
     },
   ],
 }
+
+/** @deprecated Use editionTierSeriesKeyField */
+export const editionTierSeriesRelationField = editionTierSeriesKeyField

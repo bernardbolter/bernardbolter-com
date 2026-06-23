@@ -1,4 +1,17 @@
-import type { Artwork, SeriesEditionTier } from '@/payload-types'
+import type { Artwork } from '@/payload-types'
+
+import {
+  buildEditionTierSpecLine,
+  type EditionTierLabelMaps,
+  type EditionTierSpecInput,
+  substrateLabel,
+} from '@/lib/artwork/editionTierDisplay'
+import {
+  findSeriesEditionTier,
+  seriesEditionTiersFromSeries,
+  resolveArtworkSeriesDoc,
+  type SeriesEditionTierSpec,
+} from '@/lib/artwork/seriesEditionTiers'
 
 export type OwnershipRegistryCopy = {
   copyNumber?: string | null
@@ -24,7 +37,15 @@ export type OwnershipRegistryTier = {
   isOriginalTier?: boolean | null
   copies?: OwnershipRegistryCopy[] | null
   printSubstrate?: string | null
+  printTechnique?: string | null
   dimensions?: string | null
+  dimensionUnit?: string | null
+  widthWhole?: number | null
+  widthFraction?: string | null
+  heightWhole?: number | null
+  heightFraction?: string | null
+  widthCm?: number | null
+  heightCm?: number | null
 }
 
 export type PublicEditionTierRow = {
@@ -38,34 +59,41 @@ export type PublicEditionTier = {
   tierOrder: number
   editionSize: number
   headerSummary: string
+  specLine: string | null
   claimedRows: PublicEditionTierRow[]
   apRow: PublicEditionTierRow | null
   claimHref: string
 }
 
-const PRINT_SUBSTRATE_LABELS: Record<string, string> = {
-  paper: 'Paper',
-  'aluminum-mount': 'Aluminum mount',
-  canvas: 'Canvas',
-  'oil-on-canvas': 'Oil on canvas',
+function tierSpecInput(tier: OwnershipRegistryTier): EditionTierSpecInput {
+  return {
+    editionSize: tier.editionSize,
+    apCount: tier.apCount,
+    dimensionUnit: tier.dimensionUnit,
+    widthWhole: tier.widthWhole,
+    widthFraction: tier.widthFraction,
+    heightWhole: tier.heightWhole,
+    heightFraction: tier.heightFraction,
+    widthCm: tier.widthCm,
+    heightCm: tier.heightCm,
+    dimensions: tier.dimensions,
+    substrate: tier.printSubstrate,
+    printTechnique: tier.printTechnique,
+  }
 }
 
-function substrateLabel(substrate: string | null | undefined): string | null {
-  const trimmed = substrate?.trim()
-  if (!trimmed) return null
-  return PRINT_SUBSTRATE_LABELS[trimmed] ?? trimmed
+export function buildOwnershipTierSpecLine(
+  tier: OwnershipRegistryTier,
+  labelMaps?: EditionTierLabelMaps,
+): string | null {
+  return buildEditionTierSpecLine(tierSpecInput(tier), labelMaps)
 }
 
-function formatDimensions(widthCm?: number | null, heightCm?: number | null): string | null {
-  if (widthCm == null || heightCm == null) return null
-  return `${widthCm} × ${heightCm} cm`
-}
-
-function resolveSeriesEditionTier(
-  value: DcsEditionTier['seriesEditionTier'],
-): SeriesEditionTier | null {
-  if (value == null || typeof value === 'number') return null
-  return value
+function resolveSeriesEditionTierSpec(
+  artwork: Artwork,
+  tierKey: string | null | undefined,
+): SeriesEditionTierSpec | null {
+  return findSeriesEditionTier(artwork, tierKey)
 }
 
 const DCS_TIER_LABELS: Record<string, string> = {
@@ -103,9 +131,67 @@ type MegacitiesEditionTier = NonNullable<
   NonNullable<NonNullable<Artwork['megacities']>['print']>['editions']
 >[number]
 
-function dcsTierToRegistryTier(tier: DcsEditionTier, index: number): OwnershipRegistryTier {
+function seriesTierSpecToRegistryTier(spec: SeriesEditionTierSpec): OwnershipRegistryTier {
+  return {
+    tierLabel: spec.tierName?.trim() || spec.tierKey,
+    tierOrder: spec.tierOrder ?? 0,
+    editionSize: spec.editionSize,
+    apCount: spec.apCount ?? 0,
+    isOriginalTier: spec.isOriginalTier ?? false,
+    copies: [],
+    printSubstrate: spec.substrate?.trim() || null,
+    printTechnique: spec.printTechnique,
+    dimensionUnit: spec.dimensionUnit,
+    widthWhole: spec.widthWhole,
+    widthFraction: spec.widthFraction,
+    heightWhole: spec.heightWhole,
+    heightFraction: spec.heightFraction,
+    widthCm: spec.widthCm,
+    heightCm: spec.heightCm,
+  }
+}
+
+function mergeSeriesEditionTiersWithArtworkRows<T extends { seriesTierKey?: string | null }>(
+  artwork: Artwork,
+  seriesSpecs: SeriesEditionTierSpec[],
+  artworkRows: T[],
+  convertRow: (artwork: Artwork, row: T, index: number) => OwnershipRegistryTier,
+): OwnershipRegistryTier[] {
+  const rowByKey = new Map<string, T>()
+  for (const row of artworkRows) {
+    const key = row.seriesTierKey?.trim()
+    if (key) rowByKey.set(key, row)
+  }
+
+  const merged = seriesSpecs.map((spec, index) => {
+    const row = rowByKey.get(spec.tierKey)
+    if (row) return convertRow(artwork, row, index)
+    return seriesTierSpecToRegistryTier(spec)
+  })
+
+  const coveredKeys = new Set(seriesSpecs.map((spec) => spec.tierKey))
+  for (const row of artworkRows) {
+    const key = row.seriesTierKey?.trim()
+    if (key && coveredKeys.has(key)) continue
+    merged.push(convertRow(artwork, row, merged.length))
+  }
+
+  return merged.slice().sort((a, b) => (a.tierOrder ?? 0) - (b.tierOrder ?? 0))
+}
+
+function seriesEditionTiersForArtwork(artwork: Artwork): OwnershipRegistryTier[] {
+  const specs = seriesEditionTiersFromSeries(resolveArtworkSeriesDoc(artwork))
+  if (specs.length === 0) return []
+  return specs.map(seriesTierSpecToRegistryTier)
+}
+
+function dcsTierToRegistryTier(
+  artwork: Artwork,
+  tier: DcsEditionTier,
+  index: number,
+): OwnershipRegistryTier {
   const copies = normalizeCopies(tier.copies as OwnershipRegistryCopy[] | undefined)
-  const seriesTier = resolveSeriesEditionTier(tier.seriesEditionTier)
+  const seriesTier = resolveSeriesEditionTierSpec(artwork, tier.seriesTierKey)
 
   if (seriesTier) {
     return {
@@ -116,7 +202,14 @@ function dcsTierToRegistryTier(tier: DcsEditionTier, index: number): OwnershipRe
       isOriginalTier: seriesTier.isOriginalTier ?? tier.isOriginalTier ?? false,
       copies,
       printSubstrate: seriesTier.substrate?.trim() || substrateLabel(tier.printSubstrate),
-      dimensions: formatDimensions(seriesTier.widthCm, seriesTier.heightCm),
+      printTechnique: seriesTier.printTechnique,
+      dimensionUnit: seriesTier.dimensionUnit,
+      widthWhole: seriesTier.widthWhole,
+      widthFraction: seriesTier.widthFraction,
+      heightWhole: seriesTier.heightWhole,
+      heightFraction: seriesTier.heightFraction,
+      widthCm: seriesTier.widthCm,
+      heightCm: seriesTier.heightCm,
     }
   }
 
@@ -134,13 +227,12 @@ function dcsTierToRegistryTier(tier: DcsEditionTier, index: number): OwnershipRe
 }
 
 function megacitiesTierToRegistryTier(
+  artwork: Artwork,
   tier: MegacitiesEditionTier,
   index: number,
 ): OwnershipRegistryTier {
   const copies = normalizeCopies(tier.copies as OwnershipRegistryCopy[] | undefined)
-  const seriesTier = resolveSeriesEditionTier(
-    tier.seriesEditionTier as DcsEditionTier['seriesEditionTier'],
-  )
+  const seriesTier = resolveSeriesEditionTierSpec(artwork, tier.seriesTierKey)
 
   if (seriesTier) {
     return {
@@ -151,8 +243,15 @@ function megacitiesTierToRegistryTier(
       isOriginalTier: seriesTier.isOriginalTier ?? tier.isOriginalTier ?? false,
       copies,
       printSubstrate: seriesTier.substrate?.trim() || null,
-      dimensions:
-        formatDimensions(seriesTier.widthCm, seriesTier.heightCm) ?? tier.dimensions ?? null,
+      printTechnique: seriesTier.printTechnique,
+      dimensionUnit: seriesTier.dimensionUnit,
+      widthWhole: seriesTier.widthWhole,
+      widthFraction: seriesTier.widthFraction,
+      heightWhole: seriesTier.heightWhole,
+      heightFraction: seriesTier.heightFraction,
+      widthCm: seriesTier.widthCm,
+      heightCm: seriesTier.heightCm,
+      dimensions: tier.dimensions ?? null,
     }
   }
 
@@ -170,28 +269,66 @@ function megacitiesTierToRegistryTier(
   }
 }
 
-function ownershipRegistryTierToRegistryTier(tier: OwnershipRegistryTier): OwnershipRegistryTier {
+function ownershipRegistryRowToTier(
+  row: Record<string, unknown>,
+): OwnershipRegistryTier {
   return {
-    ...tier,
-    copies: normalizeCopies(tier.copies),
+    tierLabel: typeof row.tierLabel === 'string' ? row.tierLabel : null,
+    tierOrder: typeof row.tierOrder === 'number' ? row.tierOrder : null,
+    editionSize: typeof row.editionSize === 'number' ? row.editionSize : null,
+    apCount: typeof row.apCount === 'number' ? row.apCount : null,
+    isOriginalTier: row.isOriginalTier === true,
+    copies: normalizeCopies(row.copies as OwnershipRegistryCopy[] | undefined),
+    printSubstrate: typeof row.substrate === 'string' ? row.substrate : null,
+    printTechnique: typeof row.printTechnique === 'string' ? row.printTechnique : null,
+    dimensionUnit: typeof row.dimensionUnit === 'string' ? row.dimensionUnit : null,
+    widthWhole: typeof row.widthWhole === 'number' ? row.widthWhole : null,
+    widthFraction: typeof row.widthFraction === 'string' ? row.widthFraction : null,
+    heightWhole: typeof row.heightWhole === 'number' ? row.heightWhole : null,
+    heightFraction: typeof row.heightFraction === 'string' ? row.heightFraction : null,
   }
 }
 
-/** Resolve edition tiers from DCS tab, Megacities print, or ownershipRegistry fallback. */
+/** Resolve edition tiers from DCS tab, Megacities print, embedded series, or ownershipRegistry fallback. */
 export function asEditionTiers(artwork: Artwork): OwnershipRegistryTier[] {
+  const seriesSpecs = seriesEditionTiersFromSeries(resolveArtworkSeriesDoc(artwork))
+
   const dcsTiers = artwork.dcs?.editionTiers
   if (Array.isArray(dcsTiers) && dcsTiers.length > 0) {
-    return dcsTiers.map(dcsTierToRegistryTier)
+    if (seriesSpecs.length > 0) {
+      return mergeSeriesEditionTiersWithArtworkRows(
+        artwork,
+        seriesSpecs,
+        dcsTiers,
+        dcsTierToRegistryTier,
+      )
+    }
+    return dcsTiers.map((tier, index) => dcsTierToRegistryTier(artwork, tier, index))
   }
 
   const megacitiesTiers = artwork.megacities?.print?.editions
   if (Array.isArray(megacitiesTiers) && megacitiesTiers.length > 0) {
-    return megacitiesTiers.map(megacitiesTierToRegistryTier)
+    if (seriesSpecs.length > 0) {
+      return mergeSeriesEditionTiersWithArtworkRows(
+        artwork,
+        seriesSpecs,
+        megacitiesTiers,
+        megacitiesTierToRegistryTier,
+      )
+    }
+    return megacitiesTiers.map((tier, index) =>
+      megacitiesTierToRegistryTier(artwork, tier, index),
+    )
   }
 
-  const raw = (artwork as Artwork & { ownershipRegistry?: OwnershipRegistryTier[] })
-    .ownershipRegistry
-  return Array.isArray(raw) ? raw.map(ownershipRegistryTierToRegistryTier) : []
+  if (seriesSpecs.length > 0) {
+    return seriesEditionTiersForArtwork(artwork)
+  }
+
+  const raw = artwork.ownershipRegistry
+  return Array.isArray(raw)
+    ? raw.map((tier) => ownershipRegistryRowToTier(tier as Record<string, unknown>))
+    : []
 }
 
 function numberedCopies(tier: OwnershipRegistryTier): OwnershipRegistryCopy[] {
@@ -319,7 +456,10 @@ export function originalCopyOwnerLabel(copy: OwnershipRegistryCopy): string {
   return copy.owner?.trim() || 'Private collection'
 }
 
-export function buildPublicEditionTiers(artwork: Artwork): PublicEditionTier[] {
+export function buildPublicEditionTiers(
+  artwork: Artwork,
+  labelMaps?: EditionTierLabelMaps,
+): PublicEditionTier[] {
   const slug = artwork.slug?.trim() || ''
 
   return asEditionTiers(artwork)
@@ -340,6 +480,7 @@ export function buildPublicEditionTiers(artwork: Artwork): PublicEditionTier[] {
         tierOrder: tier.tierOrder ?? 0,
         editionSize: tier.editionSize ?? 0,
         headerSummary: buildHeaderSummary(tier),
+        specLine: buildEditionTierSpecLine(tierSpecInput(tier), labelMaps),
         claimedRows,
         apRow: buildApRow(tier),
         claimHref: `/contact?${params.toString()}`,

@@ -26,10 +26,9 @@ describe('resolveToolsForSession', () => {
     const phaseA = resolveToolsForSession('event-enrichment', 'phase-a-research').map((t) => t.name)
     const phaseB = resolveToolsForSession('event-enrichment', 'phase-b-reasoning').map((t) => t.name)
 
+    expect(phaseA).toContain('update_field')
     expect(phaseA).toContain('propose_authority_field')
     expect(phaseA).toContain('transition_to_reasoning_phase')
-    expect(phaseA).not.toContain('update_field')
-
     expect(phaseB).toContain('update_field')
     expect(phaseB).not.toContain('propose_authority_field')
   })

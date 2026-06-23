@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import EmbeddingPage from '@/components/artwork/EmbeddingPage'
-import Info from '@/components/info/Info'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { buildVisualEmbeddingJsonLd } from '@/lib/jsonld/visualEmbedding'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
@@ -74,7 +73,6 @@ export default async function Page({ params }: Props) {
         }}
       >
         <div className="bio-page__container">
-          <Info />
           <EmbeddingPage
             artwork={artwork}
             embedding={embedding}

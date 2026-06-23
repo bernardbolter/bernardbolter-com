@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import EventPage from '@/components/events/EventPage'
-import Info from '@/components/info/Info'
 import { buildEventJsonLd } from '@/lib/jsonld/event'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistGlobal, getPublishedEventBySlug } from '@/lib/payload/siteDocuments'
@@ -39,7 +38,6 @@ export default async function EventDetailPage({ params }: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <div className="event-page__layout">
-        <Info />
         <EventPage event={event} />
       </div>
     </>

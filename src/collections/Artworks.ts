@@ -11,6 +11,11 @@ import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
 
 import { artworkPrimaryMediaFields } from './artworks/artworkPrimaryMediaFields'
 import { editionTierIsOriginalTierField } from './artworks/editionTierOwnershipFields'
+import {
+  editionTierDimensionFields,
+  editionTierPrintTechniqueField,
+  editionTierSubstrateField,
+} from './artworks/editionTierSpecFields'
 import { dcsTab } from './artworks/dcsTabFields'
 import { fieldNotesTab } from './artworks/fieldNotesTab'
 import { megacitiesTab } from './artworks/megacitiesTabFields'
@@ -1168,7 +1173,8 @@ export const Artworks: CollectionConfig = {
               name: 'videoUrl',
               type: 'text',
               admin: {
-                description: 'Primary embeddable URL (YouTube, Vimeo, …). Cleared when videoFile is set.',
+                description:
+                  'YouTube/Vimeo URL. When a videoFile is set, only a YouTube link is kept here as an external “watch on YouTube” link — it is not embedded.',
               },
             },
             {
@@ -1539,6 +1545,9 @@ export const Artworks: CollectionConfig = {
                 },
                 { name: 'apCount', type: 'number', defaultValue: 0 },
                 editionTierIsOriginalTierField,
+                ...editionTierDimensionFields,
+                editionTierSubstrateField,
+                editionTierPrintTechniqueField,
                 {
                   name: 'copies',
                   type: 'array',

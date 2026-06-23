@@ -1,0 +1,71 @@
+.datenschutz-prose {
+  width: 100%;
+}
+
+h2.datenschutz-lang {
+  margin: 0 0 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ui-line, #ddd);
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-primary, #111);
+}
+
+.datenschutz-lang-section + .datenschutz-lang-section {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--ui-line, #ddd);
+}
+
+.datenschutz-prose h2 {
+  margin: 1.25rem 0 0.5rem;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary, #111);
+}
+
+.datenschutz-prose h3 {
+  margin: 1rem 0 0.375rem;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #111);
+}
+
+.datenschutz-prose p {
+  margin-bottom: 0.625rem;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #333;
+}
+
+.datenschutz-prose ul,
+.datenschutz-prose ol {
+  margin: 0 0 0.625rem 1.125rem;
+  padding: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #333;
+}
+
+.datenschutz-prose li {
+  margin-bottom: 0.25rem;
+}
+
+.datenschutz-prose a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.datenschutz-prose a:hover {
+  color: var(--text-primary, #111);
+}

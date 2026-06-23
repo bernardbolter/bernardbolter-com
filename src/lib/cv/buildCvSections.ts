@@ -1,5 +1,7 @@
 import type { Artist, Event } from '@/payload-types'
 
+import { cvRowFromEvent, cvRowPlainText, type CvRowModel } from '@/lib/cv/cvRowModel'
+
 /** §2.10 standard section order (education first; selected collections from Artist, not Events). */
 export const CV_SECTION_ORDER = [
   'education',
@@ -68,7 +70,7 @@ function defaultSectionFromEventType(event: Event): CvSectionSlug {
   }
 }
 
-function sectionForEvent(event: Event): CvSectionSlug {
+export function sectionForEvent(event: Event): CvSectionSlug {
   const raw = event.cvSection
   if (raw && CV_SECTION_ORDER.includes(raw as CvSectionSlug)) {
     return raw as CvSectionSlug
@@ -76,197 +78,58 @@ function sectionForEvent(event: Event): CvSectionSlug {
   return defaultSectionFromEventType(event)
 }
 
-export function eventDisplayYear(event: Event): string {
-  const y =
-    event.yearStart != null && !Number.isNaN(Number(event.yearStart)) ?
-      Number(event.yearStart)
-    : new Date(event.startDate).getFullYear()
-  if (event.isOngoing) {
-    return `${y}–ongoing`
-  }
-  return String(y)
-}
-
-const AWARD_OUTCOME_LABEL: Record<NonNullable<Event['awardOutcome']>, string> = {
-  winner: 'winner',
-  shortlisted: 'shortlisted',
-  nominated: 'nominated',
-  'honourable-mention': 'honourable mention',
-}
-
-/**
- * §2.10 CV line formats.
- */
-export function formatCvLine(event: Event): string {
-  const year = eventDisplayYear(event)
-  const displayTitle = (event.cvDisplayTitle ?? event.title).trim()
-
-  if (event.eventType === 'publication') {
-    const pubName = (event.publicationTitle ?? '').trim()
-    const pages = (event.publicationPages ?? '').trim()
-    let line = `${year} ‘${displayTitle}’ in ${pubName}`
-    if (pages) {
-      line += `, pp. ${pages}`
-    }
-    return line
-  }
-
-  if (event.eventType === 'bibliography') {
-    const author = (event.bibliographyAuthor ?? '').trim()
-    const pub = (event.publicationTitle ?? '').trim()
-    const pages = (event.publicationPages ?? '').trim()
-    let line = `${year} ${author}, ‘${displayTitle}’, ${pub}`
-    if (pages) line += `, pp. ${pages}`
-    return line
-  }
-
-  if (event.eventType === 'education') {
-    const inst = (event.institution ?? '').trim()
-    const deg = (event.degree ?? '').trim()
-    const subj = (event.subject ?? '').trim()
-    const city = (event.venueCity ?? '').trim()
-    const ys = event.yearStart != null ? String(event.yearStart) : year
-    const degreePart = [deg, subj].filter(Boolean).join(', ')
-    const tail = [degreePart, inst, city].filter(Boolean).join(' — ')
-    return `${ys} ${tail}`.trim()
-  }
-
-  if (event.eventType === 'award') {
-    const org = (event.awardGrantingOrganisation ?? '').trim()
-    let line = `${year} ${displayTitle}`
-    if (org) {
-      line += `, ${org}`
-    }
-    if (event.awardOutcome && event.awardOutcome !== 'winner') {
-      line += ` (${AWARD_OUTCOME_LABEL[event.awardOutcome]})`
-    }
-    return line
-  }
-
-  if (event.eventType === 'residency') {
-    const org = (event.residencyOrganisation ?? '').trim()
-    const city = (event.venueCity ?? '').trim()
-    const parts = [displayTitle, org, city].filter(Boolean)
-    return `${year} ${parts.join(', ')}`
-  }
-
-  const venue = (event.venueName ?? '').trim()
-  const city = (event.venueCity ?? '').trim()
-  const place = [venue, city].filter(Boolean).join(', ')
-  if (place) {
-    return `${year} ${displayTitle} ${place}`
-  }
-  return `${year} ${displayTitle}`
-}
-
-export type CvEntryParts = {
-  year: string
-  primary: string
-  secondary?: string
-  tertiary?: string
-  variant: 'venue' | 'education' | 'publication' | 'plain'
-}
-
 export type CvSectionBlock = {
   slug: CvSectionSlug
   heading: string
   items: Array<{
     id: number | string
+    row: CvRowModel
     text: string
-    parts: CvEntryParts
-    hasPage?: boolean
-    slug?: string | null
   }>
 }
 
-const CV_DISPLAY_HEADING: Partial<Record<CvSectionSlug, string>> = {
-  education: 'EDUCATION',
-  'solo-exhibitions': 'SOLO',
-  'group-exhibitions': 'GROUP',
-  performances: 'PERFORMANCE',
-  publications: 'PUBLICATIONS',
-  'talks-panels': 'ORGANIZATIONS',
+/** Re-export date helpers used by tests and JSON-LD builders. */
+export { educationYearColumn, eventDisplayYear } from '@/lib/cv/cvRowModel'
+
+export function cvSectionDisplayHeading(_slug: CvSectionSlug, fallback: string): string {
+  return fallback
 }
 
-export function cvSectionDisplayHeading(slug: CvSectionSlug, fallback: string): string {
-  return CV_DISPLAY_HEADING[slug] ?? fallback.toUpperCase()
-}
-
-export function cvEntryPartsFromEvent(event: Event): CvEntryParts {
-  const year = eventDisplayYear(event)
-  const displayTitle = (event.cvDisplayTitle ?? event.title).trim()
-
-  if (event.eventType === 'education') {
-    const degreePart = [event.degree, event.subject].filter(Boolean).join(', ')
-    const titlePart = degreePart || displayTitle
-    return {
-      year: event.yearStart != null ? String(event.yearStart) : year,
-      primary: (event.institution ?? '').trim(),
-      secondary: titlePart ? `'${titlePart}'` : undefined,
-      tertiary: event.venueCity ? `- ${event.venueCity.trim()}` : undefined,
-      variant: 'education',
-    }
-  }
-
-  if (event.eventType === 'publication' || event.eventType === 'bibliography') {
-    return {
-      year,
-      primary: displayTitle,
-      secondary: (event.bibliographyAuthor ?? event.publicationTitle ?? event.role ?? '').trim() || undefined,
-      variant: 'publication',
-    }
-  }
-
-  if (event.eventType === 'award' || event.eventType === 'talk-panel') {
-    return {
-      year,
-      primary: displayTitle,
-      secondary: (event.awardGrantingOrganisation ?? event.venueName ?? event.role ?? '').trim() || undefined,
-      variant: 'publication',
-    }
-  }
-
-  const city = (event.venueCity ?? '').trim()
-  return {
-    year,
-    primary: (event.venueName ?? event.residencyOrganisation ?? '').trim(),
-    secondary: displayTitle ? `'${displayTitle}'` : undefined,
-    tertiary: city ? `- ${city}` : undefined,
-    variant: 'venue',
-  }
-}
-
-function plainEntryParts(text: string): CvEntryParts {
-  return { year: '', primary: text, variant: 'plain' }
-}
-
-function selectedCollectionLines(
+function selectedCollectionRows(
   artist: Artist | null | undefined,
-): Array<{ id: string; text: string; parts: CvEntryParts }> {
+): Array<{ id: string | number; row: CvRowModel; text: string }> {
   const rows = artist?.selectedCollections
   if (!Array.isArray(rows)) return []
+
   return rows
     .filter((r) => r && r.cvVisible !== false)
     .map((r, i) => {
-      const name = (r.institutionName ?? '').trim()
+      const institutionName = (r.institutionName ?? '').trim()
       const city = (r.city ?? '').trim()
-      const country = (r.country ?? '').trim()
-      const place = [city, country].filter(Boolean).join(', ')
-      const text = place ? `${name}, ${place}` : name
-      return { id: `sc-${i}`, text, parts: plainEntryParts(text) }
+      const row: CvRowModel = {
+        kind: 'collection',
+        id: `sc-${i}`,
+        institutionName,
+        city,
+      }
+      return {
+        id: row.id,
+        row,
+        text: cvRowPlainText(row),
+      }
     })
     .filter((x) => x.text.length > 0)
 }
 
-/** Group, sort (year DESC, then cvPriority DESC), and order sections per §2.10. */
+/** Group, sort (year DESC, cvPriority ASC), and order sections per spec. */
 export function buildCvSections(events: Event[], artist?: Artist | null): CvSectionBlock[] {
   const bySection = new Map<CvSectionSlug, Event[]>()
 
-  for (const e of events) {
-    if (e.eventType === 'education' && e.cvVisible === false) continue
-    const key = sectionForEvent(e)
+  for (const event of events) {
+    if (event.eventType === 'education' && event.cvVisible === false) continue
+    const key = sectionForEvent(event)
     const list = bySection.get(key) ?? []
-    list.push(e)
+    list.push(event)
     bySection.set(key, list)
   }
 
@@ -282,7 +145,7 @@ export function buildCvSections(events: Event[], artist?: Artist | null): CvSect
       if (yb !== ya) return yb - ya
       const pb = b.cvPriority ?? 5
       const pa = a.cvPriority ?? 5
-      if (pb !== pa) return pb - pa
+      if (pa !== pb) return pa - pb
       const tb = (b.cvDisplayTitle ?? b.title).trim()
       const ta = (a.cvDisplayTitle ?? a.title).trim()
       return ta.localeCompare(tb, undefined, { sensitivity: 'base' })
@@ -292,7 +155,7 @@ export function buildCvSections(events: Event[], artist?: Artist | null): CvSect
   const blocks: CvSectionBlock[] = []
   for (const slug of CV_SECTION_ORDER) {
     if (slug === 'selected-collections') {
-      const items = selectedCollectionLines(artist ?? null)
+      const items = selectedCollectionRows(artist ?? null)
       if (!items.length) continue
       blocks.push({
         slug,
@@ -307,15 +170,22 @@ export function buildCvSections(events: Event[], artist?: Artist | null): CvSect
     blocks.push({
       slug,
       heading: SECTION_HEADING[slug],
-      items: list.map((ev) => ({
-        id: ev.id,
-        text: formatCvLine(ev),
-        parts: cvEntryPartsFromEvent(ev),
-        hasPage: Boolean(ev.hasPage),
-        slug: ev.slug,
-      })),
+      items: list.map((event) => {
+        const row = cvRowFromEvent(slug, event)
+        return {
+          id: event.id,
+          row,
+          text: cvRowPlainText(row),
+        }
+      }),
     })
   }
 
   return blocks
+}
+
+/** @deprecated Use cvRowPlainText(row) — kept for callers that still pass formatted lines. */
+export function formatCvLine(event: Event): string {
+  const row = cvRowFromEvent(sectionForEvent(event), event)
+  return cvRowPlainText(row)
 }

@@ -8,6 +8,7 @@ import {
   TimerSvg,
 } from '@/components/icons'
 import { closeSearchNavState } from '@/helpers/navSearch'
+import { getNavContainerTop } from '@/helpers/navLayout'
 import useWindowSize from '@/hooks/useWindowSize'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
@@ -23,13 +24,7 @@ export default function Nav() {
       className="nav-container"
       style={{
         zIndex: 5001,
-        top: !state.artworkViewTimeline
-          ? 4
-          : state.showSlideshow
-            ? 4
-            : size.width && size.width > 768
-              ? 130
-              : 4,
+        top: getNavContainerTop(state, size),
       }}
     >
       <div

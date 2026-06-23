@@ -449,6 +449,8 @@ export async function POST(request: Request) {
             sessionId: session.sessionId,
             phaseTransition: phaseTransition ?? autoPhaseTransition,
             ...(sessionType === 'event-enrichment' ? { eventDialoguePhase } : {}),
+            fieldUpdateTimeline: session.fieldUpdateTimeline ?? [],
+            eventAuthorityProposals: session.eventAuthorityProposals ?? [],
             model,
             promptCache: isPromptCacheEnabled() ? {} : undefined,
           })

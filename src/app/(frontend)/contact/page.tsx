@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import Contact from '@/components/contact/Contact'
-import Info from '@/components/info/Info'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistForContactPage } from '@/lib/payload/contactPage'
 import { generateContactPageJsonLd } from '@/utilities/generateContactPageJsonLd'
@@ -26,7 +25,6 @@ export default async function ContactPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       ) : null}
-      <Info />
       {artist ? (
         <Contact artist={artist} />
       ) : (

@@ -7,7 +7,7 @@ import {
   editionTierLocalNameValidate,
   editionTierLocalSizeValidate,
   editionTierRowIdentityValidate,
-  editionTierSeriesRelationField,
+  editionTierSeriesKeyField,
   editionTierVendureVariantIdField,
 } from '@/collections/artworks/editionTierOwnershipFields'
 
@@ -236,7 +236,7 @@ export const dcsTab: Tab = {
               'Archival record of edition tiers. Vendure is source of truth for pricing; webhook maintains remaining counts.',
           },
           fields: [
-            editionTierSeriesRelationField,
+            editionTierSeriesKeyField,
             editionTierVendureVariantIdField,
             {
               name: 'tierName',
@@ -244,7 +244,7 @@ export const dcsTab: Tab = {
               validate: editionTierLocalNameValidate,
               admin: {
                 description:
-                  'Fallback when seriesEditionTier is not set. Deprecated once the series relation is populated.',
+                  'Fallback when seriesTierKey is not set. Deprecated once the series tier key is populated.',
               },
               options: [
                 { label: 'Small print', value: 'small-print' },

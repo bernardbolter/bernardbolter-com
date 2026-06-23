@@ -4,7 +4,7 @@ import { primaryImageMediaIdFromTimeline } from '@/lib/artOfficial/primaryImageF
 import { collapseTimelineToLatest } from '@/lib/artOfficial/sessionTimeline'
 
 import { StagedArtworkPreview } from './StagedArtworkPreview'
-import type { TimelineEntry } from './types'
+import type { EventAuthorityProposal, TimelineEntry } from './types'
 
 import './artOfficialChat.scss'
 
@@ -48,12 +48,37 @@ function displayEntries(entries: TimelineEntry[], hidePrimaryImageId: boolean): 
   )
 }
 
+function PendingProposalGroup({ proposals }: { proposals: EventAuthorityProposal[] }) {
+  if (proposals.length === 0) return null
+  return (
+    <div className="art-official-sidebar__pending" style={{ marginBottom: 16 }}>
+      <h4 className="art-official-sidebar__group-title">Pending confirmation</h4>
+      <p className="art-official-sidebar__hint" style={{ marginTop: 0 }}>
+        Phase A proposals — confirm in chat to stage on the event.
+      </p>
+      <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+        {proposals.map((p) => (
+          <li key={p.fieldName} className="art-official-sidebar__entry">
+            <div className="art-official-sidebar__entry-meta">
+              <code className="art-official-sidebar__field">{p.fieldName}</code>
+              <span className="art-official-sidebar__pill">{p.confidence ?? 'proposed'}</span>
+            </div>
+            <div className="art-official-sidebar__entry-value">{truncate(p.value)}</div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export function SessionSidebar({
   timeline,
   sessionType,
+  pendingAuthorityProposals = [],
 }: {
   timeline: TimelineEntry[]
   sessionType: string
+  pendingAuthorityProposals?: EventAuthorityProposal[]
 }) {
   const primaryMediaId =
     sessionType === 'artwork-cataloguing' ? primaryImageMediaIdFromTimeline(timeline) : null
@@ -81,14 +106,17 @@ export function SessionSidebar({
                 : sessionType === 'triptych-cataloguing'
                   ? 'Triptych commits corpus fields on Triptychs (panels and commerce stay in admin).'
                   : sessionType === 'event-enrichment'
-                    ? 'Event enrichment commits staged fields on the linked Events record.'
+                    ? 'Event enrichment commits staged fields plus artworks and installation photos from the media panel.'
                     : `${sessionType} — committed at confirmation only.`}
         </p>
       </div>
       <div className="art-official-sidebar__fields">
-        {displayTimeline.length === 0 ? (
+        {sessionType === 'event-enrichment' ? (
+          <PendingProposalGroup proposals={pendingAuthorityProposals} />
+        ) : null}
+        {displayTimeline.length === 0 && pendingAuthorityProposals.length === 0 ? (
           <p className="art-official-sidebar__empty">No staged updates yet.</p>
-        ) : (
+        ) : displayTimeline.length === 0 ? null : (
           Object.entries(grouped).map(([collection, entries]) => (
             <TimelineGroup
               key={collection}

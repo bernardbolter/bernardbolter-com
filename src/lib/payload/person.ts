@@ -3,16 +3,19 @@ import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 
 import type { Artist } from '@/payload-types'
+import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 async function fetchArtistRecord(): Promise<Artist | null> {
-  const payload = await getPayload({ config })
-  const result = await payload.find({
-    collection: 'artists',
-    limit: 1,
-    depth: 0,
-    overrideAccess: false,
+  return withDbRetry(async () => {
+    const payload = await getPayload({ config })
+    const result = await payload.find({
+      collection: 'artists',
+      limit: 1,
+      depth: 0,
+      overrideAccess: false,
+    })
+    return result.docs[0] ?? null
   })
-  return result.docs[0] ?? null
 }
 
 const getCachedPerson = unstable_cache(fetchArtistRecord, ['artist-site-record'], {

@@ -5,12 +5,13 @@ import {
   MEGACITIES_ROOT_SERIES_SLUG,
   resolveArtworkSeriesSlug,
 } from '@/lib/artOfficial/catalogScope'
+import { seriesEditionTierKeys } from '@/lib/artwork/seriesEditionTiers'
 
 export type SeriesEditionTierSeed = {
-  seriesEditionTier: number
+  seriesTierKey: string
 }
 
-/** Explicit allowlist — do not auto-populate for every series with SeriesEditionTiers records. */
+/** Explicit allowlist — do not auto-populate for every series with edition tiers. */
 export const SERIES_EDITION_TIER_AUTOPOPULATE_SLUGS = [
   DCS_ROOT_SERIES_SLUG,
   MEGACITIES_ROOT_SERIES_SLUG,
@@ -127,15 +128,15 @@ export function shouldAutopopulateSeriesEditionTiers(args: {
 }
 
 export function buildAutopopulatedSeriesEditionTiers(
-  seriesEditionTierIds: number[],
+  seriesTierKeys: string[],
 ): SeriesEditionTierSeed[] {
-  return seriesEditionTierIds.map((id) => ({ seriesEditionTier: id }))
+  return seriesTierKeys.map((seriesTierKey) => ({ seriesTierKey }))
 }
 
-export async function fetchSeriesEditionTierIdsForSlug(
+export async function fetchSeriesEditionTierKeysForSlug(
   req: PayloadRequest,
   seriesSlug: string,
-): Promise<number[]> {
+): Promise<string[]> {
   const seriesResult = await req.payload.find({
     collection: 'series',
     where: { slug: { equals: seriesSlug } },
@@ -147,16 +148,7 @@ export async function fetchSeriesEditionTierIdsForSlug(
   const series = seriesResult.docs[0]
   if (!series) return []
 
-  const tiersResult = await req.payload.find({
-    collection: 'series-edition-tiers',
-    where: { series: { equals: series.id } },
-    sort: 'tierOrder',
-    limit: 10,
-    depth: 0,
-    req,
-  })
-
-  return tiersResult.docs.map((tier) => tier.id)
+  return seriesEditionTierKeys(series)
 }
 
 function readSeriesId(value: unknown): number | null {
@@ -197,6 +189,14 @@ export async function resolveArtworkSeriesSlugForAutopopulate(
   }
 }
 
+/** @deprecated Use fetchSeriesEditionTierKeysForSlug */
+export const fetchSeriesEditionTierIdsForSlug = fetchSeriesEditionTierKeysForSlug
+
+/** @deprecated Use buildAutopopulatedSeriesEditionTiers with tier keys */
+export function buildAutopopulatedSeriesEditionTierIds(seriesEditionTierIds: number[]) {
+  return seriesEditionTierIds.map((id) => ({ seriesEditionTier: id }))
+}
+
 /** @deprecated Use resolveDcsEffectiveEditionTiers via SERIES_EDITION_TIER_AUTOPOPULATE_TARGETS */
 export const resolveEffectiveEditionTiers = resolveDcsEffectiveEditionTiers
 
@@ -206,9 +206,9 @@ export const shouldAutopopulateDcsEditionTiers = shouldAutopopulateSeriesEdition
 /** @deprecated Use buildAutopopulatedSeriesEditionTiers */
 export const buildAutopopulatedDcsEditionTiers = buildAutopopulatedSeriesEditionTiers
 
-/** @deprecated Use fetchSeriesEditionTierIdsForSlug with DCS_ROOT_SERIES_SLUG */
+/** @deprecated Use fetchSeriesEditionTierKeysForSlug with DCS_ROOT_SERIES_SLUG */
 export const fetchDcsSeriesEditionTierIds = (req: PayloadRequest) =>
-  fetchSeriesEditionTierIdsForSlug(req, DCS_ROOT_SERIES_SLUG)
+  fetchSeriesEditionTierKeysForSlug(req, DCS_ROOT_SERIES_SLUG)
 
 /** @deprecated Use resolveArtworkSeriesSlugForAutopopulate */
 export const resolveDcsSeriesSlug = resolveArtworkSeriesSlugForAutopopulate

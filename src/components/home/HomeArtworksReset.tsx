@@ -15,7 +15,6 @@ export default function HomeArtworksReset() {
 
     setState((prev) => ({
       ...prev,
-      artworkViewTimeline: true,
       filtersArray: [],
       isAvailableFilter: false,
       searchValue: '',

@@ -1,13 +1,21 @@
-import { getPayload } from 'payload'
+import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 
 import { getSeriesColor } from '@/helpers/seriesColor'
 import type { SeriesMention } from '@/lib/bio/linkSeriesMentions'
+import { withDbRetry } from '@/lib/payload/withDbRetry'
 import type { FilterCategory } from '@/types/frontend'
 import type { Series } from '@/payload-types'
 
 const getPayloadInstance = async () => getPayload({ config })
+
+/** Minimal series projection for nav / bio links — avoids edition tier + locale joins. */
+const SERIES_NAV_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+} as const
 
 function mapSeriesToFilterCategory(doc: Series): FilterCategory {
   return {
@@ -18,9 +26,7 @@ function mapSeriesToFilterCategory(doc: Series): FilterCategory {
   }
 }
 
-async function fetchFilterSeries(): Promise<FilterCategory[]> {
-  const payload = await getPayloadInstance()
-
+export async function fetchFilterSeriesWithPayload(payload: Payload): Promise<FilterCategory[]> {
   const result = await payload.find({
     collection: 'series',
     where: {
@@ -29,10 +35,18 @@ async function fetchFilterSeries(): Promise<FilterCategory[]> {
     sort: 'name',
     depth: 0,
     limit: 100,
+    select: SERIES_NAV_SELECT,
     overrideAccess: false,
   })
 
   return result.docs.map(mapSeriesToFilterCategory)
+}
+
+async function fetchFilterSeries(): Promise<FilterCategory[]> {
+  return withDbRetry(async () => {
+    const payload = await getPayloadInstance()
+    return fetchFilterSeriesWithPayload(payload)
+  })
 }
 
 const getCachedFilterSeries = unstable_cache(fetchFilterSeries, ['series-filter-nav'], {
@@ -49,20 +63,23 @@ export async function getFilterSeries(): Promise<FilterCategory[]> {
 }
 
 async function fetchPublishedSeriesMentions(): Promise<SeriesMention[]> {
-  const payload = await getPayloadInstance()
+  return withDbRetry(async () => {
+    const payload = await getPayloadInstance()
 
-  const result = await payload.find({
-    collection: 'series',
-    where: { status: { equals: 'published' } },
-    sort: 'name',
-    depth: 0,
-    limit: 100,
-    overrideAccess: false,
+    const result = await payload.find({
+      collection: 'series',
+      where: { status: { equals: 'published' } },
+      sort: 'name',
+      depth: 0,
+      limit: 100,
+      select: SERIES_NAV_SELECT,
+      overrideAccess: false,
+    })
+
+    return result.docs
+      .filter((doc) => doc.name?.trim() && doc.slug?.trim())
+      .map((doc) => ({ name: doc.name.trim(), slug: doc.slug.trim() }))
   })
-
-  return result.docs
-    .filter((doc) => doc.name?.trim() && doc.slug?.trim())
-    .map((doc) => ({ name: doc.name.trim(), slug: doc.slug.trim() }))
 }
 
 export type { SeriesMention }

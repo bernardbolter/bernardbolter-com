@@ -15,35 +15,67 @@ import config from '@payload-config'
 
 const BASEL_SLUG = '__fixture-basel-dcs' as const
 
-const SERIES_TIER_NAMES = {
-  monumental: 'Monumental Edition',
-  'collectors-print': 'Collectors print',
-  'small-print': 'Small print',
-} as const
+const DCS_SERIES_TIER_DEFS = [
+  {
+    tierKey: 'monumental',
+    tierName: 'Monumental Edition',
+    tierOrder: 1,
+    isOriginalTier: true,
+    editionSize: 3,
+    apCount: 1,
+    dimensionUnit: 'cm' as const,
+    widthWhole: 121,
+    heightWhole: 121,
+    substrate: 'aluminum-mount' as const,
+    printTechnique: 'pigment-print' as const,
+  },
+  {
+    tierKey: 'collectors-print',
+    tierName: 'Collectors print',
+    tierOrder: 2,
+    isOriginalTier: false,
+    editionSize: 6,
+    apCount: 2,
+    dimensionUnit: 'cm' as const,
+    widthWhole: 80,
+    heightWhole: 120,
+    substrate: 'aluminum-mount' as const,
+    printTechnique: 'pigment-print' as const,
+  },
+  {
+    tierKey: 'small-print',
+    tierName: 'Small print',
+    tierOrder: 3,
+    isOriginalTier: false,
+    editionSize: 200,
+    apCount: 0,
+    dimensionUnit: 'cm' as const,
+    widthWhole: 40,
+    heightWhole: 60,
+    substrate: 'paper' as const,
+    printTechnique: 'pigment-print' as const,
+  },
+] as const
 
-async function getSeriesEditionTierIds(
+async function ensureDcsSeriesEditionTiers(
   payload: Awaited<ReturnType<typeof getPayload>>,
   seriesId: number,
-): Promise<Record<keyof typeof SERIES_TIER_NAMES, number>> {
-  const result = await payload.find({
-    collection: 'series-edition-tiers',
-    where: { series: { equals: seriesId } },
-    limit: 20,
-    sort: 'tierOrder',
+): Promise<void> {
+  const series = await payload.findByID({
+    collection: 'series',
+    id: seriesId,
+    depth: 0,
     overrideAccess: true,
   })
 
-  const ids = {} as Record<keyof typeof SERIES_TIER_NAMES, number>
-  for (const [key, tierName] of Object.entries(SERIES_TIER_NAMES)) {
-    const doc = result.docs.find((row) => row.tierName === tierName)
-    if (!doc) {
-      throw new Error(
-        `SeriesEditionTiers "${tierName}" not found for Digital City Series. Create in admin first.`,
-      )
-    }
-    ids[key as keyof typeof SERIES_TIER_NAMES] = doc.id
-  }
-  return ids
+  if (Array.isArray(series.editionTiers) && series.editionTiers.length > 0) return
+
+  await payload.update({
+    collection: 'series',
+    id: seriesId,
+    data: { editionTiers: [...DCS_SERIES_TIER_DEFS] },
+    overrideAccess: true,
+  })
 }
 
 // Exact same tags as artworkFixture.ts — guaranteed to exist after that seed runs
@@ -73,7 +105,7 @@ async function seed() {
     throw new Error('Series "digital-city-series" not found. Create it in the admin first.')
   }
   const seriesId = seriesResult.docs[0].id
-  const seriesEditionTierIds = await getSeriesEditionTierIds(payload, seriesId)
+  await ensureDcsSeriesEditionTiers(payload, seriesId)
 
   // --- Creator ---
   const artistResult = await payload.find({
@@ -357,12 +389,12 @@ async function seed() {
       },
     ],
 
-    // Edition tiers — v2: seriesEditionTier relation + per-artwork copies[] (fixture test data)
+    // Edition tiers — seriesTierKey + per-artwork copies[] (fixture test data)
     dcs: {
       editionTiers: [
         {
           tierName: 'monumental',
-          seriesEditionTier: seriesEditionTierIds.monumental,
+          seriesTierKey: 'monumental',
           totalEditionSize: 3,
           printSubstrate: 'aluminum-mount',
           includesSupportingPrints: true,
@@ -389,7 +421,7 @@ async function seed() {
         },
         {
           tierName: 'collectors-print',
-          seriesEditionTier: seriesEditionTierIds['collectors-print'],
+          seriesTierKey: 'collectors-print',
           totalEditionSize: 6,
           printSubstrate: 'aluminum-mount',
           includesSupportingPrints: true,
@@ -441,7 +473,7 @@ async function seed() {
         },
         {
           tierName: 'small-print',
-          seriesEditionTier: seriesEditionTierIds['small-print'],
+          seriesTierKey: 'small-print',
           totalEditionSize: 200,
           printSubstrate: 'paper',
           includesSupportingPrints: true,

@@ -39,7 +39,7 @@ describe('shouldAutopopulateSeriesEditionTiers', () => {
     expect(
       shouldAutopopulateSeriesEditionTiers({
         seriesSlug: 'digital-city-series',
-        editionTiers: [{ seriesEditionTier: 1 }],
+        editionTiers: [{ seriesTierKey: 'monumental' }],
       }),
     ).toBe(false)
   })
@@ -59,7 +59,7 @@ describe('resolveDcsEffectiveEditionTiers', () => {
     expect(
       resolveDcsEffectiveEditionTiers(
         { dcs: { editionTiers: [] } },
-        { dcs: { editionTiers: [{ seriesEditionTier: 9 }] } },
+        { dcs: { editionTiers: [{ seriesTierKey: 'monumental' }] } },
       ),
     ).toEqual([])
   })
@@ -68,9 +68,9 @@ describe('resolveDcsEffectiveEditionTiers', () => {
     expect(
       resolveDcsEffectiveEditionTiers(
         {},
-        { dcs: { editionTiers: [{ seriesEditionTier: 2 }] } },
+        { dcs: { editionTiers: [{ seriesTierKey: 'collectors-print' }] } },
       ),
-    ).toEqual([{ seriesEditionTier: 2 }])
+    ).toEqual([{ seriesTierKey: 'collectors-print' }])
   })
 
   it('returns undefined when neither side has editionTiers', () => {
@@ -79,30 +79,31 @@ describe('resolveDcsEffectiveEditionTiers', () => {
 })
 
 describe('buildAutopopulatedSeriesEditionTiers', () => {
-  it('maps series tier ids to relation-only entries', () => {
-    expect(buildAutopopulatedSeriesEditionTiers([1, 2, 3])).toEqual([
-      { seriesEditionTier: 1 },
-      { seriesEditionTier: 2 },
-      { seriesEditionTier: 3 },
+  it('maps series tier keys to key-only entries', () => {
+    expect(buildAutopopulatedSeriesEditionTiers(['monumental', 'small-print'])).toEqual([
+      { seriesTierKey: 'monumental' },
+      { seriesTierKey: 'small-print' },
     ])
   })
 })
 
 describe('editionTierRowIdentityValidate', () => {
-  it('rejects rows with neither relation nor fallback fields', async () => {
+  it('rejects rows with neither key nor fallback fields', async () => {
     const { editionTierRowIdentityValidate } = await import(
       '@/collections/artworks/editionTierOwnershipFields'
     )
     expect(editionTierRowIdentityValidate([{}], {} as never)).toBe(
-      'Edition tier 1: link a series edition tier or set tierName and totalEditionSize.',
+      'Edition tier 1: set seriesTierKey or provide tierName and totalEditionSize.',
     )
   })
 
-  it('accepts relation-only rows', async () => {
+  it('accepts key-only rows', async () => {
     const { editionTierRowIdentityValidate } = await import(
       '@/collections/artworks/editionTierOwnershipFields'
     )
-    expect(editionTierRowIdentityValidate([{ seriesEditionTier: 2 }], {} as never)).toBe(true)
+    expect(editionTierRowIdentityValidate([{ seriesTierKey: 'monumental' }], {} as never)).toBe(
+      true,
+    )
   })
 })
 
@@ -112,7 +113,7 @@ describe('editionTierMegacitiesRowIdentityValidate', () => {
       '@/collections/artworks/editionTierOwnershipFields'
     )
     expect(editionTierMegacitiesRowIdentityValidate([{}], {} as never)).toBe(
-      'Edition 1: link a series edition tier or set tier and editionSize.',
+      'Edition 1: set seriesTierKey or provide tier and editionSize.',
     )
   })
 })

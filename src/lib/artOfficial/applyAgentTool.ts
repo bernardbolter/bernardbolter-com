@@ -68,6 +68,15 @@ import { listLegacyRecords, lookupLegacyRecord } from './legacyLookup'
 import { clampPreUploadStep } from './preUploadGuide'
 import { upsertTimelineEntry } from './sessionTimeline'
 import { normalizeEventDialoguePhase } from './eventDialoguePhase'
+import {
+  isEventPhaseAStagingField,
+  normalizeEventPhaseAFieldName,
+  normalizeEventPhaseAStagedValue,
+} from './eventPhaseAStaging'
+import {
+  ensureEventPhaseBForFieldStaging,
+  transitionEventSessionToPhaseB,
+} from './transitionEventDialoguePhase'
 import { estimateTimelineDateForWork } from './sequencing/estimateTimelineDate'
 import { findArtworkBySlug, resolveTargetArtworkSlug } from './sequencing/resolveArtwork'
 
@@ -177,12 +186,50 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           return failTool(tool.name, message)
         }
         if (session.sessionType === 'event-enrichment') {
+          const phaseBError = await ensureEventPhaseBForFieldStaging({
+            payload,
+            user,
+            session,
+            send,
+            reason: 'Staging reflective event fields',
+            targetCollection: args.targetCollection,
+            field: args.field,
+          })
+          if (phaseBError) {
+            return failTool(tool.name, phaseBError)
+          }
+
           const phase = normalizeEventDialoguePhase(session.eventDialoguePhase)
           if (phase === 'phase-a-research') {
-            return failTool(
-              tool.name,
-              'Phase A uses propose_authority_field and confirm_authority_proposal — not update_field.',
-            )
+            if (args.targetCollection !== 'events') {
+              return failTool(
+                tool.name,
+                'Phase A only stages targetCollection "events". Use update_field with factual fields like venueAddress, venueUrl, endDate, sameAs.',
+              )
+            }
+            const field = normalizeEventPhaseAFieldName(args.field)
+            if (!isEventPhaseAStagingField(field)) {
+              return failTool(
+                tool.name,
+                `Field ${args.field} is not stageable in Phase A. Use: venueAddress, venueUrl, venueLatLng, venueCountry, endDate, sameAs, venueWikidataUri, etc.`,
+              )
+            }
+            args.field = field
+            try {
+              if (typeof args.value === 'string') {
+                args.value = normalizeEventPhaseAStagedValue(field, args.value)
+              } else if (field === 'venueLatLng' && args.value && typeof args.value === 'object') {
+                const lat = (args.value as { lat?: unknown }).lat
+                const lng = (args.value as { lng?: unknown }).lng
+                if (typeof lat !== 'number' || typeof lng !== 'number') {
+                  throw new Error('venueLatLng must be { lat: number, lng: number }.')
+                }
+              } else if (field === 'sameAs' && typeof args.value === 'string') {
+                args.value = normalizeEventPhaseAStagedValue(field, args.value)
+              }
+            } catch (err) {
+              return failTool(tool.name, err instanceof Error ? err.message : String(err))
+            }
           }
         }
         if (!isFieldAllowedForAgent(args.targetCollection, args.field)) {
@@ -196,12 +243,17 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
             return failTool(tool.name, err instanceof Error ? err.message : String(err))
           }
         }
+        let entrySource = args.source
+        if (session.sessionType === 'event-enrichment' && args.targetCollection === 'events') {
+          const eventPhase = normalizeEventDialoguePhase(session.eventDialoguePhase)
+          entrySource = eventPhase === 'phase-a-research' ? 'phase-a-haiku' : 'conversation'
+        }
         const entry = {
           targetCollection: args.targetCollection,
           field: args.field,
           value: args.value,
           confidence: args.confidence,
-          source: args.source,
+          source: entrySource,
           timestamp: new Date().toISOString(),
         }
         const timeline = upsertTimelineEntry(
@@ -279,6 +331,15 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           return failTool(tool.name, parsed.error)
         }
         const args = generateConfirmationDraftSchema.parse(parsed.data)
+        if (session.sessionType === 'event-enrichment') {
+          await transitionEventSessionToPhaseB({
+            payload,
+            user,
+            session,
+            send,
+            reason: 'Generating event confirmation draft',
+          })
+        }
         const draftData: Record<string, unknown> = {
           agentDraftDescriptionShort: args.agentDraftDescriptionShort,
           agentDraftDescriptionLong: args.agentDraftDescriptionLong,
@@ -797,11 +858,18 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           return failTool(tool.name, 'propose_authority_field is for event-enrichment Phase A only.')
         }
         const args = proposeAuthorityFieldSchema.parse(parsed.data)
+        const fieldName = normalizeEventPhaseAFieldName(args.fieldName)
+        if (!isEventPhaseAStagingField(fieldName)) {
+          return failTool(
+            tool.name,
+            `Field ${args.fieldName} cannot be staged in Phase A. Use an allowed events field (venueAddress, venueUrl, venueLatLng, endDate, sameAs, etc.).`,
+          )
+        }
         const proposals = readEventAuthorityProposals(session).filter(
-          (p) => p.fieldName !== args.fieldName,
+          (p) => p.fieldName !== fieldName,
         )
         proposals.push({
-          fieldName: args.fieldName,
+          fieldName,
           value: args.value,
           sourceUrl: args.sourceUrl,
           confidence: args.confidence,
@@ -815,8 +883,8 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           user,
           context: { skipAgent: true },
         })
-        send('tool-staged', { name: tool.name, input: args })
-        return toolResult({ ok: true, proposed: true, fieldName: args.fieldName })
+        send('tool-staged', { name: tool.name, input: { ...args, fieldName } })
+        return toolResult({ ok: true, proposed: true, fieldName })
       }
 
       case TOOL_CONFIRM_AUTHORITY_PROPOSAL: {
@@ -826,20 +894,31 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           return failTool(tool.name, 'confirm_authority_proposal is for event-enrichment Phase A only.')
         }
         const args = confirmAuthorityProposalSchema.parse(parsed.data)
-        const proposals = readEventAuthorityProposals(session)
-        const match = proposals.find((p) => p.fieldName === args.fieldName)
-        if (!match) {
-          return failTool(tool.name, `No pending proposal for field ${args.fieldName}.`)
+        const fieldName = normalizeEventPhaseAFieldName(args.fieldName)
+        if (!isEventPhaseAStagingField(fieldName)) {
+          return failTool(tool.name, `Field ${args.fieldName} cannot be staged in Phase A.`)
         }
 
-        let value: unknown = match.value
-        if (args.fieldName === 'sameAs') {
-          value = [{ uri: match.value }]
+        const proposals = readEventAuthorityProposals(session)
+        const match = proposals.find((p) => p.fieldName === fieldName)
+        const rawValue = match?.value ?? args.value
+        if (!rawValue) {
+          return failTool(
+            tool.name,
+            `No pending proposal for ${fieldName}. Call propose_authority_field first, or pass value and sourceUrl with confirm.`,
+          )
+        }
+
+        let value: unknown
+        try {
+          value = normalizeEventPhaseAStagedValue(fieldName, rawValue)
+        } catch (err) {
+          return failTool(tool.name, err instanceof Error ? err.message : String(err))
         }
 
         const entry = {
           targetCollection: 'events',
-          field: args.fieldName,
+          field: fieldName,
           value,
           confidence: 'confirmed' as const,
           source: 'phase-a-haiku' as const,
@@ -852,7 +931,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           entry,
         )
         session.fieldUpdateTimeline = timeline
-        const remaining = proposals.filter((p) => p.fieldName !== args.fieldName)
+        const remaining = proposals.filter((p) => p.fieldName !== fieldName)
         session.eventAuthorityProposals = remaining
         await payload.update({
           collection: 'sessions',
@@ -865,8 +944,18 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           user,
           context: { skipAgent: true },
         })
-        send('tool-staged', { name: tool.name, input: args })
-        return toolResult({ ok: true, confirmed: true, fieldName: args.fieldName })
+        send('tool-staged', {
+          name: tool.name,
+          input: {
+            fieldName,
+            targetCollection: 'events',
+            field: fieldName,
+            value,
+            confidence: 'confirmed',
+            source: 'phase-a-haiku',
+          },
+        })
+        return toolResult({ ok: true, confirmed: true, fieldName })
       }
 
       case TOOL_TRANSITION_TO_REASONING_PHASE: {

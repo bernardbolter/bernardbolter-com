@@ -35,10 +35,17 @@ import { buildArtworkRefinementBlock } from './artworkRefinement'
 import { buildEventRefinementBlock } from './buildEventRefinementBlock'
 import { assembleEventPhaseAPrompt } from './assembleEventPhaseAPrompt'
 import {
+  buildEventPhaseADialogueRules,
+  buildEventSessionTypeOverride,
+} from './eventSessionPrompt'
+import {
   assembleEventPhaseBPrompt,
+  buildEventSessionCloseBlock,
+  buildEventTagWrapUpBlock,
   summarizeRelatedEventsForPrompt,
 } from './assembleEventPhaseBPrompt'
 import { queryRelatedCompleteEvents } from './queryRelatedCompleteEvents'
+import { resolveToolsForSession } from './agentTools'
 import type { EventDialoguePhase } from './eventDialoguePhase'
 import { normalizeEventDialoguePhase } from './eventDialoguePhase'
 
@@ -110,9 +117,11 @@ export async function buildSystemPromptParts(
   const cachedPrefixParts = [
     buildIdentityAndRole(artistName, siteUrl, nameLegal),
     knowledgeBlocks || '(Practice knowledge sections are empty — rely on the conversation.)',
-    DIALOGUE_RULES,
-    buildFieldRoadmap(careerStage),
   ]
+
+  if (sessionType !== 'event-enrichment') {
+    cachedPrefixParts.push(DIALOGUE_RULES, buildFieldRoadmap(careerStage))
+  }
 
   if (sessionType === 'artwork-cataloguing') {
     const seriesRecords = await listSeriesWithParents({ payload, user })
@@ -140,13 +149,28 @@ export async function buildSystemPromptParts(
   if (sessionType === 'event-enrichment') {
     const eventPhase = normalizeEventDialoguePhase(args.eventDialoguePhase)
     if (eventPhase === 'phase-a-research') {
-      cachedPrefixParts.push(assembleEventPhaseAPrompt(), buildSessionCloseBlock())
+      cachedPrefixParts.push(
+        assembleEventPhaseAPrompt(),
+        buildEventPhaseADialogueRules(),
+        buildSessionCloseBlock(),
+      )
     }
   }
 
   const cachedPrefix = cachedPrefixParts.join('\n\n---\n\n')
 
-  const dynamicParts = [sessionTypeOverride(sessionType)]
+  const eventPhase = normalizeEventDialoguePhase(args.eventDialoguePhase)
+  const dynamicParts =
+    sessionType === 'event-enrichment'
+      ? [buildEventSessionTypeOverride(eventPhase)]
+      : [sessionTypeOverride(sessionType)]
+
+  if (sessionType === 'event-enrichment') {
+    const activeTools = resolveToolsForSession(sessionType, eventPhase).map((tool) => tool.name)
+    dynamicParts.push(
+      `ACTIVE TOOLS THIS SESSION (only these are callable):\n${activeTools.map((name) => `- ${name}`).join('\n')}`,
+    )
+  }
   if (sessionType === 'artwork-cataloguing') {
     if (artworkRecordId) {
       // Refinement mode: inject existing artwork context instead of pre-upload state
@@ -213,7 +237,8 @@ export async function buildSystemPromptParts(
       })
       dynamicParts.push(
         assembleEventPhaseBPrompt(summarizeRelatedEventsForPrompt(related)),
-        buildSessionCloseBlock(),
+        buildEventTagWrapUpBlock(),
+        buildEventSessionCloseBlock(),
       )
     }
   }

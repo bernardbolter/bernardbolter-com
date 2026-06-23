@@ -81,20 +81,15 @@ export default function ArtworkTitle() {
         >
           <h1 className="artwork-title__title">{currentArtwork.title}</h1>
           <h2 className="artwork-title__year">{currentArtwork.yearCreated ?? '—'}</h2>
-          {mediumLabel ? (
-            <div className="artwork-title__medium-row">
-              <h3 className="artwork-title__medium">{mediumLabel}</h3>
-              <div
-                className="artwork-title__series-box"
-                style={{
-                  background: seriesColor,
-                }}
-              />
-            </div>
-          ) : null}
+          {mediumLabel ? <h3 className="artwork-title__medium">{mediumLabel}</h3> : null}
           {sizeInput ? (
             <ArtworkSize width={sizeInput.width} height={sizeInput.height} units={sizeInput.units} />
           ) : null}
+          <div
+            className="artwork-title__series-box"
+            style={{ background: seriesColor }}
+            aria-hidden
+          />
         </div>
         <div
           className={

@@ -1,6 +1,8 @@
 import type { CollectionConfig } from 'payload'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
+import { seriesEditionTiersField } from '@/collections/series/seriesEditionTierFields'
+import { seriesBeforeChange } from '@/hooks/seriesBeforeChange'
 
 export const Series: CollectionConfig = {
   slug: 'series',
@@ -17,6 +19,9 @@ export const Series: CollectionConfig = {
     create: ({ req: { user } }) => isArtistOrAdmin(user),
     update: ({ req: { user } }) => isArtistOrAdmin(user),
     delete: ({ req: { user } }) => isArtistOrAdmin(user),
+  },
+  hooks: {
+    beforeChange: [seriesBeforeChange],
   },
   fields: [
     {
@@ -87,6 +92,7 @@ export const Series: CollectionConfig = {
         position: 'sidebar',
       },
     },
+    seriesEditionTiersField,
     {
       name: 'seriesUntrackedEditionsNote',
       type: 'textarea',
