@@ -2,7 +2,7 @@
 import type { Metadata } from 'next'
 import { Barlow, Barlow_Condensed, Staatliches } from 'next/font/google'
 
-import Info from '@/components/info/Info'
+import { SiteChrome } from '@/components/site/SiteChrome'
 import ArtworksProvider from '@/providers/ArtworkProvider'
 import { getLayoutProviderData } from '@/lib/payload/layoutData'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
@@ -109,7 +109,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         `}
       >
           <ArtworksProvider artworks={artworksData} artist={artistInfo} filterSeries={filterSeries}>
-            <Info />
+            <SiteChrome />
             <AnimationWrapper>
               {children}
             </AnimationWrapper>

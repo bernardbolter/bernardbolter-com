@@ -1,61 +1,35 @@
 'use client'
 
-import { FormEvent, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useActionState } from 'react'
 
-export function LoginForm() {
-  const searchParams = useSearchParams()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+import {
+  studioLoginAction,
+  type StudioLoginState,
+} from '@/lib/studio/studioLoginAction'
 
-  const destination = useMemo(() => {
-    const from = searchParams.get('from')?.trim()
-    if (!from || !from.startsWith('/')) return '/studio'
-    return from
-  }, [searchParams])
+type Props = {
+  destination: string
+}
 
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitting(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email: email.trim(), password }),
-      })
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => ({}))) as { errors?: { message?: string }[] }
-        const message = payload.errors?.[0]?.message || 'Login failed. Check email and password.'
-        setError(message)
-        return
-      }
-
-      window.location.assign(destination)
-    } catch {
-      setError('Login failed. Please try again.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
+export function LoginForm({ destination }: Props) {
+  const [state, formAction, submitting] = useActionState<StudioLoginState, FormData>(
+    studioLoginAction,
+    null,
+  )
 
   return (
-    <form className="studio-login__form" onSubmit={onSubmit}>
+    <form className="studio-login__form" action={formAction}>
+      <input type="hidden" name="from" value={destination} />
+
       <label className="studio-login__label" htmlFor="studio-email">
         Email
       </label>
       <input
         id="studio-email"
+        name="email"
         type="email"
         autoComplete="email"
         required
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
       />
 
       <label className="studio-login__label" htmlFor="studio-password">
@@ -63,14 +37,13 @@ export function LoginForm() {
       </label>
       <input
         id="studio-password"
+        name="password"
         type="password"
         autoComplete="current-password"
         required
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
       />
 
-      {error ? <p className="studio-login__error">{error}</p> : null}
+      {state?.error ? <p className="studio-login__error">{state.error}</p> : null}
 
       <button type="submit" disabled={submitting}>
         {submitting ? 'Signing in…' : 'Sign in'}
