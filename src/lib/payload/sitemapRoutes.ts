@@ -2,14 +2,11 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 import { withDbRetry } from '@/lib/payload/withDbRetry'
+import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import type { Artwork, Event, Series } from '@/payload-types'
 
-const FIXTURE_SLUG_PATTERN = '__%'
-
 export function isPublicSitemapSlug(slug: string | null | undefined): boolean {
-  const value = slug?.trim()
-  if (!value) return false
-  return !value.startsWith('__')
+  return isPublicCatalogueSlug(slug)
 }
 
 export type SitemapEntries = {
@@ -24,12 +21,7 @@ export async function fetchSitemapEntries(): Promise<SitemapEntries> {
 
     const artworksResult = await payload.find({
       collection: 'artworks',
-      where: {
-        and: [
-          { status: { equals: 'published' } },
-          { slug: { not_like: FIXTURE_SLUG_PATTERN } },
-        ],
-      },
+      where: { status: { equals: 'published' } },
       limit: 1000,
       depth: 0,
       overrideAccess: true,
@@ -37,12 +29,7 @@ export async function fetchSitemapEntries(): Promise<SitemapEntries> {
 
     const seriesResult = await payload.find({
       collection: 'series',
-      where: {
-        and: [
-          { status: { equals: 'published' } },
-          { slug: { not_like: FIXTURE_SLUG_PATTERN } },
-        ],
-      },
+      where: { status: { equals: 'published' } },
       limit: 100,
       depth: 0,
       overrideAccess: true,
@@ -51,11 +38,7 @@ export async function fetchSitemapEntries(): Promise<SitemapEntries> {
     const eventsResult = await payload.find({
       collection: 'events',
       where: {
-        and: [
-          { status: { equals: 'published' } },
-          { hasPage: { equals: true } },
-          { slug: { not_like: FIXTURE_SLUG_PATTERN } },
-        ],
+        and: [{ status: { equals: 'published' } }, { hasPage: { equals: true } }],
       },
       limit: 500,
       depth: 0,
@@ -63,9 +46,9 @@ export async function fetchSitemapEntries(): Promise<SitemapEntries> {
     })
 
     return {
-      artworks: artworksResult.docs,
-      series: seriesResult.docs,
-      events: eventsResult.docs,
+      artworks: artworksResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
+      series: seriesResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
+      events: eventsResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
     }
   })
 }

@@ -1,16 +1,13 @@
 import type { Payload, Where } from 'payload'
 
-import { FIXTURE_SLUG_PATTERN } from '@/lib/corpus/constants'
+import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import type { Artist, Artwork, Series } from '@/payload-types'
 
 const defaultLocale = 'en' as const
 const PAGE_SIZE = 100
 
 function publishedArtworkWhere(seriesSlug?: string | null): Where {
-  const and: Where[] = [
-    { status: { equals: 'published' } },
-    { slug: { not_like: FIXTURE_SLUG_PATTERN } },
-  ]
+  const and: Where[] = [{ status: { equals: 'published' } }]
 
   const seriesFilter = seriesSlug?.trim()
   if (seriesFilter) {
@@ -41,7 +38,7 @@ export async function fetchCorpusArtworks(
       overrideAccess: true,
     })
 
-    docs.push(...result.docs)
+    docs.push(...result.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)))
     hasNextPage = result.hasNextPage
     page += 1
   }
@@ -53,19 +50,14 @@ export async function fetchCorpusSeries(payload: Payload): Promise<Series[]> {
   const result = await payload.find({
     collection: 'series',
     locale: defaultLocale,
-    where: {
-      and: [
-        { status: { equals: 'published' } },
-        { slug: { not_like: FIXTURE_SLUG_PATTERN } },
-      ],
-    },
+    where: { status: { equals: 'published' } },
     limit: 100,
     depth: 0,
     sort: 'yearStart',
     overrideAccess: true,
   })
 
-  return result.docs
+  return result.docs.filter((doc) => isPublicCatalogueSlug(doc.slug))
 }
 
 export async function fetchCorpusArtist(payload: Payload): Promise<Artist | null> {
