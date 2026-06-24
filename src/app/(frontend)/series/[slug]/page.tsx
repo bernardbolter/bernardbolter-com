@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import Artworks from '@/components/artworks/Artworks'
-import HeaderTitle from '@/components/info/HeaderTitle'
 import { Nav } from '@/components/navs'
 import SeriesPageInit from '@/components/series/SeriesPageInit'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
@@ -57,7 +56,6 @@ export default async function SeriesPage({ params }: Props) {
         />
       ) : null}
       <SeriesPageInit seriesSlug={series.slug} />
-      <HeaderTitle title={series.name} large />
       <Nav />
       <Artworks />
     </main>
