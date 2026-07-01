@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
 import { getDisplayImageUrl } from '@/helpers/artworkCatalog'
+import { isReservedFrontendSlug } from '@/lib/routes/reservedFrontendSlugs'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
@@ -30,6 +31,9 @@ export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
+  if (isReservedFrontendSlug(slug)) {
+    return { title: 'Not found' }
+  }
   const artwork = await getArtworkForPage(slug)
   if (!artwork) {
     return { title: 'Artwork not found' }
@@ -63,6 +67,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function Page({ params }: Props) {
   const { slug } = await params
+  if (isReservedFrontendSlug(slug)) notFound()
+
   const [artwork, artist] = await Promise.all([
     getArtworkForPage(slug),
     getArtistRecord(),

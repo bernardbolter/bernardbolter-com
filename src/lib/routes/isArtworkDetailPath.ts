@@ -1,18 +1,4 @@
-const RESERVED_SINGLE_SEGMENT = new Set([
-  'admin',
-  'api',
-  'artworks',
-  'bio',
-  'contact',
-  'cv',
-  'datenschutz',
-  'events',
-  'statement',
-  'studio',
-  'preview',
-  'robots.txt',
-  'sitemap.xml',
-])
+import { isReservedFrontendSlug } from '@/lib/routes/reservedFrontendSlugs'
 
 /** True for public artwork pages `/{slug}` and dev preview `/preview/artwork/{slug}`. */
 export function isArtworkDetailPath(pathname: string): boolean {
@@ -21,5 +7,5 @@ export function isArtworkDetailPath(pathname: string): boolean {
   const segments = pathname.split('/').filter(Boolean)
   if (segments.length !== 1) return false
 
-  return !RESERVED_SINGLE_SEGMENT.has(segments[0].toLowerCase())
+  return !isReservedFrontendSlug(segments[0])
 }

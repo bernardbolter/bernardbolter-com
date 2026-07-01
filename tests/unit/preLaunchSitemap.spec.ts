@@ -21,8 +21,8 @@ describe('robots production gate', () => {
   it('allows AI crawlers on production', async () => {
     vi.stubEnv('VERCEL_ENV', 'production')
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://bernardbolter.com')
-    const { default: robots } = await import('@/app/(frontend)/robots')
-    const rules = robots()
+    const { getRobotsConfig } = await import('@/lib/seo/robotsConfig')
+    const rules = getRobotsConfig()
 
     expect(rules.sitemap).toBe('https://bernardbolter.com/sitemap.xml')
     expect(rules.rules).toEqual(
@@ -35,8 +35,8 @@ describe('robots production gate', () => {
 
   it('disallows all crawlers on preview and local dev', async () => {
     vi.stubEnv('VERCEL_ENV', 'preview')
-    const { default: robots } = await import('@/app/(frontend)/robots')
-    const rules = robots()
+    const { getRobotsConfig } = await import('@/lib/seo/robotsConfig')
+    const rules = getRobotsConfig()
 
     expect(rules).toEqual({
       rules: { userAgent: '*', disallow: '/' },
