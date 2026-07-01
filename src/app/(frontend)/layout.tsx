@@ -2,6 +2,8 @@
 import type { Metadata } from 'next'
 import { Barlow, Barlow_Condensed, Staatliches } from 'next/font/google'
 
+import { JsonLdScript } from '@/components/seo/JsonLdScript'
+import { RouteStructuredData } from '@/components/seo/RouteStructuredData'
 import { SiteChrome } from '@/components/site/SiteChrome'
 import ArtworksProvider from '@/providers/ArtworkProvider'
 import { getLayoutProviderData } from '@/lib/payload/layoutData'
@@ -84,21 +86,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              '@context': 'https://schema.org',
-              '@type': 'Person',
-              name: 'Bernard Bolter',
-              jobTitle: 'Mixed Media and Digital Artist',
-              url: siteBaseUrl,
-              description: 'San Francisco born, Berlin based, mixed media and digital artist.',
-              image: `${siteBaseUrl}/bernard-bolter-portrait.jpeg`,
-              sameAs: ['https://instagram.com/bernardbolter'],
-            }),
+        <JsonLdScript
+          data={{
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            name: 'Bernard Bolter',
+            jobTitle: 'Mixed Media and Digital Artist',
+            url: siteBaseUrl,
+            description: 'San Francisco born, Berlin based, mixed media and digital artist.',
+            image: `${siteBaseUrl}/bernard-bolter-portrait.jpeg`,
+            sameAs: ['https://instagram.com/bernardbolter'],
           }}
         />
+        <RouteStructuredData />
       </head>
       <body
         className={`

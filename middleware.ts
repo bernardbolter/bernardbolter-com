@@ -9,6 +9,7 @@ export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-studio-path', pathname)
+  requestHeaders.set('x-pathname', pathname)
 
   if (!pathname.startsWith(STUDIO_ROOT) || pathname.startsWith(STUDIO_LOGIN)) {
     return NextResponse.next({
@@ -30,5 +31,7 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/studio', '/studio/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)',
+  ],
 }

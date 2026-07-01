@@ -3,10 +3,8 @@ import type { Metadata } from 'next'
 import Bio from '@/components/bio/Bio'
 import { normalizeBioPhotos } from '@/helpers/bioPhotos'
 import { formatBioBirthLine, formatBioLivesAndWorksLine } from '@/lib/bio/bioHeader'
-import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getBioPageArtist } from '@/lib/payload/bioPage'
 import { getPublishedSeriesMentions } from '@/lib/payload/series'
-import { generateBioJsonLd } from '@/utilities/generateBioJsonLd'
 
 export const revalidate = 3600
 
@@ -21,16 +19,8 @@ export default async function BioPage() {
     getBioPageArtist(),
     getPublishedSeriesMentions(),
   ])
-  const jsonLd = artist ? generateBioJsonLd(artist, { baseUrl: getSiteBaseUrl() }) : null
-
   return (
     <div className="bio-page__container">
-      {jsonLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      ) : null}
       {artist ? (
         <Bio
           name={artist.name}

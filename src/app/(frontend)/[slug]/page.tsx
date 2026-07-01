@@ -7,7 +7,6 @@ import { isReservedFrontendSlug } from '@/lib/routes/reservedFrontendSlugs'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
-import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import {
   getArtworkForPage,
@@ -75,19 +74,11 @@ export default async function Page({ params }: Props) {
   ])
   if (!artwork) notFound()
 
-  const jsonLd = buildArtworkJsonLd(artwork, artist)
-
   return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
-        <div className="artwork-page__layout">
-          <ArtworkPage artwork={artwork} artist={artist} />
-        </div>
-      </ArtworkPageChromeProvider>
-    </>
+    <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
+      <div className="artwork-page__layout">
+        <ArtworkPage artwork={artwork} artist={artist} />
+      </div>
+    </ArtworkPageChromeProvider>
   )
 }
