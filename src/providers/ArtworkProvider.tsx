@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, createContext, useContext, type ReactNode } from 'react'
 
 import { artworkHasDisplayImage, resolveSeriesSlug } from '@/helpers/artworkCatalog'
+import { getArtworkViewportLayout } from '@/helpers/artworkViewportLayout'
 import { generateTimeline, getArtworkSortKey } from '@/helpers/timeline'
 import {
   DEFAULT_ARTIST_INFO,
@@ -51,23 +52,9 @@ export const ArtworksProvider = ({ children, artworks, artist, filterSeries }: A
   // Keep viewport and artwork container sizing in provider state.
   useEffect(() => {
     const applyViewportDimensions = () => {
-      const viewportWidth = window.innerWidth
-      const viewportHeight = window.innerHeight
-      const isDesktop = viewportWidth >= 768
-      const artworkContainerSize = isDesktop
-        ? Math.max(1, viewportHeight - 125)
-        : Math.max(1, viewportWidth - 50)
-      const artworkDesktopSideWidth = isDesktop
-        ? Math.max(0, (viewportWidth - artworkContainerSize) / 2)
-        : 0
-
       setState((prev) => ({
         ...prev,
-        viewportWidth,
-        viewportHeight,
-        artworkContainerWidth: artworkContainerSize,
-        artworkContainerHeight: artworkContainerSize,
-        artworkDesktopSideWidth,
+        ...getArtworkViewportLayout(window.innerWidth, window.innerHeight),
       }))
     }
 

@@ -1,5 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 
+import { getSsrArtworkViewportLayout } from '@/helpers/artworkViewportLayout'
+import { generateTimeline } from '@/helpers/timeline'
 import type { Artwork, Artist, Event, Media } from '@/payload-types'
 import type { SortingType, TimelineResult } from '@/types/timlineTypes'
 
@@ -94,13 +96,28 @@ export function createInitialArtworksState(
   artist: ArtistInfoData = DEFAULT_ARTIST_INFO,
   filterSeries: FilterCategory[] = [],
 ): ArtworksState {
+  const sorting: SortingType = 'latest'
+  const viewport = getSsrArtworkViewportLayout()
+  const formattedArtworks =
+    artworks.length > 0
+      ? generateTimeline({
+          artworks,
+          sorting,
+          artworkContainerWidth: viewport.artworkContainerWidth,
+          artworkContainerHeight: viewport.artworkContainerHeight,
+          desktopSideWidth: viewport.artworkDesktopSideWidth,
+          viewportWidth: viewport.viewportWidth,
+          viewportHeight: viewport.viewportHeight,
+        })
+      : null
+
   return {
     filterSeries,
     original: artworks,
     filtered: artworks,
-    formattedArtworks: null,
+    formattedArtworks,
     currentArtworkIndex: 0,
-    sorting: 'latest',
+    sorting,
     artworkViewTimeline: true,
     filtersArray: [],
     isAvailableFilter: false,
@@ -120,11 +137,7 @@ export function createInitialArtworksState(
     statementData: null,
     contactData: null,
     datenschutzData: null,
-    viewportWidth: 0,
-    viewportHeight: 0,
-    artworkContainerWidth: 0,
-    artworkContainerHeight: 0,
-    artworkDesktopSideWidth: 0,
+    ...viewport,
     savedTimelineIndex: 0,
     savedTimelineFiltersHash: '',
     totalCount: artworks.length,
