@@ -1,6 +1,5 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 
 import { mapArtistToInfoData } from '@/helpers/mapArtistInfo'
 import {
@@ -8,7 +7,6 @@ import {
   type LayoutProviderArtworks,
 } from '@/lib/payload/artworks'
 import { fetchFilterSeriesWithPayload } from '@/lib/payload/series'
-import { shouldUseDbUnavailableFallback } from '@/lib/payload/buildSafeDb'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 import type { ArtistInfoData, FilterCategory } from '@/types/frontend'
 import type { Artist } from '@/payload-types'
@@ -51,26 +49,12 @@ async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
   })
 }
 
-const getCachedLayoutProviderData = unstable_cache(
-  fetchLayoutProviderData,
-  ['layout-provider-data'],
-  {
-    revalidate: 3600,
-    tags: ['artworks', 'artists', 'series'],
-  },
-)
-
 /** Single-connection fetch for root layout (avoids parallel getPayload pool exhaustion). */
 export async function getLayoutProviderData(): Promise<LayoutProviderData> {
   try {
-    if (process.env.NODE_ENV === 'development') {
-      return fetchLayoutProviderData()
-    }
-    return getCachedLayoutProviderData()
+    return await fetchLayoutProviderData()
   } catch (err) {
-    if (shouldUseDbUnavailableFallback(err)) {
-      return { ...EMPTY_LAYOUT_PROVIDER_DATA }
-    }
-    throw err
+    console.error('[layout-provider-data] falling back to empty data', err)
+    return { ...EMPTY_LAYOUT_PROVIDER_DATA }
   }
 }
