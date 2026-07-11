@@ -18,29 +18,33 @@ function normalizePathname(pathname: string): string {
 
 /** Route-specific JSON-LD for injection in root layout `<head>`. */
 export async function resolveRouteJsonLd(pathname: string): Promise<RouteJsonLd | null> {
-  const normalized = normalizePathname(pathname)
-  const baseUrl = getSiteBaseUrl()
+  try {
+    const normalized = normalizePathname(pathname)
+    const baseUrl = getSiteBaseUrl()
 
-  if (normalized === '/') {
-    const artist = await getPerson()
-    return buildHomeJsonLd(artist, { baseUrl })
+    if (normalized === '/') {
+      const artist = await getPerson()
+      return buildHomeJsonLd(artist, { baseUrl })
+    }
+
+    if (normalized === '/bio') {
+      const artist = await getBioPageArtist()
+      return artist ? generateBioJsonLd(artist, { baseUrl }) : null
+    }
+
+    if (isArtworkDetailPath(normalized)) {
+      const slug = normalized.split('/').filter(Boolean).at(-1)
+      if (!slug) return null
+
+      const [artwork, artist] = await Promise.all([
+        getArtworkForPage(slug),
+        getArtistRecord(),
+      ])
+      return artwork ? buildArtworkJsonLd(artwork, artist) : null
+    }
+
+    return null
+  } catch {
+    return null
   }
-
-  if (normalized === '/bio') {
-    const artist = await getBioPageArtist()
-    return artist ? generateBioJsonLd(artist, { baseUrl }) : null
-  }
-
-  if (isArtworkDetailPath(normalized)) {
-    const slug = normalized.split('/').filter(Boolean).at(-1)
-    if (!slug) return null
-
-    const [artwork, artist] = await Promise.all([
-      getArtworkForPage(slug),
-      getArtistRecord(),
-    ])
-    return artwork ? buildArtworkJsonLd(artwork, artist) : null
-  }
-
-  return null
 }

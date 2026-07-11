@@ -8,7 +8,7 @@ import {
   type LayoutProviderArtworks,
 } from '@/lib/payload/artworks'
 import { fetchFilterSeriesWithPayload } from '@/lib/payload/series'
-import { shouldUseBuildSafeDbFallback } from '@/lib/payload/buildSafeDb'
+import { shouldUseDbUnavailableFallback } from '@/lib/payload/buildSafeDb'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 import type { ArtistInfoData, FilterCategory } from '@/types/frontend'
 import type { Artist } from '@/payload-types'
@@ -68,7 +68,7 @@ export async function getLayoutProviderData(): Promise<LayoutProviderData> {
     }
     return getCachedLayoutProviderData()
   } catch (err) {
-    if (shouldUseBuildSafeDbFallback(err)) {
+    if (shouldUseDbUnavailableFallback(err)) {
       return { ...EMPTY_LAYOUT_PROVIDER_DATA }
     }
     throw err

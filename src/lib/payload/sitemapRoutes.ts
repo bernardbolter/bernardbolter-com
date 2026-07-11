@@ -2,7 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 import { withDbRetry } from '@/lib/payload/withDbRetry'
-import { shouldUseBuildSafeDbFallback } from '@/lib/payload/buildSafeDb'
+import { shouldUseDbUnavailableFallback } from '@/lib/payload/buildSafeDb'
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import type { Artwork, Event, Series } from '@/payload-types'
 
@@ -54,7 +54,7 @@ export async function fetchSitemapEntries(): Promise<SitemapEntries> {
       }
     })
   } catch (err) {
-    if (shouldUseBuildSafeDbFallback(err)) {
+    if (shouldUseDbUnavailableFallback(err)) {
       return { artworks: [], series: [], events: [] }
     }
     throw err

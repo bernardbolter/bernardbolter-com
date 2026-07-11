@@ -3,7 +3,7 @@ import config from '@payload-config'
 import type { Artist, Media } from '@/payload-types'
 
 import { withDbRetry } from '@/lib/payload/withDbRetry'
-import { shouldUseBuildSafeDbFallback } from '@/lib/payload/buildSafeDb'
+import { shouldUseDbUnavailableFallback } from '@/lib/payload/buildSafeDb'
 
 const defaultLocale = 'en' as const
 
@@ -53,7 +53,7 @@ export async function getArtistForContactPage(): Promise<Artist | null> {
       return populateLocationMapImages(artist, payload)
     })
   } catch (err) {
-    if (shouldUseBuildSafeDbFallback(err)) {
+    if (shouldUseDbUnavailableFallback(err)) {
       return null
     }
     throw err
