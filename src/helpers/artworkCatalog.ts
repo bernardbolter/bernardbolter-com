@@ -19,7 +19,7 @@ export function resolveSeriesSlug(artwork: Pick<Artwork, 'seriesSlug' | 'series'
 }
 
 export function artworkHasDisplayImage(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage'>,
+  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
 ): boolean {
   return Boolean(getDisplayImageUrl(artwork))
 }

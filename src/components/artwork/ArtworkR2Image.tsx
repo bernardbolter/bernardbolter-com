@@ -5,12 +5,15 @@ import { useCallback, useState, type CSSProperties, type ImgHTMLAttributes } fro
 type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'onError'> & {
   src: string
   fallbackSrc: string
+  /** Fires only when both src and fallbackSrc fail to load. */
+  onError?: () => void
 }
 
 export default function ArtworkR2Image({
   src,
   fallbackSrc,
   onLoad,
+  onError,
   ...props
 }: Props) {
   const [currentSrc, setCurrentSrc] = useState(src)
@@ -20,8 +23,10 @@ export default function ArtworkR2Image({
     if (!usedFallback && fallbackSrc && currentSrc !== fallbackSrc) {
       setCurrentSrc(fallbackSrc)
       setUsedFallback(true)
+      return
     }
-  }, [currentSrc, fallbackSrc, usedFallback])
+    onError?.()
+  }, [currentSrc, fallbackSrc, onError, usedFallback])
 
   return (
     <img

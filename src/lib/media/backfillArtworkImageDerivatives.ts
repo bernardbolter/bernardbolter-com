@@ -1,4 +1,5 @@
 import { getPayload } from 'payload'
+import type { Where } from 'payload'
 
 import config from '@payload-config'
 import { getArtworkOriginalImageUrl } from '@/lib/media/artworkR2Images'
@@ -48,19 +49,16 @@ export async function backfillArtworkImageDerivatives(
   let seen = 0
 
   while (true) {
-    const where = slugFilter
+    const where: Where = slugFilter
       ? {
           and: [
-            { status: { equals: 'published' as const } },
+            { status: { equals: 'published' } },
             { primaryImage: { exists: true } },
             { slug: { equals: slugFilter } },
           ],
         }
       : {
-          and: [
-            { status: { equals: 'published' as const } },
-            { primaryImage: { exists: true } },
-          ],
+          and: [{ status: { equals: 'published' } }, { primaryImage: { exists: true } }],
         }
 
     const response = await payload.find({
