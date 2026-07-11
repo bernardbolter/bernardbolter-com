@@ -8,7 +8,7 @@ function revalidateFrontendArtworkPaths(slugs: string[]) {
   for (const slug of slugs) {
     const path = `/${slug}`
     revalidatePath(path)
-    revalidatePath(`${path}/embedding`)
+    revalidatePath(`${path}/vision`)
   }
 }
 

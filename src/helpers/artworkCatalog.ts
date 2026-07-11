@@ -1,6 +1,10 @@
 import type { Artwork, Media } from '@/payload-types'
 import { SIZE_TIER_VALUES } from '@/lib/artOfficial/inferSizeTier'
-import { mediaPublicUrl } from '@/lib/media/publicUrl'
+import {
+  getArtworkImageSources,
+  getArtworkOriginalImageUrl,
+  type ArtworkImageContext,
+} from '@/lib/media/artworkR2Images'
 import type { ArtworkSizeTier } from '@/types/frontend'
 
 const DEFAULT_SIZE_TIER: ArtworkSizeTier = 'lg'
@@ -21,17 +25,23 @@ export function artworkHasDisplayImage(
 }
 
 export function getDisplayImageUrl(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage'>,
+  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
+  context: ArtworkImageContext = 'grid',
 ): string | null {
-  const primary = artwork.primaryImage
-  if (primary && typeof primary === 'object') {
-    return mediaPublicUrl(primary)
-  }
-  const poster = artwork.posterImage
-  if (poster && typeof poster === 'object') {
-    return mediaPublicUrl(poster)
-  }
-  return null
+  return getArtworkImageSources(artwork, context)?.src ?? null
+}
+
+export function getArtworkImageFallbackUrl(
+  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
+): string | null {
+  return getArtworkOriginalImageUrl(artwork)
+}
+
+export function getArtworkImagePair(
+  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
+  context: ArtworkImageContext,
+): { src: string; fallback: string } | null {
+  return getArtworkImageSources(artwork, context)
 }
 
 export function getSizeTier(artwork: Pick<Artwork, 'sizeTier'>): ArtworkSizeTier {

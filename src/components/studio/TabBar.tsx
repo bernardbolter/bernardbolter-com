@@ -9,6 +9,7 @@ const TABS = [
   { href: '/studio/notes', label: 'Notes' },
   { href: '/studio/episodes', label: 'Episodes' },
   { href: '/studio/digest', label: 'Digest' },
+  { href: '/studio/archive', label: 'Archive' },
 ]
 
 export function TabBar() {

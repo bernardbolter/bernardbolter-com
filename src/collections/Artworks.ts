@@ -4,6 +4,7 @@ import { adminOnlyFieldAccess, privateFieldAccess, publicReadStaffWriteAccess, i
 import { artworkAchBeforeChange, artworkAchValidateAr } from '@/hooks/artworkAch'
 import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
+import { artworkAfterChangeImageResize } from '@/hooks/artworkAfterChangeImageResize'
 import { artworkAfterRead } from '@/hooks/artworkAfterRead'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
 import { artworkSeriesEditionTiersBeforeChange } from '@/hooks/artworkSeriesEditionTiersBeforeChange'
@@ -54,7 +55,7 @@ export const Artworks: CollectionConfig = {
   hooks: {
     beforeValidate: [artworkAchValidateAr],
     beforeChange: [artworkBeforeChange, artworkSeriesEditionTiersBeforeChange, artworkAchBeforeChange],
-    afterChange: [artworkAfterChange, artworkAfterChangeAr],
+    afterChange: [artworkAfterChange, artworkAfterChangeImageResize, artworkAfterChangeAr],
     afterRead: [artworkAfterRead],
   },
   admin: {
@@ -1030,6 +1031,77 @@ export const Artworks: CollectionConfig = {
                 readOnly: true,
                 description: 'When the CLIP embedding was last generated for this artwork.',
               },
+            },
+            {
+              name: 'embeddings',
+              type: 'array',
+              admin: {
+                description:
+                  'Metadata for each embedding model run. Vectors stored in pgvector columns, not here.',
+              },
+              fields: [
+                {
+                  name: 'model',
+                  type: 'select',
+                  required: true,
+                  options: [
+                    { label: 'CLIP ViT-L/14', value: 'clip-vit-large-patch14' },
+                    { label: 'DINOv2 Large', value: 'dinov2-large' },
+                  ],
+                },
+                {
+                  name: 'dimensions',
+                  type: 'number',
+                  required: true,
+                },
+                {
+                  name: 'pgVectorColumn',
+                  type: 'text',
+                  required: true,
+                  admin: {
+                    description:
+                      "The pgvector column name where this model's vector is stored, e.g. clip_embedding",
+                  },
+                },
+                {
+                  name: 'generatedDate',
+                  type: 'date',
+                },
+                {
+                  name: 'specUrl',
+                  type: 'text',
+                },
+                {
+                  name: 'shortDescription',
+                  type: 'text',
+                },
+              ],
+            },
+            {
+              name: 'visionAnalyses',
+              type: 'array',
+              fields: [
+                {
+                  name: 'text',
+                  type: 'textarea',
+                  required: true,
+                },
+                {
+                  name: 'model',
+                  type: 'text',
+                  required: true,
+                  admin: {
+                    description:
+                      'Exact model version string, e.g. claude-sonnet-4-6, gpt-4o, gemini-2.5-pro, deepseek-vl2',
+                  },
+                },
+                {
+                  name: 'date',
+                  type: 'date',
+                  required: true,
+                  defaultValue: () => new Date().toISOString(),
+                },
+              ],
             },
             {
               name: 'embedding',

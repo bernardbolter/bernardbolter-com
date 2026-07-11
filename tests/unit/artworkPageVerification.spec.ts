@@ -153,7 +153,7 @@ describe('artwork page verification checklist', () => {
       expect(typeof (jsonLd.width as { value: number }).value).toBe('number')
     })
 
-    it('emits sameAs as an array and clip endpoint only when embedding exists', () => {
+    it('emits sameAs as an array and vision page URL only when embedding exists', () => {
       const uris = collectArtworkSameAsUris(fixture as Artwork)
       expect(Array.isArray(jsonLd.sameAs)).toBe(true)
       expect(jsonLd.sameAs).toEqual(uris)
@@ -163,6 +163,7 @@ describe('artwork page verification checklist', () => {
         (row) => row.propertyID === 'artism:clipEmbeddingEndpoint',
       )
       expect(clipEndpoint).toBeUndefined()
+      expect(jsonLd).not.toHaveProperty('artism:visionPageUrl')
     })
 
     it('includes non-empty artism intent fields from fixture in additionalProperty', () => {

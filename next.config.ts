@@ -11,21 +11,11 @@ const nextConfig: NextConfig = {
     return [
       { source: '/artworks', destination: '/', permanent: true },
       { source: '/artworks/:slug', destination: '/:slug', permanent: true },
+      { source: '/:slug/embedding', destination: '/:slug/vision', permanent: true },
     ]
   },
   images: {
-    qualities: [75, 80],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '*.r2.dev',
-      },
-    ],
-    localPatterns: [
-      {
-        pathname: '/api/media/file/**',
-      },
-    ],
+    unoptimized: true,
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {

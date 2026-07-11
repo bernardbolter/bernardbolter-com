@@ -19,6 +19,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 
 import './artwork-page.css'
+import './vision-page.css'
 
 export type ArtworkPageProps = {
   artwork: Artwork

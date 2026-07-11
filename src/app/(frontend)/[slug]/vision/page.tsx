@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
-import EmbeddingPage from '@/components/artwork/EmbeddingPage'
+import VisionPage from '@/components/artwork/VisionPage'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
-import { buildVisualEmbeddingJsonLd } from '@/lib/jsonld/visualEmbedding'
+import { getDirectR2ImageUrl } from '@/lib/artwork/visionPage'
+import { buildVisionPageJsonLd } from '@/lib/jsonld/visionPage'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtworkForPage, getPublishedArtworkSlugs } from '@/lib/payload/artworkPage'
 import { fetchArtworkClipEmbeddingRecord } from '@/lib/payload/clipEmbedding'
@@ -32,10 +33,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const base = getSiteBaseUrl()
   const title = artwork.title?.trim() || 'Artwork'
+  const directImageUrl = getDirectR2ImageUrl(artwork)
+
   return {
-    title: `${title} — Visual embedding`,
-    description: `CLIP visual embedding for ${title}.`,
-    alternates: { canonical: `${base}/${slug}/embedding` },
+    title: `${title} — Vision`,
+    description: `Visual embeddings and vision analyses for ${title}.`,
+    alternates: { canonical: `${base}/${slug}/vision` },
+    ...(directImageUrl
+      ? {
+          icons: {
+            other: [{ rel: 'image', url: directImageUrl }],
+          },
+        }
+      : {}),
   }
 }
 
@@ -45,20 +55,24 @@ export default async function Page({ params }: Props) {
   if (!artwork || typeof artwork.id !== 'number') notFound()
 
   const clipRecord = await fetchArtworkClipEmbeddingRecord(artwork.id)
-  const embedding = clipRecord?.embedding ?? null
-  const similarWorks = embedding?.length
-    ? await getSimilarArtworksForPage(artwork.id, 3)
-    : []
+  const vectorsByColumn: Record<string, number[]> = {}
+  const similarWorksByColumn: Record<string, Awaited<ReturnType<typeof getSimilarArtworksForPage>>> =
+    {}
+
+  if (clipRecord?.embedding?.length) {
+    vectorsByColumn.clip_embedding = clipRecord.embedding
+    similarWorksByColumn.clip_embedding = await getSimilarArtworksForPage(artwork.id, 3)
+  }
 
   const baseUrl = getSiteBaseUrl()
   const artworkUrl = `${baseUrl}/${slug}`
   const artworkTitle = artwork.title?.trim() || 'Artwork'
-  const jsonLd = embedding?.length
-    ? buildVisualEmbeddingJsonLd(artwork, artworkUrl, embedding, clipRecord?.generatedAt)
-    : null
+  const directImageUrl = getDirectR2ImageUrl(artwork)
+  const jsonLd = buildVisionPageJsonLd(artwork, artworkUrl, vectorsByColumn)
 
   return (
     <>
+      {directImageUrl ? <link rel="image" href={directImageUrl} /> : null}
       {jsonLd ? (
         <script
           type="application/ld+json"
@@ -73,11 +87,10 @@ export default async function Page({ params }: Props) {
         }}
       >
         <div className="bio-page__container">
-          <EmbeddingPage
+          <VisionPage
             artwork={artwork}
-            embedding={embedding}
-            generatedAt={clipRecord?.generatedAt}
-            similarWorks={similarWorks}
+            vectorsByColumn={vectorsByColumn}
+            similarWorksByColumn={similarWorksByColumn}
           />
         </div>
       </ArtworkPageChromeProvider>

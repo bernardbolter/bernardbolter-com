@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactPlayer from 'react-player'
 
@@ -112,11 +112,6 @@ export default function Layer0Image({ artwork }: Props) {
       marginHeight: Math.max(0, (viewportHeight - displaySize.displayHeight) / 2),
     }
   }, [displaySize.displayHeight, displaySize.displayWidth, viewportHeight, viewportWidth])
-
-  const imageSizes = useMemo(
-    () => `(max-width: 768px) 100vw, ${Math.round(displaySize.displayWidth)}px`,
-    [displaySize.displayWidth],
-  )
 
   const resetAndChangeImage = useCallback(
     (newIndex: number) => {
@@ -264,17 +259,16 @@ export default function Layer0Image({ artwork }: Props) {
                         <p>{hasError ? 'image failed to load' : 'loading...'}</p>
                       </div>
                     )}
-                    <Image
+                    <ArtworkR2Image
                       className="artwork-image__image"
                       src={image.url}
-                      sizes={imageSizes}
+                      fallbackSrc={image.fallbackUrl}
                       alt={image.alt || artwork.title || 'Bernard Bolter Artwork'}
                       width={displaySize.displayWidth}
                       height={displaySize.displayHeight}
-                      quality={80}
-                      placeholder="blur"
-                      blurDataURL={blurDataURL}
-                      priority={index === activeIndex}
+                      loading={index === activeIndex ? 'eager' : 'lazy'}
+                      decoding="async"
+                      fetchPriority={index === activeIndex ? 'high' : 'auto'}
                       onLoad={() => markImageLoaded(image.url, index)}
                       onError={() => {
                         setImageLoadingStates((prev) => {
@@ -291,6 +285,8 @@ export default function Layer0Image({ artwork }: Props) {
                       style={{
                         objectFit: 'contain',
                         opacity: hasError ? 0 : 1,
+                        width: displaySize.displayWidth,
+                        height: displaySize.displayHeight,
                       }}
                     />
                   </div>

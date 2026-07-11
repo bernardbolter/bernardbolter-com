@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
-import { getDisplayImageUrl } from '@/helpers/artworkCatalog'
+import { getArtworkImageFallbackUrl } from '@/helpers/artworkCatalog'
 import { isReservedFrontendSlug } from '@/lib/routes/reservedFrontendSlugs'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const base = getSiteBaseUrl()
   const seo = resolveArtworkSeo(artwork)
-  const imageUrl = getDisplayImageUrl(artwork)
+  const imageUrl = getArtworkImageFallbackUrl(artwork)
   const canonical = `${base}/${slug}`
   const ogImages = imageUrl ? [{ url: imageUrl.startsWith('http') ? imageUrl : `${base}${imageUrl}` }] : undefined
 
@@ -75,10 +75,13 @@ export default async function Page({ params }: Props) {
   if (!artwork) notFound()
 
   return (
-    <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
-      <div className="artwork-page__layout">
-        <ArtworkPage artwork={artwork} artist={artist} />
-      </div>
-    </ArtworkPageChromeProvider>
+    <>
+      {imageUrl ? <link rel="image" href={imageUrl} /> : null}
+      <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
+        <div className="artwork-page__layout">
+          <ArtworkPage artwork={artwork} artist={artist} />
+        </div>
+      </ArtworkPageChromeProvider>
+    </>
   )
 }

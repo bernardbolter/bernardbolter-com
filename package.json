@@ -19,6 +19,8 @@
     "seed:artwork-fixture": "cross-env NODE_OPTIONS=--no-deprecation tsx src/seed/artworkFixture.ts",
     "migrate:people-schema": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-people-schema.ts",
     "backfill:clip": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillClipEmbeddings.ts",
+    "backfill:images": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillArtworkImageDerivatives.ts",
+    "backfill:images:local": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/resizeArtworkImagesLocal.ts",
     "typecheck": "tsc --noEmit",
     "worker": "cross-env NODE_OPTIONS=--no-deprecation tsx src/workers/index.ts"
   },

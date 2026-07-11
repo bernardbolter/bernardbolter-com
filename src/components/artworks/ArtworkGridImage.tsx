@@ -1,16 +1,15 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 
+import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
 import { PlayButtonSvg } from '@/components/icons'
 import {
-  getDisplayImageUrl,
+  getArtworkImagePair,
   getPrimaryMediaDimensions,
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
-import { seriesColorBlurDataURLs } from '@/helpers/blurURLs'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { CELL_PAD, type GridItemLayout } from '@/lib/artwork/gridRealSize'
 import { getTranslateOffset } from '@/lib/artwork/gridTranslate'
@@ -41,11 +40,6 @@ function isVideoArtwork(artwork: CatalogueArtwork): boolean {
   return hasPoster || hasVideoFile || hasVideoUrl || hasClips
 }
 
-function getImageSizes(columnWidth: number): string {
-  const px = Math.round(columnWidth)
-  return `(max-width: 550px) 100vw, (max-width: 768px) 50vw, (max-width: 980px) 33vw, (max-width: 1200px) 25vw, ${px}px`
-}
-
 export default function ArtworkGridImage({ layout }: ArtworkGridImageProps) {
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [imageFailed, setImageFailed] = useState(false)
@@ -53,9 +47,8 @@ export default function ArtworkGridImage({ layout }: ArtworkGridImageProps) {
   const { artwork, columnWidth, displayWidth, displayHeight, usingFallbackSizing } = layout
   const isVideo = isVideoArtwork(artwork)
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
-  const imageSrc = getDisplayImageUrl(artwork) ?? ''
+  const imagePair = getArtworkImagePair(artwork, 'grid')
   const { width: imageWidth, height: imageHeight } = getPrimaryMediaDimensions(artwork)
-  const blurDataURL = seriesColorBlurDataURLs[seriesSlug] ?? seriesColorBlurDataURLs.default
   const captionMaxWidth = columnWidth - (columnWidth - displayWidth) / 2
   const translate = getTranslateOffset(artwork.id)
 
@@ -91,7 +84,7 @@ export default function ArtworkGridImage({ layout }: ArtworkGridImageProps) {
         >
           {isVideo ? <PlayButtonSvg /> : null}
 
-          {(isImageLoading || imageFailed) && imageSrc ? (
+          {(isImageLoading || imageFailed) && imagePair ? (
             <div
               className="artwork-grid__placeholer-overlay"
               style={{
@@ -103,22 +96,21 @@ export default function ArtworkGridImage({ layout }: ArtworkGridImageProps) {
             </div>
           ) : null}
 
-          {imageSrc ? (
-            <Image
+          {imagePair ? (
+            <ArtworkR2Image
               className="artwork-grid__image"
-              src={imageSrc}
+              src={imagePair.src}
+              fallbackSrc={imagePair.fallback}
               alt={artwork.title ?? 'Artwork'}
               width={imageWidth}
               height={imageHeight}
+              loading="lazy"
+              decoding="async"
               style={{
                 width: displayWidth,
                 height: displayHeight,
                 opacity: imageFailed ? 0 : 1,
               }}
-              placeholder="blur"
-              blurDataURL={blurDataURL}
-              loading="lazy"
-              sizes={getImageSizes(columnWidth)}
               onLoad={() => setIsImageLoading(false)}
               onError={() => {
                 setIsImageLoading(false)

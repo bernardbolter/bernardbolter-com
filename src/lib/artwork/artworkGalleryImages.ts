@@ -1,8 +1,14 @@
 import type { Artwork, Media } from '@/payload-types'
+
+import {
+  getArtworkImageSources,
+} from '@/lib/media/artworkR2Images'
+import { stripMediaUrlVersion } from '@/lib/media/r2Object'
 import { mediaPublicUrl } from '@/lib/media/publicUrl'
 
 export type ArtworkGalleryImage = {
   url: string
+  fallbackUrl: string
   alt: string
   width: number
   height: number
@@ -10,11 +16,12 @@ export type ArtworkGalleryImage = {
 
 function readMedia(media: number | Media | null | undefined): ArtworkGalleryImage | null {
   const mediaDoc = media && typeof media === 'object' ? media : null
-  if (!mediaDoc) return null
-  const url = mediaPublicUrl(mediaDoc)
-  if (!url) return null
+  if (!mediaDoc?.url?.trim()) return null
+
+  const fallbackUrl = stripMediaUrlVersion(mediaDoc.url.trim())
   return {
-    url,
+    url: fallbackUrl,
+    fallbackUrl,
     alt: mediaDoc.alt?.trim() || '',
     width: mediaDoc.width && mediaDoc.width > 0 ? mediaDoc.width : 1200,
     height: mediaDoc.height && mediaDoc.height > 0 ? mediaDoc.height : 900,
@@ -34,12 +41,23 @@ export function collectArtworkGalleryImages(artwork: Artwork): ArtworkGalleryIma
 
   const primary = readMedia(artwork.primaryImage)
   if (primary) {
+    const sources = getArtworkImageSources(artwork, 'artwork-page')
     push({
       ...primary,
+      url: sources?.src ?? primary.url,
+      fallbackUrl: sources?.fallback ?? primary.fallbackUrl,
       alt: artwork.primaryImageAltText?.trim() || artwork.title || 'Artwork',
     })
   } else {
-    push(readMedia(artwork.posterImage))
+    const poster = readMedia(artwork.posterImage)
+    if (poster) {
+      const sources = getArtworkImageSources(artwork, 'artwork-page')
+      push({
+        ...poster,
+        url: sources?.src ?? poster.url,
+        fallbackUrl: sources?.fallback ?? poster.fallbackUrl,
+      })
+    }
   }
 
   for (const row of artwork.alternateViewImages ?? []) {

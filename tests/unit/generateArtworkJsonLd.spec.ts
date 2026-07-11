@@ -42,7 +42,7 @@ describe('buildHomeJsonLd', () => {
 })
 
 describe('buildArtworkJsonLd', () => {
-  it('includes artism context and clip embedding endpoint in additionalProperty', () => {
+  it('includes artism context and vision page URL when embeddings exist', () => {
     const jsonLd = buildArtworkJsonLd(
       minimalArtwork({
         clipEmbedding: [0.1, 0.2, 0.3],
@@ -57,12 +57,61 @@ describe('buildArtworkJsonLd', () => {
     })
     expect(jsonLd['@id']).toBe('https://bernardbolter.com/gates-iii')
     expect(jsonLd.creator).toEqual({ '@id': 'https://bernardbolter.com/bio#person' })
+    expect(jsonLd['artism:visionPageUrl']).toBe('https://bernardbolter.com/gates-iii/vision')
 
-    const additionalProperty = jsonLd.additionalProperty as Array<Record<string, unknown>>
+    const additionalProperty = (jsonLd.additionalProperty ?? []) as Array<Record<string, unknown>>
     const clipEndpoint = additionalProperty.find(
       (row) => row.propertyID === 'artism:clipEmbeddingEndpoint',
     )
-    expect(clipEndpoint?.value).toBe('https://bernardbolter.com/gates-iii/embedding')
+    expect(clipEndpoint).toBeUndefined()
+  })
+
+  it('suppresses reasoningStatus stub in additionalProperty', () => {
+    const jsonLd = buildArtworkJsonLd(
+      minimalArtwork({ reasoningStatus: 'stub' }),
+      null,
+      { baseUrl: 'https://bernardbolter.com' },
+    )
+
+    const additionalProperty = (jsonLd.additionalProperty ?? []) as Array<Record<string, unknown>>
+    const reasoning = additionalProperty.find(
+      (row) => row.propertyID === 'artism:reasoningStatus',
+    )
+    expect(reasoning).toBeUndefined()
+  })
+
+  it('emits corpus vision fields when analyses and embeddings metadata exist', () => {
+    const jsonLd = buildArtworkJsonLd(
+      minimalArtwork({
+        embeddings: [
+          {
+            model: 'clip-vit-large-patch14',
+            dimensions: 768,
+            pgVectorColumn: 'clip_embedding',
+            specUrl: 'https://huggingface.co/openai/clip-vit-large-patch14',
+            shortDescription: 'Language-informed visual embedding — 768 dimensions',
+            generatedDate: '2026-03-15T00:00:00.000Z',
+          },
+        ],
+        visionAnalyses: [
+          {
+            text: 'Strong diagonal from lower-left.',
+            model: 'claude-sonnet-4-6',
+            date: '2026-07-08T00:00:00.000Z',
+          },
+        ],
+      }),
+      null,
+      { baseUrl: 'https://bernardbolter.com' },
+    )
+
+    const embeddings = jsonLd['artism:embeddings'] as Array<Record<string, unknown>>
+    expect(embeddings).toHaveLength(1)
+    expect(embeddings[0]).not.toHaveProperty('artism:vector')
+
+    const analyses = jsonLd['artism:visionAnalyses'] as Array<Record<string, unknown>>
+    expect(analyses).toHaveLength(1)
+    expect(analyses[0]?.text).toBe('Strong diagonal from lower-left.')
   })
 
   it('emits catalogue number in additionalProperty', () => {
@@ -72,7 +121,7 @@ describe('buildArtworkJsonLd', () => {
       { baseUrl: 'https://bernardbolter.com' },
     )
 
-    const additionalProperty = jsonLd.additionalProperty as Array<Record<string, unknown>>
+    const additionalProperty = (jsonLd.additionalProperty ?? []) as Array<Record<string, unknown>>
     expect(additionalProperty).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

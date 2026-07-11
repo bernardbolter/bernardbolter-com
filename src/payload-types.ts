@@ -1446,6 +1446,34 @@ export interface Artwork {
    */
   clipEmbeddingGeneratedAt?: string | null;
   /**
+   * Metadata for each embedding model run. Vectors stored in pgvector columns, not here.
+   */
+  embeddings?:
+    | {
+        model: 'clip-vit-large-patch14' | 'dinov2-large';
+        dimensions: number;
+        /**
+         * The pgvector column name where this model's vector is stored, e.g. clip_embedding
+         */
+        pgVectorColumn: string;
+        generatedDate?: string | null;
+        specUrl?: string | null;
+        shortDescription?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  visionAnalyses?:
+    | {
+        text: string;
+        /**
+         * Exact model version string, e.g. claude-sonnet-4-6, gpt-4o, gemini-2.5-pro, deepseek-vl2
+         */
+        model: string;
+        date: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Legacy JSON embedding placeholder — migrate to clipEmbedding / drop after cutover.
    */
   embedding?:
@@ -4851,6 +4879,25 @@ export interface ArtworksSelect<T extends boolean = true> {
   recognitionTimeline?: T;
   clipEmbedding?: T;
   clipEmbeddingGeneratedAt?: T;
+  embeddings?:
+    | T
+    | {
+        model?: T;
+        dimensions?: T;
+        pgVectorColumn?: T;
+        generatedDate?: T;
+        specUrl?: T;
+        shortDescription?: T;
+        id?: T;
+      };
+  visionAnalyses?:
+    | T
+    | {
+        text?: T;
+        model?: T;
+        date?: T;
+        id?: T;
+      };
   embedding?: T;
   keywords?:
     | T

@@ -70,7 +70,7 @@
 
 .studio-tabbar {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.25rem;
   position: sticky;
   bottom: 0;
@@ -379,4 +379,82 @@
   border-radius: 8px;
   padding: 0.55rem 0.65rem;
   font: inherit;
+}
+
+.studio-archive__lede {
+  color: #475569;
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+.studio-archive__panel {
+  border: 1px solid #d9e1ea;
+  border-radius: 12px;
+  background: #fff;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.studio-archive__panel h3 {
+  margin: 0 0 0.35rem;
+}
+
+.studio-archive__hint {
+  margin: 0 0 0.75rem;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.studio-archive__textarea {
+  width: 100%;
+  border: 1px solid #d9e1ea;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  padding: 0.65rem;
+  resize: vertical;
+}
+
+.studio-archive__actions {
+  margin-top: 0.75rem;
+}
+
+.studio-archive__actions button {
+  border: 0;
+  border-radius: 8px;
+  background: #1a3a52;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  padding: 0.55rem 0.9rem;
+}
+
+.studio-archive__actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.studio-archive__success {
+  margin: 0.65rem 0 0;
+  color: #166534;
+}
+
+.studio-archive__error {
+  margin: 0.65rem 0 0;
+  color: #b91c1c;
+}
+
+.studio-archive__details {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.studio-archive__details pre {
+  margin: 0.5rem 0 0;
+  padding: 0.65rem;
+  background: #f1f5f9;
+  border-radius: 8px;
+  overflow-x: auto;
 }

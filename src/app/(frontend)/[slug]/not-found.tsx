@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 
+import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
 import {
   artworkHasDisplayImage,
-  getDisplayImageUrl,
+  getArtworkImagePair,
   getPrimaryMediaDimensions,
 } from '@/helpers/artworkCatalog'
 import { getRandomPublishedArtwork } from '@/lib/payload/siteDocuments'
@@ -20,8 +20,8 @@ const linkClassName =
 
 export default async function ArtworkNotFound() {
   const randomArtwork = await getRandomPublishedArtwork()
-  const imageUrl = randomArtwork ? getDisplayImageUrl(randomArtwork) : null
-  const showArtwork = Boolean(randomArtwork && imageUrl && artworkHasDisplayImage(randomArtwork))
+  const imagePair = randomArtwork ? getArtworkImagePair(randomArtwork, 'grid') : null
+  const showArtwork = Boolean(randomArtwork && imagePair && artworkHasDisplayImage(randomArtwork))
 
   let imageWidth = 500
   let imageHeight = 500
@@ -55,7 +55,7 @@ export default async function ArtworkNotFound() {
           </Link>
         </div>
 
-        {showArtwork && randomArtwork && imageUrl ? (
+        {showArtwork && randomArtwork && imagePair ? (
           <>
             <div className="my-space-1 h-px w-full max-w-[25rem] bg-border" />
             <div className="flex w-full max-w-[25rem] flex-col items-start">
@@ -66,12 +66,15 @@ export default async function ArtworkNotFound() {
                 {randomArtwork.title}
               </h2>
               <Link href={`/${randomArtwork.slug}`} className="block w-full">
-                <Image
-                  src={imageUrl}
+                <ArtworkR2Image
+                  src={imagePair.src}
+                  fallbackSrc={imagePair.fallback}
                   alt={randomArtwork.title ?? 'Artwork'}
                   width={imageWidth}
                   height={imageHeight}
                   className="h-auto w-full object-contain"
+                  loading="lazy"
+                  decoding="async"
                 />
               </Link>
             </div>

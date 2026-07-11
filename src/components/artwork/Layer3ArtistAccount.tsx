@@ -1,9 +1,12 @@
 import Link from 'next/link'
 
-import ClipEmbeddingNote, { type SimilarWorkItem } from '@/components/artwork/ClipEmbeddingNote'
-import { getDisplayImageUrl, resolveSeriesSlug } from '@/helpers/artworkCatalog'
+import ArtworkVisionAnalysisCard from '@/components/artwork/ArtworkVisionAnalysisCard'
+import ArtworkVisualSimilarityCard from '@/components/artwork/ArtworkVisualSimilarityCard'
+import type { SimilarWorkItem } from '@/components/artwork/similarWorkItem'
+import { getArtworkImagePair, resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
+import { latestVisionAnalysis } from '@/lib/artwork/visionPage'
 import type { SimilarArtworkCard } from '@/lib/payload/similarArtworksPage'
 import type { Artwork, ArtHistoricalReference, Tag } from '@/payload-types'
 
@@ -56,12 +59,13 @@ function similarWorkItems(works: SimilarArtworkCard[] | null | undefined): Simil
   return (works ?? [])
     .slice(0, 3)
     .map((work) => {
-      const imageUrl = getDisplayImageUrl(work)
-      if (!imageUrl || !work.slug?.trim()) return null
+      const imagePair = getArtworkImagePair(work, 'similar-works')
+      if (!imagePair || !work.slug?.trim()) return null
       return {
         slug: work.slug.trim(),
         title: work.title?.trim() || 'Artwork',
-        imageUrl,
+        imageSrc: imagePair.src,
+        imageFallback: imagePair.fallback,
       }
     })
     .filter((work): work is SimilarWorkItem => work !== null)
@@ -103,9 +107,25 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
   const hasClassification =
     populatedTagGroups.length > 0 || (artwork.conceptualKeywords ?? []).some((row) => row.keyword?.trim())
 
+  const latestAnalysis = latestVisionAnalysis(artwork)
+  const artworkSlug = artwork.slug?.trim() || ''
+  const similarItems = similarWorkItems(similarWorks)
+
   return (
     <section className="artwork-page__layer">
       <div className="artwork-page__inner">
+        {latestAnalysis ? (
+          <ArtworkVisionAnalysisCard artwork={artwork} seriesColor={seriesColor} />
+        ) : null}
+
+        {hasClipEmbedding ? (
+          <ArtworkVisualSimilarityCard
+            artworkSlug={artworkSlug}
+            seriesColor={seriesColor}
+            similarWorks={similarItems}
+          />
+        ) : null}
+
         <IntentBlock label="Contribution" value={artwork.formalContributionAssessment} />
 
         {intentFields.map((field) => (
@@ -180,12 +200,6 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
             </div>
           </>
         ) : null}
-
-        <ClipEmbeddingNote
-          artworkSlug={artwork.slug?.trim() || ''}
-          hasClipEmbedding={hasClipEmbedding}
-          similarWorks={similarWorkItems(similarWorks)}
-        />
         </div>
       </div>
     </section>

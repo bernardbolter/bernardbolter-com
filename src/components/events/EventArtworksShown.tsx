@@ -1,25 +1,26 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
-import { getDisplayImageUrl } from '@/helpers/artworkCatalog'
+import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
+import { getArtworkImagePair } from '@/helpers/artworkCatalog'
 import type { CatalogueArtwork } from '@/types/frontend'
 
 function EventArtworkThumbnail({ artwork }: { artwork: CatalogueArtwork }) {
-  const imageUrl = getDisplayImageUrl(artwork)
+  const imagePair = getArtworkImagePair(artwork, 'grid')
   const slug = artwork.slug?.trim()
   const title = artwork.title?.trim() || 'Untitled'
 
-  if (!slug || !imageUrl) return null
+  if (!slug || !imagePair) return null
 
   return (
     <Link href={`/${slug}`} className="event-page__artwork-card">
       <div className="event-page__artwork-frame">
-        <Image
-          src={imageUrl}
+        <ArtworkR2Image
+          src={imagePair.src}
+          fallbackSrc={imagePair.fallback}
           alt={title}
-          fill
           className="event-page__artwork-image"
-          sizes="(max-width: 550px) 45vw, 200px"
+          loading="lazy"
+          decoding="async"
         />
       </div>
       <p className="event-page__artwork-title">{title}</p>
@@ -35,7 +36,7 @@ export function EventArtworksShown({
   presentationNote?: string | null
 }) {
   const visibleArtworks = artworks.filter(
-    (artwork) => artwork.slug?.trim() && getDisplayImageUrl(artwork),
+    (artwork) => artwork.slug?.trim() && getArtworkImagePair(artwork, 'grid'),
   )
 
   if (visibleArtworks.length === 0) return null

@@ -1,9 +1,10 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
 import { revalidatePath, revalidateTag } from 'next/cache'
-import type { Media } from '@/payload-types'
+import type { Artwork, Media } from '@/payload-types'
 
 import { generateClipEmbedding } from '@/utilities/generateClipEmbedding'
 import { persistArtworkClipEmbedding } from '@/utilities/persistArtworkClipEmbedding'
+import { CLIP_EMBEDDING_METADATA } from '@/lib/artwork/visionPage'
 
 function ensureAbsoluteImageUrl(url: string): string {
   if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -53,7 +54,7 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
     if (typeof doc.slug === 'string' && doc.slug.trim()) {
       const path = `/${doc.slug.trim()}`
       revalidatePath(path)
-      revalidatePath(`${path}/embedding`)
+      revalidatePath(`${path}/vision`)
     }
   } catch {
     // No Next.js static generation store (seed scripts, tests)
@@ -73,7 +74,39 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
         return
       }
       const embedding = await generateClipEmbedding(imageUrl)
-      await persistArtworkClipEmbedding(req.payload, doc.id, embedding)
+      const generatedAt = new Date()
+      await persistArtworkClipEmbedding(req.payload, doc.id, embedding, generatedAt)
+
+      const existing = Array.isArray(doc.embeddings) ? doc.embeddings : []
+      const hasClipEntry = existing.some(
+        (entry: NonNullable<Artwork['embeddings']>[number]) =>
+          entry &&
+          typeof entry === 'object' &&
+          (entry.model === CLIP_EMBEDDING_METADATA.model ||
+            entry.pgVectorColumn === CLIP_EMBEDDING_METADATA.pgVectorColumn),
+      )
+
+      if (!hasClipEntry) {
+        await req.payload.update({
+          collection: 'artworks',
+          id: doc.id,
+          data: {
+            embeddings: [
+              ...existing,
+              {
+                model: CLIP_EMBEDDING_METADATA.model,
+                dimensions: CLIP_EMBEDDING_METADATA.dimensions,
+                pgVectorColumn: CLIP_EMBEDDING_METADATA.pgVectorColumn,
+                specUrl: CLIP_EMBEDDING_METADATA.specUrl,
+                shortDescription: CLIP_EMBEDDING_METADATA.shortDescription,
+                generatedDate: generatedAt.toISOString(),
+              },
+            ],
+          },
+          context: { skipEmbedding: true },
+          req,
+        })
+      }
     } catch (err) {
       req.payload.logger.error({
         msg: 'CLIP embedding failed',

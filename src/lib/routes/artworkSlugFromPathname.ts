@@ -1,13 +1,20 @@
 import { isArtworkDetailPath } from '@/lib/routes/isArtworkDetailPath'
 
-/** Slug for `/[slug]/embedding` paths, or null when not an embedding page. */
+/** Slug for `/[slug]/vision` paths, or null when not a vision page. */
+export function artworkSlugFromVisionPath(pathname: string): string | null {
+  const segments = pathname.split('/').filter(Boolean)
+  if (segments.length !== 2 || segments[1] !== 'vision') return null
+  return segments[0] ?? null
+}
+
+/** @deprecated Use artworkSlugFromVisionPath */
 export function artworkSlugFromEmbeddingPath(pathname: string): string | null {
   const segments = pathname.split('/').filter(Boolean)
   if (segments.length !== 2 || segments[1] !== 'embedding') return null
   return segments[0] ?? null
 }
 
-/** Resolves artwork slug from detail, preview, legacy, or embedding routes. */
+/** Resolves artwork slug from detail, preview, legacy, or vision routes. */
 export function artworkSlugFromPathname(pathname: string): string | null {
   if (pathname.startsWith('/preview/artwork/')) {
     return pathname.split('/').filter(Boolean)[2] ?? null
@@ -15,6 +22,9 @@ export function artworkSlugFromPathname(pathname: string): string | null {
   if (pathname.startsWith('/artworks/')) {
     return pathname.split('/').filter(Boolean)[1] ?? null
   }
+
+  const visionSlug = artworkSlugFromVisionPath(pathname)
+  if (visionSlug) return visionSlug
 
   const embeddingSlug = artworkSlugFromEmbeddingPath(pathname)
   if (embeddingSlug) return embeddingSlug

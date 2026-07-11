@@ -1,15 +1,15 @@
 'use client'
 
-import Image from 'next/image'
+import { useState } from 'react'
 
+import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
 import { useArtworkDimensions } from '@/hooks/useArtworkDimensions'
 import {
-  getDisplayImageUrl,
+  getArtworkImagePair,
   getPrimaryMediaDimensions,
   getSizeTier,
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
-import { seriesColorBlurDataURLs } from '@/helpers/blurURLs'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import type { Artwork } from '@/payload-types'
 
@@ -30,12 +30,12 @@ export default function ArtworkImage({
   priority = false,
   onLoad,
 }: ArtworkImageProps) {
-  const imageUrl = getDisplayImageUrl(artwork)
+  const imagePair = getArtworkImagePair(artwork, 'artwork-page')
   const { width, height } = getPrimaryMediaDimensions(artwork)
   const sizeTier = getSizeTier(artwork)
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
   const seriesColor = getSeriesColor(seriesSlug)
-  const blurDataURL = seriesColorBlurDataURLs[seriesSlug] ?? seriesColorBlurDataURLs.default
+  const [failed, setFailed] = useState(false)
 
   const { displayWidth, displayHeight } = useArtworkDimensions({
     artworkContainerWidth,
@@ -46,7 +46,7 @@ export default function ArtworkImage({
     useImageFactors,
   })
 
-  if (!imageUrl) {
+  if (!imagePair) {
     return (
       <div
         className="flex items-center justify-center"
@@ -72,17 +72,18 @@ export default function ArtworkImage({
         backgroundColor: seriesColor,
       }}
     >
-      <Image
-        src={imageUrl}
+      <ArtworkR2Image
+        src={imagePair.src}
+        fallbackSrc={imagePair.fallback}
         alt={artwork.title ?? 'Artwork'}
-        fill
         draggable={false}
-        className="object-contain"
-        placeholder="blur"
-        blurDataURL={blurDataURL}
-        priority={priority}
-        sizes={`(max-width: 48rem) 100vw, ${Math.round(displayWidth)}px`}
+        className="h-full w-full object-contain"
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+        fetchPriority={priority ? 'high' : 'auto'}
         onLoad={onLoad}
+        onError={() => setFailed(true)}
+        style={{ opacity: failed ? 0 : 1 }}
       />
     </div>
   )

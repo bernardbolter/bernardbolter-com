@@ -5,6 +5,11 @@ import { buildArtMediumJsonLdValue } from '@/lib/artwork/mediumVocabulary'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { applyArtworkJsonLdExtensions } from '@/lib/jsonld/artworkExtensions'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import {
+  artworkHasEmbeddingMetadata,
+  resolveEmbeddingMetadataList,
+  visionPageUrl,
+} from '@/lib/artwork/visionPage'
 import { countryNameToIsoCode } from '@/utilities/countryNameToIsoCode'
 
 const ARTISM_CONTEXT = {
@@ -99,20 +104,15 @@ function buildAdditionalProperty(artwork: Artwork, baseUrl: string): Record<stri
   addProp('artism:sizeTier', 'Size Tier', artwork.sizeTier)
   addProp('artism:orientation', 'Orientation', artwork.orientation)
   addProp('artism:catalogueNumber', 'Catalogue Number', artwork.catalogueNumber)
-  addProp('artism:reasoningStatus', 'Reasoning Status', artwork.reasoningStatus)
+  const reasoningStatus = trimString(artwork.reasoningStatus)
+  if (reasoningStatus && reasoningStatus !== 'stub') {
+    addProp('artism:reasoningStatus', 'Reasoning Status', reasoningStatus)
+  }
 
   const dominantColors =
     artwork.dominantColors?.map((row) => trimString(row.hex)).filter(Boolean) ?? []
   if (dominantColors.length) {
     addProp('artism:dominantColors', 'Dominant Colors', dominantColors.join(', '))
-  }
-
-  if (Array.isArray(artwork.clipEmbedding) && artwork.clipEmbedding.length > 0) {
-    addProp(
-      'artism:clipEmbeddingEndpoint',
-      'CLIP Embedding Endpoint',
-      `${baseUrl}/${artwork.slug}/embedding`,
-    )
   }
 
   return additionalProperty
@@ -224,6 +224,10 @@ export function buildArtworkJsonLd(
   if (creditText) doc.creditText = creditText
 
   if (additionalProperty.length) doc.additionalProperty = additionalProperty
+
+  if (artworkHasEmbeddingMetadata(artwork) && artwork.slug?.trim()) {
+    doc['artism:visionPageUrl'] = visionPageUrl(baseUrl, artwork.slug.trim())
+  }
 
   applyArtworkJsonLdExtensions(doc, artwork, baseUrl)
 

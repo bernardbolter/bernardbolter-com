@@ -8,6 +8,8 @@ import {
   type OwnershipRegistryTier,
 } from '@/lib/artwork/ownershipRegistryPublic'
 import { buildJsonLdRelatedWorks } from '@/lib/artwork/relatedWorksPublic'
+import { resolveEmbeddingMetadataList } from '@/lib/artwork/visionPage'
+import { buildCorpusEmbeddingMetadata, buildCorpusVisionAnalyses } from '@/lib/jsonld/visionPage'
 import { toCm } from '@/lib/dimensions/physicalDimensions'
 
 export type JsonLdEditionTierSpec = {
@@ -168,5 +170,15 @@ export function applyArtworkJsonLdExtensions(
   const relatedWork = buildJsonLdRelatedWorks(artwork, baseUrl)
   if (relatedWork?.length) {
     doc['artism:relatedWork'] = relatedWork
+  }
+
+  const embeddingMetadata = resolveEmbeddingMetadataList(artwork)
+  if (embeddingMetadata.length > 0) {
+    doc['artism:embeddings'] = embeddingMetadata.map(buildCorpusEmbeddingMetadata)
+  }
+
+  const visionAnalyses = buildCorpusVisionAnalyses(artwork)
+  if (visionAnalyses?.length) {
+    doc['artism:visionAnalyses'] = visionAnalyses
   }
 }

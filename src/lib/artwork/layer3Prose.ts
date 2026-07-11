@@ -1,4 +1,5 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
+import { latestVisionAnalysis } from '@/lib/artwork/visionPage'
 import type { ArtHistoricalReference, Artwork } from '@/payload-types'
 
 function hasText(value: string | null | undefined): boolean {
@@ -28,7 +29,7 @@ const PROSE_INTENT_FIELDS: Array<(artwork: Artwork) => string | null | undefined
   (artwork) => artwork.formalContributionAssessment,
 ]
 
-/** Prose/intent fields and art-historical context — excludes tags and CLIP. */
+/** Prose/intent fields and art-historical context — excludes tags and vision cards. */
 export function artworkHasArtistAccountProse(artwork: Artwork): boolean {
   if (PROSE_INTENT_FIELDS.some((read) => hasText(read(artwork) ?? undefined))) {
     return true
@@ -48,13 +49,14 @@ type ProseColumnOptions = {
   similarWorksCount: number
 }
 
-/** Gates the single-column desktop fallback — CLIP/similar works count; tags alone do not. */
+/** Gates the single-column desktop fallback — vision cards/similar works count; tags alone do not. */
 export function artworkShowsProseColumn({
   artwork,
   hasClipEmbedding,
   similarWorksCount,
 }: ProseColumnOptions): boolean {
   if (artworkHasArtistAccountProse(artwork)) return true
+  if (latestVisionAnalysis(artwork)) return true
   if (hasClipEmbedding) return true
   if (similarWorksCount > 0) return true
   return false

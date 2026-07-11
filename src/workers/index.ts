@@ -7,6 +7,7 @@ import { registerPatternReportWorker } from '@/workers/handlers/patternReport'
 import { registerProcessFieldNoteWorker } from '@/workers/handlers/processFieldNote'
 import { registerSuggestLinesWorker } from '@/workers/handlers/suggestLines'
 import { registerSuggestTagsWorker } from '@/workers/handlers/suggestTags'
+import { registerResizeImageWorkers } from '@/workers/handlers/resizeArtworkImage'
 
 async function main() {
   const boss = await getBoss()
@@ -14,6 +15,7 @@ async function main() {
   await registerProcessFieldNoteWorker(boss)
   await registerGenerateTimelapseWorker(boss)
   await registerSuggestTagsWorker(boss)
+  await registerResizeImageWorkers(boss)
   await registerGenerateEmbeddingsWorker(boss)
   await registerSuggestLinesWorker(boss)
   await registerPatternReportWorker(boss)

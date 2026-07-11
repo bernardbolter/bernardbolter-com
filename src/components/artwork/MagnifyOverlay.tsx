@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
 import { useMemo, useRef, useState, type RefObject } from 'react'
 import Draggable, { type DraggableData, type DraggableEvent } from 'react-draggable'
 
@@ -118,16 +118,15 @@ export default function MagnifyOverlay({
                       background: seriesColor,
                     }}
                   >
-                    <Image
+                    <ArtworkR2Image
                       src={image.url}
+                      fallbackSrc={image.fallbackUrl}
                       alt={image.alt}
                       width={image.width}
                       height={image.height}
-                      quality={100}
-                      unoptimized
-                      placeholder="blur"
-                      blurDataURL={blurDataURL}
-                      priority={index === activeIndex}
+                      loading={index === activeIndex ? 'eager' : 'lazy'}
+                      decoding="async"
+                      fetchPriority={index === activeIndex ? 'high' : 'auto'}
                       draggable={false}
                       style={{
                         objectFit: 'contain',
