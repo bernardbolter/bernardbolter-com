@@ -74,6 +74,8 @@ export default async function Page({ params }: Props) {
   ])
   if (!artwork) notFound()
 
+  const imageUrl = getArtworkImageFallbackUrl(artwork)
+
   return (
     <>
       {imageUrl ? <link rel="image" href={imageUrl} /> : null}
