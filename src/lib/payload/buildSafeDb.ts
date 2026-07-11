@@ -48,9 +48,7 @@ export async function withDbUnavailableFallback<T>(
   try {
     return await fn()
   } catch (err) {
-    if (shouldUseDbUnavailableFallback(err)) {
-      return fallback
-    }
-    throw err
+    console.error('[db-unavailable-fallback]', err)
+    return fallback
   }
 }

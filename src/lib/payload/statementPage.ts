@@ -1,7 +1,7 @@
-import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import { withDbUnavailableFallback } from '@/lib/payload/buildSafeDb'
 import type { Artist, Event } from '@/payload-types'
 
 async function fetchStatementPageArtist(): Promise<Artist | null> {
@@ -16,21 +16,9 @@ async function fetchStatementPageArtist(): Promise<Artist | null> {
   return result.docs[0] ?? null
 }
 
-const getCachedStatementPageArtist = unstable_cache(
-  fetchStatementPageArtist,
-  ['artist-statement-page'],
-  {
-    revalidate: 300,
-    tags: ['artists'],
-  },
-)
-
 /** Artist row with populated statement related works and nested event relations. */
 export async function getStatementPageArtist(): Promise<Artist | null> {
-  if (process.env.NODE_ENV === 'development') {
-    return fetchStatementPageArtist()
-  }
-  return getCachedStatementPageArtist()
+  return withDbUnavailableFallback(fetchStatementPageArtist, null)
 }
 
 function readEvent(entry: number | Event | null | undefined): Event | null {

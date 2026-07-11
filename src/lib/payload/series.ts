@@ -1,9 +1,9 @@
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
-import { unstable_cache } from 'next/cache'
 
 import { getSeriesColor } from '@/helpers/seriesColor'
 import type { SeriesMention } from '@/lib/bio/linkSeriesMentions'
+import { withDbUnavailableFallback } from '@/lib/payload/buildSafeDb'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 import type { FilterCategory } from '@/types/frontend'
 import type { Series } from '@/payload-types'
@@ -51,17 +51,9 @@ async function fetchFilterSeries(): Promise<FilterCategory[]> {
   })
 }
 
-const getCachedFilterSeries = unstable_cache(fetchFilterSeries, ['series-filter-nav'], {
-  revalidate: 3600,
-  tags: ['series'],
-})
-
 /** Published root-level series for the filter drawer (excludes sub-series). */
 export async function getFilterSeries(): Promise<FilterCategory[]> {
-  if (process.env.NODE_ENV === 'development') {
-    return fetchFilterSeries()
-  }
-  return getCachedFilterSeries()
+  return withDbUnavailableFallback(fetchFilterSeries, [])
 }
 
 async function fetchPublishedSeriesMentions(): Promise<SeriesMention[]> {
@@ -86,19 +78,7 @@ async function fetchPublishedSeriesMentions(): Promise<SeriesMention[]> {
 
 export type { SeriesMention }
 
-const getCachedPublishedSeriesMentions = unstable_cache(
-  fetchPublishedSeriesMentions,
-  ['series-bio-mentions'],
-  {
-    revalidate: 3600,
-    tags: ['series'],
-  },
-)
-
 /** Published series names/slugs for auto-linking mentions in bio prose. */
 export async function getPublishedSeriesMentions(): Promise<SeriesMention[]> {
-  if (process.env.NODE_ENV === 'development') {
-    return fetchPublishedSeriesMentions()
-  }
-  return getCachedPublishedSeriesMentions()
+  return withDbUnavailableFallback(fetchPublishedSeriesMentions, [])
 }
