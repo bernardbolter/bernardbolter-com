@@ -1,5 +1,3 @@
-import Image from 'next/image'
-
 import { resolveMediaUrl } from '@/lib/studio/media'
 import type { Artist, Media } from '@/payload-types'
 
@@ -22,13 +20,14 @@ export default function ContactPhoto({ artist }: Props) {
   return (
     <div>
       <div className="aspect-[3/4] w-full overflow-hidden rounded-[0.25rem]">
-        <Image
+        <img
           src={url}
           alt={media.alt?.trim() || 'Bernard Bolter in the studio'}
           width={width}
           height={height}
           className="h-full w-full object-cover"
-          sizes="(min-width: 979px) 17.5rem, 100vw"
+          loading="lazy"
+          decoding="async"
         />
       </div>
       {caption ? (

@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { useCallback, useEffect, useState } from 'react'
 
 export type InstallationImageSlide = {
@@ -60,13 +59,14 @@ export function EventInstallationGallery({ slides }: { slides: InstallationImage
             onClick={() => setActiveIndex(index)}
             aria-label={slide.caption?.trim() || slide.alt || 'View installation photo'}
           >
-            <Image
+            <img
               src={slide.url}
               alt={slide.alt}
               width={slide.width}
               height={slide.height}
               className="event-page__masonry-image"
-              sizes="(max-width: 768px) 100vw, 50vw"
+              loading="lazy"
+              decoding="async"
             />
           </button>
         ))}
@@ -102,14 +102,13 @@ export function EventInstallationGallery({ slides }: { slides: InstallationImage
                 ‹
               </button>
             : null}
-            <Image
+            <img
               src={activeSlide.url}
               alt={activeSlide.alt}
               width={activeSlide.width}
               height={activeSlide.height}
               className="event-page__lightbox-image"
-              sizes="100vw"
-              priority
+              decoding="async"
             />
             {slides.length > 1 ?
               <button

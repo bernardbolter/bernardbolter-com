@@ -1,5 +1,3 @@
-import Image from 'next/image'
-
 import { getContactStudioLocations } from '@/lib/contact/contactStudioLocations'
 import type { Artist } from '@/payload-types'
 
@@ -15,13 +13,14 @@ function StudioCard({
   const cardContent = (
     <>
       <div className="aspect-video w-full overflow-hidden">
-        <Image
+        <img
           src={location.mapImageUrl}
           alt={location.mapAlt}
           width={location.mapImageWidth}
           height={location.mapImageHeight}
           className="h-full w-full object-cover"
-          sizes="(min-width: 979px) 50vw, 100vw"
+          loading="lazy"
+          decoding="async"
         />
       </div>
       <div className="px-[1rem] py-[0.75rem]">

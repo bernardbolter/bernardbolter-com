@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 import type { StatementRelatedWork } from '@/helpers/statementRelatedWorks'
@@ -21,12 +20,13 @@ export default function StatementRelatedWorks({ items }: StatementRelatedWorksPr
             <Link href={`/${artwork.slug}`} className="statement-related-works__card">
               {artwork.posterImage ?
                 <span className="statement-related-works__thumb">
-                  <Image
+                  <img
                     src={artwork.posterImage.url}
                     alt={artwork.posterImageAltText || artwork.title}
                     width={artwork.posterImage.width}
                     height={artwork.posterImage.height}
-                    sizes="(max-width: 767px) 100vw, 200px"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </span>
               : null}

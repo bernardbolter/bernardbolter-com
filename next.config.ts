@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
     ]
   },
   images: {
+    // Never use Vercel Image Optimization (/_next/image) — serve direct R2/public URLs.
     unoptimized: true,
   },
   webpack: (webpackConfig) => {

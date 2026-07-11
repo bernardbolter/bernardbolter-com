@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import {
@@ -165,19 +164,18 @@ export default function BioPhotoGrid({ images }: BioPhotoGridProps) {
         >
           <div className="lightbox__content" onClick={(event) => event.stopPropagation()}>
             <div className="lightbox__image-wrapper">
-              <Image
+              <img
                 src={currentLightboxImage.url}
                 alt={currentLightboxImage.alt}
                 width={currentLightboxImage.width}
                 height={currentLightboxImage.height}
+                decoding="async"
                 style={{
                   objectFit: 'contain',
                   width: '100%',
                   height: 'auto',
                   maxHeight: '85vh',
                 }}
-                quality={95}
-                priority
               />
             </div>
 

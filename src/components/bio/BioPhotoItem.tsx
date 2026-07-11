@@ -1,4 +1,3 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
 import type { BioPageImage } from '@/helpers/bioPhotos'
@@ -34,13 +33,13 @@ export default function BioPhotoItem({ image, colSpan, rowSpan, onOpen }: BioPho
           }
         }}
       >
-        <Image
+        <img
           src={image.url}
           alt={image.alt}
-          fill
-          style={{ objectFit: 'cover' }}
-          sizes="(max-width:549px) 100vw, (max-width:978px) 50vw, 33vw"
           className="bio__image-masonry"
+          loading="lazy"
+          decoding="async"
+          style={{ objectFit: 'cover', width: '100%', height: '100%', display: 'block' }}
         />
       </div>
       {image.caption ? (
