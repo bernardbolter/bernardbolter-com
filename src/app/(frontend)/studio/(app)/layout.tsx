@@ -7,6 +7,9 @@ import { StudioLogoutButton } from '@/components/studio/StudioLogoutButton'
 import { TabBar } from '@/components/studio/TabBar'
 import { getStudioUser } from '@/lib/studio/auth'
 
+// Studio routes always need auth + DB at request time, not during build.
+export const dynamic = 'force-dynamic'
+
 export default async function StudioAppLayout({ children }: { children: ReactNode }) {
   const user = await getStudioUser()
   if (!user) {

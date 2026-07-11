@@ -8,6 +8,7 @@ import {
   type LayoutProviderArtworks,
 } from '@/lib/payload/artworks'
 import { fetchFilterSeriesWithPayload } from '@/lib/payload/series'
+import { shouldUseBuildSafeDbFallback } from '@/lib/payload/buildSafeDb'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 import type { ArtistInfoData, FilterCategory } from '@/types/frontend'
 import type { Artist } from '@/payload-types'
@@ -17,6 +18,13 @@ export type LayoutProviderData = {
   person: Artist | null
   artistInfo: ArtistInfoData
   filterSeries: FilterCategory[]
+}
+
+export const EMPTY_LAYOUT_PROVIDER_DATA: LayoutProviderData = {
+  artworks: [],
+  person: null,
+  artistInfo: mapArtistToInfoData(null),
+  filterSeries: [],
 }
 
 async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
@@ -54,8 +62,15 @@ const getCachedLayoutProviderData = unstable_cache(
 
 /** Single-connection fetch for root layout (avoids parallel getPayload pool exhaustion). */
 export async function getLayoutProviderData(): Promise<LayoutProviderData> {
-  if (process.env.NODE_ENV === 'development') {
-    return fetchLayoutProviderData()
+  try {
+    if (process.env.NODE_ENV === 'development') {
+      return fetchLayoutProviderData()
+    }
+    return getCachedLayoutProviderData()
+  } catch (err) {
+    if (shouldUseBuildSafeDbFallback(err)) {
+      return { ...EMPTY_LAYOUT_PROVIDER_DATA }
+    }
+    throw err
   }
-  return getCachedLayoutProviderData()
 }

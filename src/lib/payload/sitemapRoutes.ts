@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 import { withDbRetry } from '@/lib/payload/withDbRetry'
+import { shouldUseBuildSafeDbFallback } from '@/lib/payload/buildSafeDb'
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import type { Artwork, Event, Series } from '@/payload-types'
 
@@ -16,41 +17,48 @@ export type SitemapEntries = {
 }
 
 export async function fetchSitemapEntries(): Promise<SitemapEntries> {
-  return withDbRetry(async () => {
-    const payload = await getPayload({ config })
+  try {
+    return await withDbRetry(async () => {
+      const payload = await getPayload({ config })
 
-    const artworksResult = await payload.find({
-      collection: 'artworks',
-      where: { status: { equals: 'published' } },
-      limit: 1000,
-      depth: 0,
-      overrideAccess: true,
+      const artworksResult = await payload.find({
+        collection: 'artworks',
+        where: { status: { equals: 'published' } },
+        limit: 1000,
+        depth: 0,
+        overrideAccess: true,
+      })
+
+      const seriesResult = await payload.find({
+        collection: 'series',
+        where: { status: { equals: 'published' } },
+        limit: 100,
+        depth: 0,
+        overrideAccess: true,
+      })
+
+      const eventsResult = await payload.find({
+        collection: 'events',
+        where: {
+          and: [{ status: { equals: 'published' } }, { hasPage: { equals: true } }],
+        },
+        limit: 500,
+        depth: 0,
+        overrideAccess: true,
+      })
+
+      return {
+        artworks: artworksResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
+        series: seriesResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
+        events: eventsResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
+      }
     })
-
-    const seriesResult = await payload.find({
-      collection: 'series',
-      where: { status: { equals: 'published' } },
-      limit: 100,
-      depth: 0,
-      overrideAccess: true,
-    })
-
-    const eventsResult = await payload.find({
-      collection: 'events',
-      where: {
-        and: [{ status: { equals: 'published' } }, { hasPage: { equals: true } }],
-      },
-      limit: 500,
-      depth: 0,
-      overrideAccess: true,
-    })
-
-    return {
-      artworks: artworksResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
-      series: seriesResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
-      events: eventsResult.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)),
+  } catch (err) {
+    if (shouldUseBuildSafeDbFallback(err)) {
+      return { artworks: [], series: [], events: [] }
     }
-  })
+    throw err
+  }
 }
 
 /** @deprecated Use fetchSitemapEntries */

@@ -80,6 +80,9 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600;
 
+// Skip build-time prerender DB calls (Neon quota / offline DB during CI).
+export const dynamic = 'force-dynamic';
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { artworks: artworksData, artistInfo, filterSeries } = await getLayoutProviderData()
 
