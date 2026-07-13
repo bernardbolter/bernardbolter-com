@@ -11,6 +11,7 @@ import {
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
+import type { ArtworkImageContext } from '@/lib/media/artworkR2Images'
 import type { Artwork } from '@/payload-types'
 
 interface ArtworkImageProps {
@@ -19,6 +20,8 @@ interface ArtworkImageProps {
   artworkContainerHeight: number
   useImageFactors?: boolean
   priority?: boolean
+  /** R2 derivative size — timeline/grid use 400w; artwork page uses 1200w. */
+  imageContext?: ArtworkImageContext
   onLoad?: () => void
 }
 
@@ -28,9 +31,10 @@ export default function ArtworkImage({
   artworkContainerHeight,
   useImageFactors = false,
   priority = false,
+  imageContext = 'artwork-page',
   onLoad,
 }: ArtworkImageProps) {
-  const imagePair = getArtworkImagePair(artwork, 'artwork-page')
+  const imagePair = getArtworkImagePair(artwork, imageContext)
   const { width, height } = getPrimaryMediaDimensions(artwork)
   const sizeTier = getSizeTier(artwork)
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'

@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
@@ -41,7 +42,7 @@ export default function ArtworkR2Image({
     setUsedFallback(false)
   }, [src])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     fireLoadIfComplete(imgRef.current, onLoad)
   }, [currentSrc, onLoad])
 

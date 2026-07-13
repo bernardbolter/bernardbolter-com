@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   useCallback,
@@ -16,7 +15,7 @@ import { LeftArrowSvg, RightArrowSvg } from '@/components/icons'
 import { generateSmallLines } from '@/helpers/timeline'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
-import ArtworkImage from './ArtworkImage'
+import TimelineArtworkSlot from './TimelineArtworkSlot'
 
 const DRAG_THRESHOLD_PX = 5
 const WHEEL_SCROLL_SENSITIVITY = 0.85
@@ -324,40 +323,19 @@ export default function Timeline() {
           }}
         >
           {timeline.artworksArray.map((artwork, index) => (
-            <div
+            <TimelineArtworkSlot
               key={artwork.id}
-              className="artworks-timeline__artwork-inside"
-              draggable={false}
-              onDragStart={(event) => event.preventDefault()}
-              style={{
-                marginRight:
-                  !isMobile && index < timeline.artworksArray.length - 1
-                    ? `${artwork.marginRight || 0}px`
-                    : '0px',
-                marginBottom:
-                  isMobile && index < timeline.artworksArray.length - 1
-                    ? `${artwork.marginBottom || 0}px`
-                    : '0px',
-                minWidth: `${state.artworkContainerWidth}px`,
-                minHeight: `${state.artworkContainerHeight}px`,
-              }}
-            >
-              <Link
-                href={`/${artwork.slug}`}
-                data-timeline-artwork-link
-                className="flex h-full w-full cursor-pointer items-center justify-center"
-                draggable={false}
-                onDragStart={(event) => event.preventDefault()}
-                onClick={handleArtworkLinkClick}
-              >
-                <ArtworkImage
-                  artwork={artwork}
-                  artworkContainerWidth={state.artworkContainerWidth}
-                  artworkContainerHeight={state.artworkContainerHeight}
-                  priority={index < 5}
-                />
-              </Link>
-            </div>
+              artwork={artwork}
+              index={index}
+              scrollRootRef={timelineRef}
+              artworkContainerWidth={state.artworkContainerWidth}
+              artworkContainerHeight={state.artworkContainerHeight}
+              marginRight={artwork.marginRight || 0}
+              marginBottom={artwork.marginBottom || 0}
+              isLast={index === timeline.artworksArray.length - 1}
+              isMobile={isMobile}
+              onLinkClick={handleArtworkLinkClick}
+            />
           ))}
         </div>
 
