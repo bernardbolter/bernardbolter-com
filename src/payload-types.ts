@@ -76,6 +76,7 @@ export interface Config {
     'studio-conversations': StudioConversation;
     'pattern-reports': PatternReport;
     episodes: Episode;
+    'capture-presets': CapturePreset;
     'field-notes': FieldNote;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
@@ -109,6 +110,7 @@ export interface Config {
     'studio-conversations': StudioConversationsSelect<false> | StudioConversationsSelect<true>;
     'pattern-reports': PatternReportsSelect<false> | PatternReportsSelect<true>;
     episodes: EpisodesSelect<false> | EpisodesSelect<true>;
+    'capture-presets': CapturePresetsSelect<false> | CapturePresetsSelect<true>;
     'field-notes': FieldNotesSelect<false> | FieldNotesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
@@ -3195,7 +3197,31 @@ export interface FieldNote {
   writtenNote?: string | null;
   relatedArtwork?: (number | null) | Artwork;
   relatedEpisode?: (number | null) | Episode;
-  processingStatus: 'pending' | 'processing' | 'complete' | 'failed';
+  /**
+   * Shoot preset used at upload — drives pipeline steps and default field values.
+   */
+  capturePreset?: (number | null) | CapturePreset;
+  /**
+   * Parsed from spoken slate, e.g. e01. Blank for non-episode clips.
+   */
+  episode?: string | null;
+  /**
+   * Parsed from spoken slate — closed vocabulary.
+   */
+  shotType?: ('HOOK' | 'VERSE' | 'ARRIVE' | 'DETAIL' | 'WIDE' | 'WALK' | 'CROWD' | 'TALK' | 'AMBIENT' | 'BTS') | null;
+  /**
+   * Parsed from slate ("take two" → 2). Blank if not stated.
+   */
+  take?: number | null;
+  /**
+   * Parsed from clip tail. Blank if not yet spoken.
+   */
+  verdict?: ('keeper' | 'scrap' | 'maybe') | null;
+  /**
+   * Slate parser result — filter not-found for manual cleanup.
+   */
+  slateParseStatus?: ('parsed' | 'not-found' | 'partial') | null;
+  processingStatus: 'queued' | 'pending' | 'processing' | 'complete' | 'failed';
   register?: ('exploratory' | 'resolved' | 'frustrated' | 'excited' | 'observational') | null;
   processStage?: ('early' | 'mid' | 'late' | 'completed') | null;
   conceptualThread?:
@@ -3312,6 +3338,43 @@ export interface Line {
    * Who introduced this line (manual or model suggestion).
    */
   recordOrigin: 'user' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Repeatable shoot configurations — drives upload defaults and overnight pipeline steps.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "capture-presets".
+ */
+export interface CapturePreset {
+  id: number;
+  name: string;
+  mediaType:
+    | 'text'
+    | 'photo'
+    | 'video-broll'
+    | 'video-observation'
+    | 'video-performance'
+    | 'video-process'
+    | 'voice-memo';
+  /**
+   * Processing steps run by the overnight worker for clips using this preset.
+   */
+  pipelineSteps: ('keyframes' | 'moondream' | 'whisper' | 'slateParse')[];
+  /**
+   * Optional pre-fill, e.g. e01. Leave blank for one-offs (b-roll, museum visits).
+   */
+  defaultEpisode?: string | null;
+  /**
+   * Optional pre-fill for locationName on upload.
+   */
+  defaultLocationName?: string | null;
+  transcriptLabel: 'shooter-description' | 'speech' | 'none';
+  /**
+   * Seconds between extracted keyframes (default 10).
+   */
+  keyframeIntervalSec: number;
   updatedAt: string;
   createdAt: string;
 }
@@ -4004,6 +4067,10 @@ export interface PayloadLockedDocument {
         value: number | Episode;
       } | null)
     | ({
+        relationTo: 'capture-presets';
+        value: number | CapturePreset;
+      } | null)
+    | ({
         relationTo: 'field-notes';
         value: number | FieldNote;
       } | null)
@@ -4468,6 +4535,21 @@ export interface EpisodesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "capture-presets_select".
+ */
+export interface CapturePresetsSelect<T extends boolean = true> {
+  name?: T;
+  mediaType?: T;
+  pipelineSteps?: T;
+  defaultEpisode?: T;
+  defaultLocationName?: T;
+  transcriptLabel?: T;
+  keyframeIntervalSec?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "field-notes_select".
  */
 export interface FieldNotesSelect<T extends boolean = true> {
@@ -4485,6 +4567,12 @@ export interface FieldNotesSelect<T extends boolean = true> {
   writtenNote?: T;
   relatedArtwork?: T;
   relatedEpisode?: T;
+  capturePreset?: T;
+  episode?: T;
+  shotType?: T;
+  take?: T;
+  verdict?: T;
+  slateParseStatus?: T;
   processingStatus?: T;
   register?: T;
   processStage?: T;

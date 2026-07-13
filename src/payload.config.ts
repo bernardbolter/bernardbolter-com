@@ -21,6 +21,7 @@ import { StudioConversations } from './collections/StudioConversations'
 import { PatternReports } from './collections/PatternReports'
 import { Episodes } from './collections/Episodes'
 import { FieldNotes } from './collections/FieldNotes'
+import { CapturePresets } from './collections/CapturePresets'
 import { Tags } from './collections/Tags'
 import { ArtHistoricalReferences } from './collections/ArtHistoricalReferences'
 import { Events } from './collections/Events'
@@ -106,6 +107,7 @@ export default buildConfig({
     StudioConversations,
     PatternReports,
     Episodes,
+    CapturePresets,
     FieldNotes,
     Tags,
     ArtHistoricalReferences,

@@ -76,4 +76,57 @@ describe('POST /api/studio/field-notes', () => {
     )
     expect(queueMock).toHaveBeenCalledWith(42)
   })
+
+  it('creates a video field note with preset as queued', async () => {
+    const findByID = vi.fn(async () => ({
+      id: 5,
+      mediaType: 'video-performance',
+      defaultEpisode: 'e01',
+      defaultLocationName: 'Test spot',
+      transcriptLabel: 'speech',
+      pipelineSteps: ['keyframes', 'whisper'],
+      keyframeIntervalSec: 10,
+      name: 'Test preset',
+      updatedAt: '',
+      createdAt: '',
+    }))
+    const create = vi.fn(async () => ({
+      id: 43,
+      processingStatus: 'queued',
+    }))
+    requireStudioMock.mockResolvedValue({
+      ok: true,
+      payload: { create, findByID } as never,
+      user: { id: 1 } as never,
+    })
+
+    const request = new NextRequest('http://localhost:3000/api/studio/field-notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mediaType: 'video-performance',
+        mediaFileId: 88,
+        capturePresetId: 5,
+      }),
+    })
+    const response = await POST(request)
+    expect(response.status).toBe(200)
+    const json = (await response.json()) as { id: number; processingStatus: string }
+    expect(json).toEqual({ id: 43, processingStatus: 'queued' })
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection: 'field-notes',
+        data: expect.objectContaining({
+          mediaType: 'video-performance',
+          processingStatus: 'queued',
+          capturePreset: 5,
+          episode: 'e01',
+          locationName: 'Test spot',
+          transcriptType: 'speech',
+          recordOrigin: 'user',
+        }),
+      }),
+    )
+    expect(queueMock).toHaveBeenCalledWith(43)
+  })
 })

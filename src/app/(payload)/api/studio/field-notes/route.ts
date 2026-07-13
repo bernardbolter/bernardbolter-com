@@ -1,4 +1,5 @@
 import { requireStudio } from '@/lib/studio/requireStudio'
+import { buildFieldNoteCreateData, loadCapturePreset } from '@/lib/studio/applyCapturePreset'
 import { createFieldNoteSchema } from '@/lib/studio/fieldNoteSchema'
 import { queueProcessFieldNote } from '@/lib/studio/queueProcessFieldNote'
 
@@ -22,26 +23,29 @@ export async function POST(request: Request) {
 
   const data = parsed.data
 
+  const capturePreset =
+    data.capturePresetId != null
+      ? await loadCapturePreset(payload, data.capturePresetId, user)
+      : null
+
+  if (data.capturePresetId != null && !capturePreset) {
+    return Response.json({ error: 'Capture preset not found' }, { status: 404 })
+  }
+
+  if (capturePreset && capturePreset.mediaType !== data.mediaType) {
+    return Response.json(
+      { error: `mediaType must match preset (${capturePreset.mediaType})` },
+      { status: 400 },
+    )
+  }
+
   try {
     const fieldNote = await payload.create({
       collection: 'field-notes',
-      data: {
-        mediaType: data.mediaType,
-        mediaFile: data.mediaFileId,
-        writtenNote: data.writtenNote,
-        city: data.city,
-        locationName: data.locationName,
-        location: data.location,
-        capturedAt: data.capturedAt,
-        relatedArtwork: data.relatedArtwork,
-        relatedEpisode: data.relatedEpisode,
-        lines: data.lines,
-        register: data.register,
-        processStage: data.processStage,
-        conceptualThread: data.conceptualThread,
-        processingStatus: 'pending',
-        recordOrigin: 'user',
-      },
+      data: buildFieldNoteCreateData({
+        ...data,
+        capturePreset,
+      }),
       overrideAccess: false,
       user,
     })

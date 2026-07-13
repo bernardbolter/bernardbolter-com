@@ -1,74 +1,80 @@
-# Vision Analysis Prompt Spec
+# Vision Analysis Prompt Spec — Moondream
+## Per-shot-type prompting for the FieldNotes pipeline
 
-**Status: FROZEN — version A-1.0**
-**Date frozen: July 11, 2026**
-
-This is the single source of truth for the vision analysis prompt. Any change to the prompt text requires a new version number (A-1.1, A-2.0, etc.) and a new entry in `vision-prompt-changelog.md` — never edit this file's frozen prompt in place.
+*Companion to fieldnotes-worker-pipeline-spec.md. Moondream (1.8B, 4-bit quantized, CPU) needs short, blunt, single-question prompts — not elaborate instructions. This spec gives one prompt per shotType so keyframe tags are consistently structured and actually useful for sorting/timeline-building, rather than generic image captions.*
 
 ---
 
-## Why this exists
+## 1. Why generic prompting fails here
 
-The `visionAnalyses[]` array on each Artwork record accumulates independent visual readings from different AI models over time. For those readings to be comparable — not just a pile of prose — every model has to answer the *same* prompt. This file is that fixed point.
-
-## Schema constraint — read before touching the prompt
-
-The Studio → Archive importer for vision analyses accepts exactly three fields per entry, nothing else:
-
-```json
-{
-  "text": "string — full analysis prose",
-  "model": "string — exact model version string",
-  "date": "string — ISO date"
-}
-```
-
-No `promptVersion` field exists in the importer or the Payload schema. This means the prompt must be designed so all its intent is captured as *instructions that shape the prose*, not as separate structured output — there is nowhere else for structured sub-fields to go. See `vision-prompt-changelog.md` for how prompt-version provenance is tracked outside the record itself.
-
-## Blindness requirement — process rule, not a stored field
-
-Every run of this prompt must happen in a session that has seen **only the image** — no artwork title, series, page content, or prior conversation about the work. Nothing in the schema enforces this after the fact, so it has to be protected at generation time:
-
-- Always a fresh chat session, or a session where no other context about the artwork has been loaded.
-- Attach the image directly (upload/drag-drop) rather than a URL, where possible — this also sidesteps tool-level restrictions on fetching image content from URLs.
-- If blindness is ever broken (context leaked before the analysis ran), discard that run rather than recording it. A contaminated entry is worse than no entry — it looks like an independent witness but isn't one.
+A default "describe this image" prompt on a small quantized vision model produces prose like *"a man is standing near a large statue in what appears to be a park"* — technically accurate, useless for sorting. What the catalog needs instead is **short tag lists**, differentiated by what actually matters for that shot type: a VERSE frame cares about framing and legibility of the performer against the background; a DETAIL frame cares about which part of the artwork and the light; a CROWD frame cares about people and attention direction. Same model, different question, much more useful output.
 
 ---
 
-## Prompt A-1.0 (frozen)
+## 2. Output format (all shot types)
 
-```
-Analyze this artwork image. Do not attempt to identify the artist, title, series, or specific location, even if you recognize them — describe only what is visually present.
+Instruct the model to return **a short comma-separated tag list, 5–10 tags, lowercase, no full sentences.** This matches the existing `keyframes[].tags` field shape (array of short strings) and is what small models do best — they degrade fast on longer generative asks but hold up on short categorical ones.
 
-Write a detailed visual analysis in flowing prose (multiple paragraphs are fine). Cover: composition and spatial structure, colour palette and tonal quality, mood and atmosphere, and formal/technical qualities apparent in the surface or medium.
+Generic instruction appended to every prompt below:
+> "Answer only with a short list of tags, 5 to 10 words or short phrases, comma-separated. No sentences."
 
-If the image contains any visual cues suggesting multiple time periods, states, or moments coexisting within a single frame, describe those cues specifically and precisely rather than resolving or explaining them away.
+---
 
-Close with a brief note on anything in the image that resists confident description or categorization — do not force a resolution where none is visually evident.
+## 3. Per-shotType prompts
 
-Be specific and observational rather than interpretive. No judgments of quality or market value. Output prose only — no JSON, no headers, no bullet lists.
-```
+### HOOK
+*Purpose: is the opening statement legible? Framing check.*
+> "List: is a person visible, are they facing the camera, is the background in focus or blurred, what is the lighting (bright/dim/golden/overcast), is text or a location landmark visible."
 
-## Model string format
+### VERSE
+*Purpose: performer legibility against the artwork — this is the core timeline-building shot.*
+> "List: person's position in frame (left/center/right), person's pose (standing/gesturing/moving), the artwork or artwork type visible behind them, how much of the artwork is visible (full/partial/cropped), lighting quality, any crowd or bystanders visible."
 
-Use the exact version string, not the product family name — matches the `model` field the importer expects:
+### ARRIVE
+*Purpose: transit/establishing motion — used for edit transitions.*
+> "List: direction of movement if visible, what is approaching or coming into frame, foreground/background separation, walking or stationary, any landmark visible."
 
-- `claude-sonnet-4-6` not `Claude`
-- `gpt-4o` not `ChatGPT`
-- `gemini-2.5-pro` not `Gemini`
-- `deepseek-vl2` not `DeepSeek`
+### DETAIL
+*Purpose: which part of the artwork, condition, light — feeds both the catalog and harvest-commentary pairing.*
+> "List: which part of the object is shown (face/hands/texture/inscription/surface/other), material if identifiable (bronze/stone/paint/other), lighting direction and quality, any visible wear, patina, or damage, dominant colors."
 
-## Workflow
+### WIDE
+*Purpose: the signature establishing composition — subject scale relative to environment.*
+> "List: how small or large the person appears relative to the artwork or setting, overall setting type (park/street/museum exterior/gallery/urban), sky visible or not, time-of-day light cues, symmetry or framing notes."
 
-1. Fresh session, image only, no other artwork context.
-2. Send the prompt above exactly as written.
-3. Copy the resulting prose as-is into `text` — do not edit, trim, or paraphrase it afterward. If a reading needs correcting, add a new entry rather than modifying this one.
-4. Build the import JSON per the confirmed shape (see `Studio → Archive` import docs) and submit.
+### WALK
+*Purpose: pure transit footage — mostly for pacing/b-roll cutaway use.*
+> "List: setting type, motion blur present or not, people count visible, notable background elements, lighting."
 
-## Do NOT
+### CROWD
+*Purpose: bystander/audience read — social proof and reaction content.*
+> "List: number of people visible (none/few/several/many), are they looking toward the subject or elsewhere, any visible reaction (smiling/filming/ignoring/stopped), setting density (empty/sparse/busy)."
 
-- Do not vary the prompt wording across models — that breaks comparability, which is the entire reason the array exists.
-- Do not add extra fields to the import JSON — the importer only accepts `text`, `model`, `date`.
-- Do not run this prompt in a session where artwork metadata has already been discussed or is visible in context.
-- Do not hand-edit a previously recorded `text` entry — append a new one instead.
-- Do not batch-run this across the archive automatically. Each analysis is a deliberate, manually triggered act.
+### TALK
+*Purpose: to-camera reflection — framing and mood read.*
+> "List: is the person's face clearly visible, close-up or medium shot, background blurred or sharp, apparent mood from posture (relaxed/tired/animated/neutral), lighting quality."
+
+### AMBIENT
+*Purpose: static room-tone shots — mostly environmental, sound matters more than image here, but tag for reuse as b-roll.*
+> "List: setting type, static or any movement in frame, lighting quality, dominant colors, any people present."
+
+### BTS
+*Purpose: behind-the-scenes — loosely tagged, mainly for retrieval later ("find the setup shots").*
+> "List: what activity is visible (setup/walking/talking/adjusting equipment/other), people count, setting type, whether performance has started or not."
+
+### photo (existing mediaType, not shotType — included for consistency with the already-running photo pipeline)
+> "List: main subject, setting type, lighting quality, dominant colors, any text or landmark visible."
+
+---
+
+## 4. Practical notes for the worker implementation
+
+- **One Moondream call per keyframe**, using the prompt matched to that clip's `shotType` field (already known from the slate parse — the vision call can run *after* the slate parser, so it always has the right prompt, not a generic default).
+- If `shotType` is blank or `slateParseStatus: not-found` (parser failed), fall back to a generic prompt: *"List: main subject, setting, lighting, notable objects, 5 to 10 tags."* Better a plain tag list than no tags.
+- **Keep prompts under ~40 words.** Longer instructions on a 1.8B quantized model tend to get partially ignored — the model answers the first clause and drops the rest. All prompts above are deliberately short for this reason.
+- Store the raw returned tag string, split on commas, trimmed, lowercased, as the `tags` array — no further NLP cleanup needed at this stage.
+- **Timing budget:** at ~15–30 sec/image on the CPU spec, a 90-second VERSE clip at the default 10-second keyframe interval produces ~9 keyframes → roughly 2–4.5 minutes of Moondream time for that one clip. Multiply by a week's shoot volume when estimating whether the 02:00–10:00 window has headroom.
+
+---
+
+*Written July 2026. Companion to fieldnotes-worker-pipeline-spec.md and shooting-plan-ai-pipeline.md.*

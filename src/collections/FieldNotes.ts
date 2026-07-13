@@ -67,11 +67,77 @@ export const FieldNotes: CollectionConfig = {
       relationTo: 'episodes' as never,
     },
     {
+      name: 'capturePreset',
+      type: 'relationship',
+      relationTo: 'capture-presets',
+      admin: {
+        description: 'Shoot preset used at upload — drives pipeline steps and default field values.',
+      },
+    },
+    {
+      name: 'episode',
+      type: 'text',
+      admin: {
+        description: 'Parsed from spoken slate, e.g. e01. Blank for non-episode clips.',
+      },
+    },
+    {
+      name: 'shotType',
+      type: 'select',
+      options: [
+        { label: 'Hook', value: 'HOOK' },
+        { label: 'Verse', value: 'VERSE' },
+        { label: 'Arrive', value: 'ARRIVE' },
+        { label: 'Detail', value: 'DETAIL' },
+        { label: 'Wide', value: 'WIDE' },
+        { label: 'Walk', value: 'WALK' },
+        { label: 'Crowd', value: 'CROWD' },
+        { label: 'Talk', value: 'TALK' },
+        { label: 'Ambient', value: 'AMBIENT' },
+        { label: 'BTS', value: 'BTS' },
+      ],
+      admin: {
+        description: 'Parsed from spoken slate — closed vocabulary.',
+      },
+    },
+    {
+      name: 'take',
+      type: 'number',
+      admin: {
+        description: 'Parsed from slate ("take two" → 2). Blank if not stated.',
+      },
+    },
+    {
+      name: 'verdict',
+      type: 'select',
+      options: [
+        { label: 'Keeper', value: 'keeper' },
+        { label: 'Scrap', value: 'scrap' },
+        { label: 'Maybe', value: 'maybe' },
+      ],
+      admin: {
+        description: 'Parsed from clip tail. Blank if not yet spoken.',
+      },
+    },
+    {
+      name: 'slateParseStatus',
+      type: 'select',
+      options: [
+        { label: 'Parsed', value: 'parsed' },
+        { label: 'Not found', value: 'not-found' },
+        { label: 'Partial', value: 'partial' },
+      ],
+      admin: {
+        description: 'Slate parser result — filter not-found for manual cleanup.',
+      },
+    },
+    {
       name: 'processingStatus',
       type: 'select',
       required: true,
       defaultValue: 'pending',
       options: [
+        { label: 'Queued', value: 'queued' },
         { label: 'Pending', value: 'pending' },
         { label: 'Processing', value: 'processing' },
         { label: 'Complete', value: 'complete' },

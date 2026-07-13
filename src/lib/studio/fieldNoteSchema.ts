@@ -39,6 +39,7 @@ export const createFieldNoteSchema = z
   .object({
     mediaType: z.enum(fieldNoteMediaTypes),
     mediaFileId: z.number().int().positive().optional(),
+    capturePresetId: z.number().int().positive().optional(),
     writtenNote: z.string().optional(),
     city: z.string().optional(),
     locationName: z.string().optional(),
@@ -52,6 +53,13 @@ export const createFieldNoteSchema = z
     conceptualThread: z.enum(fieldNoteConceptualThreads).optional(),
   })
   .superRefine((data, ctx) => {
+    if (data.capturePresetId != null && data.mediaType === 'text') {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'capturePresetId cannot be used with text field notes',
+        path: ['capturePresetId'],
+      })
+    }
     if (data.mediaType !== 'text' && data.mediaFileId == null) {
       ctx.addIssue({
         code: 'custom',
