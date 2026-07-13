@@ -1,5 +1,8 @@
 import 'dotenv/config'
 
+import { getPayload } from 'payload'
+
+import config from '@payload-config'
 import { getBoss } from '@/lib/queue/pgboss'
 import { registerGenerateEmbeddingsWorker } from '@/workers/handlers/generateEmbeddings'
 import { registerGenerateTimelapseWorker } from '@/workers/handlers/generateTimelapse'
@@ -8,6 +11,7 @@ import { registerProcessFieldNoteWorker } from '@/workers/handlers/processFieldN
 import { registerSuggestLinesWorker } from '@/workers/handlers/suggestLines'
 import { registerSuggestTagsWorker } from '@/workers/handlers/suggestTags'
 import { registerResizeImageWorkers } from '@/workers/handlers/resizeArtworkImage'
+import { startFieldNoteQueuePoller } from '@/workers/fieldNoteQueuePoller'
 
 async function main() {
   const boss = await getBoss()
@@ -19,6 +23,8 @@ async function main() {
   await registerGenerateEmbeddingsWorker(boss)
   await registerSuggestLinesWorker(boss)
   await registerPatternReportWorker(boss)
+
+  startFieldNoteQueuePoller(() => getPayload({ config }))
 
   console.info('[worker] pg-boss workers started')
 

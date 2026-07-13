@@ -46,7 +46,7 @@ One record per repeatable shoot type. Studio admin upload flow: pick a preset, d
 
 ## 3. Hetzner worker — processing window
 
-Runs as a background daemon or cron-scheduled job, **fixed window 02:00–10:00** local time. Outside the window: no processing runs, regardless of queue depth. Reasoning: keeps CPU fully free during the day, and a week's batch of clips (Moondream at 15–30s/image) can comfortably take an hour or more unattended overnight.
+Runs as a background daemon or cron-scheduled job, **fixed window 02:00–08:00** local time. Outside the window: no processing runs, regardless of queue depth. Reasoning: keeps CPU fully free during the day, and a week's batch of clips (Moondream at 15–30s/image) can comfortably take an hour or more unattended overnight.
 
 ```
 02:00 — window opens
@@ -55,22 +55,22 @@ Runs as a background daemon or cron-scheduled job, **fixed window 02:00–10:00*
       processingStatus: processing
       ffmpeg: extract keyframes (interval from capturePreset.keyframeIntervalSec,
                default 10s) + extract audio track as 16kHz mono wav
-      moondream: tag each keyframe → tags array per keyframe
       whisper (faster-whisper, medium, multilingual, no language hint):
                transcribe audio → transcript + detectedLanguage
       slate parser: run against transcript (see §4)
+      moondream: tag each keyframe → tags array per keyframe (after slate parse — needs shotType)
       writeback: keyframes[], audioTranscript, detectedLanguage, duration,
                  episode, shotType, take, verdict, slateParseStatus
       delete extracted audio wav (scratch, disposable)
-      keep keyframe images (local scratch — thumbnails for admin UI)
+      keep keyframe images on R2 (CDN URLs in keyframes[].imageUrl)
       processingStatus: complete (or failed, with error logged)
-10:00 — window closes
+08:00 — window closes
   → any clip still processingStatus: processing when window closes:
       finish current clip, then stop (don't kill mid-clip)
   → remaining queued clips wait for next night
 ```
 
-If the queue empties before 10:00, the worker simply idles until the next window — no need to process ahead of schedule.
+If the queue empties before 08:00, the worker simply idles until the next window — no need to process ahead of schedule.
 
 ---
 
@@ -136,7 +136,7 @@ One throwaway clip, ~30 seconds, shot on a balcony or similar:
 2. Talk for 20 seconds about anything.
 3. Say the verdict: "Keeper."
 4. Upload via a CapturePreset (create a minimal test preset if none exists yet).
-5. Wait for the next 02:00–10:00 window (or manually trigger the worker once, for same-day validation).
+5. Wait for the next 02:00–08:00 window (or set `FIELDNOTE_PROCESSING_FORCE=true` and trigger the worker once, for same-day validation).
 6. Check the FieldNotes record: did `episode`, `shotType`, `take`, `verdict` all parse correctly? Is the transcript clean? Do keyframe tags say anything sensible?
 
 If all four slate fields parse correctly and the transcript is legible, the loop is proven end-to-end — real shooting can start. If not, fix the parser or the spoken convention before committing a week of footage to it.

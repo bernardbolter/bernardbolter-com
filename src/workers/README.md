@@ -39,13 +39,24 @@ node dist/workers/index.js
 
 Integration tests: set `HAS_FFMPEG=1` and `FFMPEG_SAMPLE_VIDEO=/path/to/clip.mp4` to run ffmpeg integration test locally.
 
+### Processing window (Phase 4)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `FIELDNOTE_PROCESSING_START_HOUR` | `2` | Window opens (local hour, inclusive) |
+| `FIELDNOTE_PROCESSING_END_HOUR` | `8` | Window closes (local hour, exclusive) |
+| `FIELDNOTE_PROCESSING_TZ` | `Europe/Berlin` | IANA timezone for window check |
+| `FIELDNOTE_PROCESSING_FORCE` | — | Set `true` to bypass window (test gate) |
+| `FIELDNOTE_POLL_INTERVAL_MS` | `60000` | Queue poller interval while worker runs |
+
 ## Queues
 
 Defined in `src/lib/queue/jobs.ts`. Upload creates a `process-fieldnote` job via `POST /api/studio/field-notes`.
 
-**Current behavior (Phase D):**
+**Current behavior (Phase 4):**
 
-- `process-fieldnote` — marks `text` FieldNotes `complete`; other media types stay `pending` until Hetzner processing (Phase E).
+- `process-fieldnote` — runs the ffmpeg → Whisper → slate parse → Moondream pipeline during the **02:00–08:00** window (`Europe/Berlin` by default). Upload jobs enqueue immediately but skip until the window opens unless `FIELDNOTE_PROCESSING_FORCE=true`.
+- A queue poller runs every 60s while the worker process is alive and picks up `queued` / `pending` field notes during the window.
 - All other job names are registered stubs that log and exit.
 
 ## Hetzner
