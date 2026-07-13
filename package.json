@@ -22,7 +22,8 @@
     "backfill:images": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillArtworkImageDerivatives.ts",
     "backfill:images:local": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/resizeArtworkImagesLocal.ts",
     "seed:capture-presets": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/seedCapturePresets.ts",
-    "migrate:fieldnotes-pipeline": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/push-fieldnotes-pipeline-schema.ts",
+    "migrate:fieldnotes-pipeline": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-fieldnotes-pipeline-schema.ts",
+    "push:fieldnotes-pipeline": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/push-fieldnotes-pipeline-schema.ts",
     "verify:fieldnotes-pipeline-schema": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/verify-fieldnotes-pipeline-schema.ts",
     "typecheck": "tsc --noEmit",
     "worker": "cross-env NODE_OPTIONS=--no-deprecation tsx src/workers/index.ts"

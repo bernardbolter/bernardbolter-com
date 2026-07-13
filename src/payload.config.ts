@@ -6,10 +6,14 @@ import { fileURLToPath } from 'url'
 // One-off push scripts set PAYLOAD_DATABASE_PUSH=true before importing this module;
 // preserve that so .env (often false on production) does not disable the push.
 const preserveDatabasePush = process.env.PAYLOAD_DATABASE_PUSH === 'true'
+const preserveDevelopmentNodeEnv = process.env.NODE_ENV === 'development'
 dotenv.config({ path: '.env', override: true })
 dotenv.config({ path: '.env.local', override: true })
 if (preserveDatabasePush) {
   process.env.PAYLOAD_DATABASE_PUSH = 'true'
+}
+if (preserveDevelopmentNodeEnv) {
+  process.env.NODE_ENV = 'development'
 }
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
