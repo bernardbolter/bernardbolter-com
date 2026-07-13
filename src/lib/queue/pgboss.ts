@@ -1,5 +1,7 @@
 import { PgBoss } from 'pg-boss'
 
+import { JOB_NAMES } from '@/lib/queue/jobs'
+
 /** pg-boss schema (default); kept separate from Payload `public` tables. */
 export const PG_BOSS_SCHEMA = 'pgboss'
 
@@ -21,6 +23,23 @@ export function createBoss(): PgBoss {
   })
 }
 
+function attachBossErrorHandler(boss: PgBoss): void {
+  boss.on('error', (error) => {
+    console.error('[pg-boss] error', error)
+  })
+}
+
+/** pg-boss v12 requires queues to exist before boss.work() — send() alone does not create them. */
+export async function ensureBossQueues(boss: PgBoss): Promise<void> {
+  for (const name of Object.values(JOB_NAMES)) {
+    const existing = await boss.getQueue(name)
+    if (!existing) {
+      await boss.createQueue(name)
+      console.info(`[pg-boss] created queue ${name}`)
+    }
+  }
+}
+
 /** Singleton pg-boss instance; starts once and reuses across API routes / workers. */
 export async function getBoss(): Promise<PgBoss> {
   if (bossInstance) {
@@ -30,7 +49,9 @@ export async function getBoss(): Promise<PgBoss> {
   if (!bossStartPromise) {
     bossStartPromise = (async () => {
       const boss = createBoss()
+      attachBossErrorHandler(boss)
       await boss.start()
+      await ensureBossQueues(boss)
       bossInstance = boss
       return boss
     })()

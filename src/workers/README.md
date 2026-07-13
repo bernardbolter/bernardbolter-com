@@ -53,6 +53,8 @@ Integration tests: set `HAS_FFMPEG=1` and `FFMPEG_SAMPLE_VIDEO=/path/to/clip.mp4
 
 Defined in `src/lib/queue/jobs.ts`. Upload creates a `process-fieldnote` job via `POST /api/studio/field-notes`.
 
+On first `getBoss()` start, all queues are created in the `pgboss` schema (pg-boss v12 requires this before `boss.work()`).
+
 **Current behavior (Phase 4):**
 
 - `process-fieldnote` — runs the ffmpeg → Whisper → slate parse → Moondream pipeline during the **02:00–08:00** window (`Europe/Berlin` by default). Upload jobs enqueue immediately but skip until the window opens unless `FIELDNOTE_PROCESSING_FORCE=true`.
