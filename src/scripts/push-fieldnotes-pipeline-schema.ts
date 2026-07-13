@@ -2,6 +2,7 @@
  * One-off Payload schema push for capture-presets + field-notes pipeline fields.
  *
  * Sets PAYLOAD_DATABASE_PUSH=true for this process only (does not change .env).
+ * payload.config.ts preserves this flag across its own dotenv reload.
  *
  * Usage: npm run migrate:fieldnotes-pipeline
  *

@@ -2,9 +2,15 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-// Load .env BEFORE importing anything else (.env wins over stale shell env)
+// Load .env BEFORE importing anything else (.env wins over stale shell env).
+// One-off push scripts set PAYLOAD_DATABASE_PUSH=true before importing this module;
+// preserve that so .env (often false on production) does not disable the push.
+const preserveDatabasePush = process.env.PAYLOAD_DATABASE_PUSH === 'true'
 dotenv.config({ path: '.env', override: true })
 dotenv.config({ path: '.env.local', override: true })
+if (preserveDatabasePush) {
+  process.env.PAYLOAD_DATABASE_PUSH = 'true'
+}
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
