@@ -1,6 +1,7 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
-import { revalidatePath, revalidateTag } from 'next/cache'
 import type { Artwork, Media } from '@/payload-types'
+
+import { revalidateArchive } from '@/lib/cache/revalidateArchive'
 
 import { generateClipEmbedding } from '@/utilities/generateClipEmbedding'
 import { persistArtworkClipEmbedding } from '@/utilities/persistArtworkClipEmbedding'
@@ -48,17 +49,12 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
     return doc
   }
 
-  try {
-    revalidateTag('artworks', 'max')
-    revalidatePath('/', 'layout')
-    if (typeof doc.slug === 'string' && doc.slug.trim()) {
-      const path = `/${doc.slug.trim()}`
-      revalidatePath(path)
-      revalidatePath(`${path}/vision`)
-    }
-  } catch {
-    // No Next.js static generation store (seed scripts, tests)
+  const paths = ['/']
+  if (typeof doc.slug === 'string' && doc.slug.trim()) {
+    const path = `/${doc.slug.trim()}`
+    paths.push(path, `${path}/vision`)
   }
+  revalidateArchive({ tags: ['artworks'], paths })
   if (!process.env.CLIP_EMBEDDING_URL) {
     return doc
   }

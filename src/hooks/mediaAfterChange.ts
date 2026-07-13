@@ -1,15 +1,14 @@
 import type { CollectionAfterChangeHook } from 'payload'
-import { revalidatePath, revalidateTag } from 'next/cache'
+
+import { revalidateArchive } from '@/lib/cache/revalidateArchive'
 
 function revalidateFrontendArtworkPaths(slugs: string[]) {
-  revalidateTag('artworks', 'max')
-  revalidatePath('/', 'layout')
-
+  const paths = ['/']
   for (const slug of slugs) {
     const path = `/${slug}`
-    revalidatePath(path)
-    revalidatePath(`${path}/vision`)
+    paths.push(path, `${path}/vision`)
   }
+  revalidateArchive({ tags: ['artworks'], paths })
 }
 
 /** Bust frontend cache when a media file is replaced or its metadata changes. */
