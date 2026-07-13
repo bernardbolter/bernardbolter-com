@@ -17,6 +17,8 @@ import type { CatalogueArtwork } from '@/types/frontend'
 
 interface ArtworkGridImageProps {
   layout: GridItemLayout
+  /** First row in each column — eager load (lazy breaks inside the grid scroll container). */
+  priority?: boolean
 }
 
 function isVideoArtwork(artwork: CatalogueArtwork): boolean {
@@ -40,7 +42,7 @@ function isVideoArtwork(artwork: CatalogueArtwork): boolean {
   return hasPoster || hasVideoFile || hasVideoUrl || hasClips
 }
 
-export default function ArtworkGridImage({ layout }: ArtworkGridImageProps) {
+export default function ArtworkGridImage({ layout, priority = false }: ArtworkGridImageProps) {
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [imageFailed, setImageFailed] = useState(false)
 
@@ -104,8 +106,9 @@ export default function ArtworkGridImage({ layout }: ArtworkGridImageProps) {
               alt={artwork.title ?? 'Artwork'}
               width={imageWidth}
               height={imageHeight}
-              loading="lazy"
+              loading={priority ? 'eager' : 'lazy'}
               decoding="async"
+              fetchPriority={priority ? 'high' : 'auto'}
               style={{
                 width: displayWidth,
                 height: displayHeight,

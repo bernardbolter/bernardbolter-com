@@ -35,8 +35,12 @@ export default function ArtworksGrid() {
           className="artwork-grid__column"
           style={{ width: gridMetrics.width, gap: gridMetrics.gap }}
         >
-          {column.map((layout) => (
-            <ArtworkGridImage key={layout.artwork.id} layout={layout} />
+          {column.map((layout, rowIndex) => (
+            <ArtworkGridImage
+              key={layout.artwork.id}
+              layout={layout}
+              priority={rowIndex === 0}
+            />
           ))}
         </div>
       ))}
