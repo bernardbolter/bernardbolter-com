@@ -87,7 +87,7 @@ export default function TimelineArtworkSlot({
             artwork={artwork}
             artworkContainerWidth={artworkContainerWidth}
             artworkContainerHeight={artworkContainerHeight}
-            imageContext="grid"
+            imageContext="timeline"
             priority={index < TIMELINE_INITIAL_LOAD_COUNT}
           />
         ) : (

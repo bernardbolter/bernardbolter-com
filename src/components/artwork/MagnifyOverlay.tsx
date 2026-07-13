@@ -119,8 +119,8 @@ export default function MagnifyOverlay({
                     }}
                   >
                     <ArtworkR2Image
-                      src={image.url}
-                      fallbackSrc={image.fallbackUrl}
+                      src={image.magnifyUrl}
+                      fallbackSrc={image.magnifyFallbackUrl}
                       alt={image.alt}
                       width={image.width}
                       height={image.height}

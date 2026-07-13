@@ -20,7 +20,7 @@ interface ArtworkImageProps {
   artworkContainerHeight: number
   useImageFactors?: boolean
   priority?: boolean
-  /** R2 derivative size — timeline/grid use 400w; artwork page uses 1200w. */
+  /** R2 derivative — grid/similar 400w, timeline/slideshow/artwork page 800w, vision 1200w. */
   imageContext?: ArtworkImageContext
   onLoad?: () => void
 }

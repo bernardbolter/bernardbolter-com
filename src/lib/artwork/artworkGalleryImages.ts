@@ -1,13 +1,20 @@
 import type { Artwork, Media } from '@/payload-types'
 
 import {
+  derivativePublicUrl,
   getArtworkImageSources,
 } from '@/lib/media/artworkR2Images'
 import { stripMediaUrlVersion } from '@/lib/media/r2Object'
 import { mediaPublicUrl } from '@/lib/media/publicUrl'
 
 export type ArtworkGalleryImage = {
+  /** Display size in Layer 0 slider (800w derivative for primary). */
   url: string
+  /** Largest available — original R2 file for magnify (e.g. 1600px). */
+  magnifyUrl: string
+  /** Magnify onError fallback — 1200w derivative when slug derivatives exist. */
+  magnifyFallbackUrl: string
+  /** Slider onError fallback — original R2 URL. */
   fallbackUrl: string
   alt: string
   width: number
@@ -21,6 +28,8 @@ function readMedia(media: number | Media | null | undefined): ArtworkGalleryImag
   const fallbackUrl = stripMediaUrlVersion(mediaDoc.url.trim())
   return {
     url: fallbackUrl,
+    magnifyUrl: fallbackUrl,
+    magnifyFallbackUrl: fallbackUrl,
     fallbackUrl,
     alt: mediaDoc.alt?.trim() || '',
     width: mediaDoc.width && mediaDoc.width > 0 ? mediaDoc.width : 1200,
@@ -39,23 +48,32 @@ export function collectArtworkGalleryImages(artwork: Artwork): ArtworkGalleryIma
     images.push(image)
   }
 
+  const slug = artwork.slug?.trim()
+  const magnifyDerivativeFallback = slug ? derivativePublicUrl(slug, '1200w') : null
+
   const primary = readMedia(artwork.primaryImage)
   if (primary) {
-    const sources = getArtworkImageSources(artwork, 'artwork-page')
+    const displaySources = getArtworkImageSources(artwork, 'artwork-page')
+    const originalUrl = displaySources?.fallback ?? primary.fallbackUrl
     push({
       ...primary,
-      url: sources?.src ?? primary.url,
-      fallbackUrl: sources?.fallback ?? primary.fallbackUrl,
+      url: displaySources?.src ?? primary.url,
+      magnifyUrl: originalUrl,
+      magnifyFallbackUrl: magnifyDerivativeFallback ?? originalUrl,
+      fallbackUrl: originalUrl,
       alt: artwork.primaryImageAltText?.trim() || artwork.title || 'Artwork',
     })
   } else {
     const poster = readMedia(artwork.posterImage)
     if (poster) {
-      const sources = getArtworkImageSources(artwork, 'artwork-page')
+      const displaySources = getArtworkImageSources(artwork, 'artwork-page')
+      const originalUrl = displaySources?.fallback ?? poster.fallbackUrl
       push({
         ...poster,
-        url: sources?.src ?? poster.url,
-        fallbackUrl: sources?.fallback ?? poster.fallbackUrl,
+        url: displaySources?.src ?? poster.url,
+        magnifyUrl: originalUrl,
+        magnifyFallbackUrl: magnifyDerivativeFallback ?? originalUrl,
+        fallbackUrl: originalUrl,
       })
     }
   }

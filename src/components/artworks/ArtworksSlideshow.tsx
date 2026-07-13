@@ -180,6 +180,7 @@ export default function ArtworksSlideshow({ autoPlayInterval = 5000 }: ArtworksS
             artwork={currentArtwork}
             artworkContainerWidth={state.artworkContainerWidth}
             artworkContainerHeight={state.artworkContainerHeight}
+            imageContext="slideshow"
             priority
             onLoad={handleImageLoad}
           />

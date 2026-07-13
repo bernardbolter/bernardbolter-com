@@ -46,8 +46,13 @@ describe('artworkR2Images', () => {
       fallback: 'https://cdn.example.com/basel-switzerland-composite.jpg',
     })
 
+    expect(getArtworkImageSources(artwork, 'timeline')).toEqual({
+      src: 'https://cdn.example.com/basel-switzerland-800w.jpg',
+      fallback: 'https://cdn.example.com/basel-switzerland-composite.jpg',
+    })
+
     expect(getArtworkImageSources(artwork, 'artwork-page')).toEqual({
-      src: 'https://cdn.example.com/basel-switzerland-1200w.jpg',
+      src: 'https://cdn.example.com/basel-switzerland-800w.jpg',
       fallback: 'https://cdn.example.com/basel-switzerland-composite.jpg',
     })
   })

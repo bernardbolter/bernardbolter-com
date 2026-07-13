@@ -30,17 +30,17 @@ export function stripMediaUrlVersion(url: string): string {
 
 /** Resolve the R2 object key from a public CDN URL. */
 export function objectKeyFromPublicUrl(url: string): string {
-  const base = getR2PublicBase()
   const normalized = stripMediaUrlVersion(url)
-  if (normalized.startsWith(`${base}/`)) {
-    return normalized.slice(base.length + 1)
-  }
 
   try {
-    const parsed = new URL(normalized)
-    return parsed.pathname.replace(/^\//, '')
+    const pathname = new URL(normalized).pathname.replace(/^\//, '')
+    return decodeURIComponent(pathname)
   } catch {
-    return normalized.replace(/^\//, '')
+    const base = getR2PublicBase()
+    const rawKey = normalized.startsWith(`${base}/`)
+      ? normalized.slice(base.length + 1)
+      : normalized.replace(/^\//, '')
+    return decodeURIComponent(rawKey)
   }
 }
 

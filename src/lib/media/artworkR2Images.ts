@@ -5,7 +5,13 @@ import {
   stripMediaUrlVersion,
 } from '@/lib/media/r2Object'
 
-export type ArtworkImageContext = 'grid' | 'artwork-page' | 'vision-page' | 'similar-works'
+export type ArtworkImageContext =
+  | 'grid'
+  | 'timeline'
+  | 'slideshow'
+  | 'artwork-page'
+  | 'vision-page'
+  | 'similar-works'
 
 export const ARTWORK_DERIVATIVE_SIZES = [
   { suffix: '400w', width: 400 },
@@ -23,7 +29,9 @@ export type ArtworkImageSources = {
 const CONTEXT_SUFFIX: Record<ArtworkImageContext, ArtworkDerivativeSuffix> = {
   grid: '400w',
   'similar-works': '400w',
-  'artwork-page': '1200w',
+  timeline: '800w',
+  slideshow: '800w',
+  'artwork-page': '800w',
   'vision-page': '1200w',
 }
 
