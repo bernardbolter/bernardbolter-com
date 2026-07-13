@@ -549,12 +549,32 @@ h6 {
   padding: 10px;
   font-size: 13px;
   pointer-events: none;
+  box-sizing: border-box;
 }
 
 .artwork-grid__placeholer-overlay p {
   font-weight: 800;
   font-size: 10px;
-  color: var(--surface-page);
+  color: #fff;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.artwork-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.artwork-placeholder p {
+  font-weight: 800;
+  font-size: 10px;
+  color: #fff;
+  margin: 0;
+  text-align: center;
 }
 
 .artwork-grid__info {

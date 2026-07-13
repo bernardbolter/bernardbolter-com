@@ -122,10 +122,11 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
             />
           ) : (
             <div
-              className="artwork-grid__placeholer-overlay"
+              className="artwork-grid__placeholer-overlay artwork-placeholder"
               style={{
                 backgroundColor: getSeriesColor(seriesSlug),
                 zIndex: 10,
+                position: 'relative',
                 width: displayWidth,
                 height: displayHeight,
               }}

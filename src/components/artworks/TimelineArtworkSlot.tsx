@@ -92,13 +92,16 @@ export default function TimelineArtworkSlot({
           />
         ) : (
           <div
+            className="artwork-placeholder"
             aria-hidden
             style={{
               width: artworkContainerWidth,
               height: artworkContainerHeight,
               backgroundColor: seriesColor,
             }}
-          />
+          >
+            <p>loading…</p>
+          </div>
         )}
       </Link>
     </div>

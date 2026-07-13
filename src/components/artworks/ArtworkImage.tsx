@@ -53,14 +53,14 @@ export default function ArtworkImage({
   if (!imagePair) {
     return (
       <div
-        className="flex items-center justify-center"
+        className="artwork-placeholder"
         style={{
           width: displayWidth,
           height: displayHeight,
           backgroundColor: seriesColor,
         }}
       >
-        <span className="font-heading text-sm text-surface-page">No image</span>
+        <p>No image</p>
       </div>
     )
   }
