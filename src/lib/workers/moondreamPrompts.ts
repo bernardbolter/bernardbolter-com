@@ -2,7 +2,7 @@ import type { FieldNoteShotType } from '@/lib/workers/fieldNotePipelineConstants
 import { FIELD_NOTE_SHOT_TYPES } from '@/lib/workers/fieldNotePipelineConstants'
 import type { FieldNote } from '@/payload-types'
 
-/** Appended to every Moondream prompt — see docs/vision/vision-analysis-prompt-spec.md §2. */
+/** Appended to every Moondream prompt — see docs/vision/moondream-prompt-spec.md §2. */
 export const MOONDREAM_TAG_SUFFIX =
   'Answer only with a short list of tags, 5 to 10 words or short phrases, comma-separated. No sentences.'
 
