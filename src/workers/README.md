@@ -21,7 +21,23 @@ node dist/workers/index.js
 |----------|---------|
 | `DATABASE_URL` | Postgres (Neon); pg-boss uses schema `pgboss` |
 | `PAYLOAD_SECRET` | Payload Local API in handlers |
-| `R2_*`, `NEXT_PUBLIC_IMAGE_DOMAIN` | Phase E media processing (not needed for text-only stub) |
+| `R2_*`, `NEXT_PUBLIC_IMAGE_DOMAIN` | Media download + keyframe upload (Phase E4+) |
+
+### FieldNotes pipeline sidecars (Phase 3+)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `FFMPEG_PATH` | `ffmpeg` | Keyframe + audio extraction |
+| `FFPROBE_PATH` | `ffprobe` | Duration probe |
+| `WHISPER_URL` | `http://127.0.0.1:9000` | faster-whisper HTTP sidecar ([whisper-asr-webservice](https://github.com/ahmetoner/whisper-asr-webservice)) |
+| `MOONDREAM_URL` | `http://127.0.0.1:2020` | Moondream vision sidecar — `POST /v1/query` with `image` + `prompt` multipart fields |
+| `FIELDNOTE_SCRATCH_DIR` | `{tmpdir}/fieldnotes` | Temp workspace for extracted WAV + keyframes |
+
+**Whisper sidecar:** `POST {WHISPER_URL}/asr?encode=true&task=transcribe&output=json` with multipart `audio_file`.
+
+**Moondream sidecar:** `POST {MOONDREAM_URL}/v1/query` with multipart `image` + `prompt`; JSON `{ "text": "tag1, tag2, ..." }`.
+
+Integration tests: set `HAS_FFMPEG=1` and `FFMPEG_SAMPLE_VIDEO=/path/to/clip.mp4` to run ffmpeg integration test locally.
 
 ## Queues
 
