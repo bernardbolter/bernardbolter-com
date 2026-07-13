@@ -6,6 +6,7 @@ import {
   normalizeVisionImportItems,
   type VisionAnalysisImportInput,
 } from './archiveImportSchemas'
+import { revalidateArtworkPaths } from './revalidateArtworkPaths'
 
 export type VisionAnalysisImportResult = {
   slug: string
@@ -54,6 +55,8 @@ export async function applyVisionAnalysisImport(
       overrideAccess: false,
       user,
     })
+
+    revalidateArtworkPaths(slug)
 
     results.push({
       slug,

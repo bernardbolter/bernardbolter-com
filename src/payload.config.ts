@@ -2,9 +2,9 @@ import dotenv from 'dotenv'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-// Load .env BEFORE importing anything else
-dotenv.config({ path: '.env' })
-dotenv.config({ path: '.env.local' })
+// Load .env BEFORE importing anything else (.env wins over stale shell env)
+dotenv.config({ path: '.env', override: true })
+dotenv.config({ path: '.env.local', override: true })
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'

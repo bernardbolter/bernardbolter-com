@@ -4,8 +4,12 @@ import { FormEvent, useState } from 'react'
 
 import { parseImportJson } from '@/lib/studio/parseImportJson'
 import {
+  buildVisionAnalysisPrompt,
+  buildVisionImportJsonPrompt,
   buildVisionImportTemplate,
-  VISION_IMPORT_CLAUDE_PROMPT,
+  buildVisionPhoneWorkflowPrompt,
+  VISION_ANALYSIS_PROMPT_A1_0,
+  VISION_PROMPT_VERSION,
 } from '@/lib/studio/visionImportTemplate'
 
 const FIELDS_EXAMPLE = `{
@@ -83,7 +87,8 @@ export function ArchiveImportPanel() {
   const [fieldsError, setFieldsError] = useState<string | null>(null)
   const [visionSubmitting, setVisionSubmitting] = useState(false)
   const [fieldsSubmitting, setFieldsSubmitting] = useState(false)
-  const [promptCopied, setPromptCopied] = useState(false)
+  const [promptCopied, setPromptCopied] = useState<string | null>(null)
+  const [visionSlug, setVisionSlug] = useState('')
 
   async function handleVisionSubmit(event: FormEvent) {
     event.preventDefault()
@@ -117,15 +122,17 @@ export function ArchiveImportPanel() {
     }
   }
 
-  async function copyClaudePrompt() {
+  async function copyPrompt(label: string, text: string) {
     try {
-      await navigator.clipboard.writeText(VISION_IMPORT_CLAUDE_PROMPT)
-      setPromptCopied(true)
-      window.setTimeout(() => setPromptCopied(false), 2000)
+      await navigator.clipboard.writeText(text)
+      setPromptCopied(label)
+      window.setTimeout(() => setPromptCopied(null), 2000)
     } catch {
       setVisionError('Could not copy prompt — select and copy from the box below.')
     }
   }
+
+  const visionPromptOptions = visionSlug.trim() ? { slug: visionSlug.trim() } : {}
 
   return (
     <div className="studio-archive">
@@ -137,9 +144,24 @@ export function ArchiveImportPanel() {
       <form className="studio-archive__panel studio-archive__panel--primary" onSubmit={handleVisionSubmit}>
         <h3>Vision analyses</h3>
         <p className="studio-archive__hint">
-          Appends to <code>visionAnalyses[]</code>. Paste Claude output here (markdown code fences
+          Appends to <code>visionAnalyses[]</code>. Prompt version{' '}
+          <code>{VISION_PROMPT_VERSION}</code> — paste Claude output here (markdown code fences
           are OK).
         </p>
+
+        <label className="studio-archive__label" htmlFor="vision-slug">
+          Artwork slug (optional — pre-fills copied prompts)
+        </label>
+        <input
+          id="vision-slug"
+          className="studio-archive__input"
+          type="text"
+          value={visionSlug}
+          onChange={(event) => setVisionSlug(event.target.value)}
+          placeholder="gates-iii"
+          autoComplete="off"
+          spellCheck={false}
+        />
 
         <div className="studio-archive__toolbar">
           <button
@@ -149,14 +171,45 @@ export function ArchiveImportPanel() {
           >
             Insert template
           </button>
-          <button type="button" className="studio-archive__secondary" onClick={copyClaudePrompt}>
-            {promptCopied ? 'Prompt copied' : 'Copy Claude prompt'}
+          <button
+            type="button"
+            className="studio-archive__secondary"
+            onClick={() =>
+              copyPrompt('workflow', buildVisionPhoneWorkflowPrompt(visionPromptOptions))
+            }
+          >
+            {promptCopied === 'workflow' ? 'Workflow copied' : 'Copy full workflow'}
+          </button>
+          <button
+            type="button"
+            className="studio-archive__secondary"
+            onClick={() =>
+              copyPrompt('analysis', buildVisionAnalysisPrompt(visionPromptOptions))
+            }
+          >
+            {promptCopied === 'analysis' ? 'Analysis copied' : 'Copy analysis (A-1.0)'}
+          </button>
+          <button
+            type="button"
+            className="studio-archive__secondary"
+            onClick={() =>
+              copyPrompt('json', buildVisionImportJsonPrompt(visionPromptOptions))
+            }
+          >
+            {promptCopied === 'json' ? 'JSON rules copied' : 'Copy JSON wrap'}
           </button>
         </div>
 
         <details className="studio-archive__details">
-          <summary>Claude prompt (for phone workflow)</summary>
-          <pre className="studio-archive__prompt">{VISION_IMPORT_CLAUDE_PROMPT}</pre>
+          <summary>Full workflow prompt (analysis + JSON)</summary>
+          <pre className="studio-archive__prompt">
+            {buildVisionPhoneWorkflowPrompt(visionPromptOptions)}
+          </pre>
+        </details>
+
+        <details className="studio-archive__details">
+          <summary>Analysis prompt only (A-1.0)</summary>
+          <pre className="studio-archive__prompt">{VISION_ANALYSIS_PROMPT_A1_0}</pre>
         </details>
 
         <textarea

@@ -12,6 +12,7 @@ import {
   normalizeArtworkFieldsImportItems,
   type ArtworkFieldsImportInput,
 } from './archiveImportSchemas'
+import { revalidateArtworkPaths } from './revalidateArtworkPaths'
 
 export type ArtworkFieldsImportResult = {
   slug: string
@@ -97,6 +98,8 @@ export async function applyArtworkFieldsImport(
       overrideAccess: false,
       user,
     })
+
+    revalidateArtworkPaths(slug)
 
     results.push({
       slug,

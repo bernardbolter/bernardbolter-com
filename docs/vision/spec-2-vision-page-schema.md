@@ -459,9 +459,7 @@ No API integration required. Manual entry:
 
 1. Open any vision model chat interface (claude.ai, chatgpt.com, gemini.google.com, chat.deepseek.com)
 2. Paste the direct R2 image URL for the artwork (from the artwork's `imageUrl` field in Payload)
-3. Use the **standard prompt exactly** — do not vary it across models:
-
-> *"Please give a detailed visual analysis of this artwork — describe the composition, colour palette, spatial structure, mood, and any formal qualities you notice. Be specific and observational rather than interpretive."*
+3. Use the **standard prompt exactly** — do not vary it across models. See `docs/vision/vision-analysis-prompt-spec.md` (version **A-1.0**, changelog in `vision-prompt-changelog.md`).
 
 4. Copy the full response
 5. In Payload admin → Artwork record → `visionAnalyses` array → Add entry → paste text, enter model string, date auto-fills

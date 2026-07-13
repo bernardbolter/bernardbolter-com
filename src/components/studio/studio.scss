@@ -429,6 +429,24 @@
   font-size: 0.9rem;
 }
 
+.studio-archive__label {
+  display: block;
+  margin: 0 0 0.35rem;
+  color: #475569;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.studio-archive__input {
+  width: 100%;
+  border: 1px solid #d9e1ea;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.65rem;
+}
+
 .studio-archive__textarea {
   width: 100%;
   border: 1px solid #d9e1ea;

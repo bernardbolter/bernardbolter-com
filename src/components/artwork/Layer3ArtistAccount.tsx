@@ -114,18 +114,6 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
   return (
     <section className="artwork-page__layer">
       <div className="artwork-page__inner">
-        {latestAnalysis ? (
-          <ArtworkVisionAnalysisCard artwork={artwork} seriesColor={seriesColor} />
-        ) : null}
-
-        {hasClipEmbedding ? (
-          <ArtworkVisualSimilarityCard
-            artworkSlug={artworkSlug}
-            seriesColor={seriesColor}
-            similarWorks={similarItems}
-          />
-        ) : null}
-
         <IntentBlock label="Contribution" value={artwork.formalContributionAssessment} />
 
         {intentFields.map((field) => (
@@ -201,6 +189,18 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
           </>
         ) : null}
         </div>
+
+        {hasClipEmbedding ? (
+          <ArtworkVisualSimilarityCard
+            artworkSlug={artworkSlug}
+            seriesColor={seriesColor}
+            similarWorks={similarItems}
+          />
+        ) : null}
+
+        {latestAnalysis ? (
+          <ArtworkVisionAnalysisCard artwork={artwork} seriesColor={seriesColor} />
+        ) : null}
       </div>
     </section>
   )

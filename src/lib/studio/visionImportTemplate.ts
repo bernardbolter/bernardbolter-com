@@ -1,24 +1,21 @@
-export const VISION_IMPORT_CLAUDE_PROMPT = `Output ONLY valid JSON for Bernard Bolter Studio vision import. No markdown fences, no commentary.
+import {
+  buildVisionPhoneWorkflowPrompt,
+  VISION_ANALYSIS_PROMPT_A1_0,
+  VISION_IMPORT_JSON_RULES,
+  VISION_PROMPT_VERSION,
+} from './visionAnalysisPrompt'
 
-Shape:
-{
-  "slug": "artwork-slug-here",
-  "analyses": [
-    {
-      "text": "Full vision analysis prose.",
-      "model": "claude-sonnet-4-6",
-      "date": "YYYY-MM-DD"
-    }
-  ]
-}
+export {
+  VISION_ANALYSIS_PROMPT_A1_0,
+  VISION_IMPORT_JSON_RULES,
+  VISION_PROMPT_VERSION,
+  buildVisionAnalysisPrompt,
+  buildVisionImportJsonPrompt,
+  buildVisionPhoneWorkflowPrompt,
+} from './visionAnalysisPrompt'
 
-Rules:
-- slug must match an existing published artwork slug
-- text is required (plain string, can be multi-paragraph)
-- model is the exact model version string you used
-- date is ISO date YYYY-MM-DD (today if unsure)
-- To append multiple analyses for one work, add more objects in analyses[]
-- For multiple artworks, use: { "items": [ { "slug": "...", "analyses": [...] }, ... ] }`
+/** Full phone workflow: A-1.0 analysis + Studio import JSON. */
+export const VISION_IMPORT_CLAUDE_PROMPT = buildVisionPhoneWorkflowPrompt()
 
 export function buildVisionImportTemplate(date = new Date()): string {
   const isoDate = date.toISOString().slice(0, 10)
