@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   fieldNoteConceptualThreads,
@@ -31,6 +31,8 @@ function mediaLabel(type: string): string {
 }
 
 export function UploadForm() {
+  const libraryInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
   const [mediaType, setMediaType] = useState<(typeof fieldNoteMediaTypes)[number]>('photo')
   const [writtenNote, setWrittenNote] = useState('')
@@ -94,6 +96,16 @@ export function UploadForm() {
     () => fieldNoteMediaTypes.map((value) => ({ value, label: mediaLabel(value) })),
     [],
   )
+
+  function onFileChosen(next: File | null) {
+    setFile(next)
+    if (next) setMediaType(inferMediaType(next))
+  }
+
+  function clearFileInputs() {
+    if (libraryInputRef.current) libraryInputRef.current.value = ''
+    if (cameraInputRef.current) cameraInputRef.current.value = ''
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -194,10 +206,7 @@ export function UploadForm() {
       setProcessStage('')
       setConceptualThread('')
       setShowMore(false)
-      if (!isTextOnly) {
-        const input = document.getElementById('studio-upload-file') as HTMLInputElement | null
-        if (input) input.value = ''
-      }
+      clearFileInputs()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed.')
     } finally {
@@ -229,19 +238,47 @@ export function UploadForm() {
 
       {!isTextOnly ? (
         <div className="studio-upload__field">
-          <label htmlFor="studio-upload-file">File</label>
+          <span className="studio-upload__field-label" id="studio-upload-file-label">
+            File
+          </span>
+          <div className="studio-upload__file-actions" role="group" aria-labelledby="studio-upload-file-label">
+            <button
+              type="button"
+              className="studio-upload__file-action"
+              disabled={submitting}
+              onClick={() => libraryInputRef.current?.click()}
+            >
+              Choose file
+            </button>
+            <button
+              type="button"
+              className="studio-upload__file-action"
+              disabled={submitting}
+              onClick={() => cameraInputRef.current?.click()}
+            >
+              Use camera
+            </button>
+          </div>
           <input
+            ref={libraryInputRef}
             id="studio-upload-file"
+            type="file"
+            accept="image/*,video/*,audio/*"
+            disabled={submitting}
+            hidden
+            onChange={(event) => onFileChosen(event.target.files?.[0] ?? null)}
+          />
+          <input
+            ref={cameraInputRef}
+            id="studio-upload-camera"
             type="file"
             accept="image/*,video/*,audio/*"
             capture="environment"
             disabled={submitting}
-            onChange={(event) => {
-              const next = event.target.files?.[0] ?? null
-              setFile(next)
-              if (next) setMediaType(inferMediaType(next))
-            }}
+            hidden
+            onChange={(event) => onFileChosen(event.target.files?.[0] ?? null)}
           />
+          {file ? <p className="studio-upload__file-selected">{file.name}</p> : null}
         </div>
       ) : null}
 
