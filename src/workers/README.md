@@ -30,12 +30,12 @@ node dist/workers/index.js
 | `FFMPEG_PATH` | `ffmpeg` | Keyframe + audio extraction |
 | `FFPROBE_PATH` | `ffprobe` | Duration probe |
 | `WHISPER_URL` | `http://127.0.0.1:9000` | faster-whisper HTTP sidecar ([whisper-asr-webservice](https://github.com/ahmetoner/whisper-asr-webservice)) |
-| `MOONDREAM_URL` | `http://127.0.0.1:2020` | Moondream vision sidecar — `POST /v1/query` with `image` + `prompt` multipart fields |
+| `MOONDREAM_URL` | `http://127.0.0.1:2020` | [Moondream Station](https://docs.moondream.ai/station/) — `POST /v1/query` JSON API |
 | `FIELDNOTE_SCRATCH_DIR` | `{tmpdir}/fieldnotes` | Temp workspace for extracted WAV + keyframes |
 
 **Whisper sidecar:** `POST {WHISPER_URL}/asr?encode=true&task=transcribe&output=json` with multipart `audio_file`.
 
-**Moondream sidecar:** `POST {MOONDREAM_URL}/v1/query` with multipart `image` + `prompt`; JSON `{ "text": "tag1, tag2, ..." }`.
+**Moondream Station:** `pip install moondream-station` then `moondream-station start 2020` (or pm2). Request: `POST {MOONDREAM_URL}/v1/query` with JSON `{ image_url, question, stream: false }`; response `{ answer: "tag1, tag2, ..." }`.
 
 Integration tests: set `HAS_FFMPEG=1` and `FFMPEG_SAMPLE_VIDEO=/path/to/clip.mp4` to run ffmpeg integration test locally.
 

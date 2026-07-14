@@ -14,9 +14,30 @@ type MoondreamJsonResponse = {
   response?: string
 }
 
-/** Local Moondream HTTP sidecar — see workers/README.md for the expected contract. */
+type MoondreamQueryRequest = {
+  image_url: string
+  question: string
+  stream: false
+}
+
+/** Local Moondream Station — see workers/README.md for install and contract. */
 export function getMoondreamUrl(): string {
   return process.env.MOONDREAM_URL?.replace(/\/$/, '') || 'http://127.0.0.1:2020'
+}
+
+export function imageMimeTypeFromPath(imagePath: string): string {
+  switch (path.extname(imagePath).toLowerCase()) {
+    case '.png':
+      return 'image/png'
+    case '.webp':
+      return 'image/webp'
+    default:
+      return 'image/jpeg'
+  }
+}
+
+export function toMoondreamDataUri(imageBytes: Buffer, mimeType: string): string {
+  return `data:${mimeType};base64,${imageBytes.toString('base64')}`
 }
 
 export function parseMoondreamResponse(body: MoondreamJsonResponse): MoondreamTagResult {
@@ -27,22 +48,28 @@ export function parseMoondreamResponse(body: MoondreamJsonResponse): MoondreamTa
 /**
  * Tag a keyframe image with a shot-type-specific Moondream prompt.
  *
- * Sidecar contract:
+ * Moondream Station contract:
  *   POST /v1/query
- *   multipart: image (file), prompt (string)
- *   JSON response: { "text": "tag1, tag2, ..." }
+ *   JSON: { image_url: "data:image/jpeg;base64,...", question: "...", stream: false }
+ *   JSON response: { "answer": "tag1, tag2, ..." }
  */
 export async function queryMoondreamImage(
   imagePath: string,
   prompt: string,
 ): Promise<MoondreamTagResult> {
   const imageBytes = await fs.readFile(imagePath)
-  const form = new FormData()
-  form.append('image', new Blob([imageBytes]), path.basename(imagePath))
-  form.append('prompt', prompt)
+  const payload: MoondreamQueryRequest = {
+    image_url: toMoondreamDataUri(imageBytes, imageMimeTypeFromPath(imagePath)),
+    question: prompt,
+    stream: false,
+  }
 
   const url = `${getMoondreamUrl()}/v1/query`
-  const response = await fetch(url, { method: 'POST', body: form })
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
 
   if (!response.ok) {
     const detail = await response.text().catch(() => '')

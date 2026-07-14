@@ -5,8 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   getMoondreamUrl,
+  imageMimeTypeFromPath,
   parseMoondreamResponse,
   queryMoondreamImage,
+  toMoondreamDataUri,
 } from '@/lib/workers/moondream'
 
 describe('moondream client', () => {
@@ -32,6 +34,13 @@ describe('moondream client', () => {
     ])
   })
 
+  it('builds data URIs for Moondream Station', () => {
+    expect(toMoondreamDataUri(Buffer.from('abc'), 'image/jpeg')).toBe(
+      'data:image/jpeg;base64,YWJj',
+    )
+    expect(imageMimeTypeFromPath('/tmp/frame.png')).toBe('image/png')
+  })
+
   describe('queryMoondreamImage', () => {
     let tmpDir: string
     let imagePath: string
@@ -47,10 +56,10 @@ describe('moondream client', () => {
       vi.unstubAllGlobals()
     })
 
-    it('posts image + prompt to sidecar', async () => {
+    it('posts image_url + question JSON to Moondream Station', async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => ({ text: 'person, camera, blurred background' }),
+        json: async () => ({ answer: 'person, camera, blurred background' }),
       })
       vi.stubGlobal('fetch', fetchMock)
 
@@ -62,7 +71,16 @@ describe('moondream client', () => {
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
       expect(url).toMatch(/\/v1\/query$/)
       expect(init.method).toBe('POST')
-      expect(init.body).toBeInstanceOf(FormData)
+      expect(init.headers).toEqual({ 'Content-Type': 'application/json' })
+
+      const body = JSON.parse(String(init.body)) as {
+        image_url: string
+        question: string
+        stream: boolean
+      }
+      expect(body.question).toBe('List: person visible.')
+      expect(body.stream).toBe(false)
+      expect(body.image_url).toMatch(/^data:image\/jpeg;base64,/)
     })
 
     it('throws on sidecar error', async () => {
