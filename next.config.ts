@@ -7,6 +7,10 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Studio field-note uploads are multipart POSTs (video clips can be large).
+    middlewareClientMaxBodySize: '500mb',
+  },
   async redirects() {
     return [
       { source: '/artworks', destination: '/', permanent: true },

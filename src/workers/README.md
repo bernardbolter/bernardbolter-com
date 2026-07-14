@@ -21,7 +21,9 @@ node dist/workers/index.js
 |----------|---------|
 | `DATABASE_URL` | Postgres (Neon); pg-boss uses schema `pgboss` |
 | `PAYLOAD_SECRET` | Payload Local API in handlers |
-| `R2_*`, `NEXT_PUBLIC_IMAGE_DOMAIN` | Media download + keyframe upload (Phase E4+) |
+| `R2_*`, `NEXT_PUBLIC_IMAGE_DOMAIN` | Artwork media + keyframe upload (Phase E4+) |
+| `FIELDNOTES_MEDIA_ROOT` | Local inbox for studio uploads (default `~/data/fieldnotes`) |
+| `FIELDNOTES_MAX_UPLOAD_BYTES` | Max multipart upload size (default 500MB) |
 
 ### FieldNotes pipeline sidecars (Phase 3+)
 
@@ -35,7 +37,23 @@ node dist/workers/index.js
 
 **Whisper sidecar:** `POST {WHISPER_URL}/asr?encode=true&task=transcribe&output=json` with multipart `audio_file`.
 
-**Moondream Station:** `pip install moondream-station` then `moondream-station start 2020` (or pm2). Request: `POST {MOONDREAM_URL}/v1/query` with JSON `{ image_url, question, stream: false }`; response `{ answer: "tag1, tag2, ..." }`.
+**Moondream Station:** `pip install moondream-station`, complete the one-time PyTorch prompt (option **6 = CPU**), then launch the REPL — it auto-starts the REST server on port 2020:
+
+```bash
+~/apps/moondream-venv/bin/moondream-station
+# wait for "API Endpoint: http://localhost:2020/v1"
+# inside the REPL, `start 2020` also works if service is stopped
+```
+
+PM2 (no `start` arg — that is a REPL command, not a CLI flag):
+
+```bash
+pm2 start /home/bernard/apps/moondream-venv/bin/moondream-station \
+  --name moondream \
+  --interpreter /home/bernard/apps/moondream-venv/bin/python
+```
+
+Request: `POST {MOONDREAM_URL}/v1/query` with JSON `{ image_url, question, stream: false }`; response `{ answer: "tag1, tag2, ..." }`.
 
 Integration tests: set `HAS_FFMPEG=1` and `FFMPEG_SAMPLE_VIDEO=/path/to/clip.mp4` to run ffmpeg integration test locally.
 

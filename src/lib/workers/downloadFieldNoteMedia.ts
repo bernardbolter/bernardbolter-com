@@ -4,6 +4,12 @@ import path from 'node:path'
 import type { Payload } from 'payload'
 
 import { fetchR2ObjectBufferFromUrl } from '@/lib/media/r2Object'
+import {
+  getFieldNotesMediaRoot,
+  isLocalFieldNoteMedia,
+  resolveAbsolutePathUnderRoot,
+  resolveLocalFieldNoteRelativePath,
+} from '@/lib/studio/fieldNoteLocalStorage'
 
 export async function downloadMediaFileToScratch(
   payload: Payload,
@@ -17,13 +23,21 @@ export async function downloadMediaFileToScratch(
     overrideAccess: true,
   })
 
+  const filename = media.filename?.trim() || `media-${mediaFileId}`
+  const scratchPath = path.join(scratchDir, path.basename(filename))
+
+  if (isLocalFieldNoteMedia(media)) {
+    const relativePath = resolveLocalFieldNoteRelativePath(media)
+    const sourcePath = resolveAbsolutePathUnderRoot(getFieldNotesMediaRoot(), relativePath)
+    await fs.copyFile(sourcePath, scratchPath)
+    return scratchPath
+  }
+
   if (!media.url) {
     throw new Error(`Media ${mediaFileId} has no url`)
   }
 
   const buffer = await fetchR2ObjectBufferFromUrl(media.url)
-  const filename = media.filename?.trim() || `media-${mediaFileId}`
-  const localPath = path.join(scratchDir, path.basename(filename))
-  await fs.writeFile(localPath, buffer)
-  return localPath
+  await fs.writeFile(scratchPath, buffer)
+  return scratchPath
 }

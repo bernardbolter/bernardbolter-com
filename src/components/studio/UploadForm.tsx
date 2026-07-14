@@ -126,50 +126,20 @@ export function UploadForm() {
           return
         }
 
-        const urlRes = await fetch('/api/studio/upload-url', {
+        const uploadFormData = new FormData()
+        uploadFormData.append('file', file)
+
+        const uploadRes = await fetch('/api/studio/upload', {
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type || 'application/octet-stream',
-          }),
+          body: uploadFormData,
         })
-        if (!urlRes.ok) {
-          const payload = (await urlRes.json().catch(() => ({}))) as { error?: string }
-          throw new Error(payload.error || 'Could not start upload.')
+        if (!uploadRes.ok) {
+          const payload = (await uploadRes.json().catch(() => ({}))) as { error?: string }
+          throw new Error(payload.error || 'Could not upload file.')
         }
-        const { uploadUrl, objectKey } = (await urlRes.json()) as {
-          uploadUrl: string
-          objectKey: string
-        }
-
-        const putRes = await fetch(uploadUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': file.type || 'application/octet-stream' },
-          body: file,
-        })
-        if (!putRes.ok) {
-          throw new Error('Upload to storage failed.')
-        }
-
-        const confirmRes = await fetch('/api/studio/upload-confirm', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            objectKey,
-            filename: file.name,
-            mimeType: file.type || 'application/octet-stream',
-            size: file.size,
-          }),
-        })
-        if (!confirmRes.ok) {
-          const payload = (await confirmRes.json().catch(() => ({}))) as { error?: string }
-          throw new Error(payload.error || 'Could not register upload.')
-        }
-        const confirmData = (await confirmRes.json()) as { id: number }
-        mediaFileId = confirmData.id
+        const uploadData = (await uploadRes.json()) as { id: number }
+        mediaFileId = uploadData.id
       }
 
       const createRes = await fetch('/api/studio/field-notes', {

@@ -37,26 +37,19 @@ test.describe('Studio Upload', () => {
     await page.waitForURL(/\/studio$/)
   }
 
-  async function mockR2Upload(page: import('@playwright/test').Page, objectKey: string) {
-    await page.route('**/api/studio/upload-url', async (route) => {
+  async function mockLocalUpload(page: import('@playwright/test').Page, mediaId: number) {
+    await page.route('**/api/studio/upload', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          uploadUrl: 'https://mock-r2.example/upload',
-          objectKey,
-          publicUrl: `https://cdn.example/${objectKey}`,
-        }),
+        body: JSON.stringify({ id: mediaId, relativePath: 'inbox/2026/07/mock-photo.jpg' }),
       })
-    })
-    await page.route('https://mock-r2.example/upload', async (route) => {
-      await route.fulfill({ status: 200, body: '' })
     })
   }
 
   test('uploads a photo with an existing line', async ({ page }) => {
     await login(page)
-    await mockR2Upload(page, 'field-notes/2026/05/mock-photo.jpg')
+    await mockLocalUpload(page, 101)
 
     await page.evaluate(async () => {
       await fetch('/api/studio/lines', {
@@ -77,7 +70,7 @@ test.describe('Studio Upload', () => {
 
   test('inline-creates a line during upload', async ({ page }) => {
     await login(page)
-    await mockR2Upload(page, 'field-notes/2026/05/mock-inline.jpg')
+    await mockLocalUpload(page, 102)
 
     await page.goto('http://localhost:3000/studio')
     await page.setInputFiles('#studio-upload-file', FIXTURE_IMAGE)
