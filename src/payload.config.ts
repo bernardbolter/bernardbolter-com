@@ -13,7 +13,7 @@ if (preserveDatabasePush) {
   process.env.PAYLOAD_DATABASE_PUSH = 'true'
 }
 if (preserveDevelopmentNodeEnv) {
-  process.env.NODE_ENV = 'development'
+  Object.assign(process.env, { NODE_ENV: 'development' })
 }
 
 import { postgresAdapter } from '@payloadcms/db-postgres'
