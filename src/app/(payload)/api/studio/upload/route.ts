@@ -4,7 +4,6 @@ import {
   buildInboxRelativePath,
   getFieldNotesMaxUploadBytes,
   mediaAltFromInboxPath,
-  toLocalFieldNoteUrl,
   writeInboxFile,
 } from '@/lib/studio/fieldNoteLocalStorage'
 
@@ -51,7 +50,6 @@ export async function POST(request: Request) {
         filename: relativePath,
         mimeType,
         filesize: bytes.length,
-        url: toLocalFieldNoteUrl(relativePath),
       },
       overrideAccess: false,
       user,

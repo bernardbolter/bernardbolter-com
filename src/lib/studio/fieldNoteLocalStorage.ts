@@ -79,3 +79,22 @@ export async function writeInboxFile(bytes: Buffer, relativePath: string): Promi
 export function mediaAltFromInboxPath(relativePath: string): string {
   return mediaAltFromObjectKey(relativePath)
 }
+
+/** Public URL stored on Media — inbox files use fieldnote-local:, artwork uses CDN. */
+export function resolveMediaStorageUrl(filename: string): string {
+  if (filename.startsWith(INBOX_PREFIX)) {
+    return toLocalFieldNoteUrl(filename)
+  }
+  const domain = process.env.NEXT_PUBLIC_IMAGE_DOMAIN?.replace(/\/$/, '')
+  if (!domain) {
+    throw new Error('NEXT_PUBLIC_IMAGE_DOMAIN is not configured')
+  }
+  return `${domain}/${filename}`
+}
+
+export function studioLocalMediaApiPath(relativePath: string): string {
+  return `/api/studio/local-media/${relativePath
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/')}`
+}

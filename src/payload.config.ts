@@ -47,6 +47,8 @@ import { PrintSetConfig } from './globals/PrintSetConfig'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
+import { resolveMediaStorageUrl } from './lib/studio/fieldNoteLocalStorage'
+
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -154,8 +156,7 @@ export default buildConfig({
     s3Storage({
       collections: {
         media: {
-          generateFileURL: ({ filename }) =>
-            `${process.env.NEXT_PUBLIC_IMAGE_DOMAIN}/${filename}`,
+          generateFileURL: ({ filename }) => resolveMediaStorageUrl(filename),
         },
       },
       bucket: process.env.R2_BUCKET_NAME || '',

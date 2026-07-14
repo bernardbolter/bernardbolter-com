@@ -72,9 +72,9 @@ describe('POST /api/studio/upload', () => {
         data: expect.objectContaining({
           filename: 'inbox/2026/07/uuid-test.jpg',
           mimeType: 'video/mp4',
-          url: 'fieldnote-local:inbox/2026/07/uuid-test.jpg',
         }),
       }),
     )
+    expect(create.mock.calls[0]?.[0]?.data).not.toHaveProperty('url')
   })
 })

@@ -11,6 +11,7 @@ import {
   isLocalFieldNoteMedia,
   resolveAbsolutePathUnderRoot,
   resolveLocalFieldNoteRelativePath,
+  resolveMediaStorageUrl,
   toLocalFieldNoteUrl,
   writeInboxFile,
 } from '@/lib/studio/fieldNoteLocalStorage'
@@ -51,6 +52,17 @@ describe('fieldNoteLocalStorage', () => {
     expect(isLocalFieldNoteMedia(media)).toBe(true)
     expect(resolveLocalFieldNoteRelativePath(media)).toBe(relativePath)
     expect(media.url).toBe(`${FIELDNOTE_LOCAL_URL_PREFIX}${relativePath}`)
+  })
+
+  it('resolves storage URLs for inbox vs CDN filenames', () => {
+    process.env.NEXT_PUBLIC_IMAGE_DOMAIN = 'https://cdn.example'
+    expect(resolveMediaStorageUrl('inbox/2026/07/clip.mp4')).toBe(
+      'fieldnote-local:inbox/2026/07/clip.mp4',
+    )
+    expect(resolveMediaStorageUrl('artworks/photo.jpg')).toBe(
+      'https://cdn.example/artworks/photo.jpg',
+    )
+    delete process.env.NEXT_PUBLIC_IMAGE_DOMAIN
   })
 
   it('rejects path traversal', () => {
