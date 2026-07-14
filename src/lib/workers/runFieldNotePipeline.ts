@@ -1,9 +1,7 @@
 import fs from 'node:fs/promises'
-import path from 'node:path'
 
 import type { Payload } from 'payload'
 
-import { fetchR2ObjectBufferFromUrl } from '@/lib/media/r2Object'
 import { downloadMediaFileToScratch } from '@/lib/workers/downloadFieldNoteMedia'
 import { extractAudioOnly, extractKeyframesAndAudio } from '@/lib/workers/ffmpeg'
 import {
@@ -263,20 +261,6 @@ export async function runFieldNotePipeline(
           const tags = await tagImageAtPath(frame.path, slateContext)
           const imageUrl = await uploadKeyframeJpeg(fieldNote.id, frame.timestamp, frame.path)
           processedKeyframes.push({ timestamp: frame.timestamp, imageUrl, tags })
-        }
-      } else if (fieldNote.mediaType === 'photo') {
-        const media = await payload.findByID({
-          collection: 'media',
-          id: mediaFileId,
-          depth: 0,
-          overrideAccess: true,
-        })
-        if (media.url) {
-          const buffer = await fetchR2ObjectBufferFromUrl(media.url)
-          const tempImage = path.join(scratchDir, 'photo.jpg')
-          await fs.writeFile(tempImage, buffer)
-          const tags = await tagImageAtPath(tempImage, slateContext)
-          processedKeyframes.push({ timestamp: 0, imageUrl: media.url, tags })
         }
       }
 
