@@ -119,6 +119,22 @@ const KICKOFFS: Record<SessionType | 'artwork-cataloguing-refinement', SessionKi
     message:
       "I'd like to enrich this event. Please start Phase A — review the stub record and look up authority URIs for the venue and any external links. Present each finding for me to confirm.",
   },
+  'connected-reading': {
+    title: 'Connected reading',
+    intro:
+      'Cross-work reading session — follow a thread across multiple artworks without committing a single primary cataloguing record. Mentions are tracked on the session; abstracts may be proposed for bio/statement.',
+    buttonLabel: 'Begin connected reading',
+    message:
+      "I'd like a connected reading across works. Please ask which thread or pair of works we're following first.",
+  },
+  'annual-snapshot': {
+    title: 'Annual snapshot',
+    intro:
+      'Year-end practice snapshot — updates to biography/statement layers and high-level framing, not a single artwork catalogue.',
+    buttonLabel: 'Begin annual snapshot',
+    message:
+      "I'd like to do an annual practice snapshot. Please ask what year we're reflecting on and what changed.",
+  },
 }
 
 export function getSessionKickoff(

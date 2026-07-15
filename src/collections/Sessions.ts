@@ -33,9 +33,11 @@ export const Sessions: CollectionConfig = {
       options: [
         { label: 'Artwork cataloguing', value: 'artwork-cataloguing' },
         { label: 'Triptych cataloguing', value: 'triptych-cataloguing' },
+        { label: 'Connected reading', value: 'connected-reading' },
         { label: 'Artist statement', value: 'artist-statement' },
         { label: 'Biography', value: 'biography' },
         { label: 'Onboarding', value: 'onboarding' },
+        { label: 'Annual snapshot', value: 'annual-snapshot' },
         { label: 'Sequencing', value: 'sequencing' },
         { label: 'Episode storyboard', value: 'episode-storyboard' },
         { label: 'Episode assembly', value: 'episode-assembly' },
@@ -62,10 +64,35 @@ export const Sessions: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
+      name: 'primaryArtwork',
+      type: 'relationship',
+      relationTo: 'artworks',
+      admin: {
+        position: 'sidebar',
+        description:
+          'The single artwork this session was cataloguing, if any. Empty for biography/statement-only sessions. Kept in sync with artworkRecord.',
+      },
+    },
+    {
+      name: 'mentionedArtworks',
+      type: 'relationship',
+      relationTo: 'artworks',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Every other artwork referenced during the session — comparisons, corpus connections, related works. Queryable independently from primaryArtwork.',
+      },
+    },
+    {
       name: 'artworkRecord',
       type: 'relationship',
       relationTo: 'artworks',
-      admin: { position: 'sidebar' },
+      admin: {
+        position: 'sidebar',
+        description:
+          'Legacy alias for primaryArtwork. Prefer primaryArtwork for new code; both stay in sync.',
+      },
     },
     {
       name: 'triptychRecord',
@@ -179,6 +206,61 @@ export const Sessions: CollectionConfig = {
     { name: 'firstImpression', type: 'textarea' },
     { name: 'secondDescription', type: 'textarea' },
     {
+      name: 'proposedAbstracts',
+      type: 'array',
+      labels: { singular: 'Proposed abstract', plural: 'Proposed abstracts' },
+      admin: {
+        description:
+          'Abstracts proposed during the session-close abstract-proposal beat, before they are written to the Artist singleton.',
+      },
+      fields: [
+        {
+          name: 'targetCollection',
+          type: 'select',
+          required: true,
+          options: [
+            { label: 'Bio timeline', value: 'bio-timeline' },
+            { label: 'Statement throughline', value: 'statement-throughline' },
+          ],
+        },
+        { name: 'text', type: 'textarea', required: true },
+        {
+          name: 'status',
+          type: 'select',
+          defaultValue: 'proposed',
+          options: [
+            { label: 'Proposed', value: 'proposed' },
+            { label: 'Accepted', value: 'accepted' },
+            { label: 'Edited', value: 'edited' },
+            { label: 'Rejected', value: 'rejected' },
+          ],
+        },
+        {
+          name: 'eventDate',
+          type: 'text',
+          admin: {
+            description: 'Bio-timeline only: when the life-event happened (e.g. "1993").',
+            condition: (_, siblingData) => siblingData?.targetCollection === 'bio-timeline',
+          },
+        },
+        {
+          name: 'dateRecognized',
+          type: 'date',
+          admin: {
+            description: 'Statement-throughline only: when the pattern was named.',
+            condition: (_, siblingData) =>
+              siblingData?.targetCollection === 'statement-throughline',
+          },
+        },
+        {
+          name: 'linkedArtworks',
+          type: 'relationship',
+          relationTo: 'artworks',
+          hasMany: true,
+        },
+      ],
+    },
+    {
       name: 'highlightedMediaSlot',
       type: 'text',
       admin: {
@@ -277,6 +359,12 @@ export const Sessions: CollectionConfig = {
       async ({ data, operation }) => {
         if (operation === 'create' && !data.sessionId) {
           data.sessionId = randomUUID()
+        }
+        // Keep primaryArtwork and legacy artworkRecord in sync.
+        if (data.primaryArtwork != null && data.artworkRecord == null) {
+          data.artworkRecord = data.primaryArtwork
+        } else if (data.artworkRecord != null && data.primaryArtwork == null) {
+          data.primaryArtwork = data.artworkRecord
         }
         return data
       },

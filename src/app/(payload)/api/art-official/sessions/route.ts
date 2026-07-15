@@ -5,13 +5,18 @@ const createSessionSchema = z.object({
   sessionType: z.enum([
     'artwork-cataloguing',
     'triptych-cataloguing',
+    'connected-reading',
     'artist-statement',
     'biography',
     'onboarding',
+    'annual-snapshot',
     'sequencing',
+    'episode-storyboard',
+    'episode-assembly',
     'event-enrichment',
   ]),
   artworkRecord: z.number().int().positive().optional(),
+  primaryArtwork: z.number().int().positive().optional(),
   triptychRecord: z.number().int().positive().optional(),
   sequencingSeries: z.number().int().positive().optional(),
   eventRecord: z.number().int().positive().optional(),
@@ -51,12 +56,15 @@ export async function POST(request: Request) {
     )
   }
 
+  const artworkId = parsed.data.primaryArtwork ?? parsed.data.artworkRecord
+
   const session = await payload.create({
     collection: 'sessions',
     data: {
       sessionType: parsed.data.sessionType,
       artistId: artist.id,
-      artworkRecord: parsed.data.artworkRecord,
+      artworkRecord: artworkId,
+      primaryArtwork: artworkId,
       triptychRecord: parsed.data.triptychRecord,
       sequencingSeries: parsed.data.sequencingSeries,
       eventRecord: parsed.data.eventRecord,
@@ -68,8 +76,8 @@ export async function POST(request: Request) {
       // Pre-upload questionnaire only runs for new artworks — skip when refining an existing one.
       ...(parsed.data.sessionType === 'artwork-cataloguing'
         ? {
-            currentPhase: parsed.data.artworkRecord ? 'identity' : 'pre-upload',
-            ...(!parsed.data.artworkRecord ? { preUploadStep: 1 } : {}),
+            currentPhase: artworkId ? 'identity' : 'pre-upload',
+            ...(!artworkId ? { preUploadStep: 1 } : {}),
           }
         : {}),
     },

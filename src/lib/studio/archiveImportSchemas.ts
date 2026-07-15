@@ -40,8 +40,46 @@ export const artworkFieldsImportSchema = z.union([
   }),
 ])
 
+export const envelopeWriteSchema = z.discriminatedUnion('collection', [
+  z.object({
+    collection: z.literal('artworks'),
+    slug: z.string().min(1),
+    operation: z.literal('set').optional(),
+    fields: z.record(z.string(), z.unknown()),
+  }),
+  z.object({
+    collection: z.literal('bio-timeline'),
+    operation: z.literal('append'),
+    entry: z.object({
+      eventDate: z.string().optional(),
+      text: z.string().min(1),
+      sourceSessionRef: z.union([z.string(), z.number()]).optional(),
+      linkedArtworkSlugs: z.array(z.string()).optional(),
+      visibility: z.enum(['public', 'private']).optional(),
+    }),
+  }),
+  z.object({
+    collection: z.literal('statement-throughlines'),
+    operation: z.literal('append'),
+    entry: z.object({
+      dateRecognized: z.string().optional(),
+      text: z.string().min(1),
+      sourceSessionRef: z.union([z.string(), z.number()]).optional(),
+      linkedArtworkSlugs: z.array(z.string()).optional(),
+      visibility: z.enum(['public', 'private']).optional(),
+    }),
+  }),
+])
+
+export const envelopeImportSchema = z.object({
+  sourceSessionRef: z.union([z.string(), z.number()]).optional(),
+  writes: z.array(envelopeWriteSchema).min(1),
+})
+
 export type VisionAnalysisImportInput = z.infer<typeof visionAnalysisImportSchema>
 export type ArtworkFieldsImportInput = z.infer<typeof artworkFieldsImportSchema>
+export type EnvelopeImportInput = z.infer<typeof envelopeImportSchema>
+export type EnvelopeWrite = z.infer<typeof envelopeWriteSchema>
 
 export function normalizeVisionImportItems(
   input: VisionAnalysisImportInput,

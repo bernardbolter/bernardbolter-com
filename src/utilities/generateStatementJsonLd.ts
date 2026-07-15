@@ -1,8 +1,9 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
+import { throughlineMentionArtworks } from '@/lib/artist/accumulatingEntries'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import { buildArtworkMentionStub } from '@/lib/jsonld/artworkMention'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
-import type { Artist, Artwork, Event } from '@/payload-types'
+import type { Artist, Artwork, Event, Session } from '@/payload-types'
 
 const ARTISM_CONTEXT = {
   '@vocab': 'https://schema.org/',
@@ -64,11 +65,50 @@ function buildEventAboutBlock(event: Event, baseUrl: string): Record<string, unk
   return about
 }
 
+function sessionHref(
+  session: number | Session | null | undefined,
+  baseUrl: string,
+): string | undefined {
+  if (!session || typeof session !== 'object') return undefined
+  if (session.status !== 'completed' || !session.sessionId) return undefined
+  return `${baseUrl}/sessions/${session.sessionId}`
+}
+
+function buildThroughlineProperties(
+  artist: Artist,
+  baseUrl: string,
+): Record<string, unknown>[] {
+  return (artist.statementThroughlines ?? [])
+    .filter((entry) => (entry.visibility ?? 'public') === 'public' && entry.text?.trim())
+    .map((entry) => {
+      const basedOn = sessionHref(entry.sourceSessionRef, baseUrl)
+      return {
+        '@type': 'PropertyValue',
+        propertyID: 'artism:statementThroughline',
+        value: entry.text.trim(),
+        ...(entry.dateRecognized
+          ? { 'artism:dateRecognized': entry.dateRecognized }
+          : {}),
+        ...(basedOn ? { isBasedOn: basedOn } : {}),
+      }
+    })
+}
+
 function buildMentions(artist: Artist, baseUrl: string): Record<string, unknown>[] {
-  return (artist.statementRelatedWorks ?? [])
+  const fromRelated = (artist.statementRelatedWorks ?? [])
     .map((entry) => readArtwork(entry.artwork))
     .filter((artwork): artwork is Artwork => artwork !== null)
-    .map((artwork) => buildArtworkMentionStub(artwork, baseUrl))
+
+  const fromThroughlines = throughlineMentionArtworks(artist)
+  const seen = new Set<number>()
+  const combined: Artwork[] = []
+  for (const artwork of [...fromRelated, ...fromThroughlines]) {
+    if (seen.has(artwork.id)) continue
+    seen.add(artwork.id)
+    combined.push(artwork)
+  }
+
+  return combined.map((artwork) => buildArtworkMentionStub(artwork, baseUrl))
 }
 
 function buildAuthor(artist: Artist, baseUrl: string): Record<string, unknown> {
@@ -89,6 +129,7 @@ export function generateStatementJsonLd(
   const abstractText = artist.statementShort?.trim()
   const dateModified = artist.statementLastRevised?.trim()
   const mentions = buildMentions(artist, base)
+  const additionalProperty = buildThroughlineProperties(artist, base)
 
   const doc: Record<string, unknown> = {
     '@context': ARTISM_CONTEXT,
@@ -103,6 +144,7 @@ export function generateStatementJsonLd(
     ...(abstractText ? { abstract: abstractText } : {}),
     ...(dateModified ? { dateModified } : {}),
     ...(mentions.length ? { mentions } : {}),
+    ...(additionalProperty.length ? { additionalProperty } : {}),
   }
 
   if (options.aboutEvent) {

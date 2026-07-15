@@ -131,9 +131,11 @@ export function sessionTypeOverride(
   sessionType:
     | 'artwork-cataloguing'
     | 'triptych-cataloguing'
+    | 'connected-reading'
     | 'artist-statement'
     | 'biography'
     | 'onboarding'
+    | 'annual-snapshot'
     | 'sequencing'
     | 'episode-storyboard'
     | 'episode-assembly'
@@ -150,6 +152,8 @@ Stage corpus and core fields via update_field with targetCollection "triptychs" 
 Do NOT stage panels, slug, series, status, commerce, or printSets — Bernard wires structure and panels in the admin.
 
 Commit applies staged text to an existing triptych linked to this session, or creates a draft when title, series, and three panels are supplied at commit.`
+    case 'connected-reading':
+      return `SESSION TYPE: Connected reading across works. Do not treat a single artwork as the sole commit target. Track comparisons via conversation; when proposing bio timeline or statement throughline abstracts, only propose genuine cross-work patterns or life-facts — never restate artwork-level intent fields.`
     case 'artist-statement':
       return 'SESSION TYPE: You are working on the artist statement. Stage updates for Artist.statementFull / statementMedium / statementShort via update_field on artists. Do not write to Artworks.'
     case 'biography':
@@ -161,6 +165,8 @@ Example:
 update_field({ targetCollection: "artists", field: "bioFull", value: "Paragraph…", confidence: "confirmed", source: "conversation" })
 
 Do not use practice-knowledge or invented field names. Do not write to Artworks.`
+    case 'annual-snapshot':
+      return `SESSION TYPE: Annual practice snapshot. Focus on what changed this year across the practice. Stage artist biography/statement updates when warranted; propose bio-timeline or statement-throughline abstracts only for genuine cross-work patterns or life-facts.`
     case 'onboarding':
       return `SESSION TYPE: You are running an onboarding interview to populate Practice Knowledge. No artwork image is involved.
 

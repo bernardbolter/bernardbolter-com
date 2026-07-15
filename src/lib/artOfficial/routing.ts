@@ -1,9 +1,11 @@
 export type SessionType =
   | 'artwork-cataloguing'
   | 'triptych-cataloguing'
+  | 'connected-reading'
   | 'artist-statement'
   | 'biography'
   | 'onboarding'
+  | 'annual-snapshot'
   | 'sequencing'
   | 'episode-storyboard'
   | 'episode-assembly'
@@ -12,9 +14,11 @@ export type SessionType =
 export const SESSION_TYPES: SessionType[] = [
   'artwork-cataloguing',
   'triptych-cataloguing',
+  'connected-reading',
   'artist-statement',
   'biography',
   'onboarding',
+  'annual-snapshot',
   'sequencing',
   'episode-storyboard',
   'episode-assembly',
@@ -56,6 +60,7 @@ export function commitTarget(t: SessionType): CommitTarget {
       return { kind: 'apply-sequencing' }
     case 'artist-statement':
     case 'biography':
+    case 'annual-snapshot':
       return { kind: 'update-artist-singleton' }
     case 'episode-storyboard':
     case 'episode-assembly':
@@ -63,6 +68,7 @@ export function commitTarget(t: SessionType): CommitTarget {
     case 'event-enrichment':
       return { kind: 'update-event' }
     case 'onboarding':
+    case 'connected-reading':
       return { kind: 'no-record-write' }
     default: {
       const _exhaustive: never = t

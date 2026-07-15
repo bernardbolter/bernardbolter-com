@@ -28,6 +28,7 @@ import { collapseTimelineToLatest, type TimelineEntry } from '@/lib/artOfficial/
 import { findArtworkBySlug, resolveTargetArtworkSlug } from '@/lib/artOfficial/sequencing/resolveArtwork'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 import type { SessionType } from '@/lib/artOfficial/routing'
+import { applySessionProposedAbstracts } from '@/lib/studio/applyEnvelopeImport'
 
 type RouteContext = { params: Promise<{ sessionId: string }> }
 
@@ -440,6 +441,12 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   if (!reapply) {
+    await applySessionProposedAbstracts(payload, user, session)
+
+    const proposedAbstracts = (session.proposedAbstracts ?? []).map((row) =>
+      row.status === 'rejected' ? row : { ...row, status: 'accepted' as const },
+    )
+
     await payload.update({
       collection: 'sessions',
       id: session.id,
@@ -448,9 +455,11 @@ export async function POST(request: Request, context: RouteContext) {
         completedAt: new Date().toISOString(),
         dialogueRefinementFlag: refinementFlagged,
         artworkRecord: artworkId ?? session.artworkRecord,
+        primaryArtwork: artworkId ?? session.primaryArtwork ?? session.artworkRecord,
         triptychRecord: triptychId ?? session.triptychRecord,
         episodeRecord: episodeId ?? session.episodeRecord,
         eventRecord: eventId ?? session.eventRecord,
+        proposedAbstracts,
         ...(body.firstImpression ? { firstImpression: body.firstImpression } : {}),
         ...(body.secondDescription ? { secondDescription: body.secondDescription } : {}),
         ...(body.refinementNotes ? { refinementNotes: body.refinementNotes } : {}),

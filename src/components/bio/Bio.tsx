@@ -1,5 +1,7 @@
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
+import StillBeingWritten from '@/components/shared/StillBeingWritten'
 import type { BioPageImage } from '@/helpers/bioPhotos'
+import type { AccumulatingEntry, HistoricalDocumentLink } from '@/lib/artist/accumulatingEntries'
 import type { SeriesMention } from '@/lib/bio/linkSeriesMentions'
 
 import BioHeader from './BioHeader'
@@ -14,6 +16,8 @@ interface BioProps {
   bioFull: unknown
   seriesMentions?: SeriesMention[]
   images: BioPageImage[]
+  timelineEntries?: AccumulatingEntry[]
+  historicalBios?: HistoricalDocumentLink[]
 }
 
 export default function Bio({
@@ -24,6 +28,8 @@ export default function Bio({
   bioFull,
   seriesMentions = [],
   images,
+  timelineEntries = [],
+  historicalBios = [],
 }: BioProps) {
   return (
     <DocumentScrollShell
@@ -36,6 +42,11 @@ export default function Bio({
         <BioHeader name={name} birthLine={birthLine} livesAndWorksLine={livesAndWorksLine} />
         {tagline ? <p className="bio__tagline">{tagline}</p> : null}
         <BioProse content={bioFull} seriesMentions={seriesMentions} />
+        <StillBeingWritten
+          entries={timelineEntries}
+          historicalLinks={historicalBios}
+          historicalHeading="Earlier bios"
+        />
       </div>
       <BioPhotoGrid images={images} />
     </DocumentScrollShell>

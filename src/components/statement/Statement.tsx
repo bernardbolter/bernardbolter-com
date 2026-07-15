@@ -1,6 +1,8 @@
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
+import StillBeingWritten from '@/components/shared/StillBeingWritten'
 import type { StatementPhoto } from '@/helpers/statementPhotos'
 import type { StatementRelatedWork } from '@/helpers/statementRelatedWorks'
+import type { AccumulatingEntry, HistoricalDocumentLink } from '@/lib/artist/accumulatingEntries'
 
 import StatementClosingBody from './StatementClosingBody'
 import StatementClosing from './StatementClosing'
@@ -20,6 +22,8 @@ interface StatementProps {
   sceneImagesFirst: StatementPhoto[]
   sceneImagesSecond: StatementPhoto[]
   relatedWorks: StatementRelatedWork[]
+  throughlines?: AccumulatingEntry[]
+  historicalStatements?: HistoricalDocumentLink[]
 }
 
 export default function Statement({
@@ -31,6 +35,8 @@ export default function Statement({
   sceneImagesFirst,
   sceneImagesSecond,
   relatedWorks,
+  throughlines = [],
+  historicalStatements = [],
 }: StatementProps) {
   const hasOpening = Boolean(statementOpening)
   const hasClosingBody = Boolean(statementClosingBody)
@@ -57,6 +63,11 @@ export default function Statement({
       <StatementSceneImages photos={sceneImagesSecond} />
       {hasClosingBody ? <StatementClosingBody content={statementClosingBody} /> : null}
       <StatementRelatedWorks items={relatedWorks} />
+      <StillBeingWritten
+        entries={throughlines}
+        historicalLinks={historicalStatements}
+        historicalHeading="Earlier statements"
+      />
       <StatementClosing line={statementClosingLine?.trim() ?? ''} />
     </DocumentScrollShell>
   )

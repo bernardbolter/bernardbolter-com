@@ -6,6 +6,11 @@ import {
   normalizeStatementSceneImagesSecond,
 } from '@/helpers/statementPhotos'
 import { normalizeStatementRelatedWorks } from '@/helpers/statementRelatedWorks'
+import {
+  historicalStatementLinks,
+  publicStatementThroughlines,
+} from '@/lib/artist/accumulatingEntries'
+import { attachPublicSessionRefs } from '@/lib/artist/attachPublicSessionRefs'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import {
   getStatementAboutEventFromArtist,
@@ -22,7 +27,8 @@ export const metadata: Metadata = {
 }
 
 export default async function StatementPage() {
-  const artist = await getStatementPageArtist()
+  const rawArtist = await getStatementPageArtist()
+  const artist = rawArtist ? await attachPublicSessionRefs(rawArtist) : null
   const aboutEvent = artist ? await getStatementAboutEventFromArtist(artist) : null
   const jsonLd =
     artist ?
@@ -50,6 +56,8 @@ export default async function StatementPage() {
           sceneImagesFirst={normalizeStatementSceneImagesFirst(artist)}
           sceneImagesSecond={normalizeStatementSceneImagesSecond(artist)}
           relatedWorks={normalizeStatementRelatedWorks(artist.statementRelatedWorks)}
+          throughlines={publicStatementThroughlines(artist)}
+          historicalStatements={historicalStatementLinks(artist)}
         />
       : <Statement
           statementOpening={null}

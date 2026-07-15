@@ -42,7 +42,46 @@ const FIELDS_BATCH_EXAMPLE = `{
   ]
 }`
 
-type ImportKind = 'vision' | 'fields'
+const ENVELOPE_EXAMPLE = `{
+  "sourceSessionRef": "session-uuid-or-id",
+  "writes": [
+    {
+      "collection": "artworks",
+      "slug": "the-thinker",
+      "operation": "set",
+      "fields": {
+        "intent": "…",
+        "formalContributionAssessment": "…"
+      }
+    },
+    {
+      "collection": "artworks",
+      "slug": "the-thinker",
+      "operation": "set",
+      "fields": { "reasoningStatus": "complete" }
+    },
+    {
+      "collection": "bio-timeline",
+      "operation": "append",
+      "entry": {
+        "eventDate": "1993",
+        "text": "…",
+        "linkedArtworkSlugs": ["the-thinker"]
+      }
+    },
+    {
+      "collection": "statement-throughlines",
+      "operation": "append",
+      "entry": {
+        "dateRecognized": "2026-07-15",
+        "text": "…",
+        "linkedArtworkSlugs": ["the-thinker"]
+      }
+    }
+  ]
+}`
+
+type ImportKind = 'vision' | 'fields' | 'envelope'
 
 type VisionImportResult = {
   slug: string
@@ -50,11 +89,20 @@ type VisionImportResult = {
   total: number
 }
 
+type EnvelopeImportResult = {
+  collection: string
+  slug?: string
+  status: 'saved' | 'skipped' | 'failed'
+  reason?: string
+}
+
 async function postImport(kind: ImportKind, body: string) {
   const endpoint =
     kind === 'vision'
       ? '/api/studio/archive/vision-analyses'
-      : '/api/studio/archive/artwork-fields'
+      : kind === 'envelope'
+        ? '/api/studio/archive/envelope'
+        : '/api/studio/archive/artwork-fields'
   const response = await fetch(endpoint, {
     method: 'POST',
     credentials: 'include',
@@ -63,12 +111,28 @@ async function postImport(kind: ImportKind, body: string) {
   })
   const data = (await response.json().catch(() => ({}))) as {
     error?: string
-    results?: VisionImportResult[]
+    results?: VisionImportResult[] | EnvelopeImportResult[]
   }
-  if (!response.ok) {
+  if (!response.ok && kind !== 'envelope') {
     throw new Error(data.error ?? `Import failed (${response.status})`)
   }
+  if (kind === 'envelope' && !response.ok && response.status !== 200) {
+    // Per-write results still returned on partial failure (200); total failure uses 412.
+    if (!data.results?.length) {
+      throw new Error(data.error ?? `Import failed (${response.status})`)
+    }
+  }
   return data
+}
+
+function formatEnvelopeSuccess(results: EnvelopeImportResult[] | undefined): string {
+  if (!results?.length) return 'Imported.'
+  return results
+    .map((row) => {
+      const target = row.slug ? `${row.collection}/${row.slug}` : row.collection
+      return row.reason ? `${target}: ${row.status} (${row.reason})` : `${target}: ${row.status}`
+    })
+    .join(' · ')
 }
 
 function formatVisionSuccess(results: VisionImportResult[] | undefined): string {
@@ -81,12 +145,16 @@ function formatVisionSuccess(results: VisionImportResult[] | undefined): string 
 export function ArchiveImportPanel() {
   const [visionJson, setVisionJson] = useState('')
   const [fieldsJson, setFieldsJson] = useState('')
+  const [envelopeJson, setEnvelopeJson] = useState('')
   const [visionStatus, setVisionStatus] = useState<string | null>(null)
   const [fieldsStatus, setFieldsStatus] = useState<string | null>(null)
+  const [envelopeStatus, setEnvelopeStatus] = useState<string | null>(null)
   const [visionError, setVisionError] = useState<string | null>(null)
   const [fieldsError, setFieldsError] = useState<string | null>(null)
+  const [envelopeError, setEnvelopeError] = useState<string | null>(null)
   const [visionSubmitting, setVisionSubmitting] = useState(false)
   const [fieldsSubmitting, setFieldsSubmitting] = useState(false)
+  const [envelopeSubmitting, setEnvelopeSubmitting] = useState(false)
   const [promptCopied, setPromptCopied] = useState<string | null>(null)
   const [visionSlug, setVisionSlug] = useState('')
 
@@ -98,7 +166,7 @@ export function ArchiveImportPanel() {
     try {
       const parsed = parseImportJson(visionJson)
       const data = await postImport('vision', JSON.stringify(parsed))
-      setVisionStatus(formatVisionSuccess(data.results))
+      setVisionStatus(formatVisionSuccess(data.results as VisionImportResult[] | undefined))
     } catch (error) {
       setVisionError(error instanceof Error ? error.message : String(error))
     } finally {
@@ -119,6 +187,29 @@ export function ArchiveImportPanel() {
       setFieldsError(error instanceof Error ? error.message : String(error))
     } finally {
       setFieldsSubmitting(false)
+    }
+  }
+
+  async function handleEnvelopeSubmit(event: FormEvent) {
+    event.preventDefault()
+    setEnvelopeSubmitting(true)
+    setEnvelopeError(null)
+    setEnvelopeStatus(null)
+    try {
+      const parsed = parseImportJson(envelopeJson)
+      const data = await postImport('envelope', JSON.stringify(parsed))
+      const results = data.results as EnvelopeImportResult[] | undefined
+      setEnvelopeStatus(formatEnvelopeSuccess(results))
+      const failed = results?.filter((row) => row.status === 'failed') ?? []
+      if (failed.length) {
+        setEnvelopeError(
+          `${failed.length} write(s) failed — other writes still applied. Fix and re-paste safely.`,
+        )
+      }
+    } catch (error) {
+      setEnvelopeError(error instanceof Error ? error.message : String(error))
+    } finally {
+      setEnvelopeSubmitting(false)
     }
   }
 
@@ -264,6 +355,38 @@ export function ArchiveImportPanel() {
         </div>
         {fieldsStatus ? <p className="studio-archive__success">{fieldsStatus}</p> : null}
         {fieldsError ? <p className="studio-archive__error">{fieldsError}</p> : null}
+      </form>
+
+      <form className="studio-archive__panel studio-archive__panel--primary" onSubmit={handleEnvelopeSubmit}>
+        <h3>Multi-collection envelope</h3>
+        <p className="studio-archive__hint">
+          One paste routes to artworks + bio timeline + statement throughlines. Writes succeed or
+          fail independently. Append is idempotent (same session + text skips duplicates). Put{' '}
+          <code>reasoningStatus: complete</code> in its own <code>set</code> write after other
+          artwork fields.
+        </p>
+        <textarea
+          className="studio-archive__textarea"
+          value={envelopeJson}
+          onChange={(event) => setEnvelopeJson(event.target.value)}
+          placeholder={ENVELOPE_EXAMPLE}
+          rows={14}
+          spellCheck={false}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+        />
+        <details className="studio-archive__details">
+          <summary>Envelope example</summary>
+          <pre>{ENVELOPE_EXAMPLE}</pre>
+        </details>
+        <div className="studio-archive__actions">
+          <button type="submit" disabled={envelopeSubmitting || !envelopeJson.trim()}>
+            {envelopeSubmitting ? 'Importing…' : 'Import envelope'}
+          </button>
+        </div>
+        {envelopeStatus ? <p className="studio-archive__success">{envelopeStatus}</p> : null}
+        {envelopeError ? <p className="studio-archive__error">{envelopeError}</p> : null}
       </form>
     </div>
   )

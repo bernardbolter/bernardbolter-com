@@ -360,6 +360,53 @@ export interface Artist {
       }[]
     | null;
   /**
+   * Accumulating life-facts discovered in Art/Official sessions. Displayed below the curated bio — provisional by design. Defaults public.
+   */
+  bioTimelineEntries?:
+    | {
+        /**
+         * When the life-event happened (e.g. "1993"), not when it was captured.
+         */
+        eventDate?: string | null;
+        text: string;
+        sourceSessionRef?: (number | null) | Session;
+        /**
+         * Optional. The artwork(s) that prompted this fact, if any.
+         */
+        linkedArtworkSlugs?: (number | Artwork)[] | null;
+        visibility?: ('public' | 'private') | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Prior full bios from earlier periods of practice. Linked as documents on /bio — not excerpted inline.
+   */
+  historicalBios?:
+    | {
+        date: string;
+        fullText: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        /**
+         * Optional note on what prompted this version — a show, a life change, a rewrite.
+         */
+        context?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Opening section at the top of /statement. Drop cap applies to this section's first paragraph only.
    */
   statementOpening?: {
@@ -493,6 +540,54 @@ export interface Artist {
          * Optional short context line, e.g. "Part I — the installation". Leave blank to show title and year only.
          */
         note?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Cross-work pattern discoveries from Art/Official sessions. Displayed below the curated statement — provisional by design. Defaults public.
+   */
+  statementThroughlines?:
+    | {
+        /**
+         * When the pattern was named/recognized, not when the linked works were made.
+         */
+        dateRecognized?: string | null;
+        text: string;
+        linkedArtworkSlugs?: (number | Artwork)[] | null;
+        /**
+         * The session where this throughline was first named.
+         */
+        sourceSessionRef?: (number | null) | Session;
+        /**
+         * Later sessions that independently corroborated this pattern. Grows over time; makes a throughline's strength as a real recurring pattern visible.
+         */
+        reinforcingSessions?: (number | Session)[] | null;
+        visibility?: ('public' | 'private') | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Prior full statements from earlier periods. Linked as documents on /statement — not excerpted inline.
+   */
+  historicalStatements?:
+    | {
+        date: string;
+        fullText: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        };
+        context?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -3702,6 +3797,221 @@ export interface Person {
   createdAt: string;
 }
 /**
+ * Art/Official session transcripts (not exposed to anonymous API).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sessions".
+ */
+export interface Session {
+  id: number;
+  sessionId?: string | null;
+  sessionType:
+    | 'artwork-cataloguing'
+    | 'triptych-cataloguing'
+    | 'connected-reading'
+    | 'artist-statement'
+    | 'biography'
+    | 'onboarding'
+    | 'annual-snapshot'
+    | 'sequencing'
+    | 'episode-storyboard'
+    | 'episode-assembly'
+    | 'event-enrichment';
+  status: 'in-progress' | 'completed' | 'abandoned';
+  artistId?: (number | null) | Artist;
+  /**
+   * The single artwork this session was cataloguing, if any. Empty for biography/statement-only sessions. Kept in sync with artworkRecord.
+   */
+  primaryArtwork?: (number | null) | Artwork;
+  /**
+   * Every other artwork referenced during the session — comparisons, corpus connections, related works. Queryable independently from primaryArtwork.
+   */
+  mentionedArtworks?: (number | Artwork)[] | null;
+  /**
+   * Legacy alias for primaryArtwork. Prefer primaryArtwork for new code; both stay in sync.
+   */
+  artworkRecord?: (number | null) | Artwork;
+  /**
+   * Optional — link when refining an existing triptych corpus.
+   */
+  triptychRecord?: (number | null) | Triptych;
+  /**
+   * MoP episode for storyboard or assembly sessions.
+   */
+  episodeRecord?: (number | null) | Episode;
+  /**
+   * Event stub being enriched in an event-enrichment session.
+   */
+  eventRecord?: (number | null) | Event;
+  /**
+   * Two-phase event dialogue. Phase A: authority lookup. Phase B: reflective questions.
+   */
+  eventDialoguePhase?: ('phase-a-research' | 'phase-b-reasoning') | null;
+  /**
+   * Pending Phase A authority URI proposals awaiting artist confirmation.
+   */
+  eventAuthorityProposals?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Active Lines this session contributes to.
+   */
+  lines?: (number | Line)[] | null;
+  completedAt?: string | null;
+  /**
+   * Full Anthropic message array (opaque).
+   */
+  messages?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Art/Official dialogue phase (model tiering). Updated by set_phase or manual advance.
+   */
+  currentPhase?:
+    | (
+        | 'pre-upload'
+        | 'vision'
+        | 'identity'
+        | 'physical'
+        | 'classification'
+        | 'intent'
+        | 'art-historical'
+        | 'late'
+        | 'confirmation'
+      )
+    | null;
+  /**
+   * Per-turn Anthropic usage (input/output/cache). Staff-only; not exposed on public APIs.
+   */
+  tokenLog?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Current pre-upload question (1–4). Updated by Art/Official as the dialogue advances.
+   */
+  preUploadStep?: number | null;
+  firstImpression?: string | null;
+  secondDescription?: string | null;
+  /**
+   * Abstracts proposed during the session-close abstract-proposal beat, before they are written to the Artist singleton.
+   */
+  proposedAbstracts?:
+    | {
+        targetCollection: 'bio-timeline' | 'statement-throughline';
+        text: string;
+        status?: ('proposed' | 'accepted' | 'edited' | 'rejected') | null;
+        /**
+         * Bio-timeline only: when the life-event happened (e.g. "1993").
+         */
+        eventDate?: string | null;
+        /**
+         * Statement-throughline only: when the pattern was named.
+         */
+        dateRecognized?: string | null;
+        linkedArtworks?: (number | Artwork)[] | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Art/Official: slot id highlighted in the Media uploads panel (set by the agent).
+   */
+  highlightedMediaSlot?: string | null;
+  /**
+   * Art/Official staged media attachments (images, videos, URLs) before commit.
+   */
+  stagedMedia?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Event enrichment: linked artworks and installation photos pending commit.
+   */
+  stagedEventMedia?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Array of { field, value, confidence, source, timestamp }.
+   */
+  fieldUpdateTimeline?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  agentDraftDescriptionShort?: string | null;
+  agentDraftDescriptionLong?: string | null;
+  agentDraftConceptualKeywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  agentDraftFormalContributionAssessment?: string | null;
+  sessionNotes?: string | null;
+  weakPhases?:
+    | (
+        | 'pre-upload'
+        | 'vision'
+        | 'identity'
+        | 'physical'
+        | 'intent'
+        | 'art-historical'
+        | 'classification'
+        | 'late'
+        | 'confirmation'
+      )[]
+    | null;
+  blindDescriptionUseful?: boolean | null;
+  formalContributionAccuracy?: ('accurate' | 'partial' | 'missed') | null;
+  /**
+   * Flag for follow-up refinement pass.
+   */
+  dialogueRefinementFlag?: boolean | null;
+  refinementNotes?: string | null;
+  /**
+   * For sequencing sessions — the series being ordered.
+   */
+  sequencingSeries?: (number | null) | Series;
+  /**
+   * WordPress databaseId cross-checked during cataloguing (legacy lookup). Read-only reference.
+   */
+  legacyRecordId?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Documents that brief the Art/Official agent at session start.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3821,188 +4131,6 @@ export interface SmallPrint {
    * Whether this print is selectable in the set builder.
    */
   available?: boolean | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Art/Official session transcripts (not exposed to anonymous API).
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "sessions".
- */
-export interface Session {
-  id: number;
-  sessionId?: string | null;
-  sessionType:
-    | 'artwork-cataloguing'
-    | 'triptych-cataloguing'
-    | 'artist-statement'
-    | 'biography'
-    | 'onboarding'
-    | 'sequencing'
-    | 'episode-storyboard'
-    | 'episode-assembly'
-    | 'event-enrichment';
-  status: 'in-progress' | 'completed' | 'abandoned';
-  artistId?: (number | null) | Artist;
-  artworkRecord?: (number | null) | Artwork;
-  /**
-   * Optional — link when refining an existing triptych corpus.
-   */
-  triptychRecord?: (number | null) | Triptych;
-  /**
-   * MoP episode for storyboard or assembly sessions.
-   */
-  episodeRecord?: (number | null) | Episode;
-  /**
-   * Event stub being enriched in an event-enrichment session.
-   */
-  eventRecord?: (number | null) | Event;
-  /**
-   * Two-phase event dialogue. Phase A: authority lookup. Phase B: reflective questions.
-   */
-  eventDialoguePhase?: ('phase-a-research' | 'phase-b-reasoning') | null;
-  /**
-   * Pending Phase A authority URI proposals awaiting artist confirmation.
-   */
-  eventAuthorityProposals?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Active Lines this session contributes to.
-   */
-  lines?: (number | Line)[] | null;
-  completedAt?: string | null;
-  /**
-   * Full Anthropic message array (opaque).
-   */
-  messages?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Art/Official dialogue phase (model tiering). Updated by set_phase or manual advance.
-   */
-  currentPhase?:
-    | (
-        | 'pre-upload'
-        | 'vision'
-        | 'identity'
-        | 'physical'
-        | 'classification'
-        | 'intent'
-        | 'art-historical'
-        | 'late'
-        | 'confirmation'
-      )
-    | null;
-  /**
-   * Per-turn Anthropic usage (input/output/cache). Staff-only; not exposed on public APIs.
-   */
-  tokenLog?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Current pre-upload question (1–4). Updated by Art/Official as the dialogue advances.
-   */
-  preUploadStep?: number | null;
-  firstImpression?: string | null;
-  secondDescription?: string | null;
-  /**
-   * Art/Official: slot id highlighted in the Media uploads panel (set by the agent).
-   */
-  highlightedMediaSlot?: string | null;
-  /**
-   * Art/Official staged media attachments (images, videos, URLs) before commit.
-   */
-  stagedMedia?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Event enrichment: linked artworks and installation photos pending commit.
-   */
-  stagedEventMedia?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Array of { field, value, confidence, source, timestamp }.
-   */
-  fieldUpdateTimeline?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  agentDraftDescriptionShort?: string | null;
-  agentDraftDescriptionLong?: string | null;
-  agentDraftConceptualKeywords?:
-    | {
-        keyword: string;
-        id?: string | null;
-      }[]
-    | null;
-  agentDraftFormalContributionAssessment?: string | null;
-  sessionNotes?: string | null;
-  weakPhases?:
-    | (
-        | 'pre-upload'
-        | 'vision'
-        | 'identity'
-        | 'physical'
-        | 'intent'
-        | 'art-historical'
-        | 'classification'
-        | 'late'
-        | 'confirmation'
-      )[]
-    | null;
-  blindDescriptionUseful?: boolean | null;
-  formalContributionAccuracy?: ('accurate' | 'partial' | 'missed') | null;
-  /**
-   * Flag for follow-up refinement pass.
-   */
-  dialogueRefinementFlag?: boolean | null;
-  refinementNotes?: string | null;
-  /**
-   * For sequencing sessions — the series being ordered.
-   */
-  sequencingSeries?: (number | null) | Series;
-  /**
-   * WordPress databaseId cross-checked during cataloguing (legacy lookup). Read-only reference.
-   */
-  legacyRecordId?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -4258,6 +4386,24 @@ export interface ArtistsSelect<T extends boolean = true> {
         relatedEvent?: T;
         id?: T;
       };
+  bioTimelineEntries?:
+    | T
+    | {
+        eventDate?: T;
+        text?: T;
+        sourceSessionRef?: T;
+        linkedArtworkSlugs?: T;
+        visibility?: T;
+        id?: T;
+      };
+  historicalBios?:
+    | T
+    | {
+        date?: T;
+        fullText?: T;
+        context?: T;
+        id?: T;
+      };
   statementOpening?: T;
   statementPullQuote?: T;
   statementSceneImagesFirst?:
@@ -4287,6 +4433,25 @@ export interface ArtistsSelect<T extends boolean = true> {
     | {
         artwork?: T;
         note?: T;
+        id?: T;
+      };
+  statementThroughlines?:
+    | T
+    | {
+        dateRecognized?: T;
+        text?: T;
+        linkedArtworkSlugs?: T;
+        sourceSessionRef?: T;
+        reinforcingSessions?: T;
+        visibility?: T;
+        id?: T;
+      };
+  historicalStatements?:
+    | T
+    | {
+        date?: T;
+        fullText?: T;
+        context?: T;
         id?: T;
       };
   statementLastRevised?: T;
@@ -5817,6 +5982,8 @@ export interface SessionsSelect<T extends boolean = true> {
   sessionType?: T;
   status?: T;
   artistId?: T;
+  primaryArtwork?: T;
+  mentionedArtworks?: T;
   artworkRecord?: T;
   triptychRecord?: T;
   episodeRecord?: T;
@@ -5831,6 +5998,17 @@ export interface SessionsSelect<T extends boolean = true> {
   preUploadStep?: T;
   firstImpression?: T;
   secondDescription?: T;
+  proposedAbstracts?:
+    | T
+    | {
+        targetCollection?: T;
+        text?: T;
+        status?: T;
+        eventDate?: T;
+        dateRecognized?: T;
+        linkedArtworks?: T;
+        id?: T;
+      };
   highlightedMediaSlot?: T;
   stagedMedia?: T;
   stagedEventMedia?: T;

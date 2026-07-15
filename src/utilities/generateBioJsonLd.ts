@@ -2,7 +2,7 @@ import { getPopulatedSocialChannels } from '@/lib/contact/socialChannels'
 import { getBioCurrentCities } from '@/lib/bio/bioHeader'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { normalizeBioPhotos } from '@/helpers/bioPhotos'
-import type { Artist } from '@/payload-types'
+import type { Artist, Session } from '@/payload-types'
 
 const ARTISM_CONTEXT = {
   '@vocab': 'https://schema.org/',
@@ -80,6 +80,33 @@ function buildSameAs(artist: Artist, baseUrl: string): string[] {
   return [...values]
 }
 
+function sessionHref(
+  session: number | Session | null | undefined,
+  baseUrl: string,
+): string | undefined {
+  if (!session || typeof session !== 'object') return undefined
+  if (session.status !== 'completed' || !session.sessionId) return undefined
+  return `${baseUrl}/sessions/${session.sessionId}`
+}
+
+function buildBiographicalNotes(
+  artist: Artist,
+  baseUrl: string,
+): Record<string, unknown>[] {
+  return (artist.bioTimelineEntries ?? [])
+    .filter((entry) => (entry.visibility ?? 'public') === 'public' && entry.text?.trim())
+    .map((entry) => {
+      const basedOn = sessionHref(entry.sourceSessionRef, baseUrl)
+      return {
+        '@type': 'PropertyValue',
+        propertyID: 'artism:biographicalNote',
+        value: entry.text.trim(),
+        ...(entry.eventDate?.trim() ? { 'artism:eventDate': entry.eventDate.trim() } : {}),
+        ...(basedOn ? { isBasedOn: basedOn } : {}),
+      }
+    })
+}
+
 /** ProfilePage JSON-LD for /bio — Person is the primary entity. */
 export function generateBioJsonLd(
   artist: Artist,
@@ -93,6 +120,7 @@ export function generateBioJsonLd(
   const sameAs = buildSameAs(artist, base)
   const birthCity = artist.birthCity?.trim()
   const description = artist.bioShort?.trim()
+  const additionalProperty = buildBiographicalNotes(artist, base)
 
   const person: Record<string, unknown> = {
     '@type': 'Person',
@@ -117,6 +145,7 @@ export function generateBioJsonLd(
   if (alumniOf.length) person.alumniOf = alumniOf
   if (images.length) person.image = images
   if (sameAs.length) person.sameAs = sameAs
+  if (additionalProperty.length) person.additionalProperty = additionalProperty
 
   return {
     '@context': ARTISM_CONTEXT,

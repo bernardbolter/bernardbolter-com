@@ -278,6 +278,22 @@ export function ConfirmationPanel({
             </div>
           ) : null}
 
+          {session.proposedAbstracts && session.proposedAbstracts.length > 0 ? (
+            <div className="art-official-confirm__abstracts">
+              <h4 className="art-official-confirm__subheading">Proposed abstracts</h4>
+              <ul className="art-official-confirm__abstract-list">
+                {session.proposedAbstracts.map((row) => (
+                  <li key={row.id ?? `${row.targetCollection}-${row.text.slice(0, 24)}`}>
+                    <strong>{row.targetCollection}</strong> ({row.status}) — {row.text}
+                  </li>
+                ))}
+              </ul>
+              <p className="art-official-confirm__hint">
+                Non-rejected abstracts are written to the Artist record on commit.
+              </p>
+            </div>
+          ) : null}
+
           <div className="art-official-confirm__actions">
             <Button
               buttonStyle="primary"

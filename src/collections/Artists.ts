@@ -300,6 +300,69 @@ export const Artists: CollectionConfig = {
       ],
     },
     {
+      name: 'bioTimelineEntries',
+      type: 'array',
+      labels: { singular: 'Bio timeline entry', plural: 'Bio timeline entries' },
+      admin: {
+        description:
+          'Accumulating life-facts discovered in Art/Official sessions. Displayed below the curated bio — provisional by design. Defaults public.',
+      },
+      fields: [
+        {
+          name: 'eventDate',
+          type: 'text',
+          admin: {
+            description: 'When the life-event happened (e.g. "1993"), not when it was captured.',
+          },
+        },
+        { name: 'text', type: 'textarea', required: true },
+        {
+          name: 'sourceSessionRef',
+          type: 'relationship',
+          relationTo: 'sessions',
+        },
+        {
+          name: 'linkedArtworkSlugs',
+          type: 'relationship',
+          relationTo: 'artworks',
+          hasMany: true,
+          admin: {
+            description: 'Optional. The artwork(s) that prompted this fact, if any.',
+          },
+        },
+        {
+          name: 'visibility',
+          type: 'select',
+          defaultValue: 'public',
+          options: [
+            { label: 'Public', value: 'public' },
+            { label: 'Private', value: 'private' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'historicalBios',
+      type: 'array',
+      labels: { singular: 'Historical bio', plural: 'Historical bios' },
+      admin: {
+        description:
+          'Prior full bios from earlier periods of practice. Linked as documents on /bio — not excerpted inline.',
+      },
+      fields: [
+        { name: 'date', type: 'date', required: true },
+        { name: 'fullText', type: 'richText', required: true },
+        {
+          name: 'context',
+          type: 'text',
+          admin: {
+            description:
+              'Optional note on what prompted this version — a show, a life change, a rewrite.',
+          },
+        },
+      ],
+    },
+    {
       name: 'statementOpening',
       type: 'richText',
       localized: true,
@@ -397,6 +460,73 @@ export const Artists: CollectionConfig = {
               'Optional short context line, e.g. "Part I — the installation". Leave blank to show title and year only.',
           },
         },
+      ],
+    },
+    {
+      name: 'statementThroughlines',
+      type: 'array',
+      labels: { singular: 'Statement throughline', plural: 'Statement throughlines' },
+      admin: {
+        description:
+          'Cross-work pattern discoveries from Art/Official sessions. Displayed below the curated statement — provisional by design. Defaults public.',
+      },
+      fields: [
+        {
+          name: 'dateRecognized',
+          type: 'date',
+          admin: {
+            description:
+              'When the pattern was named/recognized, not when the linked works were made.',
+          },
+        },
+        { name: 'text', type: 'textarea', required: true },
+        {
+          name: 'linkedArtworkSlugs',
+          type: 'relationship',
+          relationTo: 'artworks',
+          hasMany: true,
+        },
+        {
+          name: 'sourceSessionRef',
+          type: 'relationship',
+          relationTo: 'sessions',
+          admin: {
+            description: 'The session where this throughline was first named.',
+          },
+        },
+        {
+          name: 'reinforcingSessions',
+          type: 'relationship',
+          relationTo: 'sessions',
+          hasMany: true,
+          admin: {
+            description:
+              "Later sessions that independently corroborated this pattern. Grows over time; makes a throughline's strength as a real recurring pattern visible.",
+          },
+        },
+        {
+          name: 'visibility',
+          type: 'select',
+          defaultValue: 'public',
+          options: [
+            { label: 'Public', value: 'public' },
+            { label: 'Private', value: 'private' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'historicalStatements',
+      type: 'array',
+      labels: { singular: 'Historical statement', plural: 'Historical statements' },
+      admin: {
+        description:
+          'Prior full statements from earlier periods. Linked as documents on /statement — not excerpted inline.',
+      },
+      fields: [
+        { name: 'date', type: 'date', required: true },
+        { name: 'fullText', type: 'richText', required: true },
+        { name: 'context', type: 'text' },
       ],
     },
     {

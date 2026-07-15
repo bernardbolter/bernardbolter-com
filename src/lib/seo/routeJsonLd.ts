@@ -1,6 +1,7 @@
 import { isArtworkDetailPath } from '@/lib/routes/isArtworkDetailPath'
 import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { attachPublicSessionRefs } from '@/lib/artist/attachPublicSessionRefs'
 import { getBioPageArtist } from '@/lib/payload/bioPage'
 import { getArtworkForPage } from '@/lib/payload/artworkPage'
 import { getPerson } from '@/lib/payload/person'
@@ -28,8 +29,10 @@ export async function resolveRouteJsonLd(pathname: string): Promise<RouteJsonLd 
     }
 
     if (normalized === '/bio') {
-      const artist = await getBioPageArtist()
-      return artist ? generateBioJsonLd(artist, { baseUrl }) : null
+      const raw = await getBioPageArtist()
+      if (!raw) return null
+      const artist = await attachPublicSessionRefs(raw)
+      return generateBioJsonLd(artist, { baseUrl })
     }
 
     if (isArtworkDetailPath(normalized)) {
