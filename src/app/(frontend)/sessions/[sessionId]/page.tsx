@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import type { Artwork } from '@/payload-types'
 
@@ -65,19 +66,25 @@ export default async function PublicSessionPage({ params }: PageProps) {
       })
     : null
 
+  const ladderSlug = primary?.slug ?? mentioned[0]?.slug ?? null
+
   return (
     <div className="bio-page__container">
       <DocumentScrollShell
         title="SESSION"
-        closeHref="/bio"
+        closeHref="/sessions"
         scrollClassName="bio-container"
         closeClassName="bio__close-container"
       >
         <div className="bio__content-container">
+          <CorpusLadder slug={ladderSlug} current="sessions" />
           <p className="bio__tagline">{session.sessionType.replace(/-/g, ' ')}</p>
           {completedLabel ? (
             <p className="bio__masonry-caption">Completed {completedLabel}</p>
           ) : null}
+          <p className="bio__masonry-caption">
+            Public crumb only — transcript stays private.
+          </p>
 
           <div className="bio__main-content" style={{ paddingTop: '1.5rem' }}>
             {primary ? (

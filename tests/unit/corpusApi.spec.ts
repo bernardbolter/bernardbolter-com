@@ -53,6 +53,7 @@ describe('buildCorpusIndexResponse', () => {
 
     expect(response['@type']).toBe('DataFeed')
     expect(response['artism:totalArtworks']).toBe(1)
+    expect(response['artism:tier']).toBe(1)
     expect(response.dataFeedElement).toEqual([
       {
         slug: 'basel-switzerland',
@@ -64,15 +65,25 @@ describe('buildCorpusIndexResponse', () => {
         medium: 'Photo collage',
         reasoningStatus: 'complete',
         hasEditions: 'limited',
+        gist: null,
+        descriptionShort: null,
+        intentLine: null,
         url: `${baseUrl}/basel-switzerland`,
+        visionUrl: `${baseUrl}/basel-switzerland/vision`,
+        recordUrl: `${baseUrl}/basel-switzerland/record`,
+        sessionsUrl: `${baseUrl}/sessions?artwork=basel-switzerland`,
       },
     ])
   })
 
   it('includes series filter in the index URL when provided', () => {
-    const response = buildCorpusIndexResponse([artwork()], baseUrl, 'digital-city-series')
+    const response = buildCorpusIndexResponse([artwork()], baseUrl, {
+      series: 'digital-city-series',
+    })
 
-    expect(response.url).toBe(`${baseUrl}/api/corpus?format=index&series=digital-city-series`)
+    expect(response.url).toBe(
+      `${baseUrl}/api/corpus?series=digital-city-series&format=index`,
+    )
   })
 })
 

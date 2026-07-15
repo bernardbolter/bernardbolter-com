@@ -5,6 +5,7 @@ import {
   buildCorpusResponse,
   type CorpusFormat,
 } from '@/lib/corpus/buildCorpusResponse'
+import { parseCorpusIndexFilters } from '@/lib/corpus/corpusIndexFilters'
 import {
   fetchCorpusArtist,
   fetchCorpusArtworks,
@@ -21,19 +22,19 @@ function parseFormat(value: string | null): CorpusFormat {
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
-  const seriesFilter = searchParams.get('series')
   const format = parseFormat(searchParams.get('format'))
+  const filters = parseCorpusIndexFilters(searchParams)
 
   const payload = await getPayload({ config })
   const baseUrl = getSiteBaseUrl()
 
   const [artworks, seriesList, artist] = await Promise.all([
-    fetchCorpusArtworks(payload, seriesFilter),
+    fetchCorpusArtworks(payload, filters),
     fetchCorpusSeries(payload),
     fetchCorpusArtist(payload),
   ])
 
-  const body = buildCorpusResponse(format, artworks, seriesList, artist, baseUrl, seriesFilter)
+  const body = buildCorpusResponse(format, artworks, seriesList, artist, baseUrl, filters)
 
   return NextResponse.json(body, {
     headers: {

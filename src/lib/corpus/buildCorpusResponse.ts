@@ -1,6 +1,11 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
 import { CORPUS_CONTEXT, CORPUS_VERSION } from '@/lib/corpus/constants'
+import { corpusGistFromArtwork } from '@/lib/corpus/corpusGist'
+import {
+  buildCorpusIndexQueryString,
+  type CorpusIndexFilters,
+} from '@/lib/corpus/corpusIndexFilters'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 import type { Artist, Artwork, Series } from '@/payload-types'
 
@@ -70,12 +75,10 @@ function artworkFeedElement(artwork: Artwork, baseUrl: string): Record<string, u
 export function buildCorpusIndexResponse(
   artworks: Artwork[],
   baseUrl: string,
-  seriesSlug?: string | null,
+  filters: CorpusIndexFilters = {},
 ): Record<string, unknown> {
-  const seriesFilter = seriesSlug?.trim()
-  const url = seriesFilter
-    ? `${baseUrl}/api/corpus?format=index&series=${encodeURIComponent(seriesFilter)}`
-    : `${baseUrl}/api/corpus?format=index`
+  const qs = buildCorpusIndexQueryString(filters)
+  const url = `${baseUrl}/api/corpus${qs ? `${qs}&format=index` : '?format=index'}`
 
   return {
     '@context': CORPUS_CONTEXT,
@@ -86,8 +89,11 @@ export function buildCorpusIndexResponse(
     'artism:corpusVersion': CORPUS_VERSION,
     'artism:totalArtworks': artworks.length,
     'artism:totalPublished': artworks.length,
+    'artism:tier': 1,
     dataFeedElement: artworks.map((artwork) => {
       const series = resolveSeries(artwork)
+      const intent = trimString(artwork.intent)
+      const descriptionShort = trimString(artwork.descriptionShort)
       return {
         slug: artwork.slug,
         title: artwork.title,
@@ -98,7 +104,13 @@ export function buildCorpusIndexResponse(
         medium: resolveMediumLabel(artwork) || artwork.medium || null,
         reasoningStatus: artwork.reasoningStatus ?? null,
         hasEditions: artwork.hasEditions ?? null,
+        gist: corpusGistFromArtwork(artwork),
+        descriptionShort: descriptionShort || null,
+        intentLine: intent ? (intent.length > 180 ? `${intent.slice(0, 177)}…` : intent) : null,
         url: `${baseUrl}/${artwork.slug}`,
+        visionUrl: `${baseUrl}/${artwork.slug}/vision`,
+        recordUrl: `${baseUrl}/${artwork.slug}/record`,
+        sessionsUrl: `${baseUrl}/sessions?artwork=${encodeURIComponent(artwork.slug)}`,
       }
     }),
   }
@@ -109,12 +121,10 @@ export function buildCorpusJsonLdResponse(
   seriesList: Series[],
   artist: Artist | null,
   baseUrl: string,
-  seriesSlug?: string | null,
+  filters: CorpusIndexFilters = {},
 ): Record<string, unknown> {
-  const seriesFilter = seriesSlug?.trim()
-  const url = seriesFilter
-    ? `${baseUrl}/api/corpus?series=${encodeURIComponent(seriesFilter)}`
-    : `${baseUrl}/api/corpus`
+  const qs = buildCorpusIndexQueryString(filters)
+  const url = `${baseUrl}/api/corpus${qs}`
 
   return {
     '@context': CORPUS_CONTEXT,
@@ -137,11 +147,11 @@ export function buildCorpusResponse(
   seriesList: Series[],
   artist: Artist | null,
   baseUrl: string,
-  seriesSlug?: string | null,
+  filters: CorpusIndexFilters = {},
 ): Record<string, unknown> {
   if (format === 'index') {
-    return buildCorpusIndexResponse(artworks, baseUrl, seriesSlug)
+    return buildCorpusIndexResponse(artworks, baseUrl, filters)
   }
 
-  return buildCorpusJsonLdResponse(artworks, seriesList, artist, baseUrl, seriesSlug)
+  return buildCorpusJsonLdResponse(artworks, seriesList, artist, baseUrl, filters)
 }

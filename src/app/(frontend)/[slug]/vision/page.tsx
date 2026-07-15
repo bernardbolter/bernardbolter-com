@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import VisionPage from '@/components/artwork/VisionPage'
+import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { getDirectR2ImageUrl } from '@/lib/artwork/visionPage'
 import { buildVisionPageJsonLd } from '@/lib/jsonld/visionPage'
@@ -87,6 +88,9 @@ export default async function Page({ params }: Props) {
         }}
       >
         <div className="bio-page__container">
+          <div className="corpus-ladder-wrap">
+            <CorpusLadder slug={slug} current="vision" />
+          </div>
           <VisionPage
             artwork={artwork}
             vectorsByColumn={vectorsByColumn}
