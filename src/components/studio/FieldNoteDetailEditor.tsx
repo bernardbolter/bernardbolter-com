@@ -95,12 +95,31 @@ export function FieldNoteDetailEditor({ note: initial }: FieldNoteDetailEditorPr
       {note.keyframes?.length ? (
         <section>
           <h3>Keyframes</h3>
-          <ul className="studio-timeline">
-            {note.keyframes.map((frame) => (
-              <li key={frame.id ?? `${frame.timestamp}`}>
-                {frame.timestamp}s — {frame.tags?.map((t) => t.tag).join(', ')}
-              </li>
-            ))}
+          <ul className="studio-timeline studio-keyframes">
+            {note.keyframes.map((frame) => {
+              const tags = (frame.tags ?? [])
+                .map((entry) => entry.tag?.trim())
+                .filter(Boolean)
+              return (
+                <li key={frame.id ?? `${frame.timestamp}`} className="studio-keyframes__item">
+                  {frame.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={frame.imageUrl}
+                      alt=""
+                      className="studio-keyframes__thumb"
+                      loading="lazy"
+                    />
+                  ) : null}
+                  <div className="studio-keyframes__meta">
+                    <p className="studio-keyframes__time">{frame.timestamp}s</p>
+                    <p className="studio-keyframes__tags">
+                      {tags.length > 0 ? tags.join(', ') : 'No tags'}
+                    </p>
+                  </div>
+                </li>
+              )
+            })}
           </ul>
         </section>
       ) : null}

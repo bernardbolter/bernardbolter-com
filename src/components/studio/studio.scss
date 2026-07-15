@@ -291,6 +291,37 @@
   margin-top: 0.35rem;
 }
 
+.studio-keyframes__item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.65rem;
+}
+
+.studio-keyframes__thumb {
+  width: 120px;
+  height: auto;
+  flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.studio-keyframes__meta {
+  min-width: 0;
+}
+
+.studio-keyframes__time {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.studio-keyframes__tags {
+  margin: 0;
+  color: #475569;
+}
+
 .studio-timelapse {
   width: 100%;
   max-height: 420px;
