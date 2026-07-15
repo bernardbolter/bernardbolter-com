@@ -165,8 +165,17 @@ export function UploadForm() {
         throw new Error(payload.error || 'Could not create field note.')
       }
 
-      const created = (await createRes.json()) as { id: number; processingStatus: string }
-      setSuccess(`Field note #${created.id} queued (${created.processingStatus}).`)
+      const created = (await createRes.json()) as {
+        id: number
+        processingStatus: string
+        queueWarning?: string
+      }
+      const queueNote = created.queueWarning
+        ? ' Processing queue failed — note saved; worker may pick it up later.'
+        : ''
+      setSuccess(
+        `Field note #${created.id} saved (${created.processingStatus}).${queueNote} View in Notes.`,
+      )
       setFile(null)
       setWrittenNote('')
       setLocationName('')

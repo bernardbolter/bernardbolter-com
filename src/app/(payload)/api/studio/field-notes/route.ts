@@ -50,11 +50,19 @@ export async function POST(request: Request) {
       user,
     })
 
-    await queueProcessFieldNote(fieldNote.id)
+    let queueError: string | undefined
+    try {
+      await queueProcessFieldNote(fieldNote.id)
+    } catch (error) {
+      queueError =
+        error instanceof Error ? error.message : 'Failed to enqueue processing job'
+      console.error(`[studio] field note ${fieldNote.id} created but queue failed`, error)
+    }
 
     return Response.json({
       id: fieldNote.id,
       processingStatus: fieldNote.processingStatus,
+      ...(queueError ? { queueWarning: queueError } : {}),
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to create field note'
