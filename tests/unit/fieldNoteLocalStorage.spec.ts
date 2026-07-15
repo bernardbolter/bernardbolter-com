@@ -4,6 +4,7 @@ import path from 'node:path'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { resolveMediaStorageUrl, toLocalFieldNoteUrl } from '@/lib/studio/fieldNoteLocalPaths'
 import {
   FIELDNOTE_LOCAL_URL_PREFIX,
   buildInboxRelativePath,
@@ -11,8 +12,6 @@ import {
   isLocalFieldNoteMedia,
   resolveAbsolutePathUnderRoot,
   resolveLocalFieldNoteRelativePath,
-  resolveMediaStorageUrl,
-  toLocalFieldNoteUrl,
   writeInboxFile,
 } from '@/lib/studio/fieldNoteLocalStorage'
 

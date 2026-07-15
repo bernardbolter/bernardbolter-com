@@ -4,7 +4,7 @@ import {
   FIELDNOTE_LOCAL_URL_PREFIX,
   INBOX_PREFIX,
   studioLocalMediaApiPath,
-} from '@/lib/studio/fieldNoteLocalStorage'
+} from '@/lib/studio/fieldNoteLocalPaths'
 
 export function resolveMediaUrl(media: Media | number | null | undefined): string | null {
   if (!media || typeof media === 'number') return null

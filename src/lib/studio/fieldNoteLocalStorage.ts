@@ -4,10 +4,23 @@ import path from 'node:path'
 
 import type { Payload, TypedUser } from 'payload'
 
+import {
+  INBOX_PREFIX,
+  isLocalFieldNoteMedia,
+  resolveLocalFieldNoteRelativePath,
+  toLocalFieldNoteUrl,
+} from '@/lib/studio/fieldNoteLocalPaths'
 import { mediaAltFromObjectKey, sanitizeUploadFilename } from '@/lib/studio/r2'
 
-export const FIELDNOTE_LOCAL_URL_PREFIX = 'fieldnote-local:'
-export const INBOX_PREFIX = 'inbox/'
+export {
+  FIELDNOTE_LOCAL_URL_PREFIX,
+  INBOX_PREFIX,
+  isLocalFieldNoteMedia,
+  resolveLocalFieldNoteRelativePath,
+  resolveMediaStorageUrl,
+  studioLocalMediaApiPath,
+  toLocalFieldNoteUrl,
+} from '@/lib/studio/fieldNoteLocalPaths'
 
 const DEFAULT_MAX_UPLOAD_BYTES = 500 * 1024 * 1024
 
@@ -30,31 +43,6 @@ export function buildInboxRelativePath(filename: string, now = new Date()): stri
   const month = String(now.getUTCMonth() + 1).padStart(2, '0')
   const safeName = sanitizeUploadFilename(filename)
   return `${INBOX_PREFIX}${year}/${month}/${crypto.randomUUID()}-${safeName}`
-}
-
-export function toLocalFieldNoteUrl(relativePath: string): string {
-  return `${FIELDNOTE_LOCAL_URL_PREFIX}${relativePath}`
-}
-
-export function isLocalFieldNoteMedia(media: {
-  url?: string | null
-  filename?: string | null
-}): boolean {
-  if (media.url?.startsWith(FIELDNOTE_LOCAL_URL_PREFIX)) return true
-  return Boolean(media.filename?.startsWith(INBOX_PREFIX))
-}
-
-export function resolveLocalFieldNoteRelativePath(media: {
-  url?: string | null
-  filename?: string | null
-}): string {
-  if (media.url?.startsWith(FIELDNOTE_LOCAL_URL_PREFIX)) {
-    return media.url.slice(FIELDNOTE_LOCAL_URL_PREFIX.length)
-  }
-  if (media.filename?.startsWith(INBOX_PREFIX)) {
-    return media.filename
-  }
-  throw new Error('Not a local field note media path')
 }
 
 export function resolveAbsolutePathUnderRoot(root: string, relativePath: string): string {
@@ -80,25 +68,6 @@ export async function writeInboxFile(bytes: Buffer, relativePath: string): Promi
 
 export function mediaAltFromInboxPath(relativePath: string): string {
   return mediaAltFromObjectKey(relativePath)
-}
-
-/** Public URL stored on Media — inbox files use fieldnote-local:, artwork uses CDN. */
-export function resolveMediaStorageUrl(filename: string): string {
-  if (filename.startsWith(INBOX_PREFIX)) {
-    return toLocalFieldNoteUrl(filename)
-  }
-  const domain = process.env.NEXT_PUBLIC_IMAGE_DOMAIN?.replace(/\/$/, '')
-  if (!domain) {
-    throw new Error('NEXT_PUBLIC_IMAGE_DOMAIN is not configured')
-  }
-  return `${domain}/${filename}`
-}
-
-export function studioLocalMediaApiPath(relativePath: string): string {
-  return `/api/studio/local-media/${relativePath
-    .split('/')
-    .map((segment) => encodeURIComponent(segment))
-    .join('/')}`
 }
 
 /** Register an inbox file already on disk as a Payload media doc (no re-upload). */

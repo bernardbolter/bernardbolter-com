@@ -47,7 +47,7 @@ import { PrintSetConfig } from './globals/PrintSetConfig'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
-import { resolveMediaStorageUrl } from './lib/studio/fieldNoteLocalStorage'
+import { resolveMediaStorageUrl } from './lib/studio/fieldNoteLocalPaths'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
