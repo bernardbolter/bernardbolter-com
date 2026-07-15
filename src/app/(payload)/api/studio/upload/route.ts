@@ -1,9 +1,14 @@
+import fs from 'node:fs/promises'
+
 import { requireStudio } from '@/lib/studio/requireStudio'
 import { normalizeVideoMimeType } from '@/lib/artOfficial/mediaMime'
 import {
   buildInboxRelativePath,
+  createLocalFieldNoteMediaDoc,
   getFieldNotesMaxUploadBytes,
+  getFieldNotesMediaRoot,
   mediaAltFromInboxPath,
+  resolveAbsolutePathUnderRoot,
   writeInboxFile,
 } from '@/lib/studio/fieldNoteLocalStorage'
 
@@ -33,30 +38,37 @@ export async function POST(request: Request) {
     return Response.json({ error: `File exceeds ${maxBytes} byte limit` }, { status: 413 })
   }
 
+  let relativePath: string | null = null
+
   try {
     const bytes = Buffer.from(await entry.arrayBuffer())
     const originalName = entry instanceof File ? entry.name : 'upload'
-    const relativePath = buildInboxRelativePath(originalName)
+    relativePath = buildInboxRelativePath(originalName)
     await writeInboxFile(bytes, relativePath)
 
     const mimeType = entry.type
       ? normalizeVideoMimeType(entry.type)
       : 'application/octet-stream'
 
-    const media = await payload.create({
-      collection: 'media',
-      data: {
-        alt: mediaAltFromInboxPath(relativePath),
-        filename: relativePath,
-        mimeType,
-        filesize: bytes.length,
-      },
-      overrideAccess: false,
+    const media = await createLocalFieldNoteMediaDoc({
+      payload,
       user,
+      relativePath,
+      mimeType,
+      filesize: bytes.length,
+      alt: mediaAltFromInboxPath(relativePath),
     })
 
     return Response.json({ id: media.id, relativePath })
   } catch (error) {
+    if (relativePath) {
+      try {
+        const absolute = resolveAbsolutePathUnderRoot(getFieldNotesMediaRoot(), relativePath)
+        await fs.unlink(absolute)
+      } catch {
+        // Best-effort cleanup if media registration failed.
+      }
+    }
     const message = error instanceof Error ? error.message : 'Failed to save upload'
     return Response.json({ error: message }, { status: 500 })
   }

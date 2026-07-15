@@ -14,6 +14,8 @@ export const Media: CollectionConfig = {
   },
   upload: {
     staticDir: 'media',
+    // Studio inbox uploads register files already on disk (no req.file / no remote url fetch).
+    filesRequiredOnCreate: false,
     imageSizes: [
       {
         name: 'thumbnail',

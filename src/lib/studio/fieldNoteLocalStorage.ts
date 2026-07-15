@@ -2,6 +2,8 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 
+import type { Payload, TypedUser } from 'payload'
+
 import { mediaAltFromObjectKey, sanitizeUploadFilename } from '@/lib/studio/r2'
 
 export const FIELDNOTE_LOCAL_URL_PREFIX = 'fieldnote-local:'
@@ -97,4 +99,30 @@ export function studioLocalMediaApiPath(relativePath: string): string {
     .split('/')
     .map((segment) => encodeURIComponent(segment))
     .join('/')}`
+}
+
+/** Register an inbox file already on disk as a Payload media doc (no re-upload). */
+export async function createLocalFieldNoteMediaDoc(args: {
+  payload: Payload
+  user: TypedUser
+  relativePath: string
+  mimeType: string
+  filesize: number
+  alt: string
+}) {
+  if (!args.relativePath.startsWith(INBOX_PREFIX)) {
+    throw new Error('relativePath must start with inbox/')
+  }
+
+  return args.payload.create({
+    collection: 'media',
+    data: {
+      alt: args.alt,
+      filename: args.relativePath,
+      mimeType: args.mimeType,
+      filesize: args.filesize,
+    },
+    overrideAccess: false,
+    user: args.user,
+  })
 }
