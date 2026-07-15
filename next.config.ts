@@ -7,6 +7,8 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
+  // Override for safe deploys: build to a staging dir, swap only on success (scripts/deploy-netcup.sh).
+  distDir: process.env.NEXT_DIST_DIR?.trim() || '.next',
   experimental: {
     // Studio field-note uploads are multipart POSTs (video clips can be large).
     middlewareClientMaxBodySize: '500mb',
