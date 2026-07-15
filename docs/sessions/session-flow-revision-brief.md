@@ -2,6 +2,8 @@
 
 *Derived from The Thinker (BB-OGP-1993-005) Art/Official session, July 15, 2026. Read alongside `art-official-dialogue-spec.md`, which this brief amends — not replaces.*
 
+**Canonical operator document:** [`art-official-session-protocol.md`](./art-official-session-protocol.md) — pasteable single spine for Claude app **and** Payload Art/Official admin. Use that for sessions; this brief is the design rationale only.
+
 ## Part 1 — Why
 
 Running a full session in Claude chat (rather than the Payload admin's Claude-API-driven flow) surfaced several structural gaps in the existing session shape:
