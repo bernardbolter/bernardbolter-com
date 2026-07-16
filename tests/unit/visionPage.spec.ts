@@ -4,6 +4,7 @@ import {
   analysisPreview,
   formatVisionModelLabel,
   latestVisionAnalysis,
+  preferredVisionAnalysis,
   vectorTeasePreview,
 } from '@/lib/artwork/visionPage'
 import type { Artwork } from '@/payload-types'
@@ -16,7 +17,7 @@ describe('visionPage helpers', () => {
     expect(formatVisionModelLabel('deepseek-vl2')).toBe('DeepSeek VL2')
   })
 
-  it('returns the last vision analysis entry', () => {
+  it('returns the last vision analysis entry chronologically', () => {
     const artwork = {
       visionAnalyses: [
         { text: 'First.', model: 'gpt-4o', date: '2026-01-01' },
@@ -25,6 +26,18 @@ describe('visionPage helpers', () => {
     } as Artwork
 
     expect(latestVisionAnalysis(artwork)?.text).toBe('Latest.')
+  })
+
+  it('prefers Claude over a later Moondream row for display', () => {
+    const artwork = {
+      visionAnalyses: [
+        { text: 'Claude prose.', model: 'claude-sonnet-4-6', date: '2026-01-01' },
+        { text: 'Moondream prose.', model: 'moondream-station', date: '2026-07-16' },
+      ],
+    } as Artwork
+
+    expect(preferredVisionAnalysis(artwork)?.model).toBe('claude-sonnet-4-6')
+    expect(latestVisionAnalysis(artwork)?.model).toBe('moondream-station')
   })
 
   it('builds vector tease and analysis preview', () => {

@@ -1,5 +1,5 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
-import { latestVisionAnalysis } from '@/lib/artwork/visionPage'
+import { preferredVisionAnalysis } from '@/lib/artwork/visionPage'
 import type { ArtHistoricalReference, Artwork } from '@/payload-types'
 
 function hasText(value: string | null | undefined): boolean {
@@ -56,7 +56,7 @@ export function artworkShowsProseColumn({
   similarWorksCount,
 }: ProseColumnOptions): boolean {
   if (artworkHasArtistAccountProse(artwork)) return true
-  if (latestVisionAnalysis(artwork)) return true
+  if (preferredVisionAnalysis(artwork)) return true
   if (hasClipEmbedding) return true
   if (similarWorksCount > 0) return true
   return false

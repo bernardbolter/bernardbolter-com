@@ -9,7 +9,7 @@ import config from '@payload-config'
 
 export const revalidate = 3600
 
-/** Alias for GET /api/corpus?format=index — Tier 1/2 machine index. */
+/** Canonical Tier-1 machine index (`/api/corpus?format=index` remains a legacy alias). */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const filters = parseCorpusIndexFilters(searchParams)

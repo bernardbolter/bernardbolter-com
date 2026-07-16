@@ -1,5 +1,6 @@
 import type { Artwork } from '@/payload-types'
 
+import { visionAnalysisDisplayRank } from '@/lib/artwork/visionAnalysisGuard'
 import { getArtworkOriginalImageUrl } from '@/lib/media/artworkR2Images'
 
 export const CLIP_EMBEDDING_METADATA = {
@@ -168,6 +169,29 @@ export function resolveVisionAnalyses(artwork: Artwork): VisionAnalysisEntry[] {
 export function latestVisionAnalysis(artwork: Artwork): VisionAnalysisEntry | null {
   const analyses = resolveVisionAnalyses(artwork)
   return analyses.length > 0 ? analyses[analyses.length - 1]! : null
+}
+
+/**
+ * Analysis shown on the artwork page / Tier-1 gist.
+ * Prefers higher-tier models (Claude etc.) over Moondream so both can
+ * coexist in `visionAnalyses` without Moondream displacing Claude.
+ * Among equal rank, the last array entry wins.
+ */
+export function preferredVisionAnalysis(artwork: Artwork): VisionAnalysisEntry | null {
+  const analyses = resolveVisionAnalyses(artwork)
+  if (analyses.length === 0) return null
+
+  let best = analyses[0]!
+  let bestRank = visionAnalysisDisplayRank(best.model)
+  for (let i = 1; i < analyses.length; i++) {
+    const candidate = analyses[i]!
+    const rank = visionAnalysisDisplayRank(candidate.model)
+    if (rank >= bestRank) {
+      best = candidate
+      bestRank = rank
+    }
+  }
+  return best
 }
 
 export function visionPageUrl(baseUrl: string, slug: string): string {

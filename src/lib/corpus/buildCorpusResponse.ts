@@ -78,7 +78,8 @@ export function buildCorpusIndexResponse(
   filters: CorpusIndexFilters = {},
 ): Record<string, unknown> {
   const qs = buildCorpusIndexQueryString(filters)
-  const url = `${baseUrl}/api/corpus${qs ? `${qs}&format=index` : '?format=index'}`
+  // Canonical Tier-1 path is /api/corpus/index (not ?format=index).
+  const url = `${baseUrl}/api/corpus/index${qs}`
 
   return {
     '@context': CORPUS_CONTEXT,
@@ -92,8 +93,6 @@ export function buildCorpusIndexResponse(
     'artism:tier': 1,
     dataFeedElement: artworks.map((artwork) => {
       const series = resolveSeries(artwork)
-      const intent = trimString(artwork.intent)
-      const descriptionShort = trimString(artwork.descriptionShort)
       return {
         slug: artwork.slug,
         title: artwork.title,
@@ -105,8 +104,6 @@ export function buildCorpusIndexResponse(
         reasoningStatus: artwork.reasoningStatus ?? null,
         hasEditions: artwork.hasEditions ?? null,
         gist: corpusGistFromArtwork(artwork),
-        descriptionShort: descriptionShort || null,
-        intentLine: intent ? (intent.length > 180 ? `${intent.slice(0, 177)}…` : intent) : null,
         url: `${baseUrl}/${artwork.slug}`,
         visionUrl: `${baseUrl}/${artwork.slug}/vision`,
         recordUrl: `${baseUrl}/${artwork.slug}/record`,

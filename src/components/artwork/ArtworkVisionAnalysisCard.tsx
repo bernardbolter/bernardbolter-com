@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
 
-import { latestVisionAnalysis } from '@/lib/artwork/visionPage'
+import { preferredVisionAnalysis } from '@/lib/artwork/visionPage'
 import type { Artwork } from '@/payload-types'
 
 type Props = {
@@ -10,7 +10,7 @@ type Props = {
 }
 
 export default function ArtworkVisionAnalysisCard({ artwork, seriesColor }: Props) {
-  const analysis = latestVisionAnalysis(artwork)
+  const analysis = preferredVisionAnalysis(artwork)
   const slug = artwork.slug?.trim()
   if (!analysis || !slug) return null
 

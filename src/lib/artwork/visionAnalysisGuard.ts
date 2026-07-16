@@ -1,7 +1,11 @@
 /**
  * Guards for Moondream artwork visionAnalyses writes.
- * Higher-tier models (Claude etc.) must never be overwritten or displaced
- * by Moondream — visionAnalyses display is latest-wins.
+ *
+ * Display prefers higher-tier (Claude etc.) over Moondream — see
+ * `preferredVisionAnalysis` — so Moondream may coexist in the array
+ * without replacing Claude on the artwork page.
+ *
+ * Moondream still must never write a second Moondream row.
  */
 
 const HIGHER_TIER_PREFIXES = [
@@ -43,6 +47,13 @@ export function isHigherTierVisionModel(model: string | null | undefined): boole
   )
 }
 
+/** Rank for display preference: higher-tier > unknown > moondream. */
+export function visionAnalysisDisplayRank(model: string | null | undefined): number {
+  if (isMoondreamVisionModel(model)) return 0
+  if (isHigherTierVisionModel(model)) return 2
+  return 1
+}
+
 export type MoondreamVisionDecision =
   | { action: 'append' }
   | { action: 'skip'; reason: string }
@@ -51,12 +62,6 @@ export function decideMoondreamVisionAppend(
   existing: VisionAnalysisModelRow[] | null | undefined,
 ): MoondreamVisionDecision {
   const rows = existing ?? []
-  if (rows.some((row) => isHigherTierVisionModel(row.model))) {
-    return {
-      action: 'skip',
-      reason: 'higher-tier visionAnalyses already present',
-    }
-  }
   if (rows.some((row) => isMoondreamVisionModel(row.model))) {
     return {
       action: 'skip',

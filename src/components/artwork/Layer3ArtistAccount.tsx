@@ -6,7 +6,7 @@ import type { SimilarWorkItem } from '@/components/artwork/similarWorkItem'
 import { getArtworkImagePair, resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
-import { latestVisionAnalysis } from '@/lib/artwork/visionPage'
+import { preferredVisionAnalysis } from '@/lib/artwork/visionPage'
 import type { SimilarArtworkCard } from '@/lib/payload/similarArtworksPage'
 import type { Artwork, ArtHistoricalReference, Tag } from '@/payload-types'
 
@@ -107,7 +107,7 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
   const hasClassification =
     populatedTagGroups.length > 0 || (artwork.conceptualKeywords ?? []).some((row) => row.keyword?.trim())
 
-  const latestAnalysis = latestVisionAnalysis(artwork)
+  const latestAnalysis = preferredVisionAnalysis(artwork)
   const artworkSlug = artwork.slug?.trim() || ''
   const similarItems = similarWorkItems(similarWorks)
 
