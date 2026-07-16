@@ -94,7 +94,7 @@ async function main() {
     try {
       const result = await queryMoondreamImageUrl(imageUrl, ARTWORK_MOONDREAM_VISION_PROMPT)
       const text = result.raw.trim()
-      if (!text) throw new Error('Empty Moondream response')
+      if (!text) throw new Error('Empty Moondream response after parse')
 
       const existing = Array.isArray(artwork.visionAnalyses) ? artwork.visionAnalyses : []
       // Re-check after async work — fail closed.
@@ -121,7 +121,7 @@ async function main() {
         context: { skipAgent: true },
       })
       written += 1
-      console.log(`ok    ${artwork.slug}`)
+      console.log(`ok    ${artwork.slug} (${text.length} chars)`)
     } catch (error) {
       failed += 1
       console.error(

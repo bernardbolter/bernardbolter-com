@@ -83,14 +83,33 @@ export async function queryMoondreamImage(
 }
 
 /**
- * Query Moondream with a remote HTTPS URL or data URI (artwork R2 originals).
+ * Query Moondream with a remote HTTPS URL.
+ * Station expects a data URI (same as FieldNotes keyframe path) — remote URLs
+ * often return empty / "Incorrect padding", so we download and re-encode.
  */
 export async function queryMoondreamImageUrl(
   imageUrl: string,
   prompt: string,
 ): Promise<MoondreamTagResult> {
+  let imagePayload = imageUrl
+  if (!imageUrl.startsWith('data:')) {
+    const imageRes = await fetch(imageUrl)
+    if (!imageRes.ok) {
+      throw new Error(
+        `Failed to download image for Moondream (${imageRes.status}): ${imageUrl.slice(0, 120)}`,
+      )
+    }
+    const bytes = Buffer.from(await imageRes.arrayBuffer())
+    const contentType = imageRes.headers.get('content-type')?.split(';')[0]?.trim()
+    const mime =
+      contentType && contentType.startsWith('image/')
+        ? contentType
+        : imageMimeTypeFromPath(new URL(imageUrl).pathname)
+    imagePayload = toMoondreamDataUri(bytes, mime)
+  }
+
   const payload: MoondreamQueryRequest = {
-    image_url: imageUrl,
+    image_url: imagePayload,
     question: prompt,
     stream: false,
   }
@@ -110,5 +129,11 @@ export async function queryMoondreamImageUrl(
   }
 
   const body = (await response.json()) as MoondreamJsonResponse
-  return parseMoondreamResponse(body)
+  const parsed = parseMoondreamResponse(body)
+  if (!parsed.raw) {
+    throw new Error(
+      `Empty Moondream response body keys=[${Object.keys(body).join(',')}] sample=${JSON.stringify(body).slice(0, 300)}`,
+    )
+  }
+  return parsed
 }
