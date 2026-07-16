@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
+import sharp from 'sharp'
+
 import { parseMoondreamTags } from '@/lib/workers/moondreamPrompts'
 
 export type MoondreamTagResult = {
@@ -93,19 +95,42 @@ export async function queryMoondreamImageUrl(
 ): Promise<MoondreamTagResult> {
   let imagePayload = imageUrl
   if (!imageUrl.startsWith('data:')) {
-    const imageRes = await fetch(imageUrl)
-    if (!imageRes.ok) {
-      throw new Error(
-        `Failed to download image for Moondream (${imageRes.status}): ${imageUrl.slice(0, 120)}`,
-      )
+    const cacheKey = imageUrl
+    const cached = moondreamImageDataUriCache.get(cacheKey)
+    if (cached) {
+      imagePayload = cached
+    } else {
+      const imageRes = await fetch(imageUrl)
+      if (!imageRes.ok) {
+        throw new Error(
+          `Failed to download image for Moondream (${imageRes.status}): ${imageUrl.slice(0, 120)}`,
+        )
+      }
+
+      const bytes = Buffer.from(await imageRes.arrayBuffer())
+      const contentType = imageRes.headers.get('content-type')?.split(';')[0]?.trim()
+      const mime =
+        contentType && contentType.startsWith('image/')
+          ? contentType
+          : imageMimeTypeFromPath(new URL(imageUrl).pathname)
+
+      // Moondream Station is sensitive to payload size / preprocessing time.
+      // Resize to a manageable max width (spec-1 uses 1200w as vision size).
+      // Always convert to JPEG for a stable mime/data uri contract.
+      let resized: Buffer | null = null
+      try {
+        resized = await sharp(bytes)
+          .resize(1200, null, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85, progressive: true })
+          .toBuffer()
+      } catch {
+        resized = null
+      }
+
+      const outBytes = resized ?? bytes
+      imagePayload = toMoondreamDataUri(outBytes, resized ? 'image/jpeg' : mime)
+      moondreamImageDataUriCache.set(cacheKey, imagePayload)
     }
-    const bytes = Buffer.from(await imageRes.arrayBuffer())
-    const contentType = imageRes.headers.get('content-type')?.split(';')[0]?.trim()
-    const mime =
-      contentType && contentType.startsWith('image/')
-        ? contentType
-        : imageMimeTypeFromPath(new URL(imageUrl).pathname)
-    imagePayload = toMoondreamDataUri(bytes, mime)
   }
 
   const payload: MoondreamQueryRequest = {
@@ -137,3 +162,7 @@ export async function queryMoondreamImageUrl(
   }
   return parsed
 }
+
+// Cache resized data URIs for the duration of a backfill run to avoid repeatedly
+// downloading and re-encoding the same remote artwork image.
+const moondreamImageDataUriCache = new Map<string, string>()
