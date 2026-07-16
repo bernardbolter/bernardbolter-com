@@ -102,6 +102,14 @@ export function FieldNoteFilters() {
         />
         Untagged only
       </label>
+      <label className="studio-filters__checkbox">
+        <input
+          type="checkbox"
+          defaultChecked={params.get('museumSourced') === '1'}
+          onChange={(e) => update('museumSourced', e.target.checked ? '1' : '')}
+        />
+        Museum sourced
+      </label>
     </form>
   )
 }

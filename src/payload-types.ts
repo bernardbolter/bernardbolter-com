@@ -78,6 +78,15 @@ export interface Config {
     episodes: Episode;
     'capture-presets': CapturePreset;
     'field-notes': FieldNote;
+    campaigns: Campaign;
+    themes: Theme;
+    'queue-items': QueueItem;
+    'hashtag-tags': HashtagTag;
+    'calendar-days': CalendarDay;
+    'finale-scripts': FinaleScript;
+    segments: Segment;
+    shots: Shot;
+    takes: Take;
     tags: Tag;
     'art-historical-references': ArtHistoricalReference;
     people: Person;
@@ -112,6 +121,15 @@ export interface Config {
     episodes: EpisodesSelect<false> | EpisodesSelect<true>;
     'capture-presets': CapturePresetsSelect<false> | CapturePresetsSelect<true>;
     'field-notes': FieldNotesSelect<false> | FieldNotesSelect<true>;
+    campaigns: CampaignsSelect<false> | CampaignsSelect<true>;
+    themes: ThemesSelect<false> | ThemesSelect<true>;
+    'queue-items': QueueItemsSelect<false> | QueueItemsSelect<true>;
+    'hashtag-tags': HashtagTagsSelect<false> | HashtagTagsSelect<true>;
+    'calendar-days': CalendarDaysSelect<false> | CalendarDaysSelect<true>;
+    'finale-scripts': FinaleScriptsSelect<false> | FinaleScriptsSelect<true>;
+    segments: SegmentsSelect<false> | SegmentsSelect<true>;
+    shots: ShotsSelect<false> | ShotsSelect<true>;
+    takes: TakesSelect<false> | TakesSelect<true>;
     tags: TagsSelect<false> | TagsSelect<true>;
     'art-historical-references': ArtHistoricalReferencesSelect<false> | ArtHistoricalReferencesSelect<true>;
     people: PeopleSelect<false> | PeopleSelect<true>;
@@ -1543,6 +1561,22 @@ export interface Artwork {
    */
   clipEmbeddingGeneratedAt?: string | null;
   /**
+   * DINOv2 Large embedding stored as vector(1024). Use SQL/API for similarity, not this cell.
+   */
+  dinov2Embedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * When the DINOv2 embedding was last generated for this artwork.
+   */
+  dinov2EmbeddingGeneratedAt?: string | null;
+  /**
    * Metadata for each embedding model run. Vectors stored in pgvector columns, not here.
    */
   embeddings?:
@@ -1704,6 +1738,25 @@ export interface Artwork {
    * Active Lines this artwork contributes to.
    */
   lines?: (number | Line)[] | null;
+  /**
+   * Optional flexible graph links across archive, notes, and queue items.
+   */
+  connectsTo?:
+    | (
+        | {
+            relationTo: 'artworks';
+            value: number | Artwork;
+          }
+        | {
+            relationTo: 'field-notes';
+            value: number | FieldNote;
+          }
+        | {
+            relationTo: 'queue-items';
+            value: number | QueueItem;
+          }
+      )[]
+    | null;
   arEnabled?: boolean | null;
   /**
    * Metres; defaults from width mm ÷ 1000 on save.
@@ -3281,6 +3334,29 @@ export interface FieldNote {
     | 'video-performance'
     | 'video-process'
     | 'voice-memo';
+  /**
+   * Museum capture (photo + spoken note). Batch-reviewed per visit rather than individually.
+   */
+  museumSourced?: boolean | null;
+  /**
+   * Optional flexible graph links across archive, notes, and queue items.
+   */
+  connectsTo?:
+    | (
+        | {
+            relationTo: 'artworks';
+            value: number | Artwork;
+          }
+        | {
+            relationTo: 'field-notes';
+            value: number | FieldNote;
+          }
+        | {
+            relationTo: 'queue-items';
+            value: number | QueueItem;
+          }
+      )[]
+    | null;
   capturedAt?: string | null;
   city?: string | null;
   location?: {
@@ -3364,6 +3440,164 @@ export interface FieldNote {
     | boolean
     | null;
   recordOrigin: 'user' | 'pipeline' | 'small-model';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Single-platform schedulable social posts.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "queue-items".
+ */
+export interface QueueItem {
+  id: number;
+  campaign: number | Campaign;
+  theme?: (number | null) | Theme;
+  platform: 'instagram' | 'tiktok' | 'youtube-shorts' | 'youtube-longform';
+  contentType: 'archive-post' | 'museum-post' | 'reel' | 'story' | 'longform';
+  linkedFieldNotes?: (number | FieldNote)[] | null;
+  linkedArtworks?: (number | Artwork)[] | null;
+  captionText?: string | null;
+  hashtags?: (number | HashtagTag)[] | null;
+  suggestedTime?: string | null;
+  status: 'idea' | 'drafted' | 'scheduled' | 'posted' | 'promoted';
+  /**
+   * Set when an Instagram item is promoted from a TikTok original.
+   */
+  promotedFrom?: (number | null) | QueueItem;
+  metricsSnapshots?:
+    | {
+        date: string;
+        views?: number | null;
+        likes?: number | null;
+        shares?: number | null;
+        comments?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional flexible graph links across archive, notes, and queue items.
+   */
+  connectsTo?:
+    | (
+        | {
+            relationTo: 'artworks';
+            value: number | Artwork;
+          }
+        | {
+            relationTo: 'field-notes';
+            value: number | FieldNote;
+          }
+        | {
+            relationTo: 'queue-items';
+            value: number | QueueItem;
+          }
+      )[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Reusable social-campaign containers (planning through complete).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "campaigns".
+ */
+export interface Campaign {
+  id: number;
+  name: string;
+  startDate?: string | null;
+  finaleDate?: string | null;
+  status: 'planning' | 'active' | 'final-push' | 'complete';
+  /**
+   * Plain-language cadence notes for weekly sessions — not auto-enforced.
+   */
+  cadenceRules?: string | null;
+  /**
+   * Phase 2 flag only. When true, scheduled items are intended for Buffer — no push logic in Phase 1.
+   */
+  bufferPhaseEnabled?: boolean | null;
+  finaleScript?: (number | null) | FinaleScript;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Long-form finale arcs composed of ordered Segments.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "finale-scripts".
+ */
+export interface FinaleScript {
+  id: number;
+  campaign: number | Campaign;
+  title: string;
+  /**
+   * Ordered segments along the finale (order field on each Segment).
+   */
+  segments?: (number | Segment)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Ordered stretches of a Finale Script (e.g. East Side Gallery wall sections).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "segments".
+ */
+export interface Segment {
+  id: number;
+  finaleScript: number | FinaleScript;
+  /**
+   * Position along the wall / arc.
+   */
+  order: number;
+  wallSection: string;
+  paintedContent?: string | null;
+  angle?: string | null;
+  connectionNotes?: string | null;
+  /**
+   * Manual or digest-derived coverage from linked Shots/Takes.
+   */
+  coverageStatus?: ('no-footage' | 'some-takes' | 'covered') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Weekly-review reasoning themes that can spawn multiple Queue Items.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "themes".
+ */
+export interface Theme {
+  id: number;
+  campaign: number | Campaign;
+  title: string;
+  sourceFieldNotes?: (number | FieldNote)[] | null;
+  sourceArtworks?: (number | Artwork)[] | null;
+  /**
+   * Reasoning captured during the weekly session.
+   */
+  notes?: string | null;
+  date?: string | null;
+  /**
+   * Prior Queue Items whose metrics informed this theme.
+   */
+  informedByMetrics?: (number | QueueItem)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Reusable hashtag/tag labels for Queue Items.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hashtag-tags".
+ */
+export interface HashtagTag {
+  id: number;
+  /**
+   * e.g. #berlinart
+   */
+  label: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -4116,6 +4350,68 @@ export interface PatternReport {
   createdAt: string;
 }
 /**
+ * Day buckets holding zero or more Queue Item candidates.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "calendar-days".
+ */
+export interface CalendarDay {
+  id: number;
+  date: string;
+  queueItems?: (number | QueueItem)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Scripted reel beats for training / social video.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shots".
+ */
+export interface Shot {
+  id: number;
+  campaign: number | Campaign;
+  /**
+   * Optional link when this shot practices a finale segment.
+   */
+  segment?: (number | null) | Segment;
+  description: string;
+  intendedFraming?: string | null;
+  status: 'needed' | 'shot' | 'selected' | 'gap';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Individual takes linked to video FieldNotes for a Shot.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "takes".
+ */
+export interface Take {
+  id: number;
+  shot: number | Shot;
+  takeNumber: number;
+  /**
+   * The actual footage FieldNote.
+   */
+  videoFieldNote?: (number | null) | FieldNote;
+  quickNote?: string | null;
+  /**
+   * Marked during assembly review for EDL export.
+   */
+  selected?: boolean | null;
+  /**
+   * Optional in-point seconds for EDL export.
+   */
+  inPointSec?: number | null;
+  /**
+   * Optional out-point seconds for EDL export.
+   */
+  outPointSec?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Curated square paintings available in the print set builder. Vendure product ID is on Print set config global — not per row.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -4201,6 +4497,42 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'field-notes';
         value: number | FieldNote;
+      } | null)
+    | ({
+        relationTo: 'campaigns';
+        value: number | Campaign;
+      } | null)
+    | ({
+        relationTo: 'themes';
+        value: number | Theme;
+      } | null)
+    | ({
+        relationTo: 'queue-items';
+        value: number | QueueItem;
+      } | null)
+    | ({
+        relationTo: 'hashtag-tags';
+        value: number | HashtagTag;
+      } | null)
+    | ({
+        relationTo: 'calendar-days';
+        value: number | CalendarDay;
+      } | null)
+    | ({
+        relationTo: 'finale-scripts';
+        value: number | FinaleScript;
+      } | null)
+    | ({
+        relationTo: 'segments';
+        value: number | Segment;
+      } | null)
+    | ({
+        relationTo: 'shots';
+        value: number | Shot;
+      } | null)
+    | ({
+        relationTo: 'takes';
+        value: number | Take;
       } | null)
     | ({
         relationTo: 'tags';
@@ -4719,6 +5051,8 @@ export interface CapturePresetsSelect<T extends boolean = true> {
  */
 export interface FieldNotesSelect<T extends boolean = true> {
   mediaType?: T;
+  museumSourced?: T;
+  connectsTo?: T;
   capturedAt?: T;
   city?: T;
   location?:
@@ -4770,6 +5104,139 @@ export interface FieldNotesSelect<T extends boolean = true> {
   duration?: T;
   transcriptEmbedding?: T;
   recordOrigin?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "campaigns_select".
+ */
+export interface CampaignsSelect<T extends boolean = true> {
+  name?: T;
+  startDate?: T;
+  finaleDate?: T;
+  status?: T;
+  cadenceRules?: T;
+  bufferPhaseEnabled?: T;
+  finaleScript?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "themes_select".
+ */
+export interface ThemesSelect<T extends boolean = true> {
+  campaign?: T;
+  title?: T;
+  sourceFieldNotes?: T;
+  sourceArtworks?: T;
+  notes?: T;
+  date?: T;
+  informedByMetrics?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "queue-items_select".
+ */
+export interface QueueItemsSelect<T extends boolean = true> {
+  campaign?: T;
+  theme?: T;
+  platform?: T;
+  contentType?: T;
+  linkedFieldNotes?: T;
+  linkedArtworks?: T;
+  captionText?: T;
+  hashtags?: T;
+  suggestedTime?: T;
+  status?: T;
+  promotedFrom?: T;
+  metricsSnapshots?:
+    | T
+    | {
+        date?: T;
+        views?: T;
+        likes?: T;
+        shares?: T;
+        comments?: T;
+        id?: T;
+      };
+  connectsTo?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hashtag-tags_select".
+ */
+export interface HashtagTagsSelect<T extends boolean = true> {
+  label?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "calendar-days_select".
+ */
+export interface CalendarDaysSelect<T extends boolean = true> {
+  date?: T;
+  queueItems?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "finale-scripts_select".
+ */
+export interface FinaleScriptsSelect<T extends boolean = true> {
+  campaign?: T;
+  title?: T;
+  segments?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "segments_select".
+ */
+export interface SegmentsSelect<T extends boolean = true> {
+  finaleScript?: T;
+  order?: T;
+  wallSection?: T;
+  paintedContent?: T;
+  angle?: T;
+  connectionNotes?: T;
+  coverageStatus?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "shots_select".
+ */
+export interface ShotsSelect<T extends boolean = true> {
+  campaign?: T;
+  segment?: T;
+  description?: T;
+  intendedFraming?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "takes_select".
+ */
+export interface TakesSelect<T extends boolean = true> {
+  shot?: T;
+  takeNumber?: T;
+  videoFieldNote?: T;
+  quickNote?: T;
+  selected?: T;
+  inPointSec?: T;
+  outPointSec?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -5132,6 +5599,8 @@ export interface ArtworksSelect<T extends boolean = true> {
   recognitionTimeline?: T;
   clipEmbedding?: T;
   clipEmbeddingGeneratedAt?: T;
+  dinov2Embedding?: T;
+  dinov2EmbeddingGeneratedAt?: T;
   embeddings?:
     | T
     | {
@@ -5225,6 +5694,7 @@ export interface ArtworksSelect<T extends boolean = true> {
       };
   processPhotos?: T;
   lines?: T;
+  connectsTo?: T;
   arEnabled?: T;
   arWidthM?: T;
   arHeightM?: T;

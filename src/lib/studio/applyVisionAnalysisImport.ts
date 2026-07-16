@@ -7,6 +7,10 @@ import {
   type VisionAnalysisImportInput,
 } from './archiveImportSchemas'
 import { revalidateArtworkPaths } from './revalidateArtworkPaths'
+import {
+  decideMoondreamVisionAppend,
+  isMoondreamVisionModel,
+} from '@/lib/artwork/visionAnalysisGuard'
 
 export type VisionAnalysisImportResult = {
   slug: string
@@ -40,11 +44,33 @@ export async function applyVisionAnalysisImport(
     }
 
     const existing = Array.isArray(artwork.visionAnalyses) ? artwork.visionAnalyses : []
-    const appendedRows = item.analyses.map((row) => ({
-      text: row.text.trim(),
-      model: row.model.trim(),
-      date: row.date.trim(),
-    }))
+    const appendedRows = item.analyses
+      .map((row) => ({
+        text: row.text.trim(),
+        model: row.model.trim(),
+        date: row.date.trim(),
+      }))
+      .filter((row) => {
+        if (!isMoondreamVisionModel(row.model)) return true
+        const decision = decideMoondreamVisionAppend(existing)
+        if (decision.action === 'skip') {
+          console.warn(
+            `[vision-import] skip moondream for ${slug}: ${decision.reason}`,
+          )
+          return false
+        }
+        return true
+      })
+
+    if (appendedRows.length === 0) {
+      results.push({
+        slug,
+        artworkId: artwork.id,
+        appended: 0,
+        total: existing.length,
+      })
+      continue
+    }
 
     const next = [...existing, ...appendedRows]
 

@@ -55,6 +55,7 @@ export function buildFieldNoteCreateData(input: BuildFieldNoteDataInput): FieldN
     register: input.register,
     processStage: input.processStage,
     conceptualThread: input.conceptualThread,
+    museumSourced: input.museumSourced ?? false,
     capturePreset: preset?.id,
     episode: preset?.defaultEpisode ?? undefined,
     processingStatus: usesPreset && input.mediaType !== 'text' ? 'queued' : 'pending',

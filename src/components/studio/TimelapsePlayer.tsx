@@ -10,7 +10,8 @@ export function TimelapsePlayer({ file }: TimelapsePlayerProps) {
   if (!file || typeof file === 'number') {
     return (
       <p className="studio-muted">
-        No timelapse yet. Generate one from the painting admin record when process photos are ready.
+        No timelapse yet. Use the Painting Animation Maker tool to generate one when process
+        photos are ready.
       </p>
     )
   }

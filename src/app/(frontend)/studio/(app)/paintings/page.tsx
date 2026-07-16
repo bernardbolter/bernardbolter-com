@@ -11,7 +11,12 @@ export default async function StudioPaintingsPage() {
   return (
     <section>
       <header className="studio-page-header">
-        <h2>Paintings</h2>
+        <div>
+          <h2>Paintings</h2>
+          <p className="studio-muted">
+            Read-only dossiers. Regenerate timelapses in Tools → Animation Maker.
+          </p>
+        </div>
         <Link href="/studio/paintings/new" className="studio-page-header__action">
           New painting
         </Link>

@@ -1033,6 +1033,26 @@ export const Artworks: CollectionConfig = {
               },
             },
             {
+              name: 'dinov2Embedding',
+              type: 'json',
+              admin: {
+                hidden: true,
+                readOnly: true,
+                description:
+                  'DINOv2 Large embedding stored as vector(1024). Use SQL/API for similarity, not this cell.',
+              },
+              custom: { dbType: 'vector(1024)' },
+            },
+            {
+              name: 'dinov2EmbeddingGeneratedAt',
+              type: 'date',
+              admin: {
+                hidden: true,
+                readOnly: true,
+                description: 'When the DINOv2 embedding was last generated for this artwork.',
+              },
+            },
+            {
               name: 'embeddings',
               type: 'array',
               admin: {

@@ -9,6 +9,7 @@ import { buildVisionPageJsonLd } from '@/lib/jsonld/visionPage'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtworkForPage, getPublishedArtworkSlugs } from '@/lib/payload/artworkPage'
 import { fetchArtworkClipEmbeddingRecord } from '@/lib/payload/clipEmbedding'
+import { fetchArtworkDinov2EmbeddingRecord } from '@/lib/payload/dinov2Embedding'
 import { getSimilarArtworksForPage } from '@/lib/payload/similarArtworksPage'
 import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
 
@@ -56,13 +57,27 @@ export default async function Page({ params }: Props) {
   if (!artwork || typeof artwork.id !== 'number') notFound()
 
   const clipRecord = await fetchArtworkClipEmbeddingRecord(artwork.id)
+  const dinov2Record = await fetchArtworkDinov2EmbeddingRecord(artwork.id)
   const vectorsByColumn: Record<string, number[]> = {}
   const similarWorksByColumn: Record<string, Awaited<ReturnType<typeof getSimilarArtworksForPage>>> =
     {}
 
   if (clipRecord?.embedding?.length) {
     vectorsByColumn.clip_embedding = clipRecord.embedding
-    similarWorksByColumn.clip_embedding = await getSimilarArtworksForPage(artwork.id, 3)
+    similarWorksByColumn.clip_embedding = await getSimilarArtworksForPage(
+      artwork.id,
+      3,
+      'clip_embedding',
+    )
+  }
+
+  if (dinov2Record?.embedding?.length) {
+    vectorsByColumn.dinov2_embedding = dinov2Record.embedding
+    similarWorksByColumn.dinov2_embedding = await getSimilarArtworksForPage(
+      artwork.id,
+      3,
+      'dinov2_embedding',
+    )
   }
 
   const baseUrl = getSiteBaseUrl()

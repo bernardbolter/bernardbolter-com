@@ -22,5 +22,14 @@ export const fieldNotesTab: Tab = {
         description: 'Active Lines this artwork contributes to.',
       },
     },
+    {
+      name: 'connectsTo',
+      type: 'relationship',
+      relationTo: ['artworks', 'field-notes', 'queue-items'],
+      hasMany: true,
+      admin: {
+        description: 'Optional flexible graph links across archive, notes, and queue items.',
+      },
+    },
   ],
 }

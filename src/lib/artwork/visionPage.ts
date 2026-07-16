@@ -10,6 +10,14 @@ export const CLIP_EMBEDDING_METADATA = {
   shortDescription: 'Language-informed visual embedding — 768 dimensions',
 } as const
 
+export const DINOV2_EMBEDDING_METADATA = {
+  model: 'dinov2-large',
+  dimensions: 1024,
+  pgVectorColumn: 'dinov2_embedding',
+  specUrl: 'https://huggingface.co/facebook/dinov2-large',
+  shortDescription: 'Self-supervised visual embedding, no language influence — 1024 dimensions',
+} as const
+
 export type EmbeddingMetadata = {
   model: string
   dimensions: number
@@ -35,6 +43,7 @@ const VISION_MODEL_LABELS: Record<string, string> = {
   'gpt-4o': 'GPT-4o',
   'gemini-2.5-pro': 'Gemini 2.5 Pro',
   'deepseek-vl2': 'DeepSeek VL2',
+  'moondream-station': 'Moondream Station',
 }
 
 /** Direct R2 URL from primary/poster media — spec `imageUrl` field equivalent. */
@@ -123,16 +132,23 @@ export function resolveEmbeddingMetadataList(artwork: Artwork): EmbeddingMetadat
 
   if (resolved.length > 0) return resolved
 
+  const fallback: EmbeddingMetadata[] = []
+
   if (Array.isArray(artwork.clipEmbedding) && artwork.clipEmbedding.length > 0) {
-    return [
-      {
-        ...CLIP_EMBEDDING_METADATA,
-        generatedDate: artwork.clipEmbeddingGeneratedAt ?? null,
-      },
-    ]
+    fallback.push({
+      ...CLIP_EMBEDDING_METADATA,
+      generatedDate: artwork.clipEmbeddingGeneratedAt ?? null,
+    })
   }
 
-  return []
+  if (Array.isArray(artwork.dinov2Embedding) && artwork.dinov2Embedding.length > 0) {
+    fallback.push({
+      ...DINOV2_EMBEDDING_METADATA,
+      generatedDate: artwork.dinov2EmbeddingGeneratedAt ?? null,
+    })
+  }
+
+  return fallback
 }
 
 export function artworkHasEmbeddingMetadata(artwork: Artwork): boolean {

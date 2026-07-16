@@ -81,3 +81,34 @@ export async function queryMoondreamImage(
   const body = (await response.json()) as MoondreamJsonResponse
   return parseMoondreamResponse(body)
 }
+
+/**
+ * Query Moondream with a remote HTTPS URL or data URI (artwork R2 originals).
+ */
+export async function queryMoondreamImageUrl(
+  imageUrl: string,
+  prompt: string,
+): Promise<MoondreamTagResult> {
+  const payload: MoondreamQueryRequest = {
+    image_url: imageUrl,
+    question: prompt,
+    stream: false,
+  }
+
+  const url = `${getMoondreamUrl()}/v1/query`
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '')
+    throw new Error(
+      `Moondream sidecar failed (${response.status}): ${detail.slice(0, 500) || response.statusText}`,
+    )
+  }
+
+  const body = (await response.json()) as MoondreamJsonResponse
+  return parseMoondreamResponse(body)
+}

@@ -18,7 +18,7 @@ export default async function StudioNotesPage({ searchParams }: PageProps) {
   return (
     <section>
       <header className="studio-page-header">
-        <h2>Notes</h2>
+        <h2>All Media</h2>
       </header>
       <Suspense fallback={null}>
         <FieldNoteFilters />

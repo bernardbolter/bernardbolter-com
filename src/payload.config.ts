@@ -42,6 +42,15 @@ import { DCSCapturePhotos } from './collections/DCSCapturePhotos'
 import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
 import { Sessions } from './collections/Sessions'
+import { Campaigns } from './collections/Campaigns'
+import { Themes } from './collections/Themes'
+import { QueueItems } from './collections/QueueItems'
+import { HashtagTags } from './collections/HashtagTags'
+import { CalendarDays } from './collections/CalendarDays'
+import { FinaleScripts } from './collections/FinaleScripts'
+import { Segments } from './collections/Segments'
+import { Shots } from './collections/Shots'
+import { Takes } from './collections/Takes'
 import { ArtOfficialSettings } from './globals/ArtOfficialSettings'
 import { PrintSetConfig } from './globals/PrintSetConfig'
 
@@ -121,6 +130,15 @@ export default buildConfig({
     Episodes,
     CapturePresets,
     FieldNotes,
+    Campaigns,
+    Themes,
+    QueueItems,
+    HashtagTags,
+    CalendarDays,
+    FinaleScripts,
+    Segments,
+    Shots,
+    Takes,
     Tags,
     ArtHistoricalReferences,
     People,

@@ -2,21 +2,20 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 import { fetchArtworkClipEmbedding } from '@/lib/payload/clipEmbedding'
-import { findSimilarArtworks } from '@/lib/payload/similarity'
+import { fetchArtworkDinov2Embedding } from '@/lib/payload/dinov2Embedding'
+import { findSimilarArtworks, type SimilarityColumn } from '@/lib/payload/similarity'
 import type { Artwork } from '@/payload-types'
 
-export type SimilarArtworkCard = Pick<Artwork, 'id' | 'title' | 'slug' | 'primaryImage' | 'posterImage'> & {
+export type SimilarArtworkCard = Pick<
+  Artwork,
+  'id' | 'title' | 'slug' | 'primaryImage' | 'posterImage'
+> & {
   similarity?: number
 }
 
-export async function getSimilarArtworksForPage(
-  artworkId: number,
-  limit = 3,
+async function cardsForNeighbours(
+  neighbours: Array<{ id: number; similarity: number }>,
 ): Promise<SimilarArtworkCard[]> {
-  const embedding = await fetchArtworkClipEmbedding(artworkId)
-  if (!embedding) return []
-
-  const neighbours = await findSimilarArtworks(embedding, limit, artworkId)
   if (!neighbours.length) return []
 
   const payload = await getPayload({ config })
@@ -48,6 +47,21 @@ export async function getSimilarArtworksForPage(
     })
   }
   return cards
+}
+
+export async function getSimilarArtworksForPage(
+  artworkId: number,
+  limit = 3,
+  column: SimilarityColumn = 'clip_embedding',
+): Promise<SimilarArtworkCard[]> {
+  const embedding =
+    column === 'dinov2_embedding'
+      ? await fetchArtworkDinov2Embedding(artworkId)
+      : await fetchArtworkClipEmbedding(artworkId)
+  if (!embedding) return []
+
+  const neighbours = await findSimilarArtworks(embedding, limit, artworkId, column)
+  return cardsForNeighbours(neighbours)
 }
 
 export async function artworkHasClipEmbedding(artworkId: number): Promise<boolean> {

@@ -1,6 +1,6 @@
 import { headers as nextHeaders } from 'next/headers'
 import { redirect } from 'next/navigation'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 
 import { StudioAdminLinks } from '@/components/studio/StudioAdminLinks'
 import { StudioLogoutButton } from '@/components/studio/StudioLogoutButton'
@@ -26,7 +26,9 @@ export default async function StudioAppLayout({ children }: { children: ReactNod
           <StudioLogoutButton />
         </div>
       </header>
-      <TabBar />
+      <Suspense fallback={<nav className="studio-nav" aria-label="Studio sections" />}>
+        <TabBar />
+      </Suspense>
       <main className="studio-shell__main">{children}</main>
     </div>
   )

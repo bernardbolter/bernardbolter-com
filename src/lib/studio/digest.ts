@@ -18,6 +18,9 @@ export async function buildStudioDigest(payload: Payload, user: User) {
     dormantLines,
     latestPatternReport,
     recentNotes,
+    museumNotes,
+    calendarLookahead,
+    segments,
   ] = await Promise.all([
     payload.find({
       collection: 'artworks',
@@ -92,6 +95,35 @@ export async function buildStudioDigest(payload: Payload, user: User) {
       user,
       select: { register: true, processStage: true, conceptualThread: true, updatedAt: true },
     }),
+    payload.find({
+      collection: 'field-notes',
+      where: { museumSourced: { equals: true } },
+      limit: 1,
+      depth: 0,
+      overrideAccess: false,
+      user,
+    }),
+    payload.find({
+      collection: 'calendar-days',
+      where: {
+        and: [
+          { date: { greater_than_equal: new Date().toISOString().slice(0, 10) } },
+          { date: { less_than_equal: new Date(now + WEEK_MS).toISOString().slice(0, 10) } },
+        ],
+      },
+      limit: 14,
+      depth: 1,
+      overrideAccess: false,
+      user,
+    }),
+    payload.find({
+      collection: 'segments',
+      sort: 'order',
+      limit: 100,
+      depth: 0,
+      overrideAccess: false,
+      user,
+    }),
   ])
 
   const candidateNotes = await payload.find({
@@ -118,15 +150,29 @@ export async function buildStudioDigest(payload: Payload, user: User) {
 
   const episodeBuckets = countBy(episodes.docs.map((e) => e.status))
 
+  const emptyCalendarDays = calendarLookahead.docs.filter(
+    (day) => !day.queueItems || (Array.isArray(day.queueItems) && day.queueItems.length === 0),
+  )
+
+  const segmentCoverage = countBy(
+    segments.docs.map((s) => s.coverageStatus ?? 'no-footage'),
+  )
+
   return {
     openPaintings: artworks.docs,
     untaggedFieldNotesCount: untaggedNotes.totalDocs,
+    museumFieldNotesCount: museumNotes.totalDocs,
     episodeBuckets,
     openSessions: openSessions.docs,
     activeLines: activeLines.docs,
     dormantLines: dormantLines.docs,
     lineSuggestions,
     latestPatternReport: latestPatternReport.docs[0] ?? null,
+    calendarGaps: emptyCalendarDays.map((d) => ({
+      id: d.id,
+      date: d.date,
+    })),
+    segmentCoverage,
     practiceOverview: {
       registerCounts,
       processStageCounts: stageCounts,

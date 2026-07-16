@@ -51,6 +51,7 @@ export const createFieldNoteSchema = z
     register: z.enum(fieldNoteRegisters).optional(),
     processStage: z.enum(fieldNoteProcessStages).optional(),
     conceptualThread: z.enum(fieldNoteConceptualThreads).optional(),
+    museumSourced: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.capturePresetId != null && data.mediaType === 'text') {

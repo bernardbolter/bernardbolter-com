@@ -28,6 +28,38 @@ export function DigestView({ data }: { data: DigestData }) {
           {data.untaggedFieldNotesCount} untagged ·{' '}
           <Link href="/studio/notes?untagged=1">Review →</Link>
         </p>
+        <p>
+          {data.museumFieldNotesCount} museum-sourced ·{' '}
+          <Link href="/studio/notes?museumSourced=1">Batch review →</Link>
+        </p>
+      </section>
+
+      <section>
+        <h3>Calendar gaps (next 7 days)</h3>
+        {data.calendarGaps.length === 0 ? (
+          <p className="studio-muted">No empty calendar days in the look-ahead window (or none created yet).</p>
+        ) : (
+          <ul>
+            {data.calendarGaps.map((day) => (
+              <li key={day.id}>{day.date}</li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h3>Segment coverage</h3>
+        {Object.keys(data.segmentCoverage).length === 0 ? (
+          <p className="studio-muted">No finale segments yet.</p>
+        ) : (
+          <ul>
+            {Object.entries(data.segmentCoverage).map(([status, count]) => (
+              <li key={status}>
+                {status}: {count}
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section>

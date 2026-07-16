@@ -30,11 +30,31 @@ function mediaLabel(type: string): string {
     .join(' ')
 }
 
-export function UploadForm() {
+type InputGroup = 'photos' | 'videos' | 'audio' | 'text'
+
+const GROUP_MEDIA_TYPES: Record<InputGroup, readonly (typeof fieldNoteMediaTypes)[number][]> = {
+  photos: ['photo'],
+  videos: ['video-broll', 'video-observation', 'video-performance', 'video-process'],
+  audio: ['voice-memo'],
+  text: ['text'],
+}
+
+type UploadFormProps = {
+  initialMediaType?: (typeof fieldNoteMediaTypes)[number]
+  accept?: string
+  lockMediaTypeGroup?: InputGroup
+}
+
+export function UploadForm({
+  initialMediaType = 'photo',
+  accept = 'image/*,video/*,audio/*',
+  lockMediaTypeGroup,
+}: UploadFormProps) {
   const libraryInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
-  const [mediaType, setMediaType] = useState<(typeof fieldNoteMediaTypes)[number]>('photo')
+  const [mediaType, setMediaType] =
+    useState<(typeof fieldNoteMediaTypes)[number]>(initialMediaType)
   const [writtenNote, setWrittenNote] = useState('')
   const [city, setCity] = useState('')
   const [locationName, setLocationName] = useState('')
@@ -42,6 +62,7 @@ export function UploadForm() {
   const [register, setRegister] = useState('')
   const [processStage, setProcessStage] = useState('')
   const [conceptualThread, setConceptualThread] = useState('')
+  const [museumSourced, setMuseumSourced] = useState(false)
   const [showMore, setShowMore] = useState(false)
   const [tagQuery, setTagQuery] = useState('')
   const [tagTarget, setTagTarget] = useState<TagTarget | null>(null)
@@ -92,14 +113,21 @@ export function UploadForm() {
     return () => clearTimeout(handle)
   }, [tagQuery])
 
+  const allowedTypes = lockMediaTypeGroup
+    ? GROUP_MEDIA_TYPES[lockMediaTypeGroup]
+    : fieldNoteMediaTypes
+
   const mediaTypeOptions = useMemo(
-    () => fieldNoteMediaTypes.map((value) => ({ value, label: mediaLabel(value) })),
-    [],
+    () => allowedTypes.map((value) => ({ value, label: mediaLabel(value) })),
+    [allowedTypes],
   )
 
   function onFileChosen(next: File | null) {
     setFile(next)
-    if (next) setMediaType(inferMediaType(next))
+    if (!next || lockMediaTypeGroup === 'text') return
+    const inferred = inferMediaType(next)
+    if (allowedTypes.includes(inferred)) setMediaType(inferred)
+    else if (allowedTypes[0]) setMediaType(allowedTypes[0])
   }
 
   function clearFileInputs() {
@@ -158,6 +186,7 @@ export function UploadForm() {
           register: register || undefined,
           processStage: processStage || undefined,
           conceptualThread: conceptualThread || undefined,
+          museumSourced: museumSourced || undefined,
         }),
       })
       if (!createRes.ok) {
@@ -184,6 +213,7 @@ export function UploadForm() {
       setRegister('')
       setProcessStage('')
       setConceptualThread('')
+      setMuseumSourced(false)
       setShowMore(false)
       clearFileInputs()
     } catch (err) {
@@ -242,7 +272,7 @@ export function UploadForm() {
             ref={libraryInputRef}
             id="studio-upload-file"
             type="file"
-            accept="image/*,video/*,audio/*"
+            accept={accept}
             disabled={submitting}
             hidden
             onChange={(event) => onFileChosen(event.target.files?.[0] ?? null)}
@@ -251,7 +281,7 @@ export function UploadForm() {
             ref={cameraInputRef}
             id="studio-upload-camera"
             type="file"
-            accept="image/*,video/*,audio/*"
+            accept={accept}
             capture="environment"
             disabled={submitting}
             hidden
@@ -342,6 +372,18 @@ export function UploadForm() {
       </div>
 
       <LinesPicker value={lines} onChange={setLines} disabled={submitting} />
+
+      {lockMediaTypeGroup === 'photos' ? (
+        <label className="studio-filters__checkbox">
+          <input
+            type="checkbox"
+            checked={museumSourced}
+            disabled={submitting}
+            onChange={(event) => setMuseumSourced(event.target.checked)}
+          />
+          Museum sourced
+        </label>
+      ) : null}
 
       <div className="studio-upload__more">
         <button

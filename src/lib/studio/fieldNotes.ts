@@ -5,6 +5,7 @@ import type { FieldNote, User } from '@/payload-types'
 export type FieldNoteListFilters = {
   mediaType?: string
   untagged?: boolean
+  museumSourced?: boolean
   city?: string
   artworkId?: number
   episodeId?: number
@@ -26,6 +27,9 @@ export function buildFieldNoteWhere(filters: FieldNoteListFilters): Where {
     and.push({
       and: [{ relatedArtwork: { exists: false } }, { relatedEpisode: { exists: false } }],
     })
+  }
+  if (filters.museumSourced) {
+    and.push({ museumSourced: { equals: true } })
   }
   if (filters.city) {
     and.push({ city: { contains: filters.city } })
@@ -75,6 +79,7 @@ export function parseFieldNoteFilters(
   return {
     mediaType: pick('mediaType'),
     untagged: pick('untagged') === '1',
+    museumSourced: pick('museumSourced') === '1',
     city: pick('city'),
     artworkId: num('artworkId'),
     episodeId: num('episodeId'),

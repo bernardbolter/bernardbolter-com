@@ -161,7 +161,7 @@ async function main() {
         `UPDATE artworks
          SET clip_embedding = $1::vector,
              clip_embedding_generated_at = $3
-         WHERE id = $2`,
+         WHERE id = $2 AND clip_embedding IS NULL`,
         [JSON.stringify(embedding), artwork.id, new Date().toISOString()],
       )
 

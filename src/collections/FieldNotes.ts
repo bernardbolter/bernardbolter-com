@@ -27,6 +27,25 @@ export const FieldNotes: CollectionConfig = {
       ],
     },
     {
+      name: 'museumSourced',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description:
+          'Museum capture (photo + spoken note). Batch-reviewed per visit rather than individually.',
+        position: 'sidebar',
+      },
+    },
+    {
+      name: 'connectsTo',
+      type: 'relationship',
+      relationTo: ['artworks', 'field-notes', 'queue-items'],
+      hasMany: true,
+      admin: {
+        description: 'Optional flexible graph links across archive, notes, and queue items.',
+      },
+    },
+    {
       name: 'capturedAt',
       type: 'date',
       defaultValue: () => new Date().toISOString(),
