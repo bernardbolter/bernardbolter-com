@@ -3,6 +3,9 @@ import path from 'node:path'
 
 import sharp from 'sharp'
 
+import {
+  derivativePublicUrl,
+} from '@/lib/media/artworkR2Images'
 import { parseMoondreamTags } from '@/lib/workers/moondreamPrompts'
 
 export type MoondreamTagResult = {
@@ -14,6 +17,8 @@ type MoondreamJsonResponse = {
   text?: string
   answer?: string
   response?: string
+  error?: string
+  status?: string
 }
 
 type MoondreamQueryRequest = {
@@ -21,6 +26,13 @@ type MoondreamQueryRequest = {
   question: string
   stream: false
 }
+
+/** Max long edge for Moondream catalogue queries (smaller = fewer Station timeouts). */
+const MOONDREAM_MAX_EDGE = Number.parseInt(process.env.MOONDREAM_MAX_EDGE || '800', 10) || 800
+const MOONDREAM_JPEG_QUALITY =
+  Number.parseInt(process.env.MOONDREAM_JPEG_QUALITY || '75', 10) || 75
+const MOONDREAM_MAX_ATTEMPTS =
+  Number.parseInt(process.env.MOONDREAM_MAX_ATTEMPTS || '3', 10) || 3
 
 /** Local Moondream Station — see workers/README.md for install and contract. */
 export function getMoondreamUrl(): string {
@@ -47,6 +59,88 @@ export function parseMoondreamResponse(body: MoondreamJsonResponse): MoondreamTa
   return { raw, tags: parseMoondreamTags(raw) }
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function isTimeoutBody(body: MoondreamJsonResponse): boolean {
+  const status = (body.status ?? '').toLowerCase()
+  const error = (body.error ?? '').toLowerCase()
+  return status === 'timeout' || error.includes('timeout')
+}
+
+async function postMoondreamQuery(
+  imagePayload: string,
+  prompt: string,
+): Promise<MoondreamTagResult> {
+  const payload: MoondreamQueryRequest = {
+    image_url: imagePayload,
+    question: prompt,
+    stream: false,
+  }
+
+  const url = `${getMoondreamUrl()}/v1/query`
+  let lastError: Error | null = null
+
+  for (let attempt = 1; attempt <= MOONDREAM_MAX_ATTEMPTS; attempt++) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const detail = await response.text().catch(() => '')
+      lastError = new Error(
+        `Moondream sidecar failed (${response.status}): ${detail.slice(0, 500) || response.statusText}`,
+      )
+      if (attempt < MOONDREAM_MAX_ATTEMPTS) {
+        await sleep(1500 * attempt)
+        continue
+      }
+      throw lastError
+    }
+
+    const body = (await response.json()) as MoondreamJsonResponse
+    if (isTimeoutBody(body)) {
+      lastError = new Error(
+        `Moondream timeout (attempt ${attempt}/${MOONDREAM_MAX_ATTEMPTS}): ${JSON.stringify(body).slice(0, 200)}`,
+      )
+      if (attempt < MOONDREAM_MAX_ATTEMPTS) {
+        console.warn(`  moondream timeout — retrying in ${attempt * 2}s…`)
+        await sleep(2000 * attempt)
+        continue
+      }
+      throw lastError
+    }
+
+    const parsed = parseMoondreamResponse(body)
+    if (!parsed.raw) {
+      throw new Error(
+        `Empty Moondream response body keys=[${Object.keys(body).join(',')}] sample=${JSON.stringify(body).slice(0, 300)}`,
+      )
+    }
+    return parsed
+  }
+
+  throw lastError ?? new Error('Moondream query failed')
+}
+
+async function toResizedJpegDataUri(bytes: Buffer, fallbackMime: string): Promise<string> {
+  try {
+    const resized = await sharp(bytes)
+      .resize(MOONDREAM_MAX_EDGE, MOONDREAM_MAX_EDGE, {
+        fit: 'inside',
+        withoutEnlargement: true,
+      })
+      .jpeg({ quality: MOONDREAM_JPEG_QUALITY, progressive: true })
+      .toBuffer()
+    return toMoondreamDataUri(resized, 'image/jpeg')
+  } catch {
+    return toMoondreamDataUri(bytes, fallbackMime)
+  }
+}
+
 /**
  * Tag a keyframe image with a shot-type-specific Moondream prompt.
  *
@@ -60,28 +154,9 @@ export async function queryMoondreamImage(
   prompt: string,
 ): Promise<MoondreamTagResult> {
   const imageBytes = await fs.readFile(imagePath)
-  const payload: MoondreamQueryRequest = {
-    image_url: toMoondreamDataUri(imageBytes, imageMimeTypeFromPath(imagePath)),
-    question: prompt,
-    stream: false,
-  }
-
-  const url = `${getMoondreamUrl()}/v1/query`
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
-
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '')
-    throw new Error(
-      `Moondream sidecar failed (${response.status}): ${detail.slice(0, 500) || response.statusText}`,
-    )
-  }
-
-  const body = (await response.json()) as MoondreamJsonResponse
-  return parseMoondreamResponse(body)
+  const mime = imageMimeTypeFromPath(imagePath)
+  const imagePayload = await toResizedJpegDataUri(imageBytes, mime)
+  return postMoondreamQuery(imagePayload, prompt)
 }
 
 /**
@@ -114,53 +189,30 @@ export async function queryMoondreamImageUrl(
           ? contentType
           : imageMimeTypeFromPath(new URL(imageUrl).pathname)
 
-      // Moondream Station is sensitive to payload size / preprocessing time.
-      // Resize to a manageable max width (spec-1 uses 1200w as vision size).
-      // Always convert to JPEG for a stable mime/data uri contract.
-      let resized: Buffer | null = null
-      try {
-        resized = await sharp(bytes)
-          .resize(1200, null, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 85, progressive: true })
-          .toBuffer()
-      } catch {
-        resized = null
-      }
-
-      const outBytes = resized ?? bytes
-      imagePayload = toMoondreamDataUri(outBytes, resized ? 'image/jpeg' : mime)
+      imagePayload = await toResizedJpegDataUri(bytes, mime)
       moondreamImageDataUriCache.set(cacheKey, imagePayload)
     }
   }
 
-  const payload: MoondreamQueryRequest = {
-    image_url: imagePayload,
-    question: prompt,
-    stream: false,
-  }
+  return postMoondreamQuery(imagePayload, prompt)
+}
 
-  const url = `${getMoondreamUrl()}/v1/query`
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  })
+/** Prefer prebuilt 800w R2 derivative when present; else original. */
+export async function resolveMoondreamArtworkImageUrl(args: {
+  slug?: string | null
+  originalUrl: string
+}): Promise<string> {
+  const slug = args.slug?.trim()
+  if (!slug) return args.originalUrl
 
-  if (!response.ok) {
-    const detail = await response.text().catch(() => '')
-    throw new Error(
-      `Moondream sidecar failed (${response.status}): ${detail.slice(0, 500) || response.statusText}`,
-    )
+  const derivative = derivativePublicUrl(slug, '800w')
+  try {
+    const head = await fetch(derivative, { method: 'HEAD' })
+    if (head.ok) return derivative
+  } catch {
+    // fall through to original
   }
-
-  const body = (await response.json()) as MoondreamJsonResponse
-  const parsed = parseMoondreamResponse(body)
-  if (!parsed.raw) {
-    throw new Error(
-      `Empty Moondream response body keys=[${Object.keys(body).join(',')}] sample=${JSON.stringify(body).slice(0, 300)}`,
-    )
-  }
-  return parsed
+  return args.originalUrl
 }
 
 // Cache resized data URIs for the duration of a backfill run to avoid repeatedly

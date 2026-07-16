@@ -35,7 +35,10 @@ import {
   MOONDREAM_VISION_MODEL,
 } from '@/lib/artwork/visionAnalysisGuard'
 import { getArtworkOriginalImageUrl } from '@/lib/media/artworkR2Images'
-import { queryMoondreamImageUrl } from '@/lib/workers/moondream'
+import {
+  queryMoondreamImageUrl,
+  resolveMoondreamArtworkImageUrl,
+} from '@/lib/workers/moondream'
 import type { Artwork } from '@/payload-types'
 
 function parseArgs() {
@@ -128,8 +131,8 @@ async function main() {
       continue
     }
 
-    const imageUrl = getArtworkOriginalImageUrl(artwork)
-    if (!imageUrl) {
+    const originalUrl = getArtworkOriginalImageUrl(artwork)
+    if (!originalUrl) {
       skippedNoImage += 1
       console.log(`skip  ${artwork.slug}: no image url`)
       continue
@@ -150,6 +153,10 @@ async function main() {
     }
 
     try {
+      const imageUrl = await resolveMoondreamArtworkImageUrl({
+        slug: artwork.slug,
+        originalUrl,
+      })
       const data: Record<string, unknown> = {}
       let proseText = ''
 
