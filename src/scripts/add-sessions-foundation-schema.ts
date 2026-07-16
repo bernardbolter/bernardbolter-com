@@ -341,6 +341,14 @@ async function main() {
     { column: 'artworks_id', refTable: 'artworks' },
   ])
 
+  // Payload stores hasMany relationships nested in Artist arrays on artists_rels
+  // (paths like bioTimelineEntries.linkedArtworkSlugs). Missing this table breaks
+  // every depth>0 artists query — including homepage catalogue loads.
+  await createRelsTable(pool, 'artists_rels', 'artists', 'integer', [
+    { column: 'artworks_id', refTable: 'artworks' },
+    { column: 'sessions_id', refTable: 'sessions' },
+  ])
+
   await createArrayTable(
     pool,
     'sessions_proposed_abstracts',
