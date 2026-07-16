@@ -12,6 +12,7 @@ export type ClipEmbeddingResponse = {
  * `Authorization: Bearer …` when set.
  *
  * The endpoint must return JSON: `{ "embedding": number[] }` with length 768.
+ * Body sends both `image_url` and `imageUrl` for local sidecar + legacy clients.
  */
 export async function generateClipEmbedding(imageUrl: string): Promise<number[]> {
   const endpoint = process.env.CLIP_EMBEDDING_URL
@@ -30,7 +31,7 @@ export async function generateClipEmbedding(imageUrl: string): Promise<number[]>
   const res = await fetch(endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ imageUrl }),
+    body: JSON.stringify({ image_url: imageUrl, imageUrl }),
   })
 
   if (!res.ok) {

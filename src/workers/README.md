@@ -33,6 +33,8 @@ node dist/workers/index.js
 | `FFPROBE_PATH` | `ffprobe` | Duration probe |
 | `WHISPER_URL` | `http://127.0.0.1:9000` | faster-whisper HTTP sidecar ([whisper-asr-webservice](https://github.com/ahmetoner/whisper-asr-webservice)) |
 | `MOONDREAM_URL` | `http://127.0.0.1:2020` | [Moondream Station](https://docs.moondream.ai/station/) — `POST /v1/query` JSON API |
+| `CLIP_EMBEDDING_URL` | — | Local CLIP sidecar — `POST /v1/embed/clip` (see `services/local-embeddings/`) |
+| `DINOV2_EMBEDDING_URL` | — | Local DINOv2 sidecar — `POST /v1/embed/dinov2` |
 | `FIELDNOTE_SCRATCH_DIR` | `{tmpdir}/fieldnotes` | Temp workspace for extracted WAV + keyframes |
 
 **Whisper sidecar:** `POST {WHISPER_URL}/asr?encode=true&task=transcribe&output=json` with multipart `audio_file`.
@@ -54,6 +56,22 @@ pm2 start /home/bernard/apps/moondream-venv/bin/moondream-station \
 ```
 
 Request: `POST {MOONDREAM_URL}/v1/query` with JSON `{ image_url, question, stream: false }`; response `{ answer: "tag1, tag2, ..." }`.
+
+### Local CLIP + DINOv2 sidecar
+
+See [`services/local-embeddings/README.md`](../../services/local-embeddings/README.md). Runs on `127.0.0.1:2030`, lazy-loads one model at a time.
+
+```bash
+# after venv + pip install -r services/local-embeddings/requirements.txt
+pm2 start ~/apps/embeddings-venv/bin/uvicorn \
+  --name embeddings \
+  --interpreter none \
+  -- \
+  --app-dir /home/bernard/apps/bernardbolter/services/local-embeddings \
+  app:app --host 127.0.0.1 --port 2030
+```
+
+Backfills (`npm run backfill:clip` / `backfill:dinov2`) use the local URLs when set; pass `--replicate` to force Replicate.
 
 Integration tests: set `HAS_FFMPEG=1` and `FFMPEG_SAMPLE_VIDEO=/path/to/clip.mp4` to run ffmpeg integration test locally.
 
