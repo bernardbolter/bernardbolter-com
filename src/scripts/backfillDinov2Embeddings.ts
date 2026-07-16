@@ -116,7 +116,7 @@ function parseArgs() {
 }
 
 async function upsertDinov2Metadata(pool: Pool, artworkId: number, generatedAt: string) {
-  const { rows } = await pool.query<{ id: number }>(
+  const { rows } = await pool.query<{ id: string }>(
     `SELECT id FROM artworks_embeddings
      WHERE _parent_id = $1 AND model = $2 LIMIT 1`,
     [artworkId, DINOV2_EMBEDDING_METADATA.model],
@@ -128,12 +128,15 @@ async function upsertDinov2Metadata(pool: Pool, artworkId: number, generatedAt: 
     [artworkId],
   )
   const nextOrder = (orderRows[0]?.max ?? -1) + 1
+  // Payload nested-row ids are varchar PKs (no serial default).
+  const rowId = crypto.randomUUID().replace(/-/g, '').slice(0, 24)
 
   await pool.query(
     `INSERT INTO artworks_embeddings
-      (_order, _parent_id, model, dimensions, pg_vector_column, generated_date, spec_url, short_description)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      (id, _order, _parent_id, model, dimensions, pg_vector_column, generated_date, spec_url, short_description)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
     [
+      rowId,
       nextOrder,
       artworkId,
       DINOV2_EMBEDDING_METADATA.model,
