@@ -110,13 +110,37 @@ def _load_image(image_url: str) -> Image.Image:
         raise HTTPException(status_code=400, detail=f"Failed to fetch image: {exc}") from exc
 
 
+def _as_feature_tensor(feats: object, *, prefer_cls: bool = False) -> torch.Tensor:
+    """Normalize CLIP/DINO outputs to a 2D float tensor [batch, dim]."""
+    if torch.is_tensor(feats):
+        return feats
+    if prefer_cls:
+        hidden = getattr(feats, "last_hidden_state", None)
+        if hidden is not None and torch.is_tensor(hidden):
+            return hidden[:, 0, :]
+    pooler = getattr(feats, "pooler_output", None)
+    if pooler is not None and torch.is_tensor(pooler):
+        return pooler
+    hidden = getattr(feats, "last_hidden_state", None)
+    if hidden is not None and torch.is_tensor(hidden):
+        return hidden[:, 0, :]
+    raise TypeError(f"Unexpected embedding output type: {type(feats)}")
+
+
 @torch.inference_mode()
 def _embed_clip(image: Image.Image) -> list[float]:
     _ensure_clip()
     assert _clip_model is not None and _clip_processor is not None
     inputs = _clip_processor(images=image, return_tensors="pt")
-    inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
-    feats = _clip_model.get_image_features(**inputs)
+    pixel_values = inputs["pixel_values"].to(DEVICE)
+    # Prefer the public helper; fall back to vision tower + projection when
+    # transformers returns a BaseModelOutputWithPooling instead of a Tensor.
+    feats = _clip_model.get_image_features(pixel_values=pixel_values)
+    if not torch.is_tensor(feats):
+        vision_out = _clip_model.vision_model(pixel_values=pixel_values)
+        pooled = vision_out.pooler_output
+        feats = _clip_model.visual_projection(pooled)
+    feats = _as_feature_tensor(feats)
     feats = feats / feats.norm(dim=-1, keepdim=True)
     vec = feats[0].detach().cpu().tolist()
     if len(vec) != CLIP_DIMS:
@@ -134,8 +158,7 @@ def _embed_dinov2(image: Image.Image) -> list[float]:
     inputs = _dino_processor(images=image, return_tensors="pt")
     inputs = {k: v.to(DEVICE) for k, v in inputs.items()}
     outputs = _dino_model(**inputs)
-    # CLS token
-    feats = outputs.last_hidden_state[:, 0, :]
+    feats = _as_feature_tensor(outputs, prefer_cls=True)
     feats = feats / feats.norm(dim=-1, keepdim=True)
     vec = feats[0].detach().cpu().tolist()
     if len(vec) != DINOV2_DIMS:
