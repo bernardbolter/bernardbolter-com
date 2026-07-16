@@ -15,8 +15,8 @@
  */
 import dotenv from 'dotenv'
 
-dotenv.config({ path: '.env' })
-dotenv.config({ path: '.env.local' })
+dotenv.config({ path: '.env', override: true })
+dotenv.config({ path: '.env.local', override: true })
 
 import { Pool } from 'pg'
 import Replicate from 'replicate'
