@@ -142,6 +142,8 @@ async function main() {
     failed,
     dryRun,
   })
+
+  process.exit(0)
 }
 
 main().catch((error) => {
