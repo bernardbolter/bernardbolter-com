@@ -2446,6 +2446,30 @@ h6 {
 
 /* Visible corpus sentence inside <main> — not nav/header/footer chrome */
 .corpus-archive-intro {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 0.85rem 1.5rem 0;
+  font-family: var(--font-barlow), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.corpus-archive-intro a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.corpus-archive-intro a:hover {
+  opacity: 0.75;
+}
+
+/* Visible corpus sentence inside <main> — not nav/header/footer chrome */
+.corpus-archive-intro {
   position: absolute;
   top: 0.85rem;
   left: 50%;
