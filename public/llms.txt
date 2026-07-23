@@ -1,5 +1,13 @@
 # Bernard Bolter — Artist Archive
 
+Bernard Bolter's visual art archive: transfer paintings, satellite image collages, and digital city works, with structured provenance and edition records.
+
+Machine-readable archive index: https://bernardbolter.com/api/corpus/index
+
+This data is offered openly for AI reasoning; attribution appreciated.
+
+---
+
 > A comprehensive archive of Bernard Bolter's visual art practice spanning
 > thirty years — transfer paintings, satellite image collages, and digital
 > city works. Records are structured by the artist, outside market validation
@@ -46,4 +54,4 @@ numbered original edition rather than a unique object or a print run).
 
 ## Optional
 
-- [Corpus endpoint](https://bernardbolter.com/api/corpus): Machine-readable JSON export of the full archive for AI agent traversal. Use `?format=index` for a lightweight slug/title index, or `?series=[slug]` to filter by series.
+- [Corpus index](https://bernardbolter.com/api/corpus/index): Preferred machine-readable entry point — lightweight slug/title/gist index of the full published archive. Filter with `?series=[slug]`, year range, or reasoning status.

@@ -69,7 +69,7 @@ describe('buildCorpusIndexResponse', () => {
         gist: null,
         url: `${baseUrl}/basel-switzerland`,
         visionUrl: `${baseUrl}/basel-switzerland/vision`,
-        recordUrl: `${baseUrl}/basel-switzerland/record`,
+        recordUrl: `${baseUrl}/api/corpus/basel-switzerland`,
         sessionsUrl: `${baseUrl}/sessions?artwork=basel-switzerland`,
       },
     ])

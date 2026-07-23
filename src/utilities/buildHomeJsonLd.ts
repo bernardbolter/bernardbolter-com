@@ -48,6 +48,6 @@ export function buildHomeJsonLd(
       { '@type': 'WebPage', name: 'Contact', url: `${baseUrl}/contact` },
     ],
     'artism:archiveVersion': '1.0',
-    'artism:corpusEndpoint': `${baseUrl}/api/corpus`,
+    'artism:corpusEndpoint': `${baseUrl}/api/corpus/index`,
   }
 }

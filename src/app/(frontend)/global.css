@@ -2420,3 +2420,24 @@ h6 {
 .still-being-written__historical-link:hover .bio__masonry-caption {
   opacity: 0.75;
 }
+
+/* Homepage machine-readable corpus entry (server-rendered for crawlers) */
+.corpus-discovery-link {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 1.25rem 1.5rem 2rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.corpus-discovery-link a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.corpus-discovery-link a:hover {
+  opacity: 0.75;
+}

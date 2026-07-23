@@ -106,7 +106,7 @@ export function buildCorpusIndexResponse(
         gist: corpusGistFromArtwork(artwork),
         url: `${baseUrl}/${artwork.slug}`,
         visionUrl: `${baseUrl}/${artwork.slug}/vision`,
-        recordUrl: `${baseUrl}/${artwork.slug}/record`,
+        recordUrl: `${baseUrl}/api/corpus/${artwork.slug}`,
         sessionsUrl: `${baseUrl}/sessions?artwork=${encodeURIComponent(artwork.slug)}`,
       }
     }),

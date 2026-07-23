@@ -142,7 +142,7 @@ export function buildArtworkJsonLd(
   options: BuildArtworkJsonLdOptions = {},
 ): Record<string, unknown> {
   const baseUrl = options.baseUrl ?? getSiteBaseUrl()
-  const slug = artwork.slug
+  const slug = artwork.slug?.trim()
   const url = `${baseUrl}/${slug}`
   const description = artworkDescription(artwork)
   const additionalProperty = buildAdditionalProperty(artwork, baseUrl)
@@ -225,8 +225,12 @@ export function buildArtworkJsonLd(
 
   if (additionalProperty.length) doc.additionalProperty = additionalProperty
 
-  if (artworkHasEmbeddingMetadata(artwork) && artwork.slug?.trim()) {
-    doc['artism:visionPageUrl'] = visionPageUrl(baseUrl, artwork.slug.trim())
+  if (slug) {
+    doc['artism:recordUrl'] = `${baseUrl}/api/corpus/${slug}`
+  }
+
+  if (artworkHasEmbeddingMetadata(artwork) && slug) {
+    doc['artism:visionPageUrl'] = visionPageUrl(baseUrl, slug)
   }
 
   applyArtworkJsonLdExtensions(doc, artwork, baseUrl)

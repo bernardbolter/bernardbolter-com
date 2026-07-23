@@ -22,7 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${baseUrl}/${artwork.slug}`,
     lastModified: artwork.updatedAt ? new Date(artwork.updatedAt) : undefined,
     priority: 0.9,
-    changeFrequency: 'monthly',
+    changeFrequency: 'weekly',
   }))
 
   const seriesRoutes: MetadataRoute.Sitemap = series.map((entry) => ({

@@ -49,10 +49,11 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
     return doc
   }
 
-  const paths = ['/', '/corpus', '/sessions', '/api/corpus']
+  const paths = ['/', '/corpus', '/sessions', '/api/corpus', '/api/corpus/index']
   if (typeof doc.slug === 'string' && doc.slug.trim()) {
-    const path = `/${doc.slug.trim()}`
-    paths.push(path, `${path}/vision`, `${path}/record`)
+    const slug = doc.slug.trim()
+    const path = `/${slug}`
+    paths.push(path, `${path}/vision`, `${path}/record`, `/api/corpus/${slug}`)
   }
   revalidateArchive({ tags: ['artworks', 'corpus'], paths })
   if (!process.env.CLIP_EMBEDDING_URL) {

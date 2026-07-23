@@ -1,12 +1,21 @@
 import type { MetadataRoute } from 'next'
 
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { corpusIndexUrl } from '@/lib/seo/corpusDiscovery'
+
+function isProductionRobotsHost(): boolean {
+  const vercelEnv = process.env.VERCEL_ENV
+  // Preview/dev deploys on Vercel must stay closed.
+  if (vercelEnv === 'preview' || vercelEnv === 'development') return false
+  if (vercelEnv === 'production') return true
+  // Self-hosted production (Caddy, etc.) typically has no VERCEL_ENV.
+  return process.env.NODE_ENV === 'production'
+}
 
 export function getRobotsConfig(): MetadataRoute.Robots {
-  const isProduction = process.env.VERCEL_ENV === 'production'
   const baseUrl = getSiteBaseUrl()
 
-  if (isProduction) {
+  if (isProductionRobotsHost()) {
     return {
       rules: [
         { userAgent: '*', allow: '/' },
@@ -27,6 +36,15 @@ export function getRobotsConfig(): MetadataRoute.Robots {
 
 export function robotsConfigToText(config: MetadataRoute.Robots): string {
   const lines: string[] = []
+
+  if (isProductionRobotsHost()) {
+    lines.push(
+      '# AI crawlers: preferred machine-readable entry point is',
+      `# ${corpusIndexUrl()}`,
+      '',
+    )
+  }
+
   const rules = Array.isArray(config.rules) ? config.rules : [config.rules]
 
   for (const rule of rules) {

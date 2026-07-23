@@ -37,7 +37,7 @@ describe('buildHomeJsonLd', () => {
       '@type': 'Person',
       '@id': 'https://bernardbolter.com/bio#person',
     })
-    expect(jsonLd['artism:corpusEndpoint']).toBe('https://bernardbolter.com/api/corpus')
+    expect(jsonLd['artism:corpusEndpoint']).toBe('https://bernardbolter.com/api/corpus/index')
   })
 })
 
@@ -57,6 +57,7 @@ describe('buildArtworkJsonLd', () => {
     })
     expect(jsonLd['@id']).toBe('https://bernardbolter.com/gates-iii')
     expect(jsonLd.creator).toEqual({ '@id': 'https://bernardbolter.com/bio#person' })
+    expect(jsonLd['artism:recordUrl']).toBe('https://bernardbolter.com/api/corpus/gates-iii')
     expect(jsonLd['artism:visionPageUrl']).toBe('https://bernardbolter.com/gates-iii/vision')
 
     const additionalProperty = (jsonLd.additionalProperty ?? []) as Array<Record<string, unknown>>

@@ -56,10 +56,14 @@ import { PrintSetConfig } from './globals/PrintSetConfig'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
+import { getCorsOrigins } from './lib/cors'
 import { resolveMediaStorageUrl } from './lib/studio/fieldNoteLocalPaths'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+/** Origins allowed to call public REST/corpus APIs (ACH site, local ACH, etc.). */
+const corsOrigins = getCorsOrigins()
 
 const databaseUrl = process.env.DATABASE_URL
 
@@ -151,6 +155,10 @@ export default buildConfig({
     Sessions,
   ],
   globals: [PrintSetConfig, ArtOfficialSettings],
+  // Public catalogue reads for external sites (e.g. A Colorful History).
+  // Access control still limits anonymous clients to published artist-catalogued works.
+  cors: corsOrigins.length > 0 ? corsOrigins : undefined,
+  csrf: corsOrigins.length > 0 ? corsOrigins : undefined,
   editor: lexicalEditor(),
   secret: payloadSecret,
   typescript: {

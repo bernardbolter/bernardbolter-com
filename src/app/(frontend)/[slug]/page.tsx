@@ -13,6 +13,7 @@ import {
   getPublishedArtworkSlugs,
 } from '@/lib/payload/artworkPage'
 import { getArtistRecord } from '@/lib/payload/siteDocuments'
+import { corpusAlternateTypes, corpusRecordUrl } from '@/lib/seo/corpusDiscovery'
 
 export const revalidate = 3600
 
@@ -47,7 +48,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: seo.title,
     description: seo.description,
-    alternates: { canonical },
+    alternates: {
+      canonical,
+      ...corpusAlternateTypes(corpusRecordUrl(slug, base)),
+    },
     openGraph: {
       title: seo.title,
       description: seo.description,

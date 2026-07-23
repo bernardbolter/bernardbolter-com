@@ -9,6 +9,7 @@ import { getPerson } from '@/lib/payload/person'
 import { getSeriesBySlug } from '@/lib/payload/seriesPage'
 import { getPublishedSeriesSlugs } from '@/lib/payload/staticParams'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
+import { corpusAlternateTypes, corpusIndexUrl } from '@/lib/seo/corpusDiscovery'
 import { generateSeriesJsonLd } from '@/utilities/generateSeriesJsonLd'
 
 export const revalidate = 3600
@@ -36,7 +37,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: series.name,
     description: description || `${series.name} — artworks by Bernard Bolter.`,
-    alternates: { canonical: `/series/${slug}` },
+    alternates: {
+      canonical: `/series/${slug}`,
+      ...corpusAlternateTypes(corpusIndexUrl()),
+    },
   }
 }
 
