@@ -2421,23 +2421,25 @@ h6 {
   opacity: 0.75;
 }
 
-/* Homepage machine-readable corpus entry (server-rendered for crawlers) */
+/* Server-rendered corpus entry for HTML crawlers — optically hidden; keep real <a> in DOM */
 .corpus-discovery-link {
-  position: relative;
-  z-index: 1;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
   margin: 0;
-  padding: 1.25rem 1.5rem 2rem;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  color: var(--text-muted);
+  padding: 0;
+  max-width: 1px;
+  max-height: 1px;
+  overflow: hidden;
+  font-size: 1px;
+  line-height: 1;
+  color: transparent;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .corpus-discovery-link a {
   color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-}
-
-.corpus-discovery-link a:hover {
-  opacity: 0.75;
+  text-decoration: none;
 }
