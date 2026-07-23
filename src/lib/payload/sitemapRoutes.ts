@@ -19,7 +19,7 @@ export type SitemapEntries = {
 
 const PAGE_SIZE = 100
 
-async function findAllPublished<T extends { slug?: string | null }>(
+async function paginatePublished<T extends { slug?: string | null }>(
   collection: 'artworks' | 'series' | 'events',
   where: Where,
 ): Promise<T[]> {
@@ -37,7 +37,11 @@ async function findAllPublished<T extends { slug?: string | null }>(
       depth: 0,
       overrideAccess: true,
     })
-    docs.push(...(result.docs as T[]).filter((doc) => isPublicCatalogueSlug(doc.slug)))
+    for (const doc of result.docs) {
+      if (isPublicCatalogueSlug(doc.slug)) {
+        docs.push(doc as unknown as T)
+      }
+    }
     hasNextPage = result.hasNextPage
     page += 1
   }
@@ -49,9 +53,9 @@ export async function fetchSitemapEntries(): Promise<SitemapEntries> {
   try {
     return await withDbRetry(async () => {
       const [artworks, series, events] = await Promise.all([
-        findAllPublished<Artwork>('artworks', { status: { equals: 'published' } }),
-        findAllPublished<Series>('series', { status: { equals: 'published' } }),
-        findAllPublished<Event>('events', {
+        paginatePublished<Artwork>('artworks', { status: { equals: 'published' } }),
+        paginatePublished<Series>('series', { status: { equals: 'published' } }),
+        paginatePublished<Event>('events', {
           and: [{ status: { equals: 'published' } }, { hasPage: { equals: true } }],
         }),
       ])
