@@ -2421,10 +2421,10 @@ h6 {
   opacity: 0.75;
 }
 
-/* Server-rendered corpus entry for HTML crawlers — optically hidden; keep real <a> in DOM */
+/* Optically hidden crawler entry — keep early in homepage DOM; do not use display:none */
 .corpus-discovery-link {
-  position: fixed;
-  bottom: 0;
+  position: absolute;
+  top: 0;
   left: 0;
   z-index: 0;
   margin: 0;

@@ -29,6 +29,7 @@ describe('robots production gate', () => {
       expect.arrayContaining([
         { userAgent: 'GPTBot', allow: '/' },
         { userAgent: 'anthropic-ai', allow: '/' },
+        { userAgent: 'ClaudeBot', allow: '/' },
       ]),
     )
 

@@ -14,8 +14,9 @@ export const metadata: Metadata = {
 export default function Page() {
   return (
     <>
-      <HomePage />
+      {/* First in page HTML (optically hidden) — survives truncation on the heavy homepage */}
       <CorpusDiscoveryLink />
+      <HomePage />
     </>
   )
 }

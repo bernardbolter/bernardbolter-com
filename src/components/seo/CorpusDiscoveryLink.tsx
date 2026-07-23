@@ -1,4 +1,4 @@
-/** Server-rendered homepage link for crawlers that only follow visible `<a>` tags. */
+/** Server-rendered early in homepage HTML so truncating fetchers still see the corpus URL. */
 export function CorpusDiscoveryLink() {
   return (
     <p className="corpus-discovery-link">
