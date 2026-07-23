@@ -42,8 +42,43 @@ export const Sessions: CollectionConfig = {
         { label: 'Episode storyboard', value: 'episode-storyboard' },
         { label: 'Episode assembly', value: 'episode-assembly' },
         { label: 'Event enrichment', value: 'event-enrichment' },
+        { label: 'Corpus revisit', value: 'corpus-revisit' },
       ],
       admin: { position: 'sidebar' },
+    },
+    {
+      name: 'revisitOf',
+      type: 'relationship',
+      relationTo: 'sessions',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Set only when sessionType is corpus-revisit. Points to the original session being reopened in light of new corpus context.',
+        condition: (data) => data?.sessionType === 'corpus-revisit',
+      },
+    },
+    {
+      name: 'linchpinFlag',
+      type: 'group',
+      admin: {
+        description:
+          'Set when a session is doing double duty — cataloguing one artwork while surfacing a structural pattern across the corpus. Signals the dialogue agent to pace more slowly and not default to wrap-up once standard fields are checked off.',
+      },
+      fields: [
+        {
+          name: 'isLinchpin',
+          type: 'checkbox',
+          defaultValue: false,
+        },
+        {
+          name: 'note',
+          type: 'textarea',
+          admin: {
+            description: 'What corpus-level pattern this session surfaced, briefly.',
+            condition: (_, siblingData) => siblingData?.isLinchpin === true,
+          },
+        },
+      ],
     },
     {
       name: 'status',

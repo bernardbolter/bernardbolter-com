@@ -222,6 +222,8 @@ export async function POST(request: Request) {
         artworkRecordId,
         eventRecordId,
         weakPhases: session.weakPhases,
+        isLinchpin: session.linchpinFlag?.isLinchpin === true,
+        linchpinNote: session.linchpinFlag?.note,
         isRefinement,
         preUpload: {
           preUploadStep: session.preUploadStep,

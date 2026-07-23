@@ -10,10 +10,16 @@ import { SESSION_TYPES, type SessionType } from '@/lib/artOfficial/routing'
 const LABELS: Record<string, string> = {
   'artwork-cataloguing': 'Artwork cataloguing',
   'triptych-cataloguing': 'Triptych cataloguing',
+  'connected-reading': 'Connected reading',
   'artist-statement': 'Artist statement',
   biography: 'Biography',
   onboarding: 'Onboarding',
+  'annual-snapshot': 'Annual snapshot',
   sequencing: 'Sequencing',
+  'episode-storyboard': 'Episode storyboard',
+  'episode-assembly': 'Episode assembly',
+  'event-enrichment': 'Event enrichment',
+  'corpus-revisit': 'Corpus revisit',
 }
 
 type ArtworkResult = {

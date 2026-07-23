@@ -58,6 +58,8 @@ export type BuildSystemPromptArgs = {
   artworkRecordId?: number
   eventRecordId?: number
   weakPhases?: string[] | null
+  isLinchpin?: boolean
+  linchpinNote?: string | null
   isRefinement?: boolean
   preUpload?: PreUploadSessionState
   currentPhase?: SessionPhase
@@ -123,7 +125,7 @@ export async function buildSystemPromptParts(
     cachedPrefixParts.push(DIALOGUE_RULES, buildFieldRoadmap(careerStage))
   }
 
-  if (sessionType === 'artwork-cataloguing') {
+  if (sessionType === 'artwork-cataloguing' || sessionType === 'corpus-revisit') {
     const seriesRecords = await listSeriesWithParents({ payload, user })
     cachedPrefixParts.push(buildSeriesSlugPromptBlock(seriesRecords))
     cachedPrefixParts.push(
@@ -165,13 +167,21 @@ export async function buildSystemPromptParts(
       ? [buildEventSessionTypeOverride(eventPhase)]
       : [sessionTypeOverride(sessionType)]
 
+  if (args.isLinchpin) {
+    dynamicParts.push(
+      `LINCHPIN SESSION\n\nThis session is flagged as a linchpin${
+        args.linchpinNote?.trim() ? `: ${args.linchpinNote.trim()}` : ''
+      }.\nPace slowly. Do not default to wrap-up once standard catalogue fields are checked off — keep room for corpus-level pattern, companion works (relatedWorksAtMaking), series hinges, and bio/statement abstracts.`,
+    )
+  }
+
   if (sessionType === 'event-enrichment') {
     const activeTools = resolveToolsForSession(sessionType, eventPhase).map((tool) => tool.name)
     dynamicParts.push(
       `ACTIVE TOOLS THIS SESSION (only these are callable):\n${activeTools.map((name) => `- ${name}`).join('\n')}`,
     )
   }
-  if (sessionType === 'artwork-cataloguing') {
+  if (sessionType === 'artwork-cataloguing' || sessionType === 'corpus-revisit') {
     if (artworkRecordId) {
       // Refinement mode: inject existing artwork context instead of pre-upload state
       const refinementBlock = await buildArtworkRefinementBlock({ payload, user, artworkId: artworkRecordId })

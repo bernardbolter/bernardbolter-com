@@ -931,7 +931,7 @@ export const Artworks: CollectionConfig = {
             },
             {
               name: 'directInspiration',
-              type: 'text',
+              type: 'textarea',
               localized: true,
               admin: { description: 'Immediate seed (image, detail, memory) — not full art-historical context.' },
             },
@@ -1587,6 +1587,96 @@ export const Artworks: CollectionConfig = {
                   admin: {
                     description:
                       'Short public-facing description. Required when relatedArtwork is empty; optional supplement when linked.',
+                  },
+                },
+              ],
+            },
+            {
+              name: 'relatedWorksAtMaking',
+              type: 'array',
+              labels: {
+                singular: 'Related work at making',
+                plural: 'Related works at making',
+              },
+              access: publicReadStaffWriteAccess,
+              admin: {
+                description:
+                  'Artist-declared ties to other works based on proximity at the moment of making — not visual similarity (CLIP) and not shared tags. E.g. a companion piece made the same year, or a different-series work made on the same trip.',
+              },
+              fields: [
+                {
+                  name: 'relatedArtwork',
+                  type: 'relationship',
+                  relationTo: 'artworks',
+                  required: true,
+                },
+                {
+                  name: 'relationType',
+                  type: 'select',
+                  required: true,
+                  options: [
+                    { label: 'Paired — companion, same series, similar instinct', value: 'paired' },
+                    {
+                      label: 'Concurrent — parallel making, different series, same trip/period',
+                      value: 'concurrent',
+                    },
+                    {
+                      label: 'Predecessor — direct chronological link earlier in the body of work',
+                      value: 'predecessor',
+                    },
+                    {
+                      label: 'Successor — direct chronological link later in the body of work',
+                      value: 'successor',
+                    },
+                  ],
+                  admin: {
+                    description:
+                      '"paired" = companion work, same series, similar instinct. "concurrent" = made in parallel, different series, same trip/period. "predecessor"/"successor" = direct chronological link within a body of work.',
+                  },
+                },
+                {
+                  name: 'note',
+                  type: 'text',
+                  admin: { description: 'Optional short artist note on the nature of the tie.' },
+                },
+                {
+                  name: 'sourceSessionRef',
+                  type: 'relationship',
+                  relationTo: 'sessions',
+                },
+              ],
+            },
+            {
+              name: 'seriesHingeMarker',
+              type: 'group',
+              access: publicReadStaffWriteAccess,
+              admin: {
+                description:
+                  'Flags a work that marks a series ending or beginning — a structural hinge point in the practice, not just a normal series member.',
+              },
+              fields: [
+                {
+                  name: 'isHinge',
+                  type: 'checkbox',
+                  defaultValue: false,
+                },
+                {
+                  name: 'hingeType',
+                  type: 'select',
+                  options: [
+                    { label: 'Series end', value: 'series-end' },
+                    { label: 'Series start', value: 'series-start' },
+                    { label: 'Both', value: 'both' },
+                  ],
+                  admin: {
+                    condition: (_, siblingData) => siblingData?.isHinge === true,
+                  },
+                },
+                {
+                  name: 'note',
+                  type: 'textarea',
+                  admin: {
+                    condition: (_, siblingData) => siblingData?.isHinge === true,
                   },
                 },
               ],

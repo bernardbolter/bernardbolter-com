@@ -171,6 +171,38 @@ describe('buildArtworkJsonLd', () => {
     expect(jsonLd).not.toHaveProperty('clipEmbedding')
   })
 
+  it('emits relatedWorksAtMaking and seriesHingeMarker as additionalProperty', () => {
+    const jsonLd = buildArtworkJsonLd(
+      minimalArtwork({
+        seriesHingeMarker: {
+          isHinge: true,
+          hingeType: 'series-end',
+          note: 'Last Breaking Down Art work before DCS.',
+        },
+        relatedWorksAtMaking: [
+          {
+            relationType: 'paired',
+            note: 'Companion instinct.',
+            relatedArtwork: {
+              id: 2,
+              slug: 'skulptur-projekte-munster-2007',
+              title: 'Skulptur Projekte Münster 2007',
+            } as Artwork,
+          },
+        ],
+      }),
+      null,
+      { baseUrl: 'https://bernardbolter.com' },
+    )
+
+    const props = jsonLd.additionalProperty as Array<Record<string, unknown>>
+    const hinge = props.find((row) => row.propertyID === 'artism:seriesHingeMarker')
+    const related = props.find((row) => row.propertyID === 'artism:relatedWorksAtMaking')
+    expect(hinge?.value).toContain('series-end')
+    expect(related?.value).toContain('paired')
+    expect(related?.value).toContain('skulptur-projekte-munster-2007')
+  })
+
   it('emits subjectOf references for hasPage events only', () => {
     const jsonLd = buildArtworkJsonLd(
       minimalArtwork({

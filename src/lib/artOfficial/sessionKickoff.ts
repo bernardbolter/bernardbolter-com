@@ -135,6 +135,19 @@ const KICKOFFS: Record<SessionType | 'artwork-cataloguing-refinement', SessionKi
     message:
       "I'd like to do an annual practice snapshot. Please ask what year we're reflecting on and what changed.",
   },
+  'corpus-revisit': {
+    title: 'Corpus revisit',
+    intro:
+      'Reopen an earlier session in light of new corpus context. This creates a new Session record linked via revisitOf — it does not overwrite the original transcript.',
+    topics: [
+      'Which prior session or artwork thread to reopen',
+      'What new corpus context changes the earlier reading',
+      'Whether this revisit is also a linchpin (structural pattern across works)',
+    ],
+    buttonLabel: 'Begin corpus revisit',
+    message:
+      "I'd like to reopen an earlier session with new corpus context. Ask which session or artwork we're revisiting, and what changed since then.",
+  },
 }
 
 export function getSessionKickoff(

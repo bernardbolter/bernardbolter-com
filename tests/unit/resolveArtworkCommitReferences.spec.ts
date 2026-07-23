@@ -95,4 +95,42 @@ describe('resolveArtworkCommitReferences', () => {
       ),
     ).rejects.toThrow(/not found/i)
   })
+
+  it('registers mediumOther when medium is other and stores the custom slug', async () => {
+    const find = vi.fn().mockResolvedValue({ docs: [{ id: 7, slug: 'a-colorful-history' }] })
+    let customMediums: Array<{ value: string; label: string }> = []
+    const findGlobal = vi.fn().mockImplementation(async () => ({ customMediums }))
+    const updateGlobal = vi.fn().mockImplementation(async ({ data }) => {
+      customMediums = data.customMediums ?? []
+      return {}
+    })
+    const payload = {
+      find,
+      findByID: vi.fn().mockResolvedValue({ id: 7, slug: 'a-colorful-history' }),
+      findGlobal,
+      updateGlobal,
+      db: {},
+    } as never
+
+    const out = await resolveArtworkCommitReferences(
+      { payload, user: {} as never, session: { artistId: 2 } as never },
+      {
+        title: 'Gate',
+        series: 'a-colorful-history',
+        medium: 'other',
+        mediumOther: 'Encaustic on panel',
+      },
+    )
+
+    expect(updateGlobal).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slug: 'art-official-settings',
+        data: {
+          customMediums: [{ value: 'encaustic-on-panel', label: 'Encaustic on panel' }],
+        },
+      }),
+    )
+    expect(out.medium).toBe('encaustic-on-panel')
+    expect(out.mediumOther).toBeUndefined()
+  })
 })

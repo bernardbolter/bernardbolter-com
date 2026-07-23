@@ -10,6 +10,7 @@ export type SessionType =
   | 'episode-storyboard'
   | 'episode-assembly'
   | 'event-enrichment'
+  | 'corpus-revisit'
 
 export const SESSION_TYPES: SessionType[] = [
   'artwork-cataloguing',
@@ -23,10 +24,11 @@ export const SESSION_TYPES: SessionType[] = [
   'episode-storyboard',
   'episode-assembly',
   'event-enrichment',
+  'corpus-revisit',
 ]
 
 export function requiresArtwork(t: SessionType): boolean {
-  return t === 'artwork-cataloguing'
+  return t === 'artwork-cataloguing' || t === 'corpus-revisit'
 }
 
 export function requiresTriptych(t: SessionType): boolean {
@@ -70,6 +72,8 @@ export function commitTarget(t: SessionType): CommitTarget {
     case 'onboarding':
     case 'connected-reading':
       return { kind: 'no-record-write' }
+    case 'corpus-revisit':
+      return { kind: 'create-artwork' }
     default: {
       const _exhaustive: never = t
       return _exhaustive

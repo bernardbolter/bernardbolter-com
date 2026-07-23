@@ -3,7 +3,7 @@ import type { Payload } from 'payload'
 import type { Session, User } from '@/payload-types'
 
 import { normalizeSizeTier } from './inferSizeTier'
-import { getCustomMediums } from './artworkMediumOptions'
+import { getCustomMediums, registerCustomMedium } from './artworkMediumOptions'
 import { normalizeArtworkSelectFields } from './normalizeArtworkSelects'
 import { findSeriesIdBySlug, seriesNotFoundMessage } from './seriesSlugs'
 
@@ -105,6 +105,97 @@ async function resolveTagFields(
       delete patch[field]
     }
   }
+}
+
+async function resolveArtworkIdBySlugOrId(
+  ctx: CommitContext,
+  value: unknown,
+): Promise<number | null> {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id: unknown }).id
+    return typeof id === 'number' ? id : null
+  }
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) return Number(trimmed)
+
+  const result = await ctx.payload.find({
+    collection: 'artworks',
+    where: { slug: { equals: trimmed } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user: ctx.user,
+  })
+  const doc = result.docs[0]
+  return typeof doc?.id === 'number' ? doc.id : null
+}
+
+async function resolveSessionIdByRef(
+  ctx: CommitContext,
+  value: unknown,
+): Promise<number | null> {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id: unknown }).id
+    return typeof id === 'number' ? id : null
+  }
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) return Number(trimmed)
+
+  const result = await ctx.payload.find({
+    collection: 'sessions',
+    where: { sessionId: { equals: trimmed } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user: ctx.user,
+  })
+  const doc = result.docs[0]
+  return typeof doc?.id === 'number' ? doc.id : null
+}
+
+/** Resolve relatedArtwork / sourceSessionRef slugs → IDs on relatedWorksAtMaking rows. */
+async function resolveRelatedWorksAtMaking(
+  ctx: CommitContext,
+  patch: Record<string, unknown>,
+): Promise<void> {
+  const raw = patch.relatedWorksAtMaking
+  if (!Array.isArray(raw) || raw.length === 0) return
+
+  const next: Array<Record<string, unknown>> = []
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue
+    const entry = { ...(row as Record<string, unknown>) }
+    const artworkId = await resolveArtworkIdBySlugOrId(ctx, entry.relatedArtwork)
+    if (artworkId == null) continue
+    entry.relatedArtwork = artworkId
+
+    if (entry.sourceSessionRef != null && entry.sourceSessionRef !== '') {
+      const sessionId = await resolveSessionIdByRef(ctx, entry.sourceSessionRef)
+      if (sessionId != null) entry.sourceSessionRef = sessionId
+      else delete entry.sourceSessionRef
+    }
+
+    const relationType = entry.relationType
+    if (
+      relationType !== 'paired' &&
+      relationType !== 'concurrent' &&
+      relationType !== 'predecessor' &&
+      relationType !== 'successor'
+    ) {
+      continue
+    }
+
+    next.push(entry)
+  }
+
+  if (next.length) patch.relatedWorksAtMaking = next
+  else delete patch.relatedWorksAtMaking
 }
 
 function slugifyTitle(input: string): string {
@@ -278,6 +369,7 @@ export async function resolveArtworkCommitReferences(
   ensureSlug(out)
   await resolveSeriesField(ctx, out)
   await resolveTagFields(ctx, out)
+  await resolveRelatedWorksAtMaking(ctx, out)
   if (out.ach) {
     await resolveNestedImageCaptureTypes(ctx, out.ach, 'ach')
   }
@@ -288,9 +380,48 @@ export async function resolveArtworkCommitReferences(
   if (stagedTier) out.sizeTier = stagedTier
   else delete out.sizeTier
 
+  await resolveMediumOtherAtCommit(ctx, out)
+
   const customMediums = await getCustomMediums(ctx.payload)
   return normalizeArtworkSelectFields(out, {
     seriesSlug,
     extraMediumValues: customMediums.map((row) => row.value),
   })
+}
+
+/**
+ * When the artist’s medium isn’t in the built-in list, dialogue stages
+ * `medium: "other"` + `mediumOther: "<label>"`. Register that label (same path as
+ * Quick Upload) and store the reusable slug on `medium` before select normalize.
+ */
+async function resolveMediumOtherAtCommit(
+  ctx: CommitContext,
+  out: Record<string, unknown>,
+): Promise<void> {
+  const label = typeof out.mediumOther === 'string' ? out.mediumOther.trim() : ''
+  if (!label) return
+
+  const mediumRaw = typeof out.medium === 'string' ? out.medium.trim() : ''
+  // Only register when medium is explicitly "other", missing, or still the sentinel.
+  // If a real built-in/custom slug was already staged, drop the orphan mediumOther.
+  if (mediumRaw && mediumRaw !== 'other') {
+    const existing = await getCustomMediums(ctx.payload)
+    const known = new Set([
+      'acrylic-photo-transfer-on-canvas',
+      'acrylic-on-canvas',
+      'mixed-media-on-canvas',
+      'photo-collage',
+      'video',
+      'digital',
+      ...existing.map((row) => row.value),
+    ])
+    if (known.has(mediumRaw)) {
+      delete out.mediumOther
+      return
+    }
+  }
+
+  const registered = await registerCustomMedium(ctx.payload, label)
+  out.medium = registered.value
+  delete out.mediumOther
 }

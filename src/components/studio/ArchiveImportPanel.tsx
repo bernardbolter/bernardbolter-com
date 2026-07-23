@@ -333,7 +333,8 @@ export function ArchiveImportPanel() {
         <h3>Artwork fields (Art/Official)</h3>
         <p className="studio-archive__hint">
           Same field allowlist as Art/Official dialogue. Set{' '}
-          <code>reasoningStatus</code> to <code>complete</code> when a stub is finished.
+          <code>reasoningStatus</code> to <code>complete</code> when a stub is finished —
+          this only updates that artwork; it does not confirm other collections.
         </p>
         <textarea
           className="studio-archive__textarea"
@@ -361,9 +362,10 @@ export function ArchiveImportPanel() {
         <h3>Multi-collection envelope</h3>
         <p className="studio-archive__hint">
           One paste routes to artworks + bio timeline + statement throughlines. Writes succeed or
-          fail independently. Append is idempotent (same session + text skips duplicates). Put{' '}
-          <code>reasoningStatus: complete</code> in its own <code>set</code> write after other
-          artwork fields.
+          fail independently — not atomic across collections. Append is idempotent (same session +
+          text skips duplicates). Prefer <code>reasoningStatus: complete</code> in its own{' '}
+          <code>set</code> write after other artwork fields; a bundled artworks write still commits
+          other fields first, but complete does not wait for bio-timeline or throughline writes.
         </p>
         <textarea
           className="studio-archive__textarea"

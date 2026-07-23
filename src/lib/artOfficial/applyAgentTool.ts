@@ -305,7 +305,14 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
         const sessionData: Record<string, unknown> =
           args.field === 'preUploadStep'
             ? { preUploadStep: Number(args.value) }
-            : { [args.field]: args.value }
+            : args.field === 'linchpinFlag'
+              ? {
+                  linchpinFlag: {
+                    isLinchpin: true,
+                    note: args.value.trim(),
+                  },
+                }
+              : { [args.field]: args.value }
         if (args.field === 'preUploadStep') {
           const requested = Number(args.value)
           const current = clampPreUploadStep(session.preUploadStep ?? 1)
@@ -316,6 +323,11 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           session.firstImpression = args.value
         } else if (args.field === 'highlightedMediaSlot') {
           session.highlightedMediaSlot = args.value
+        } else if (args.field === 'linchpinFlag') {
+          session.linchpinFlag = {
+            isLinchpin: true,
+            note: args.value.trim(),
+          }
         }
         await payload.update({
           collection: 'sessions',

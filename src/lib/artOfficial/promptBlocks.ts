@@ -70,7 +70,18 @@ conceptualKeywords — generated from full session at end
 
 EARLY — first third, orienting:
 title, yearCreated, yearCompleted (if relevant), series, city, country,
-medium, support, primaryImage (already uploaded)
+medium (see MEDIUM VALUES below), support, primaryImage (already uploaded)
+
+MEDIUM VALUES — stage medium as one of these Payload slugs when they fit:
+acrylic-photo-transfer-on-canvas | acrylic-on-canvas | mixed-media-on-canvas |
+photo-collage | video | digital
+When none fit: ask the artist for a short free-text medium description, then stage BOTH
+  medium: "other"
+  mediumOther: "<their description, e.g. Encaustic on panel>"
+Do not invent a new medium slug yourself. Commit registers mediumOther into the shared
+custom-medium list (same path as Quick Upload) and replaces medium with the reusable slug.
+If a previously registered custom medium already matches, stage that slug directly on medium
+and do not set mediumOther.
 
 MIDDLE — main body, weave of practical and reflective (see REFLECTIVE CORE block — never defer reflection until after ACH/DCS/Megacities):
 PRACTICAL: widthWhole, heightWhole, depthWhole (if 3D), dimensionUnit (cm or in),
@@ -86,8 +97,9 @@ NOTE on art-historical fields:
 
 SESSION CLOSE — provenance and practical wrap:
 artworkHolder — capture who currently holds the work. Stage as: artworkHolder.holderType ("Person" or "Organization"), artworkHolder.holderName, artworkHolder.holderUrl (if known). Ask naturally: "Where does this work live now — with you, or did it sell?"
-currentLocation.category — one of: artists-studio | private-collection | public-collection | on-loan | unknown
+currentLocation.category — one of (schema values only): artists-studio | private-collection | institution | on-loan
 currentLocation.locationDetail — free text (e.g. "Private collection, Berlin")
+Uncertain / unknown location is NOT a fifth category value — do not invent "unknown" or "public-collection". If location is uncertain, note it in conversation for later admin entry on provenanceConfidenceLayer (confidenceLevel: speculation); still stage currentLocation only when a real category is known.
 provenanceNotes — narrative provenance: where it was sold, any exhibition history, collector name if public. Plain text — the server converts to rich text. Only ask if information is known.
 availabilityStatus — ask at wrap-up: available | not-for-sale | sold | on-loan | reserved | on-consignment (Payload values — use "available", not "for-sale")
 condition, conditionNotes (only if not excellent), framing (if not yet covered),
@@ -97,6 +109,12 @@ LATE AND INDIRECT — only after the conversation has gone somewhere real:
 consciousRejections — never direct; through "what were you pushing against"
 encounterNote — return to image late; reference blind description from pre-upload
 formalContributionAssessment — agent synthesises at confirmation; never asked
+relatedWorksAtMaking — artist-declared only (never infer from series/date/CLIP). When the artist names a companion, concurrent trip-mate, or chronological predecessor/successor, stage an array row:
+  { relatedArtwork: "<slug or id>", relationType: "paired"|"concurrent"|"predecessor"|"successor", note?: "…", sourceSessionRef?: <session id> }
+One-directional for now — do not invent the reverse link on the other work.
+seriesHingeMarker — when a work marks a series ending or beginning (structural hinge, not a normal series member):
+  { isHinge: true, hingeType: "series-end"|"series-start"|"both", note: "…" }
+linchpinFlag (session field, not artwork) — when this session is doing double duty (cataloguing one work while surfacing a corpus-level pattern), call store_session_field with field "linchpinFlag" and value = short note of the pattern. Judgment call — never set from field count or session length. Once set, pace more slowly; do not rush to wrap-up when standard fields are checked off.
 
 GENERATED AT CONFIRMATION — never during conversation:
 descriptionShort, descriptionLong, conceptualKeywords
@@ -139,11 +157,16 @@ export function sessionTypeOverride(
     | 'sequencing'
     | 'episode-storyboard'
     | 'episode-assembly'
-    | 'event-enrichment',
+    | 'event-enrichment'
+    | 'corpus-revisit',
 ): string {
   switch (sessionType) {
     case 'artwork-cataloguing':
       return 'SESSION TYPE: You are running a cataloguing session. Follow the full phase protocol.'
+    case 'corpus-revisit':
+      return `SESSION TYPE: Corpus revisit — a new Session record linked to an earlier one via revisitOf. Do not overwrite or rewrite the original transcript.
+
+Re-open fields and corpus connections that new context makes incomplete. Stage artwork updates as in cataloguing. When the revisit surfaces a structural pattern across works, set linchpinFlag.isLinchpin true with a short note (via store_session_field if available, or ask the artist to confirm in admin) — judgment call, never automatic from field count.`
     case 'triptych-cataloguing':
       return `SESSION TYPE: You are cataloguing a MoP triptych as a single work (three panels, one narrative).
 
@@ -718,7 +741,7 @@ export function buildCataloguingPhaseBlock(phase: string): string {
 
 Stage every confirmed artist answer immediately via update_field (confidence "confirmed", source "conversation"). Do not wait for wrap-up.
 
-Work through in order when possible: title, yearCreated, series, city/country, medium, support, dimensions (widthWhole, heightWhole, dimensionUnit), sizeTier (MUST ask — never infer silently), framing, tags after primary fields.
+Work through in order when possible: title, yearCreated, series, city/country, medium (built-in slug, or medium:"other" + mediumOther when none fit), support, dimensions (widthWhole, heightWhole, dimensionUnit), sizeTier (MUST ask — never infer silently), framing, tags after primary fields.
 
 The server automatically advances to intent (reflective Sonnet dialogue) once core catalogue fields are staged — you do not need set_phase for that transition.
 Continue staging missing factual fields even while weaving occasional light reflection — but defer deep intent/makingNote questions until intent phase.`

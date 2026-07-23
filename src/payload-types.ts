@@ -1879,6 +1879,32 @@ export interface Artwork {
       }[]
     | null;
   /**
+   * Artist-declared ties to other works based on proximity at the moment of making — not visual similarity (CLIP) and not shared tags. E.g. a companion piece made the same year, or a different-series work made on the same trip.
+   */
+  relatedWorksAtMaking?:
+    | {
+        relatedArtwork: number | Artwork;
+        /**
+         * "paired" = companion work, same series, similar instinct. "concurrent" = made in parallel, different series, same trip/period. "predecessor"/"successor" = direct chronological link within a body of work.
+         */
+        relationType: 'paired' | 'concurrent' | 'predecessor' | 'successor';
+        /**
+         * Optional short artist note on the nature of the tie.
+         */
+        note?: string | null;
+        sourceSessionRef?: (number | null) | Session;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Flags a work that marks a series ending or beginning — a structural hinge point in the practice, not just a normal series member.
+   */
+  seriesHingeMarker?: {
+    isHinge?: boolean | null;
+    hingeType?: ('series-end' | 'series-start' | 'both') | null;
+    note?: string | null;
+  };
+  /**
    * Whether this work has tracked edition tiers (DCS/Megacities editionTiers, or ownershipRegistry for other works).
    */
   hasEditions?: ('none' | 'limited' | 'open') | null;
@@ -3708,329 +3734,6 @@ export interface CapturePreset {
   createdAt: string;
 }
 /**
- * Photographic and image-making technologies referenced by ACH source photographs.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "image-capture-technologies".
- */
-export interface ImageCaptureTechnology {
-  id: number;
-  /**
-   * Display name. e.g. Daguerreotype, Wet plate collodion.
-   */
-  name: string;
-  /**
-   * Auto-generated from name on create; immutable thereafter.
-   */
-  slug?: string | null;
-  /**
-   * What this technology is, how it works, what distinguishes its visual qualities.
-   */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * Four-digit year this technology came into widespread use.
-   */
-  approximatePeriodStart?: number | null;
-  /**
-   * Four-digit year it fell out of common use. Leave null if still active.
-   */
-  approximatePeriodEnd?: number | null;
-  /**
-   * Representative example illustrating the technology's visual character.
-   */
-  exampleImage?: (number | null) | Media;
-  /**
-   * Attribution string for the example image.
-   */
-  exampleImageCredit?: string | null;
-  /**
-   * Wikidata entity URI. e.g. https://www.wikidata.org/entity/Q178227 (Daguerreotype).
-   */
-  wikidataUri?: string | null;
-  /**
-   * Wikipedia article URL. Localized — EN and DE link to their respective language editions.
-   */
-  wikipediaUrl?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * MoP triptych sets — three panels sold and catalogued as a unit. Commerce fields live here, not on individual artworks.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "triptychs".
- */
-export interface Triptych {
-  id: number;
-  title: string;
-  slug: string;
-  /**
-   * Usually Mediums of Perception or Mediums of War.
-   */
-  series: number | Series;
-  status: 'draft' | 'published' | 'archived';
-  /**
-   * Four-digit year the triptych was begun.
-   */
-  yearStart?: number | null;
-  /**
-   * Year finished if different from year start.
-   */
-  yearCompleted?: number | null;
-  /**
-   * Primary city context for this triptych.
-   */
-  city?: string | null;
-  country?: string | null;
-  /**
-   * Exactly three panels. Panel I = earliest technology, II = historical print, III = contemporary.
-   */
-  panels: {
-    artwork: number | Artwork;
-    position: 'I' | 'II' | 'III';
-    id?: string | null;
-  }[];
-  /**
-   * Overview of this triptych as a single work.
-   */
-  description?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * 1–3 sentences for cards and meta.
-   */
-  descriptionShort?: string | null;
-  descriptionLong?: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
-  } | null;
-  /**
-   * What this triptych means as a whole — first person. Never AI-generated.
-   */
-  intent?: string | null;
-  conceptualKeywords?:
-    | {
-        keyword: string;
-        id?: string | null;
-      }[]
-    | null;
-  artHistoricalReferences?: (number | ArtHistoricalReference)[] | null;
-  artHistoricalContext?: string | null;
-  /**
-   * Where this triptych sits in the MoP arc.
-   */
-  seriesContext?: string | null;
-  /**
-   * What this triptych does that has not been done before — confirmed by Bernard.
-   */
-  formalContributionAssessment?: string | null;
-  /**
-   * Vendure product ID for the original triptych set.
-   */
-  vendureProductId?: string | null;
-  printSets?:
-    | {
-        size: 'large' | 'small';
-        /**
-         * Total edition size (e.g. 15 large, 30 small). Never changes.
-         */
-        edition: number;
-        /**
-         * Vendure product ID for this print size.
-         */
-        vendureProductId: string;
-        /**
-         * Remaining prints — synced from Vendure via webhook only. Initialised from edition on first save.
-         */
-        printAvailableCount?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Date the print edition went on sale.
-   */
-  printEditionReleaseDate?: string | null;
-  /**
-   * Hand-signed and numbered by Bernard.
-   */
-  signedAndNumbered?: boolean | null;
-  /**
-   * Provenance — staff only, never in public API.
-   */
-  originalsSoldDate?: string | null;
-  /**
-   * Buyer name or institution — staff only.
-   */
-  originalsBuyer?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Individual street photographs from a DCS skate mission. One photo per parent artwork may be flagged as the Micro selection.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "dcs-capture-photos".
- */
-export interface DcsCapturePhoto {
-  id: number;
-  /**
-   * The DCS city composition this photo belongs to.
-   */
-  parentArtwork: number | Artwork;
-  /**
-   * High-res archival photograph.
-   */
-  image?: (number | null) | Media;
-  /**
-   * Position in the journey sequence, 1–40.
-   */
-  captureSequenceNumber?: number | null;
-  /**
-   * The decisive-moment street photo selected as the Micro for the final composition. Only one per parent artwork.
-   */
-  isMicroSelection?: boolean | null;
-  status?: ('draft' | 'published') | null;
-  /**
-   * Exact date and time the photo was taken.
-   */
-  captureTimestamp?: string | null;
-  /**
-   * Neighbourhood or district.
-   */
-  neighborhood?: string | null;
-  /**
-   * Latitude from EXIF or GPS log.
-   */
-  gpsLat?: number | null;
-  /**
-   * Longitude from EXIF or GPS log.
-   */
-  gpsLng?: number | null;
-  /**
-   * Artist note on this moment — short, informal.
-   */
-  captureNote?: string | null;
-  /**
-   * Accessible alt text. Agent drafts; artist confirms.
-   */
-  altText?: string | null;
-  arReconstructionBefore?: (number | null) | Media;
-  arReconstructionAfter?: (number | null) | Media;
-  arReconstructionVideoUrl?: string | null;
-  arReconstructionStatus?: ('pending' | 'in-progress' | 'complete') | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Curators, organisers, gallerists, co-exhibitors, collaborators, and other people connected to events or artworks. One record per person — reuse across events rather than creating duplicates.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "people".
- */
-export interface Person {
-  id: number;
-  name: string;
-  /**
-   * Full legal name if different from display name. Used for JSON-LD.
-   */
-  nameLegal?: string | null;
-  /**
-   * One person can hold multiple roles across different contexts. Select all that apply.
-   */
-  role?:
-    | (
-        | 'curator'
-        | 'gallerist'
-        | 'organiser'
-        | 'artist'
-        | 'collector'
-        | 'critic'
-        | 'collaborator'
-        | 'publisher'
-        | 'educator'
-        | 'institution'
-        | 'other'
-      )[]
-    | null;
-  /**
-   * If role includes "Other", describe it here. Also use for context-specific role clarification.
-   */
-  roleNote?: string | null;
-  /**
-   * Primary website URL.
-   */
-  website?: string | null;
-  /**
-   * Handle only, e.g. @juergenbluemlein — no full URL.
-   */
-  instagram?: string | null;
-  /**
-   * e.g. https://www.wikidata.org/entity/Q12345
-   */
-  wikidataUri?: string | null;
-  /**
-   * Getty ULAN URI — primarily for artists.
-   */
-  ulanUri?: string | null;
-  /**
-   * Any additional authority identifiers not covered above.
-   */
-  externalIdentifiers?:
-    | {
-        type?: ('isni' | 'orcid' | 'viaf' | 'loc' | 'other') | null;
-        value?: string | null;
-        /**
-         * Full URI for this identifier.
-         */
-        uri?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Internal context note — who this person is, how they connect to the practice. Never exposed publicly or in JSON-LD.
-   */
-  note?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
  * Art/Official session transcripts (not exposed to anonymous API).
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -4050,7 +3753,22 @@ export interface Session {
     | 'sequencing'
     | 'episode-storyboard'
     | 'episode-assembly'
-    | 'event-enrichment';
+    | 'event-enrichment'
+    | 'corpus-revisit';
+  /**
+   * Set only when sessionType is corpus-revisit. Points to the original session being reopened in light of new corpus context.
+   */
+  revisitOf?: (number | null) | Session;
+  /**
+   * Set when a session is doing double duty — cataloguing one artwork while surfacing a structural pattern across the corpus. Signals the dialogue agent to pace more slowly and not default to wrap-up once standard fields are checked off.
+   */
+  linchpinFlag?: {
+    isLinchpin?: boolean | null;
+    /**
+     * What corpus-level pattern this session surfaced, briefly.
+     */
+    note?: string | null;
+  };
   status: 'in-progress' | 'completed' | 'abandoned';
   artistId?: (number | null) | Artist;
   /**
@@ -4242,6 +3960,329 @@ export interface Session {
    * WordPress databaseId cross-checked during cataloguing (legacy lookup). Read-only reference.
    */
   legacyRecordId?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * MoP triptych sets — three panels sold and catalogued as a unit. Commerce fields live here, not on individual artworks.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "triptychs".
+ */
+export interface Triptych {
+  id: number;
+  title: string;
+  slug: string;
+  /**
+   * Usually Mediums of Perception or Mediums of War.
+   */
+  series: number | Series;
+  status: 'draft' | 'published' | 'archived';
+  /**
+   * Four-digit year the triptych was begun.
+   */
+  yearStart?: number | null;
+  /**
+   * Year finished if different from year start.
+   */
+  yearCompleted?: number | null;
+  /**
+   * Primary city context for this triptych.
+   */
+  city?: string | null;
+  country?: string | null;
+  /**
+   * Exactly three panels. Panel I = earliest technology, II = historical print, III = contemporary.
+   */
+  panels: {
+    artwork: number | Artwork;
+    position: 'I' | 'II' | 'III';
+    id?: string | null;
+  }[];
+  /**
+   * Overview of this triptych as a single work.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * 1–3 sentences for cards and meta.
+   */
+  descriptionShort?: string | null;
+  descriptionLong?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * What this triptych means as a whole — first person. Never AI-generated.
+   */
+  intent?: string | null;
+  conceptualKeywords?:
+    | {
+        keyword: string;
+        id?: string | null;
+      }[]
+    | null;
+  artHistoricalReferences?: (number | ArtHistoricalReference)[] | null;
+  artHistoricalContext?: string | null;
+  /**
+   * Where this triptych sits in the MoP arc.
+   */
+  seriesContext?: string | null;
+  /**
+   * What this triptych does that has not been done before — confirmed by Bernard.
+   */
+  formalContributionAssessment?: string | null;
+  /**
+   * Vendure product ID for the original triptych set.
+   */
+  vendureProductId?: string | null;
+  printSets?:
+    | {
+        size: 'large' | 'small';
+        /**
+         * Total edition size (e.g. 15 large, 30 small). Never changes.
+         */
+        edition: number;
+        /**
+         * Vendure product ID for this print size.
+         */
+        vendureProductId: string;
+        /**
+         * Remaining prints — synced from Vendure via webhook only. Initialised from edition on first save.
+         */
+        printAvailableCount?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Date the print edition went on sale.
+   */
+  printEditionReleaseDate?: string | null;
+  /**
+   * Hand-signed and numbered by Bernard.
+   */
+  signedAndNumbered?: boolean | null;
+  /**
+   * Provenance — staff only, never in public API.
+   */
+  originalsSoldDate?: string | null;
+  /**
+   * Buyer name or institution — staff only.
+   */
+  originalsBuyer?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Photographic and image-making technologies referenced by ACH source photographs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "image-capture-technologies".
+ */
+export interface ImageCaptureTechnology {
+  id: number;
+  /**
+   * Display name. e.g. Daguerreotype, Wet plate collodion.
+   */
+  name: string;
+  /**
+   * Auto-generated from name on create; immutable thereafter.
+   */
+  slug?: string | null;
+  /**
+   * What this technology is, how it works, what distinguishes its visual qualities.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Four-digit year this technology came into widespread use.
+   */
+  approximatePeriodStart?: number | null;
+  /**
+   * Four-digit year it fell out of common use. Leave null if still active.
+   */
+  approximatePeriodEnd?: number | null;
+  /**
+   * Representative example illustrating the technology's visual character.
+   */
+  exampleImage?: (number | null) | Media;
+  /**
+   * Attribution string for the example image.
+   */
+  exampleImageCredit?: string | null;
+  /**
+   * Wikidata entity URI. e.g. https://www.wikidata.org/entity/Q178227 (Daguerreotype).
+   */
+  wikidataUri?: string | null;
+  /**
+   * Wikipedia article URL. Localized — EN and DE link to their respective language editions.
+   */
+  wikipediaUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Individual street photographs from a DCS skate mission. One photo per parent artwork may be flagged as the Micro selection.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dcs-capture-photos".
+ */
+export interface DcsCapturePhoto {
+  id: number;
+  /**
+   * The DCS city composition this photo belongs to.
+   */
+  parentArtwork: number | Artwork;
+  /**
+   * High-res archival photograph.
+   */
+  image?: (number | null) | Media;
+  /**
+   * Position in the journey sequence, 1–40.
+   */
+  captureSequenceNumber?: number | null;
+  /**
+   * The decisive-moment street photo selected as the Micro for the final composition. Only one per parent artwork.
+   */
+  isMicroSelection?: boolean | null;
+  status?: ('draft' | 'published') | null;
+  /**
+   * Exact date and time the photo was taken.
+   */
+  captureTimestamp?: string | null;
+  /**
+   * Neighbourhood or district.
+   */
+  neighborhood?: string | null;
+  /**
+   * Latitude from EXIF or GPS log.
+   */
+  gpsLat?: number | null;
+  /**
+   * Longitude from EXIF or GPS log.
+   */
+  gpsLng?: number | null;
+  /**
+   * Artist note on this moment — short, informal.
+   */
+  captureNote?: string | null;
+  /**
+   * Accessible alt text. Agent drafts; artist confirms.
+   */
+  altText?: string | null;
+  arReconstructionBefore?: (number | null) | Media;
+  arReconstructionAfter?: (number | null) | Media;
+  arReconstructionVideoUrl?: string | null;
+  arReconstructionStatus?: ('pending' | 'in-progress' | 'complete') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Curators, organisers, gallerists, co-exhibitors, collaborators, and other people connected to events or artworks. One record per person — reuse across events rather than creating duplicates.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people".
+ */
+export interface Person {
+  id: number;
+  name: string;
+  /**
+   * Full legal name if different from display name. Used for JSON-LD.
+   */
+  nameLegal?: string | null;
+  /**
+   * One person can hold multiple roles across different contexts. Select all that apply.
+   */
+  role?:
+    | (
+        | 'curator'
+        | 'gallerist'
+        | 'organiser'
+        | 'artist'
+        | 'collector'
+        | 'critic'
+        | 'collaborator'
+        | 'publisher'
+        | 'educator'
+        | 'institution'
+        | 'other'
+      )[]
+    | null;
+  /**
+   * If role includes "Other", describe it here. Also use for context-specific role clarification.
+   */
+  roleNote?: string | null;
+  /**
+   * Primary website URL.
+   */
+  website?: string | null;
+  /**
+   * Handle only, e.g. @juergenbluemlein — no full URL.
+   */
+  instagram?: string | null;
+  /**
+   * e.g. https://www.wikidata.org/entity/Q12345
+   */
+  wikidataUri?: string | null;
+  /**
+   * Getty ULAN URI — primarily for artists.
+   */
+  ulanUri?: string | null;
+  /**
+   * Any additional authority identifiers not covered above.
+   */
+  externalIdentifiers?:
+    | {
+        type?: ('isni' | 'orcid' | 'viaf' | 'loc' | 'other') | null;
+        value?: string | null;
+        /**
+         * Full URI for this identifier.
+         */
+        uri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Internal context note — who this person is, how they connect to the practice. Never exposed publicly or in JSON-LD.
+   */
+  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -5739,6 +5780,22 @@ export interface ArtworksSelect<T extends boolean = true> {
         relatedWorkNote?: T;
         id?: T;
       };
+  relatedWorksAtMaking?:
+    | T
+    | {
+        relatedArtwork?: T;
+        relationType?: T;
+        note?: T;
+        sourceSessionRef?: T;
+        id?: T;
+      };
+  seriesHingeMarker?:
+    | T
+    | {
+        isHinge?: T;
+        hingeType?: T;
+        note?: T;
+      };
   hasEditions?: T;
   ownershipRegistry?:
     | T
@@ -6450,6 +6507,13 @@ export interface SmallPrintsSelect<T extends boolean = true> {
 export interface SessionsSelect<T extends boolean = true> {
   sessionId?: T;
   sessionType?: T;
+  revisitOf?: T;
+  linchpinFlag?:
+    | T
+    | {
+        isLinchpin?: T;
+        note?: T;
+      };
   status?: T;
   artistId?: T;
   primaryArtwork?: T;

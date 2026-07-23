@@ -58,6 +58,12 @@ export const ARTWORK_FIELD_CATALOG: CatalogField[] = [
   { field: 'city', category: 'early', layer: 'artist', tier: 'studio' },
   { field: 'country', category: 'early', layer: 'artist', tier: 'studio' },
   { field: 'medium', category: 'early', layer: 'artist', tier: 'studio' },
+  {
+    field: 'mediumOther',
+    category: 'early',
+    layer: 'artist',
+    tier: 'studio',
+  },
   { field: 'support', category: 'early', layer: 'artist', tier: 'studio' },
   { field: 'primaryImage', category: 'early', layer: 'artist', tier: 'studio' },
 
@@ -92,6 +98,18 @@ export const ARTWORK_FIELD_CATALOG: CatalogField[] = [
   { field: 'seriesContext', category: 'middle-reflective', layer: 'artist', tier: 'studio' },
   { field: 'workContext', category: 'middle-reflective', layer: 'artist', tier: 'studio' },
   { field: 'intentVsOutcome', category: 'middle-reflective', layer: 'artist', tier: 'studio' },
+  {
+    field: 'relatedWorksAtMaking',
+    category: 'middle-reflective',
+    layer: 'artist',
+    tier: 'studio',
+  },
+  {
+    field: 'seriesHingeMarker',
+    category: 'middle-reflective',
+    layer: 'artist',
+    tier: 'studio',
+  },
 
   // ── late ──────────────────────────────────────────────────
   { field: 'consciousRejections', category: 'late', layer: 'artist', tier: 'studio' },

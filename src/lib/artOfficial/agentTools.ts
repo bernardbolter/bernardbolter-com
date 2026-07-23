@@ -75,6 +75,7 @@ export const storeSessionFieldSchema = z
       'sessionNotes',
       'preUploadStep',
       'highlightedMediaSlot',
+      'linchpinFlag',
     ]),
     value: z.string(),
   })
@@ -91,6 +92,14 @@ export const storeSessionFieldSchema = z
         code: 'custom',
         path: ['value'],
         message: 'highlightedMediaSlot must be a non-empty slot id',
+      })
+    }
+    if (data.field === 'linchpinFlag' && !data.value.trim()) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['value'],
+        message:
+          'linchpinFlag value must be a short note of the corpus-level pattern (sets isLinchpin true)',
       })
     }
   })
@@ -282,7 +291,7 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
   {
     name: TOOL_STORE_SESSION_FIELD,
     description:
-      'Store a value on the session record only (not on Artworks). preUploadStep is tracked by the server — only set it when moving forward. Use firstImpression for the blind description. Use highlightedMediaSlot with a media slot id (e.g. ach-source) to highlight a row in the Media uploads panel.',
+      'Store a value on the session record only (not on Artworks). preUploadStep is tracked by the server — only set it when moving forward. Use firstImpression for the blind description. Use highlightedMediaSlot with a media slot id (e.g. ach-source) to highlight a row in the Media uploads panel. Use linchpinFlag with a short note when this session is cataloguing one work while surfacing a corpus-level pattern (sets isLinchpin true).',
     input_schema: {
       type: 'object',
       properties: {
@@ -294,6 +303,7 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
             'sessionNotes',
             'preUploadStep',
             'highlightedMediaSlot',
+            'linchpinFlag',
           ],
         },
         value: { type: 'string' },

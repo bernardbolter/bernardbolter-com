@@ -104,6 +104,38 @@ function buildAdditionalProperty(artwork: Artwork, baseUrl: string): Record<stri
   addProp('artism:sizeTier', 'Size Tier', artwork.sizeTier)
   addProp('artism:orientation', 'Orientation', artwork.orientation)
   addProp('artism:catalogueNumber', 'Catalogue Number', artwork.catalogueNumber)
+
+  if (artwork.seriesHingeMarker?.isHinge) {
+    addProp('artism:seriesHingeMarker', 'Series Hinge Marker', {
+      hingeType: artwork.seriesHingeMarker.hingeType ?? null,
+      note: artwork.seriesHingeMarker.note?.trim() || null,
+    })
+  }
+
+  const relatedAtMaking = (artwork.relatedWorksAtMaking ?? [])
+    .map((row) => {
+      if (!row?.relationType) return null
+      const linked =
+        row.relatedArtwork && typeof row.relatedArtwork === 'object'
+          ? {
+              slug: row.relatedArtwork.slug,
+              title: row.relatedArtwork.title,
+              url: row.relatedArtwork.slug
+                ? `${baseUrl}/${row.relatedArtwork.slug}`
+                : undefined,
+            }
+          : null
+      return {
+        relationType: row.relationType,
+        note: row.note?.trim() || null,
+        ...(linked ? { relatedArtwork: linked } : {}),
+      }
+    })
+    .filter(Boolean)
+  if (relatedAtMaking.length) {
+    addProp('artism:relatedWorksAtMaking', 'Related Works at Making', relatedAtMaking)
+  }
+
   const reasoningStatus = trimString(artwork.reasoningStatus)
   if (reasoningStatus && reasoningStatus !== 'stub') {
     addProp('artism:reasoningStatus', 'Reasoning Status', reasoningStatus)
