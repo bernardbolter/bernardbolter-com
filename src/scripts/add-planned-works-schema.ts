@@ -126,7 +126,7 @@ async function main() {
         "related_series_id" integer,
         "status" "public"."${STATUS_ENUM}" DEFAULT 'idea',
         "date_named" timestamp(3) with time zone,
-        "migrated_artwork_id" integer,
+        "migrated_artwork_id_id" integer,
         CONSTRAINT "${TABLE}_pkey" PRIMARY KEY ("id")
       )
     `)
@@ -148,9 +148,9 @@ async function main() {
     await addFkIfMissing(
       pool,
       TABLE,
-      'migrated_artwork_id',
+      'migrated_artwork_id_id',
       'artworks',
-      `${TABLE}_migrated_artwork_id_fk`,
+      `${TABLE}_migrated_artwork_id_id_fk`,
       'SET NULL',
     )
     await pool.query(
@@ -159,11 +159,35 @@ async function main() {
     )
     await pool.query(
       `CREATE INDEX IF NOT EXISTS "${TABLE}_migrated_artwork_idx"
-       ON "public"."${TABLE}" USING btree ("migrated_artwork_id")`,
+       ON "public"."${TABLE}" USING btree ("migrated_artwork_id_id")`,
     )
     console.log(`Created table ${TABLE}`)
   } else {
     console.log(`Table ${TABLE} already exists.`)
+    // Repair: early migration used migrated_artwork_id; Payload expects migrated_artwork_id_id
+    // (field name migratedArtworkId → snake + relationship _id suffix).
+    if (
+      (await columnExists(pool, TABLE, 'migrated_artwork_id')) &&
+      !(await columnExists(pool, TABLE, 'migrated_artwork_id_id'))
+    ) {
+      if (await constraintExists(pool, `${TABLE}_migrated_artwork_id_fk`)) {
+        await pool.query(
+          `ALTER TABLE "public"."${TABLE}" DROP CONSTRAINT "${TABLE}_migrated_artwork_id_fk"`,
+        )
+      }
+      await pool.query(
+        `ALTER TABLE "public"."${TABLE}" RENAME COLUMN "migrated_artwork_id" TO "migrated_artwork_id_id"`,
+      )
+      console.log(`Renamed ${TABLE}.migrated_artwork_id → migrated_artwork_id_id`)
+      await addFkIfMissing(
+        pool,
+        TABLE,
+        'migrated_artwork_id_id',
+        'artworks',
+        `${TABLE}_migrated_artwork_id_id_fk`,
+        'SET NULL',
+      )
+    }
   }
 
   if (!(await tableExists(pool, RELS))) {
