@@ -581,6 +581,86 @@ export const Artists: CollectionConfig = {
       ],
     },
     {
+      name: 'plannedWorks',
+      type: 'array',
+      labels: { singular: 'Planned work', plural: 'Planned works' },
+      admin: {
+        description:
+          'Stated future intentions — work named and motivated but not yet made. Distinct from consciousRejections (turned down) and stub Artworks (already exist in some minimal form). No public page or JSON-LD.',
+      },
+      fields: [
+        {
+          name: 'title',
+          type: 'text',
+          required: true,
+          admin: { description: 'Working name, e.g. "Deutsche Skate Stadt".' },
+        },
+        {
+          name: 'motivatingNote',
+          type: 'textarea',
+          admin: {
+            description:
+              'Why now — what it resolves, continues, or answers. E.g. resolves the resolution problem that held back Deutsche Stadt at skatepark zoom level.',
+          },
+        },
+        {
+          name: 'blocker',
+          type: 'textarea',
+          admin: {
+            description:
+              "What is currently preventing the work, if anything. Optional — some planned works have no blocker, just haven't been started.",
+          },
+        },
+        {
+          name: 'relatedSeries',
+          type: 'relationship',
+          relationTo: 'series',
+          admin: {
+            description: 'Which series this would belong to or relaunch.',
+          },
+        },
+        {
+          name: 'relatedArtworks',
+          type: 'relationship',
+          relationTo: 'artworks',
+          hasMany: true,
+          admin: {
+            description:
+              'Existing artworks this planned work responds to, continues, or resolves — e.g. Deutsche Stadt for Deutsche Skate Stadt.',
+          },
+        },
+        {
+          name: 'status',
+          type: 'select',
+          defaultValue: 'idea',
+          options: [
+            { label: 'Idea', value: 'idea' },
+            { label: 'Blocked', value: 'blocked' },
+            { label: 'Active', value: 'active' },
+            { label: 'Complete — migrated to Artworks', value: 'complete-migrated' },
+          ],
+        },
+        {
+          name: 'dateNamed',
+          type: 'date',
+          admin: {
+            description:
+              'When this intention was first articulated on record — not when work began.',
+          },
+        },
+        {
+          name: 'migratedArtworkId',
+          type: 'relationship',
+          relationTo: 'artworks',
+          admin: {
+            description:
+              'Set when status becomes complete-migrated — points to the resulting Artwork record. The planned entry is archived in place, not deleted.',
+            condition: (_data, siblingData) => siblingData?.status === 'complete-migrated',
+          },
+        },
+      ],
+    },
+    {
       name: 'statementLastRevised',
       type: 'date',
       admin: {

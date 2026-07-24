@@ -663,6 +663,43 @@ export interface Artist {
       }[]
     | null;
   /**
+   * Stated future intentions — work named and motivated but not yet made. Distinct from consciousRejections (turned down) and stub Artworks (already exist in some minimal form). No public page or JSON-LD.
+   */
+  plannedWorks?:
+    | {
+        /**
+         * Working name, e.g. "Deutsche Skate Stadt".
+         */
+        title: string;
+        /**
+         * Why now — what it resolves, continues, or answers. E.g. resolves the resolution problem that held back Deutsche Stadt at skatepark zoom level.
+         */
+        motivatingNote?: string | null;
+        /**
+         * What is currently preventing the work, if anything. Optional — some planned works have no blocker, just haven't been started.
+         */
+        blocker?: string | null;
+        /**
+         * Which series this would belong to or relaunch.
+         */
+        relatedSeries?: (number | null) | Series;
+        /**
+         * Existing artworks this planned work responds to, continues, or resolves — e.g. Deutsche Stadt for Deutsche Skate Stadt.
+         */
+        relatedArtworks?: (number | Artwork)[] | null;
+        status?: ('idea' | 'blocked' | 'active' | 'complete-migrated') | null;
+        /**
+         * When this intention was first articulated on record — not when work began.
+         */
+        dateNamed?: string | null;
+        /**
+         * Set when status becomes complete-migrated — points to the resulting Artwork record. The planned entry is archived in place, not deleted.
+         */
+        migratedArtworkId?: (number | null) | Artwork;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * Set manually when the artist statement text is meaningfully revised. Drives JSON-LD dateModified for /statement only — not auto-updated.
    */
   statementLastRevised?: string | null;
@@ -4946,6 +4983,19 @@ export interface ArtistsSelect<T extends boolean = true> {
         date?: T;
         fullText?: T;
         context?: T;
+        id?: T;
+      };
+  plannedWorks?:
+    | T
+    | {
+        title?: T;
+        motivatingNote?: T;
+        blocker?: T;
+        relatedSeries?: T;
+        relatedArtworks?: T;
+        status?: T;
+        dateNamed?: T;
+        migratedArtworkId?: T;
         id?: T;
       };
   statementLastRevised?: T;

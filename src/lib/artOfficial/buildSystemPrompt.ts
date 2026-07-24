@@ -48,6 +48,10 @@ import { queryRelatedCompleteEvents } from './queryRelatedCompleteEvents'
 import { resolveToolsForSession } from './agentTools'
 import type { EventDialoguePhase } from './eventDialoguePhase'
 import { normalizeEventDialoguePhase } from './eventDialoguePhase'
+import {
+  buildPlannedWorksContextBlock,
+  collectPlannedWorksForPrompt,
+} from './plannedWorksContext'
 
 export type BuildSystemPromptArgs = {
   payload: Payload
@@ -337,6 +341,44 @@ export async function buildSystemPromptParts(
   }
   if (isRefinement && weakPhases?.length) {
     dynamicParts.push(refinementPreamble(weakPhases))
+  }
+
+  // Planned works — Practice Knowledge context (no public page; agent-only)
+  try {
+    const plannedDoc = await payload.findByID({
+      collection: 'artists',
+      id: artistId,
+      depth: 1,
+      overrideAccess: false,
+      user,
+      select: { plannedWorks: true },
+    })
+    const plannedEntries = collectPlannedWorksForPrompt(plannedDoc)
+    let sessionSeriesSlug: string | null = null
+    if (
+      (sessionType === 'artwork-cataloguing' || sessionType === 'corpus-revisit') &&
+      artworkRecordId
+    ) {
+      try {
+        const artwork = await payload.findByID({
+          collection: 'artworks',
+          id: artworkRecordId,
+          depth: 1,
+          overrideAccess: false,
+          user,
+          select: { series: true },
+        })
+        if (artwork.series && typeof artwork.series === 'object' && 'slug' in artwork.series) {
+          sessionSeriesSlug = (artwork.series as { slug?: string }).slug?.trim() || null
+        }
+      } catch {
+        // non-fatal
+      }
+    }
+    const plannedBlock = buildPlannedWorksContextBlock(plannedEntries, sessionSeriesSlug)
+    if (plannedBlock) dynamicParts.push(plannedBlock)
+  } catch {
+    // non-fatal — plannedWorks table may not exist yet on older DBs
   }
 
   return {
