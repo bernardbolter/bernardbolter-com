@@ -75,11 +75,12 @@ async function main() {
     console.log(`Created ${struggleEnum}`)
   }
 
+  // hasMany select under a group — same shape as sessions_weak_phases: "order" + parent_id
   const struggleTypesTable = 'sessions_session_struggle_flag_struggle_types'
   if (!(await tableExists(pool, struggleTypesTable))) {
     await pool.query(`
       CREATE TABLE ${struggleTypesTable} (
-        order_id integer NOT NULL,
+        "order" integer NOT NULL,
         parent_id integer NOT NULL,
         value ${struggleEnum},
         id serial PRIMARY KEY
@@ -87,13 +88,24 @@ async function main() {
     `)
     await pool.query(
       `CREATE INDEX sessions_session_struggle_flag_struggle_types_order_idx
-       ON ${struggleTypesTable} USING btree (order_id)`,
+       ON ${struggleTypesTable} USING btree ("order")`,
     )
     await pool.query(
       `CREATE INDEX sessions_session_struggle_flag_struggle_types_parent_idx
        ON ${struggleTypesTable} USING btree (parent_id)`,
     )
     console.log(`Created ${struggleTypesTable}`)
+  } else if (await columnExists(pool, struggleTypesTable, 'order_id')) {
+    // Repair early Netcup create that used order_id — Payload queries "order"
+    await pool.query(
+      `ALTER TABLE ${struggleTypesTable} RENAME COLUMN order_id TO "order"`,
+    )
+    console.log(`Renamed ${struggleTypesTable}.order_id → order`)
+  } else if (!(await columnExists(pool, struggleTypesTable, 'order'))) {
+    await pool.query(
+      `ALTER TABLE ${struggleTypesTable} ADD COLUMN "order" integer NOT NULL DEFAULT 0`,
+    )
+    console.log(`Added ${struggleTypesTable}.order`)
   }
 
   const coveredTable = 'sessions_fields_covered_this_session'

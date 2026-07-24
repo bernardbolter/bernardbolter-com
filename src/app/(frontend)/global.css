@@ -1541,6 +1541,11 @@ h6 {
   padding: 120px 0 0;
 }
 
+.bio__content-container--after-photos {
+  padding-top: 2rem;
+  padding-bottom: 3rem;
+}
+
 .bio__content-wrapper {
   display: flex;
   flex-direction: column;

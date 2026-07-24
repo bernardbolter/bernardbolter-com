@@ -42,13 +42,15 @@ export default function Bio({
         <BioHeader name={name} birthLine={birthLine} livesAndWorksLine={livesAndWorksLine} />
         {tagline ? <p className="bio__tagline">{tagline}</p> : null}
         <BioProse content={bioFull} seriesMentions={seriesMentions} />
+      </div>
+      <BioPhotoGrid images={images} />
+      <div className="bio__content-container bio__content-container--after-photos">
         <StillBeingWritten
           entries={timelineEntries}
           historicalLinks={historicalBios}
           historicalHeading="Earlier bios"
         />
       </div>
-      <BioPhotoGrid images={images} />
     </DocumentScrollShell>
   )
 }
