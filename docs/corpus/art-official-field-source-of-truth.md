@@ -80,6 +80,20 @@ Two distinct envelopes exist. Do not conflate them.
   "sourceSessionRef": "session-id-or-slug",
   "writes": [
     {
+      "collection": "sessions",
+      "operation": "set",
+      "sessionId": "session-id-or-slug",
+      "fields": {
+        "sessionType": "artwork",
+        "status": "completed",
+        "primaryArtwork": "the-thinker",
+        "messages": [
+          { "role": "user", "content": "…" },
+          { "role": "assistant", "content": "…" }
+        ]
+      }
+    },
+    {
       "collection": "artworks",
       "slug": "the-thinker",
       "operation": "set",
@@ -93,12 +107,16 @@ Two distinct envelopes exist. Do not conflate them.
   ]
 }
 ```
+- `collection: "sessions"` — upsert by `sessionId` (`set` creates or fully overwrites). Processed **before** bio-timeline / statement-throughlines in the same paste so `sourceSessionRef` can point at a session created in that envelope.
+- Envelope `sessionType` shorthand: `artwork` → `artwork-cataloguing`, `statement` → `artist-statement`, `event` → `event-enrichment` (live Payload values also accepted).
 - `operation: "set"` — idempotent, safe to re-paste
 - `operation: "append"` — requires idempotency guard (skip if same `sourceSessionRef` + identical `text` already exists)
 - Each `writes[]` entry succeeds/fails independently — **never atomic**
 - `reasoningStatus: complete` is its own guarded final write, never bundled with fields that could fail
 
 **Naming fork, resolved 2026-07-23:** the envelope's `collection` key is `statement-throughlines` (**plural**) — matches Payload convention. The Session record's own field referring to a single item stays singular (`statement-throughline`). Do not use the singular form as a `collection` key — this was silently failing before.
+
+**Sessions import bridge, resolved 2026-07-24:** `sessions` is a valid envelope discriminator (see `cursor-task-sessions-import-bridge.md`).
 
 ### 2c. Importer paths (RESOLVED 2026-07-23, was open in prior audit)
 

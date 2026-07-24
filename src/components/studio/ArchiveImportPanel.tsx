@@ -46,6 +46,20 @@ const ENVELOPE_EXAMPLE = `{
   "sourceSessionRef": "session-uuid-or-id",
   "writes": [
     {
+      "collection": "sessions",
+      "operation": "set",
+      "sessionId": "session-uuid-or-id",
+      "fields": {
+        "sessionType": "artwork",
+        "status": "completed",
+        "primaryArtwork": "the-thinker",
+        "messages": [
+          { "role": "user", "content": "…" },
+          { "role": "assistant", "content": "…" }
+        ]
+      }
+    },
+    {
       "collection": "artworks",
       "slug": "the-thinker",
       "operation": "set",
@@ -66,6 +80,7 @@ const ENVELOPE_EXAMPLE = `{
       "entry": {
         "eventDate": "1993",
         "text": "…",
+        "sourceSessionRef": "session-uuid-or-id",
         "linkedArtworkSlugs": ["the-thinker"]
       }
     },
@@ -75,6 +90,7 @@ const ENVELOPE_EXAMPLE = `{
       "entry": {
         "dateRecognized": "2026-07-15",
         "text": "…",
+        "sourceSessionRef": "session-uuid-or-id",
         "linkedArtworkSlugs": ["the-thinker"]
       }
     }
@@ -92,6 +108,7 @@ type VisionImportResult = {
 type EnvelopeImportResult = {
   collection: string
   slug?: string
+  sessionId?: string
   status: 'saved' | 'skipped' | 'failed'
   reason?: string
 }
@@ -129,7 +146,11 @@ function formatEnvelopeSuccess(results: EnvelopeImportResult[] | undefined): str
   if (!results?.length) return 'Imported.'
   return results
     .map((row) => {
-      const target = row.slug ? `${row.collection}/${row.slug}` : row.collection
+      const target = row.slug
+        ? `${row.collection}/${row.slug}`
+        : row.sessionId
+          ? `${row.collection}/${row.sessionId}`
+          : row.collection
       return row.reason ? `${target}: ${row.status} (${row.reason})` : `${target}: ${row.status}`
     })
     .join(' · ')

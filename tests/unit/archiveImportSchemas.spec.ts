@@ -3,6 +3,8 @@ import { describe, expect, it } from 'vitest'
 import {
   artworkFieldsImportSchema,
   envelopeImportSchema,
+  mapEnvelopeSessionType,
+  orderEnvelopeWrites,
   visionAnalysisImportSchema,
 } from '@/lib/studio/archiveImportSchemas'
 
@@ -110,5 +112,73 @@ describe('archiveImportSchemas strict validation', () => {
       extra: true,
     })
     expect(parsed.success).toBe(false)
+  })
+
+  it('accepts sessions as a collection discriminator', () => {
+    const parsed = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'venice-biennale-2007-chat',
+          fields: {
+            sessionType: 'artwork',
+            status: 'completed',
+            primaryArtwork: 'venice-in-the-middle',
+            messages: [
+              { role: 'user', content: 'Blind description…' },
+              { role: 'assistant', content: '…' },
+            ],
+          },
+        },
+      ],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('rejects unknown keys on sessions writes', () => {
+    const parsed = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'x',
+          fields: {
+            sessionType: 'artwork',
+            status: 'completed',
+            messages: [],
+            typoField: true,
+          },
+        },
+      ],
+    })
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) {
+      expect(parsed.error.message).toMatch(/Unrecognized key/i)
+    }
+  })
+
+  it('maps envelope sessionType shorthand to Payload values', () => {
+    expect(mapEnvelopeSessionType('artwork')).toBe('artwork-cataloguing')
+    expect(mapEnvelopeSessionType('statement')).toBe('artist-statement')
+    expect(mapEnvelopeSessionType('event')).toBe('event-enrichment')
+    expect(mapEnvelopeSessionType('artwork-cataloguing')).toBe('artwork-cataloguing')
+  })
+
+  it('orders sessions writes before dependent collections', () => {
+    const ordered = orderEnvelopeWrites([
+      { collection: 'statement-throughlines' as const },
+      { collection: 'artworks' as const },
+      { collection: 'sessions' as const },
+      { collection: 'bio-timeline' as const },
+      { collection: 'sessions' as const },
+    ])
+    expect(ordered.map((w) => w.collection)).toEqual([
+      'sessions',
+      'sessions',
+      'statement-throughlines',
+      'artworks',
+      'bio-timeline',
+    ])
   })
 })

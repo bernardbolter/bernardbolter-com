@@ -5,6 +5,8 @@ import type { Artist, Session, User } from '@/payload-types'
 import {
   type EnvelopeImportInput,
   type EnvelopeWrite,
+  mapEnvelopeSessionType,
+  orderEnvelopeWrites,
 } from './archiveImportSchemas'
 import { applyArtworkFieldsImport } from './applyArtworkFieldsImport'
 import { revalidateArtworkPaths } from './revalidateArtworkPaths'
@@ -12,6 +14,7 @@ import { revalidateArtworkPaths } from './revalidateArtworkPaths'
 export type EnvelopeWriteResult = {
   collection: string
   slug?: string
+  sessionId?: string
   status: 'saved' | 'skipped' | 'failed'
   reason?: string
 }
@@ -90,6 +93,27 @@ async function resolveArtworkIdsBySlugs(
     ids.push(artwork.id)
   }
   return ids
+}
+
+async function resolveOptionalArtworkIdBySlug(
+  payload: Payload,
+  user: User,
+  slug: string | undefined,
+): Promise<number | null> {
+  if (!slug?.trim()) return null
+  const result = await payload.find({
+    collection: 'artworks',
+    where: { slug: { equals: slug.trim() } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user,
+  })
+  const artwork = result.docs[0]
+  if (!artwork) {
+    throw new Error(`primaryArtwork / mentionedArtworks: unknown slug '${slug.trim()}'`)
+  }
+  return artwork.id
 }
 
 function entryTextKey(text: string): string {
@@ -249,6 +273,87 @@ async function applyArtworkSet(
   }
 }
 
+/**
+ * Upsert a Sessions record by sessionId. `set` replaces the import surface wholesale
+ * (messages always replaced; optional fields cleared when omitted).
+ */
+async function applySessionSet(
+  payload: Payload,
+  user: User,
+  write: Extract<EnvelopeWrite, { collection: 'sessions' }>,
+): Promise<EnvelopeWriteResult> {
+  const sessionId = write.sessionId.trim()
+  if (!sessionId) throw new Error('sessionId is required')
+
+  const artist = await resolveArtist(payload, user)
+  const fields = write.fields
+  const sessionType = mapEnvelopeSessionType(fields.sessionType)
+
+  const primaryArtworkId = await resolveOptionalArtworkIdBySlug(
+    payload,
+    user,
+    fields.primaryArtwork,
+  )
+  const mentionedIds = await resolveArtworkIdsBySlugs(
+    payload,
+    user,
+    fields.mentionedArtworks,
+  )
+
+  const data: Record<string, unknown> = {
+    sessionId,
+    sessionType,
+    status: fields.status,
+    artistId: artist.id,
+    primaryArtwork: primaryArtworkId,
+    artworkRecord: primaryArtworkId,
+    mentionedArtworks: mentionedIds,
+    firstImpression: fields.firstImpression?.trim() || null,
+    secondDescription: fields.secondDescription?.trim() || null,
+    sessionNotes: fields.sessionNotes?.trim() || null,
+    proposedAbstracts: (fields.proposedAbstracts ?? []).map((row) => ({
+      targetCollection: row.targetCollection,
+      text: row.text,
+      status: row.status,
+    })),
+    messages: fields.messages,
+    completedAt: fields.status === 'completed' ? new Date().toISOString() : null,
+  }
+
+  const existing = await payload.find({
+    collection: 'sessions',
+    where: { sessionId: { equals: sessionId } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user,
+  })
+  const doc = existing.docs[0]
+
+  if (doc) {
+    await payload.update({
+      collection: 'sessions',
+      id: doc.id,
+      data: data as never,
+      overrideAccess: false,
+      user,
+    })
+  } else {
+    await payload.create({
+      collection: 'sessions',
+      data: data as never,
+      overrideAccess: false,
+      user,
+    })
+  }
+
+  return {
+    collection: 'sessions',
+    sessionId,
+    status: 'saved',
+  }
+}
+
 export async function applyEnvelopeImport(
   payload: Payload,
   user: User,
@@ -256,11 +361,14 @@ export async function applyEnvelopeImport(
 ): Promise<EnvelopeWriteResult[]> {
   const results: EnvelopeWriteResult[] = []
   const sourceDefault = input.sourceSessionRef
+  const orderedWrites = orderEnvelopeWrites(input.writes)
 
-  for (const write of input.writes) {
+  for (const write of orderedWrites) {
     try {
       if (write.collection === 'artworks') {
         results.push(await applyArtworkSet(payload, user, write))
+      } else if (write.collection === 'sessions') {
+        results.push(await applySessionSet(payload, user, write))
       } else if (write.collection === 'bio-timeline') {
         results.push(
           await applyBioTimelineAppend(payload, user, write, sourceDefault),
@@ -282,6 +390,7 @@ export async function applyEnvelopeImport(
       results.push({
         collection: write.collection,
         slug: write.collection === 'artworks' ? write.slug : undefined,
+        sessionId: write.collection === 'sessions' ? write.sessionId : undefined,
         status: 'failed',
         reason,
       })
