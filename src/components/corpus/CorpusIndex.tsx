@@ -160,6 +160,12 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
                     >
                       Sessions
                     </Link>
+                    <a
+                      href={`/api/corpus/${encodeURIComponent(artwork.slug)}?tier=5`}
+                      className="still-being-written__session-link"
+                    >
+                      Full session data (JSON)
+                    </a>
                   </p>
                 </div>
               </li>

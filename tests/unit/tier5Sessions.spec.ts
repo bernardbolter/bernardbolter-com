@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  buildSessionJsonLd,
   buildTier5SessionsResponse,
   projectTier5Session,
   sessionMatchesArtworkSlug,
   type Tier5SessionSource,
 } from '@/lib/corpus/buildTier5SessionsResponse'
+import {
+  parseSessionIndexFilters,
+  buildSessionIndexQueryString,
+} from '@/lib/corpus/sessionIndexFilters'
 import type { Artwork } from '@/payload-types'
 
 const venice = {
@@ -140,5 +145,45 @@ describe('buildTier5SessionsResponse', () => {
     expect(munsterResponse['artism:totalSessions']).toBe(1)
     expect(munsterResponse.sessions[0]?.sessionId).toBe('venice-session-1')
     expect(munsterResponse.sessions[0]?.primaryArtwork).toBe('venice-biennale-2007')
+  })
+})
+
+describe('buildSessionJsonLd', () => {
+  it('embeds Tier 5 streams with absolute artwork URLs and sameAs', () => {
+    const jsonLd = buildSessionJsonLd(session(), 'https://bernardbolter.com')
+    expect(jsonLd).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'artism:Session',
+      '@id': 'https://bernardbolter.com/sessions/venice-session-1',
+      primaryArtwork: 'https://bernardbolter.com/venice-biennale-2007',
+      mentionedArtworks: [
+        'https://bernardbolter.com/skulptur-projekte-m-nster-2007',
+      ],
+      sameAs: 'https://bernardbolter.com/api/corpus/venice-biennale-2007?tier=5',
+    })
+    expect(jsonLd).toHaveProperty('artistRecord')
+    expect(jsonLd).toHaveProperty('artism:DialogueSelfAudit')
+    expect((jsonLd!.artistRecord as { messages: unknown[] }).messages).toHaveLength(2)
+  })
+})
+
+describe('parseSessionIndexFilters', () => {
+  it('parses crawlable query params including linchpinFlag', () => {
+    const filters = parseSessionIndexFilters(
+      new URLSearchParams(
+        'sessionType=artwork-cataloguing&series=breaking-down-art&linchpinFlag=true&completedAfter=2026',
+      ),
+    )
+    expect(filters).toEqual({
+      artwork: null,
+      sessionType: 'artwork-cataloguing',
+      series: 'breaking-down-art',
+      completedAfter: '2026-01-01',
+      completedBefore: null,
+      linchpinFlag: true,
+    })
+    expect(buildSessionIndexQueryString(filters)).toBe(
+      '?sessionType=artwork-cataloguing&series=breaking-down-art&completedAfter=2026&linchpinFlag=true',
+    )
   })
 })

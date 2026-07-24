@@ -148,3 +148,37 @@ export function buildTier5SessionsResponse(options: {
     sessions: projected,
   }
 }
+
+export type ProjectedTier5Session = NonNullable<ReturnType<typeof projectTier5Session>>
+
+/**
+ * Page-embedded JSON-LD for `/sessions/[sessionId]`.
+ * Same streams as Tier 5; artwork refs are absolute URLs; `sameAs` points at the API.
+ */
+export function buildSessionJsonLd(
+  session: Tier5SessionSource,
+  baseUrl: string,
+): Record<string, unknown> | null {
+  const projected = projectTier5Session(session)
+  if (!projected) return null
+
+  const primaryUrl = projected.primaryArtwork
+    ? `${baseUrl}/${projected.primaryArtwork}`
+    : null
+  const sameAs = projected.primaryArtwork
+    ? `${baseUrl}/api/corpus/${encodeURIComponent(projected.primaryArtwork)}?tier=5`
+    : null
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'artism:Session',
+    '@id': `${baseUrl}/sessions/${projected.sessionId}`,
+    sessionType: projected.sessionType,
+    completedAt: projected.completedAt,
+    primaryArtwork: primaryUrl,
+    mentionedArtworks: projected.mentionedArtworks.map((slug) => `${baseUrl}/${slug}`),
+    artistRecord: projected.artistRecord,
+    'artism:DialogueSelfAudit': projected['artism:DialogueSelfAudit'],
+    ...(sameAs ? { sameAs } : {}),
+  }
+}

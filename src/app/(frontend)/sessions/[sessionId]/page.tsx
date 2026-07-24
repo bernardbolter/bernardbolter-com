@@ -6,6 +6,9 @@ import config from '@payload-config'
 
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
+import { JsonLdScript } from '@/components/seo/JsonLdScript'
+import { buildSessionJsonLd } from '@/lib/corpus/buildTier5SessionsResponse'
+import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import type { Artwork } from '@/payload-types'
 
 export const revalidate = 3600
@@ -21,6 +24,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { sessionId } = await params
   return {
     title: 'Session',
+    description:
+      'Human-readable session summary. Full session data is machine-readable via JSON-LD and the corpus API.',
     alternates: { canonical: `/sessions/${sessionId}` },
   }
 }
@@ -42,10 +47,26 @@ export default async function PublicSessionPage({ params }: PageProps) {
       sessionId: true,
       sessionType: true,
       status: true,
+      createdAt: true,
       completedAt: true,
       primaryArtwork: true,
       artworkRecord: true,
       mentionedArtworks: true,
+      messages: true,
+      firstImpression: true,
+      secondDescription: true,
+      fieldUpdateTimeline: true,
+      sessionNotes: true,
+      weakPhases: true,
+      blindDescriptionUseful: true,
+      formalContributionAccuracy: true,
+      dialogueRefinementFlag: true,
+      refinementNotes: true,
+      agentDraftDescriptionShort: true,
+      agentDraftDescriptionLong: true,
+      agentDraftConceptualKeywords: true,
+      agentDraftFormalContributionAssessment: true,
+      agentModel: true,
     },
   })
 
@@ -67,9 +88,15 @@ export default async function PublicSessionPage({ params }: PageProps) {
     : null
 
   const ladderSlug = primary?.slug ?? mentioned[0]?.slug ?? null
+  const baseUrl = getSiteBaseUrl()
+  const jsonLd = buildSessionJsonLd(session, baseUrl)
+  const tier5Href = primary?.slug
+    ? `/api/corpus/${encodeURIComponent(primary.slug)}?tier=5`
+    : null
 
   return (
     <div className="bio-page__container">
+      {jsonLd ? <JsonLdScript data={jsonLd} /> : null}
       <DocumentScrollShell
         title="SESSION"
         closeHref="/sessions"
@@ -83,7 +110,8 @@ export default async function PublicSessionPage({ params }: PageProps) {
             <p className="bio__masonry-caption">Completed {completedLabel}</p>
           ) : null}
           <p className="bio__masonry-caption">
-            Public crumb only — transcript stays private.
+            Full session data is machine-readable via JSON-LD and the corpus API; this page
+            shows a human-readable summary only.
           </p>
 
           <div className="bio__main-content" style={{ paddingTop: '1.5rem' }}>
@@ -111,6 +139,13 @@ export default async function PublicSessionPage({ params }: PageProps) {
             {!primary && mentioned.length === 0 ? (
               <p className="bio__masonry-caption">
                 This session contributed facts to the archive without a primary artwork.
+              </p>
+            ) : null}
+            {tier5Href ? (
+              <p style={{ paddingTop: '1rem' }}>
+                <a href={tier5Href} className="bio__inline-link">
+                  Full session data (JSON)
+                </a>
               </p>
             ) : null}
           </div>
