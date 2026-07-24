@@ -48,6 +48,15 @@ import {
 } from './agentTools'
 import { applyStagedMediaUpload } from './applyStagedMediaUpload'
 import { getMediaSlot } from './artworkMediaSlots'
+import {
+  formatConflictQuestion,
+  isMateriallyDifferent,
+  mergePriorFieldConflicts,
+  readCommittedArtworkField,
+  shouldCheckAutomaticConflict,
+  type PriorFieldConflictRow,
+} from './automaticFieldConflicts'
+import { validateSelectFieldValue, clampDescriptionShort } from './enumFieldValidation'
 import { computeMidpointSortIndex } from './computeTimelineDates'
 import {
   fetchCommonsFileMetadata,
@@ -233,8 +242,24 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           }
         }
         if (!isFieldAllowedForAgent(args.targetCollection, args.field)) {
-          const message = `Field ${args.targetCollection}.${args.field} is not writable by the agent.`
+          const message =
+            args.field === 'artHistoricalReferences'
+              ? 'artHistoricalReferences is a curated relationship — never stage prose there. Put art-historical prose in artHistoricalContext instead.'
+              : `Field ${args.targetCollection}.${args.field} is not writable by the agent.`
           return failTool(tool.name, message)
+        }
+        if (args.targetCollection === 'artworks') {
+          const enumCheck = validateSelectFieldValue(args.field, args.value)
+          if (!enumCheck.ok) {
+            return failTool(tool.name, enumCheck.error)
+          }
+          if (args.field === 'currentLocation' && args.value && typeof args.value === 'object') {
+            const catCheck = validateSelectFieldValue(
+              'currentLocation.category',
+              (args.value as { category?: unknown }).category,
+            )
+            if (!catCheck.ok) return failTool(tool.name, catCheck.error)
+          }
         }
         if (args.targetCollection === 'artworks' && args.field === 'series') {
           try {
@@ -252,6 +277,94 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           const eventPhase = normalizeEventDialoguePhase(session.eventDialoguePhase)
           entrySource = eventPhase === 'phase-a-research' ? 'phase-a-haiku' : 'conversation'
         }
+
+        // Part 3a: do not silently overwrite committed automatic fields
+        if (
+          args.targetCollection === 'artworks' &&
+          shouldCheckAutomaticConflict(args.field, entrySource)
+        ) {
+          const artworkId =
+            typeof session.primaryArtwork === 'number'
+              ? session.primaryArtwork
+              : typeof session.primaryArtwork === 'object' && session.primaryArtwork
+                ? session.primaryArtwork.id
+                : typeof session.artworkRecord === 'number'
+                  ? session.artworkRecord
+                  : typeof session.artworkRecord === 'object' && session.artworkRecord
+                    ? session.artworkRecord.id
+                    : null
+          if (artworkId != null) {
+            const artwork = await payload.findByID({
+              collection: 'artworks',
+              id: artworkId,
+              depth: 0,
+              overrideAccess: false,
+              user,
+            })
+            const committed = readCommittedArtworkField(artwork, args.field)
+            if (isMateriallyDifferent(committed, args.value)) {
+              const conflict = {
+                field: args.field,
+                priorValue: committed,
+                newValue: args.value,
+                resolution: 'unresolved' as const,
+              }
+              const priorFieldConflicts = mergePriorFieldConflicts(
+                session.priorFieldConflicts as PriorFieldConflictRow[] | null,
+                conflict,
+              )
+              session.priorFieldConflicts = priorFieldConflicts as never
+              await payload.update({
+                collection: 'sessions',
+                id: session.id,
+                data: {
+                  priorFieldConflicts: priorFieldConflicts as Session['priorFieldConflicts'],
+                },
+                overrideAccess: false,
+                user,
+                context: { skipAgent: true },
+              })
+              const unresolved = priorFieldConflicts.filter(
+                (row) => !row.resolution || row.resolution === 'unresolved',
+              )
+              return toolResult({
+                ok: true,
+                staged: false,
+                conflict: true,
+                field: args.field,
+                message: formatConflictQuestion(unresolved),
+              })
+            }
+          }
+        }
+
+        // Artist chose replace after a conflict — conversation source stages and resolves
+        if (
+          args.targetCollection === 'artworks' &&
+          entrySource === 'conversation' &&
+          Array.isArray(session.priorFieldConflicts)
+        ) {
+          const conflicts = session.priorFieldConflicts as PriorFieldConflictRow[]
+          if (conflicts.some((row) => row.field === args.field)) {
+            const priorFieldConflicts = conflicts.map((row) =>
+              row.field === args.field
+                ? { ...row, newValue: args.value, resolution: 'replaced' as const }
+                : row,
+            )
+            session.priorFieldConflicts = priorFieldConflicts as never
+            await payload.update({
+              collection: 'sessions',
+              id: session.id,
+              data: {
+                priorFieldConflicts: priorFieldConflicts as Session['priorFieldConflicts'],
+              },
+              overrideAccess: false,
+              user,
+              context: { skipAgent: true },
+            })
+          }
+        }
+
         const entry = {
           targetCollection: args.targetCollection,
           field: args.field,
@@ -357,7 +470,7 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           })
         }
         const draftData: Record<string, unknown> = {
-          agentDraftDescriptionShort: args.agentDraftDescriptionShort,
+          agentDraftDescriptionShort: clampDescriptionShort(args.agentDraftDescriptionShort),
           agentDraftDescriptionLong: args.agentDraftDescriptionLong,
           agentDraftConceptualKeywords: args.agentDraftConceptualKeywords.map((keyword) => ({
             keyword,
@@ -860,6 +973,10 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
             mediaId: args.mediaId,
             field: slot.field,
             hasAnalysis: Boolean(result.analysis),
+            ...(result.conflictQuestion ? { conflictQuestion: result.conflictQuestion } : {}),
+            ...(result.descriptionMismatch
+              ? { descriptionMismatch: result.descriptionMismatch }
+              : {}),
           })
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Could not link media to slot'

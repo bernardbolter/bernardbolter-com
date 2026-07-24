@@ -39,7 +39,6 @@ const TRIPTYCH_AGENT_FIELDS = new Set([
   'descriptionLong',
   'intent',
   'conceptualKeywords',
-  'artHistoricalReferences',
   'artHistoricalContext',
   'seriesContext',
   'formalContributionAssessment',

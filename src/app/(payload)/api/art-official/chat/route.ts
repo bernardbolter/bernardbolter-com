@@ -280,13 +280,19 @@ export async function POST(request: Request) {
 
           if (mediaUpload && session.sessionType === 'artwork-cataloguing') {
             try {
-              await applyStagedMediaUpload({
+              const uploadResult = await applyStagedMediaUpload({
                 payload,
                 user,
                 session,
                 upload: mediaUpload,
                 send,
               })
+              const notices: string[] = []
+              if (uploadResult.conflictQuestion) notices.push(uploadResult.conflictQuestion)
+              if (uploadResult.descriptionMismatch) notices.push(uploadResult.descriptionMismatch)
+              if (notices.length > 0) {
+                userTurn.content = `${userTurn.content}\n\n[Session integrity]\n${notices.join('\n\n')}`
+              }
             } catch (mediaErr) {
               console.error('[art-official/chat] media upload', mediaErr)
               send('error', {
@@ -433,11 +439,17 @@ export async function POST(request: Request) {
 
           const finalPhase = phaseTransition ?? currentPhase
 
+          // Part 3d: omit empty-content tool_results turns from the persisted transcript
+          const messagesToPersist = [userTurn, ...newStored].filter((msg) => {
+            if (msg.kind === 'tool_results' && !msg.content?.trim()) return false
+            return true
+          })
+
           await payload.update({
             collection: 'sessions',
             id: session.id,
             data: {
-              messages: [...priorMessages, userTurn, ...newStored],
+              messages: [...priorMessages, ...messagesToPersist],
               tokenLog,
               currentPhase: finalPhase,
               ...(sessionType === 'event-enrichment' ? { eventDialoguePhase } : {}),

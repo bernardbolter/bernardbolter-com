@@ -5,6 +5,7 @@ import config from '@payload-config'
 
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
+import { buildSessionGloss } from '@/lib/corpus/sessionGloss'
 import {
   buildSessionIndexQueryString,
   SESSION_INDEX_TYPE_OPTIONS,
@@ -14,7 +15,7 @@ import {
   type SessionIndexFilters,
 } from '@/lib/corpus/sessionIndexFilters'
 import { fetchCorpusSeries } from '@/lib/corpus/fetchCorpusData'
-import type { Artwork, Series } from '@/payload-types'
+import type { Artwork, Series, Session } from '@/payload-types'
 
 export const revalidate = 3600
 
@@ -48,8 +49,11 @@ type SessionRow = {
   sessionType: string
   completedAt?: string | null
   isLinchpin: boolean
+  hasStruggle: boolean
   primary: Artwork | null
   mentioned: Artwork[]
+  gloss: string
+  passNumber: number
 }
 
 function filterSessionRows(rows: SessionRow[], filters: SessionIndexFilters): SessionRow[] {
@@ -66,6 +70,8 @@ function filterSessionRows(rows: SessionRow[], filters: SessionIndexFilters): Se
     }
     if (filters.linchpinFlag === true && !row.isLinchpin) return false
     if (filters.linchpinFlag === false && row.isLinchpin) return false
+    if (filters.hasStruggle === true && !row.hasStruggle) return false
+    if (filters.hasStruggle === false && row.hasStruggle) return false
     if (filters.completedAfter || filters.completedBefore) {
       if (!row.completedAt) return false
       const completed = row.completedAt.slice(0, 10)
@@ -86,6 +92,7 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
     'completedAfter',
     'completedBefore',
     'linchpinFlag',
+    'hasStruggle',
   ]) {
     const value = raw[key]
     const single = Array.isArray(value) ? value[0] : value
@@ -111,10 +118,25 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
         artworkRecord: true,
         mentionedArtworks: true,
         linchpinFlag: true,
+        revisitOf: true,
+        fieldsCoveredThisSession: true,
+        priorFieldConflicts: true,
+        sessionStruggleFlag: true,
       },
     }),
     fetchCorpusSeries(payload),
   ])
+
+  const chronologicalPass = new Map<number, number>()
+  const seenPerArtwork = new Map<number, number>()
+  for (const session of [...result.docs].reverse()) {
+    const primary =
+      readArtwork(session.primaryArtwork) ?? readArtwork(session.artworkRecord)
+    if (!primary) continue
+    const next = (seenPerArtwork.get(primary.id) ?? 0) + 1
+    seenPerArtwork.set(primary.id, next)
+    chronologicalPass.set(session.id, next)
+  }
 
   const rows = filterSessionRows(
     result.docs
@@ -125,14 +147,27 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
         const mentioned = (session.mentionedArtworks ?? [])
           .map((entry) => readArtwork(entry))
           .filter((artwork): artwork is Artwork => artwork !== null)
+        const passNumber = chronologicalPass.get(session.id) ?? 1
+        const typed = session as Session
         return {
           id: session.id,
           sessionId: session.sessionId as string,
           sessionType: session.sessionType,
           completedAt: session.completedAt,
           isLinchpin: session.linchpinFlag?.isLinchpin === true,
+          hasStruggle: session.sessionStruggleFlag?.hasStruggle === true,
           primary,
           mentioned,
+          passNumber,
+          gloss: buildSessionGloss({
+            sessionType: session.sessionType,
+            fieldsCoveredThisSession: typed.fieldsCoveredThisSession,
+            revisitOf: typed.revisitOf,
+            passNumber,
+            linchpinFlag: typed.linchpinFlag,
+            sessionStruggleFlag: typed.sessionStruggleFlag,
+            priorFieldConflicts: typed.priorFieldConflicts,
+          }),
         }
       }),
     filters,
@@ -192,9 +227,10 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                       href={`/sessions/${row.sessionId}`}
                       className="corpus-page__title"
                     >
+                      {row.isLinchpin ? '◆ ' : ''}
                       Session {row.sessionId.slice(0, 8)}…
-                      {row.isLinchpin ? ' · linchpin' : ''}
                     </Link>
+                    <p className="bio__masonry-caption">{row.gloss}</p>
                     {row.primary ? (
                       <p className="bio__masonry-caption">
                         Primary:{' '}
@@ -295,6 +331,19 @@ function SessionsFilterForm({
           <option value="">Any</option>
           <option value="true">Linchpin only</option>
           <option value="false">Not linchpin</option>
+        </select>
+      </label>
+      <label className="corpus-page__field">
+        <span>Struggle</span>
+        <select
+          name="hasStruggle"
+          defaultValue={
+            filters.hasStruggle == null ? '' : filters.hasStruggle ? 'true' : 'false'
+          }
+        >
+          <option value="">Any</option>
+          <option value="true">Struggle flagged</option>
+          <option value="false">No struggle</option>
         </select>
       </label>
       <div className="corpus-page__filter-actions">

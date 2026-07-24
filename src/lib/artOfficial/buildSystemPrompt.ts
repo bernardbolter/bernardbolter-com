@@ -187,6 +187,47 @@ export async function buildSystemPromptParts(
       const refinementBlock = await buildArtworkRefinementBlock({ payload, user, artworkId: artworkRecordId })
       dynamicParts.push(refinementBlock)
 
+      // Suggest surveying a prior completed session (do not force revisitOf / corpus-revisit).
+      try {
+        const priors = await payload.find({
+          collection: 'sessions',
+          where: {
+            and: [
+              { status: { equals: 'completed' } },
+              {
+                or: [
+                  { primaryArtwork: { equals: artworkRecordId } },
+                  { artworkRecord: { equals: artworkRecordId } },
+                ],
+              },
+            ],
+          },
+          limit: 1,
+          sort: '-completedAt',
+          depth: 0,
+          overrideAccess: false,
+          user,
+          select: {
+            sessionId: true,
+            fieldsCoveredThisSession: true,
+          },
+        })
+        const prior = priors.docs[0]
+        if (prior?.sessionId) {
+          const covered = (prior.fieldsCoveredThisSession ?? [])
+            .map((row) => row?.field)
+            .filter(Boolean)
+            .join(', ')
+          dynamicParts.push(
+            `PRIOR SESSION ON THIS ARTWORK\n\nCompleted session ${prior.sessionId} already exists${
+              covered ? ` (fields covered: ${covered})` : ''
+            }.\nOpen by surveying what that session already confirmed before asking again. If this is a genuine revisit, set revisitOf to that session and consider sessionType corpus-revisit. If this is a correction of a mismatched artwork, keep artwork-cataloguing — do not auto-force corpus-revisit.`,
+          )
+        }
+      } catch {
+        // non-fatal
+      }
+
       // If the linked artwork is in an ACH sub-series, tell the agent explicitly so
       // it applies the full ACH workflow rather than skipping due to the series slug not
       // literally matching "a-colorful-history".

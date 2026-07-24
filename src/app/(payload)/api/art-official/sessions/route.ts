@@ -97,6 +97,49 @@ export async function POST(request: Request) {
     user,
   })
 
+  // Suggest revisitOf when prior completed sessions exist for this artwork (do not force).
+  let priorSessionSuggestion: {
+    sessionId: string
+    id: number
+    fieldsCovered: Array<{ field?: string | null } | null> | null | undefined
+    note: string
+  } | null = null
+  if (artworkId) {
+    const priors = await payload.find({
+      collection: 'sessions',
+      where: {
+        and: [
+          { status: { equals: 'completed' } },
+          {
+            or: [
+              { primaryArtwork: { equals: artworkId } },
+              { artworkRecord: { equals: artworkId } },
+            ],
+          },
+          { id: { not_equals: session.id } },
+        ],
+      },
+      limit: 5,
+      sort: '-completedAt',
+      depth: 0,
+      overrideAccess: false,
+      user,
+      select: {
+        sessionId: true,
+        fieldsCoveredThisSession: true,
+      },
+    })
+    const prior = priors.docs[0]
+    if (prior?.sessionId) {
+      priorSessionSuggestion = {
+        id: prior.id,
+        sessionId: prior.sessionId,
+        fieldsCovered: prior.fieldsCoveredThisSession,
+        note: 'Prior completed session(s) exist for this artwork. Open by surveying fieldsCoveredThisSession before asking new questions. If this is a genuine revisit, set revisitOf and offer sessionType corpus-revisit; if correcting a mismatched artwork, keep artwork-cataloguing.',
+      }
+    }
+  }
+
   return Response.json({
     id: session.id,
     sessionId: session.sessionId,
@@ -104,6 +147,7 @@ export async function POST(request: Request) {
     status: session.status,
     artworkRecord: session.artworkRecord ?? null,
     agentModel: session.agentModel ?? agentModel,
+    priorSessionSuggestion,
   })
 }
 

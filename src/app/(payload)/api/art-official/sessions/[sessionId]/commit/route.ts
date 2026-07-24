@@ -25,6 +25,10 @@ import { resolveEventCommitReferences } from '@/lib/artOfficial/resolveEventComm
 import { recomputeTimeline } from '@/lib/artOfficial/recomputeTimeline'
 import { commitTarget } from '@/lib/artOfficial/routing'
 import { collapseTimelineToLatest, type TimelineEntry } from '@/lib/artOfficial/sessionTimeline'
+import {
+  fieldsCoveredFromTimeline,
+  mergeStruggleFlag,
+} from '@/lib/artOfficial/automaticFieldConflicts'
 import { findArtworkBySlug, resolveTargetArtworkSlug } from '@/lib/artOfficial/sequencing/resolveArtwork'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
 import type { SessionType } from '@/lib/artOfficial/routing'
@@ -447,6 +451,21 @@ export async function POST(request: Request, context: RouteContext) {
       row.status === 'rejected' ? row : { ...row, status: 'accepted' as const },
     )
 
+    const messages = Array.isArray(session.messages) ? session.messages : []
+    const emptyCount = messages.filter((entry) => {
+      if (!entry || typeof entry !== 'object') return false
+      const content = (entry as { content?: unknown }).content
+      return typeof content === 'string' && content.trim() === ''
+    }).length
+    const blankStruggle =
+      messages.length > 0 && emptyCount / messages.length > 0.2
+        ? mergeStruggleFlag(
+            session.sessionStruggleFlag,
+            'blank-turn-density',
+            `${emptyCount}/${messages.length} messages had empty content`,
+          )
+        : null
+
     await payload.update({
       collection: 'sessions',
       id: session.id,
@@ -460,6 +479,8 @@ export async function POST(request: Request, context: RouteContext) {
         episodeRecord: episodeId ?? session.episodeRecord,
         eventRecord: eventId ?? session.eventRecord,
         proposedAbstracts,
+        fieldsCoveredThisSession: fieldsCoveredFromTimeline(timeline),
+        ...(blankStruggle ? { sessionStruggleFlag: blankStruggle } : {}),
         ...(body.firstImpression ? { firstImpression: body.firstImpression } : {}),
         ...(body.secondDescription ? { secondDescription: body.secondDescription } : {}),
         ...(body.refinementNotes ? { refinementNotes: body.refinementNotes } : {}),

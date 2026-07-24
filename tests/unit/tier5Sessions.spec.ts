@@ -181,6 +181,7 @@ describe('parseSessionIndexFilters', () => {
       completedAfter: '2026-01-01',
       completedBefore: null,
       linchpinFlag: true,
+      hasStruggle: null,
     })
     expect(buildSessionIndexQueryString(filters)).toBe(
       '?sessionType=artwork-cataloguing&series=breaking-down-art&completedAfter=2026&linchpinFlag=true',

@@ -884,6 +884,10 @@ Do not build a public-facing view for Sessions. This collection is admin-only.\
 \
 ---\
 \
+## Changelog\
+\
+**2026-07-24** — Full audit of all 20 completed sessions (see `sessions-audit-handoff.md`). Confirmed the Venice Biennale 2007 premature-closure pattern is one instance of a general rule: linchpin sessions need slower pacing throughout, not just as a one-off fix. Found a more common and previously undocumented failure: automatic fields (`dominantColors`, `paintedFieldColors`, `compositionalNotes`, all five tag fields) are re-derived from scratch every session with no check against already-committed values, producing silent contradictions across repeat sessions on the same artwork — confirmed on **Brandenburger Tor. 1899** (4 sessions) and, at lower severity, **BASEL switzerland** (2 sessions). Also found: repeated commit-time invalid-enum errors (`availabilityStatus`, `artHistoricalReferences`, `dimensionUnit`); one blind-description/upload mismatch (**South Elliott and Lafayette**); transcript padding from empty tool-call turns; and `artism:DialogueSelfAudit` unfilled in 19 of 20 sessions. Resulting schema and pipeline changes in `sessions-audit-cursor-spec.md`.\
+\
 *Art/Official Dialogue Specification \'97 bernardbolter.com \'b7 May 2026*\
 *Developed in dialogue: Bernard Bolter \'d7 Claude*\
 *Status: complete draft \'97 ready for Cursor implementation*}

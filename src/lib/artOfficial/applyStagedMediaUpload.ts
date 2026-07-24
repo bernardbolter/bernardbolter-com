@@ -3,6 +3,15 @@ import type { Payload } from 'payload'
 import type { Session, User } from '@/payload-types'
 
 import { getMediaSlot } from './artworkMediaSlots'
+import {
+  formatConflictQuestion,
+  isMateriallyDifferent,
+  mergePriorFieldConflicts,
+  mergeStruggleFlag,
+  readCommittedArtworkField,
+  type PriorFieldConflictRow,
+} from './automaticFieldConflicts'
+import { checkDescriptionUploadMismatch } from './descriptionUploadMismatch'
 import { runImageAnalysis } from './runImageAnalysis'
 import { ART_OFFICIAL_MODEL_VISION } from './sessionPhase'
 import {
@@ -13,6 +22,8 @@ import { upsertTimelineEntry, type TimelineEntry } from './sessionTimeline'
 
 export type ApplyMediaUploadResult = Awaited<ReturnType<typeof stageArtworkMediaUpload>> & {
   analysis?: Awaited<ReturnType<typeof runImageAnalysis>>
+  conflictQuestion?: string | null
+  descriptionMismatch?: string | null
 }
 
 type SendFn = (event: string, data: unknown) => void
@@ -20,6 +31,18 @@ type SendFn = (event: string, data: unknown) => void
 /** Convert a hex string array to Payload array-field shape: [{ hex }] */
 function hexesToSwatches(hexes: string[]): Array<{ hex: string }> {
   return hexes.filter(Boolean).map((hex) => ({ hex }))
+}
+
+function sessionArtworkId(session: Session): number | null {
+  if (typeof session.primaryArtwork === 'number') return session.primaryArtwork
+  if (session.primaryArtwork && typeof session.primaryArtwork === 'object') {
+    return session.primaryArtwork.id
+  }
+  if (typeof session.artworkRecord === 'number') return session.artworkRecord
+  if (session.artworkRecord && typeof session.artworkRecord === 'object') {
+    return session.artworkRecord.id
+  }
+  return null
 }
 
 /** Stage a media slot on the session and optionally run vision analysis for images. */
@@ -68,8 +91,18 @@ export async function applyStagedMediaUpload(args: {
     })
     args.send?.('image-analysis', { slotId: args.upload.slotId, ...analysis })
 
-    // Auto-stage vision results to the session timeline so they are committed
-    // even if the agent doesn't explicitly call trigger_image_analysis.
+    const artworkId = sessionArtworkId(args.session)
+    const artwork =
+      artworkId != null
+        ? await args.payload.findByID({
+            collection: 'artworks',
+            id: artworkId,
+            depth: 0,
+            overrideAccess: false,
+            user: args.user,
+          })
+        : null
+
     const visionEntries: TimelineEntry[] = [
       {
         targetCollection: 'artworks',
@@ -133,20 +166,66 @@ export async function applyStagedMediaUpload(args: {
       })
     }
 
-    // Merge into session timeline and persist
     let timeline = Array.isArray(args.session.fieldUpdateTimeline)
       ? [...(args.session.fieldUpdateTimeline as TimelineEntry[])]
       : []
+    let priorFieldConflicts = Array.isArray(args.session.priorFieldConflicts)
+      ? [...(args.session.priorFieldConflicts as PriorFieldConflictRow[])]
+      : []
+    const heldConflicts: PriorFieldConflictRow[] = []
+
     for (const entry of visionEntries) {
+      const field = entry.field ?? ''
+      if (field === 'analysisModelVersion') {
+        timeline = upsertTimelineEntry(timeline, entry)
+        continue
+      }
+      const committed = readCommittedArtworkField(artwork, field)
+      if (isMateriallyDifferent(committed, entry.value)) {
+        const conflict: PriorFieldConflictRow = {
+          field,
+          priorValue: committed,
+          newValue: entry.value,
+          resolution: 'unresolved',
+        }
+        priorFieldConflicts = mergePriorFieldConflicts(priorFieldConflicts, conflict)
+        heldConflicts.push(conflict)
+        continue
+      }
       timeline = upsertTimelineEntry(timeline, entry)
     }
+
     args.session.fieldUpdateTimeline = timeline as never
+    args.session.priorFieldConflicts = priorFieldConflicts as never
+
+    const mismatch = checkDescriptionUploadMismatch({
+      firstImpression: args.session.firstImpression,
+      compositionalNotes: analysis.compositionalNotes,
+      detectedSubjects: analysis.detectedSubjects,
+      dominantColors: analysis.dominantColors,
+    })
+
+    let sessionStruggleFlag = args.session.sessionStruggleFlag
+    if (mismatch.mismatch) {
+      sessionStruggleFlag = mergeStruggleFlag(
+        sessionStruggleFlag,
+        'description-upload-mismatch',
+        mismatch.message ?? undefined,
+      )
+      args.session.sessionStruggleFlag = sessionStruggleFlag as never
+    }
 
     try {
       await args.payload.update({
         collection: 'sessions',
         id: args.session.id,
-        data: { fieldUpdateTimeline: timeline },
+        data: {
+          fieldUpdateTimeline: timeline,
+          priorFieldConflicts: priorFieldConflicts as Session['priorFieldConflicts'],
+          ...(mismatch.mismatch
+            ? { sessionStruggleFlag: sessionStruggleFlag as Session['sessionStruggleFlag'] }
+            : {}),
+        },
         overrideAccess: false,
         user: args.user,
         context: { skipAgent: true },
@@ -155,15 +234,29 @@ export async function applyStagedMediaUpload(args: {
       console.error('[applyStagedMediaUpload] failed to persist vision timeline entries', err)
     }
 
-    // Emit tool-staged events so the sidebar updates immediately
     for (const entry of visionEntries) {
+      if (heldConflicts.some((c) => c.field === entry.field)) continue
       args.send?.('tool-staged', {
         name: 'update_field',
         input: entry,
       })
     }
 
-    return { ...staged, analysis }
+    const conflictQuestion =
+      heldConflicts.length > 0 ? formatConflictQuestion(heldConflicts) : null
+    if (conflictQuestion) {
+      args.send?.('field-conflicts', { message: conflictQuestion, conflicts: heldConflicts })
+    }
+    if (mismatch.mismatch && mismatch.message) {
+      args.send?.('description-mismatch', { message: mismatch.message })
+    }
+
+    return {
+      ...staged,
+      analysis,
+      conflictQuestion,
+      descriptionMismatch: mismatch.message,
+    }
   }
 
   return staged

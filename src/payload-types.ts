@@ -3922,6 +3922,60 @@ export interface Session {
     | number
     | boolean
     | null;
+  /**
+   * Auto-populated at commit: deduplicated field names written during this session (from fieldUpdateTimeline).
+   */
+  fieldsCoveredThisSession?:
+    | {
+        field?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Auto-populated when an automatic (image-analysis / knowledge-base) field would overwrite a different committed value from a prior session.
+   */
+  priorFieldConflicts?:
+    | {
+        field: string;
+        priorValue?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        priorSessionRef?: (number | null) | Session;
+        newValue?:
+          | {
+              [k: string]: unknown;
+            }
+          | unknown[]
+          | string
+          | number
+          | boolean
+          | null;
+        resolution?: ('kept-prior' | 'replaced' | 'merged' | 'unresolved') | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Mechanical tooling/schema struggle detection — distinct from dialogueRefinementFlag (artist judgment).
+   */
+  sessionStruggleFlag?: {
+    hasStruggle?: boolean | null;
+    struggleTypes?:
+      | (
+          | 'commit-error'
+          | 'description-upload-mismatch'
+          | 'blank-turn-density'
+          | 'unresolved-lookup-failure'
+          | 'other'
+        )[]
+      | null;
+    note?: string | null;
+  };
   agentDraftDescriptionShort?: string | null;
   agentDraftDescriptionLong?: string | null;
   agentDraftConceptualKeywords?:
@@ -6551,6 +6605,29 @@ export interface SessionsSelect<T extends boolean = true> {
   stagedMedia?: T;
   stagedEventMedia?: T;
   fieldUpdateTimeline?: T;
+  fieldsCoveredThisSession?:
+    | T
+    | {
+        field?: T;
+        id?: T;
+      };
+  priorFieldConflicts?:
+    | T
+    | {
+        field?: T;
+        priorValue?: T;
+        priorSessionRef?: T;
+        newValue?: T;
+        resolution?: T;
+        id?: T;
+      };
+  sessionStruggleFlag?:
+    | T
+    | {
+        hasStruggle?: T;
+        struggleTypes?: T;
+        note?: T;
+      };
   agentDraftDescriptionShort?: T;
   agentDraftDescriptionLong?: T;
   agentDraftConceptualKeywords?:

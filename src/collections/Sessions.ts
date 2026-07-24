@@ -328,6 +328,69 @@ export const Sessions: CollectionConfig = {
         description: 'Array of { field, value, confidence, source, timestamp }.',
       },
     },
+    {
+      name: 'fieldsCoveredThisSession',
+      type: 'array',
+      admin: {
+        description:
+          'Auto-populated at commit: deduplicated field names written during this session (from fieldUpdateTimeline).',
+        readOnly: true,
+      },
+      fields: [{ name: 'field', type: 'text' }],
+    },
+    {
+      name: 'priorFieldConflicts',
+      type: 'array',
+      admin: {
+        description:
+          'Auto-populated when an automatic (image-analysis / knowledge-base) field would overwrite a different committed value from a prior session.',
+      },
+      fields: [
+        { name: 'field', type: 'text', required: true },
+        { name: 'priorValue', type: 'json' },
+        {
+          name: 'priorSessionRef',
+          type: 'relationship',
+          relationTo: 'sessions',
+        },
+        { name: 'newValue', type: 'json' },
+        {
+          name: 'resolution',
+          type: 'select',
+          defaultValue: 'unresolved',
+          options: [
+            { label: 'Kept prior', value: 'kept-prior' },
+            { label: 'Replaced', value: 'replaced' },
+            { label: 'Merged', value: 'merged' },
+            { label: 'Unresolved', value: 'unresolved' },
+          ],
+        },
+      ],
+    },
+    {
+      name: 'sessionStruggleFlag',
+      type: 'group',
+      admin: {
+        description:
+          'Mechanical tooling/schema struggle detection — distinct from dialogueRefinementFlag (artist judgment).',
+      },
+      fields: [
+        { name: 'hasStruggle', type: 'checkbox', defaultValue: false },
+        {
+          name: 'struggleTypes',
+          type: 'select',
+          hasMany: true,
+          options: [
+            { label: 'Commit error', value: 'commit-error' },
+            { label: 'Description/upload mismatch', value: 'description-upload-mismatch' },
+            { label: 'Blank turn density', value: 'blank-turn-density' },
+            { label: 'Unresolved lookup failure', value: 'unresolved-lookup-failure' },
+            { label: 'Other', value: 'other' },
+          ],
+        },
+        { name: 'note', type: 'textarea' },
+      ],
+    },
     { name: 'agentDraftDescriptionShort', type: 'text' },
     { name: 'agentDraftDescriptionLong', type: 'textarea' },
     {

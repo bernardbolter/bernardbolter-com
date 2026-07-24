@@ -16,6 +16,7 @@ export type SessionIndexFilters = {
   completedAfter?: string | null
   completedBefore?: string | null
   linchpinFlag?: boolean | null
+  hasStruggle?: boolean | null
 }
 
 function parseDateParam(raw: string | null | undefined): string | null {
@@ -54,6 +55,11 @@ export function parseSessionIndexFilters(
   if (linchpinRaw === 'true' || linchpinRaw === '1') linchpinFlag = true
   if (linchpinRaw === 'false' || linchpinRaw === '0') linchpinFlag = false
 
+  const struggleRaw = searchParams.get('hasStruggle')?.trim().toLowerCase()
+  let hasStruggle: boolean | null = null
+  if (struggleRaw === 'true' || struggleRaw === '1') hasStruggle = true
+  if (struggleRaw === 'false' || struggleRaw === '0') hasStruggle = false
+
   return {
     artwork,
     sessionType,
@@ -61,6 +67,7 @@ export function parseSessionIndexFilters(
     completedAfter,
     completedBefore,
     linchpinFlag,
+    hasStruggle,
   }
 }
 
@@ -71,7 +78,8 @@ export function sessionIndexHasActiveFilters(filters: SessionIndexFilters): bool
       filters.series ||
       filters.completedAfter ||
       filters.completedBefore ||
-      filters.linchpinFlag != null,
+      filters.linchpinFlag != null ||
+      filters.hasStruggle != null,
   )
 }
 
@@ -95,6 +103,9 @@ export function buildSessionIndexQueryString(filters: SessionIndexFilters): stri
   }
   if (filters.linchpinFlag != null) {
     params.set('linchpinFlag', filters.linchpinFlag ? 'true' : 'false')
+  }
+  if (filters.hasStruggle != null) {
+    params.set('hasStruggle', filters.hasStruggle ? 'true' : 'false')
   }
   const qs = params.toString()
   return qs ? `?${qs}` : ''
