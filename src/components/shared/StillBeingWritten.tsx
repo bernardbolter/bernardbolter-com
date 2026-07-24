@@ -27,9 +27,25 @@ export default function StillBeingWritten({
               <li key={entry.id} className="still-being-written__row">
                 <span className="still-being-written__date">{entry.dateLabel}</span>
                 <div className="still-being-written__body">
-                  <p className="bio__masonry-caption still-being-written__text">{entry.text}</p>
+                  {entry.permalinkHref ? (
+                    <Link
+                      href={entry.permalinkHref}
+                      className="bio__masonry-caption still-being-written__text still-being-written__text-link"
+                    >
+                      {entry.text}
+                    </Link>
+                  ) : (
+                    <p className="bio__masonry-caption still-being-written__text">{entry.text}</p>
+                  )}
                   <div className="still-being-written__meta">
-                    {entry.sessionHref ? (
+                    {entry.permalinkHref ? (
+                      <Link
+                        href={entry.permalinkHref}
+                        className="still-being-written__session-link"
+                      >
+                        → more
+                      </Link>
+                    ) : entry.sessionHref ? (
                       <Link href={entry.sessionHref} className="still-being-written__session-link">
                         → session
                       </Link>

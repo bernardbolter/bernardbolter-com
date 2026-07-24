@@ -4,6 +4,9 @@ export type AccumulatingEntry = {
   id: string
   dateLabel: string
   text: string
+  /** Permalink to bio entry or throughline page (preferred). */
+  permalinkHref: string | null
+  /** @deprecated Prefer permalinkHref — kept for transitional callers. */
   sessionHref: string | null
   reinforcingCount?: number
 }
@@ -54,6 +57,7 @@ export function publicBioTimelineEntries(artist: Artist): AccumulatingEntry[] {
       id: entry.id ?? entry.text,
       dateLabel: entry.eventDate?.trim() || '—',
       text: entry.text.trim(),
+      permalinkHref: entry.slug?.trim() ? `/bio/entries/${entry.slug.trim()}` : null,
       sessionHref: sessionPublicHref(entry.sourceSessionRef),
     }))
 }
@@ -65,6 +69,9 @@ export function publicStatementThroughlines(artist: Artist): AccumulatingEntry[]
       id: entry.id ?? entry.text,
       dateLabel: formatIsoDate(entry.dateRecognized) || '—',
       text: entry.text.trim(),
+      permalinkHref: entry.slug?.trim()
+        ? `/statement/throughlines/${entry.slug.trim()}`
+        : null,
       sessionHref: sessionPublicHref(entry.sourceSessionRef),
       reinforcingCount: entry.reinforcingSessions?.length ?? 0,
     }))

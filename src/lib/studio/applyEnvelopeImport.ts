@@ -197,6 +197,7 @@ async function applyStatementThroughlineAppend(
       text,
       linkedArtworkSlugs: linkedIds,
       sourceSessionRef: sessionId,
+      reinforcingSessions: [],
       visibility: write.entry.visibility ?? 'public',
     },
   ]

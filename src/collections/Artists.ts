@@ -317,6 +317,24 @@ export const Artists: CollectionConfig = {
         },
         { name: 'text', type: 'textarea', required: true },
         {
+          name: 'slug',
+          type: 'text',
+          unique: true,
+          index: true,
+          admin: {
+            description:
+              'Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.',
+          },
+        },
+        {
+          name: 'discoveryExcerpt',
+          type: 'richText',
+          admin: {
+            description:
+              'Curated pull from the session where this was recognized — not the full transcript. Authored at the abstract-proposal beat.',
+          },
+        },
+        {
           name: 'sourceSessionRef',
           type: 'relationship',
           relationTo: 'sessions',
@@ -481,6 +499,24 @@ export const Artists: CollectionConfig = {
         },
         { name: 'text', type: 'textarea', required: true },
         {
+          name: 'slug',
+          type: 'text',
+          unique: true,
+          index: true,
+          admin: {
+            description:
+              'Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.',
+          },
+        },
+        {
+          name: 'discoveryExcerpt',
+          type: 'richText',
+          admin: {
+            description:
+              'Curated pull from the originating session — not the full transcript. Authored at the abstract-proposal beat.',
+          },
+        },
+        {
           name: 'linkedArtworkSlugs',
           type: 'relationship',
           relationTo: 'artworks',
@@ -496,13 +532,28 @@ export const Artists: CollectionConfig = {
         },
         {
           name: 'reinforcingSessions',
-          type: 'relationship',
-          relationTo: 'sessions',
-          hasMany: true,
+          type: 'array',
+          labels: { singular: 'Reinforcing session', plural: 'Reinforcing sessions' },
           admin: {
             description:
-              "Later sessions that independently corroborated this pattern. Grows over time; makes a throughline's strength as a real recurring pattern visible.",
+              'Each later session that independently corroborated this pattern. Session gloss renders automatically; reinforcementNote is the semantic reason this session reinforces this throughline.',
           },
+          fields: [
+            {
+              name: 'session',
+              type: 'relationship',
+              relationTo: 'sessions',
+              required: true,
+            },
+            {
+              name: 'reinforcementNote',
+              type: 'textarea',
+              admin: {
+                description:
+                  'E.g. "Confirmed via the Basel revisit — same inside/outside language used unprompted." Optional but strongly encouraged.',
+              },
+            },
+          ],
         },
         {
           name: 'visibility',

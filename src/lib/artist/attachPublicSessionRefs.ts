@@ -1,35 +1,55 @@
+import type { Artist, Session } from '@/payload-types'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import type { Artist, Session } from '@/payload-types'
-
-function sessionIdsFromArtist(artist: Artist): number[] {
+function collectSessionIds(artist: Artist): number[] {
   const ids = new Set<number>()
+
+  const push = (value: unknown) => {
+    if (typeof value === 'number') ids.add(value)
+    else if (value && typeof value === 'object' && 'id' in value) {
+      const id = (value as { id: unknown }).id
+      if (typeof id === 'number') ids.add(id)
+    }
+  }
+
   for (const entry of artist.bioTimelineEntries ?? []) {
-    const ref = entry.sourceSessionRef
-    if (typeof ref === 'number') ids.add(ref)
+    push(entry.sourceSessionRef)
   }
   for (const entry of artist.statementThroughlines ?? []) {
-    const ref = entry.sourceSessionRef
-    if (typeof ref === 'number') ids.add(ref)
-    for (const reinforcing of entry.reinforcingSessions ?? []) {
-      if (typeof reinforcing === 'number') ids.add(reinforcing)
+    push(entry.sourceSessionRef)
+    for (const row of entry.reinforcingSessions ?? []) {
+      push(row.session)
     }
   }
   return [...ids]
 }
 
+type PublicSession = Pick<
+  Session,
+  | 'id'
+  | 'sessionId'
+  | 'status'
+  | 'sessionType'
+  | 'completedAt'
+  | 'fieldsCoveredThisSession'
+  | 'revisitOf'
+  | 'linchpinFlag'
+  | 'sessionStruggleFlag'
+  | 'priorFieldConflicts'
+>
+
 /**
  * Sessions are staff-only for list/read via access control. For public bio/statement
- * pages we attach minimal session docs (sessionId + status) so completed sessions
- * can link without exposing transcripts.
+ * pages we attach minimal session docs so completed sessions can link + gloss
+ * without exposing transcripts.
  */
 export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
-  const ids = sessionIdsFromArtist(artist)
+  const ids = collectSessionIds(artist)
   if (!ids.length) return artist
 
   const payload = await getPayload({ config })
-  const map = new Map<number, Pick<Session, 'id' | 'sessionId' | 'status'>>()
+  const map = new Map<number, PublicSession>()
 
   await Promise.all(
     ids.map(async (id) => {
@@ -41,6 +61,13 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
           select: {
             sessionId: true,
             status: true,
+            sessionType: true,
+            completedAt: true,
+            fieldsCoveredThisSession: true,
+            revisitOf: true,
+            linchpinFlag: true,
+            sessionStruggleFlag: true,
+            priorFieldConflicts: true,
           },
         })
         if (session) {
@@ -48,6 +75,13 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
             id: session.id,
             sessionId: session.sessionId,
             status: session.status,
+            sessionType: session.sessionType,
+            completedAt: session.completedAt,
+            fieldsCoveredThisSession: session.fieldsCoveredThisSession,
+            revisitOf: session.revisitOf,
+            linchpinFlag: session.linchpinFlag,
+            sessionStruggleFlag: session.sessionStruggleFlag,
+            priorFieldConflicts: session.priorFieldConflicts,
           })
         }
       } catch {
@@ -56,9 +90,12 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
     }),
   )
 
-  const hydrate = (
-    ref: number | Session | null | undefined,
-  ): number | Session | null | undefined => {
+  const hydrate = (ref: number | Session | null | undefined): number | Session | null | undefined => {
+    if (typeof ref !== 'number') return ref
+    return (map.get(ref) as Session | undefined) ?? ref
+  }
+
+  const hydrateRequired = (ref: number | Session): number | Session => {
     if (typeof ref !== 'number') return ref
     return (map.get(ref) as Session | undefined) ?? ref
   }
@@ -72,9 +109,10 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
     statementThroughlines: (artist.statementThroughlines ?? []).map((entry) => ({
       ...entry,
       sourceSessionRef: hydrate(entry.sourceSessionRef),
-      reinforcingSessions: (entry.reinforcingSessions ?? [])
-        .map((ref) => hydrate(ref))
-        .filter((ref): ref is number | Session => ref != null),
+      reinforcingSessions: (entry.reinforcingSessions ?? []).map((row) => ({
+        ...row,
+        session: hydrateRequired(row.session),
+      })),
     })),
   }
 }

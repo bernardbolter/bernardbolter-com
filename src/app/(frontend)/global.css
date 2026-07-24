@@ -2374,6 +2374,16 @@ h6 {
   font-style: italic;
 }
 
+.still-being-written__text-link {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.still-being-written__text-link:hover {
+  opacity: 0.8;
+}
+
 .still-being-written__meta {
   display: flex;
   flex-wrap: wrap;
@@ -2419,6 +2429,105 @@ h6 {
 
 .still-being-written__historical-link:hover .bio__masonry-caption {
   opacity: 0.75;
+}
+
+/* Bio entry + throughline permalink pages */
+.bio-entry-page,
+.throughline-page {
+  max-width: 42rem;
+}
+
+.bio-entry-page__date,
+.throughline-page__date {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.bio-entry-page__title,
+.throughline-page__title {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+  font-weight: 400;
+  line-height: 1.35;
+}
+
+.discovery-excerpt {
+  margin: 0 0 1.75rem;
+  padding: 0.85rem 0 0.85rem 1rem;
+  border-left: 2px solid color-mix(in srgb, var(--text-muted) 35%, transparent);
+}
+
+.discovery-excerpt__label {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.discovery-excerpt__body {
+  margin: 0;
+  font-style: italic;
+}
+
+.discovery-excerpt__body p {
+  margin: 0 0 0.65rem;
+}
+
+.discovery-excerpt__body p:last-child {
+  margin-bottom: 0;
+}
+
+.bio-entry-page__session,
+.throughline-page__reinforcements,
+.session-sibling-links {
+  margin: 1.75rem 0 0;
+}
+
+.throughline-page__reinforcement-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 12px;
+  border-left: 2px solid color-mix(in srgb, var(--text-muted) 22%, transparent);
+}
+
+.throughline-page__reinforcement-row {
+  margin: 0 0 1.1rem;
+  padding-left: 4px;
+}
+
+.throughline-page__reinforcement-row:last-child {
+  margin-bottom: 0;
+}
+
+.throughline-page__note {
+  margin-top: 0.35rem;
+  font-style: italic;
+}
+
+.session-sibling-links__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.session-sibling-links__list li {
+  margin: 0 0 0.45rem;
+}
+
+.session-gloss-line {
+  margin: 0;
+}
+
+.session-gloss-line--index .bio__inline-link {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.02em;
 }
 
 /* Optically hidden crawler entry — keep early in homepage DOM; do not use display:none */

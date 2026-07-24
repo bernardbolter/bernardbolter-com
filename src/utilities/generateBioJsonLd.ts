@@ -97,11 +97,13 @@ function buildBiographicalNotes(
     .filter((entry) => (entry.visibility ?? 'public') === 'public' && entry.text?.trim())
     .map((entry) => {
       const basedOn = sessionHref(entry.sourceSessionRef, baseUrl)
+      const slug = entry.slug?.trim()
       return {
         '@type': 'PropertyValue',
         propertyID: 'artism:biographicalNote',
         value: entry.text.trim(),
         ...(entry.eventDate?.trim() ? { 'artism:eventDate': entry.eventDate.trim() } : {}),
+        ...(slug ? { url: `${baseUrl}/bio/entries/${slug}` } : {}),
         ...(basedOn ? { isBasedOn: basedOn } : {}),
       }
     })

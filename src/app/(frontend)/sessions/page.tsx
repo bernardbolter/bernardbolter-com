@@ -5,8 +5,7 @@ import config from '@payload-config'
 
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
-import { buildSessionGloss } from '@/lib/corpus/sessionGloss'
-import { sessionTier5ApiPath } from '@/lib/corpus/buildTier5SessionsResponse'
+import SessionGlossLine from '@/components/shared/SessionGlossLine'
 import {
   buildSessionIndexQueryString,
   SESSION_INDEX_TYPE_OPTIONS,
@@ -46,6 +45,7 @@ function seriesSlugFromArtwork(artwork: Artwork | null): string | null {
 
 type SessionRow = {
   id: number
+  session: Session
   sessionId: string
   sessionType: string
   completedAt?: string | null
@@ -53,7 +53,6 @@ type SessionRow = {
   hasStruggle: boolean
   primary: Artwork | null
   mentioned: Artwork[]
-  gloss: string
   passNumber: number
 }
 
@@ -152,6 +151,7 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
         const typed = session as Session
         return {
           id: session.id,
+          session: typed,
           sessionId: session.sessionId as string,
           sessionType: session.sessionType,
           completedAt: session.completedAt,
@@ -160,15 +160,6 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
           primary,
           mentioned,
           passNumber,
-          gloss: buildSessionGloss({
-            sessionType: session.sessionType,
-            fieldsCoveredThisSession: typed.fieldsCoveredThisSession,
-            revisitOf: typed.revisitOf,
-            passNumber,
-            linchpinFlag: typed.linchpinFlag,
-            sessionStruggleFlag: typed.sessionStruggleFlag,
-            priorFieldConflicts: typed.priorFieldConflicts,
-          }),
         }
       }),
     filters,
@@ -214,7 +205,6 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                     day: 'numeric',
                   })
                 : '—'
-              const tier5Href = sessionTier5ApiPath(row.sessionId)
               return (
                 <li key={row.id} className="corpus-page__row">
                   <div className="corpus-page__meta">
@@ -222,14 +212,12 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                     <span className="corpus-page__status">{row.sessionType}</span>
                   </div>
                   <div className="corpus-page__body">
-                    <Link
-                      href={`/sessions/${row.sessionId}`}
-                      className="corpus-page__title"
-                    >
-                      {row.isLinchpin ? '◆ ' : ''}
-                      Session {row.sessionId.slice(0, 8)}…
-                    </Link>
-                    <p className="bio__masonry-caption">{row.gloss}</p>
+                    <SessionGlossLine
+                      session={row.session}
+                      passNumber={row.passNumber}
+                      showJsonLink
+                      className="session-gloss-line session-gloss-line--index"
+                    />
                     {row.primary ? (
                       <p className="bio__masonry-caption">
                         Primary:{' '}
@@ -243,11 +231,6 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                         Mentioned: {row.mentioned.map((a) => a.title).join(', ')}
                       </p>
                     ) : null}
-                    <p className="corpus-page__links">
-                      <a href={tier5Href} className="still-being-written__session-link">
-                        Full session data (JSON)
-                      </a>
-                    </p>
                   </div>
                 </li>
               )

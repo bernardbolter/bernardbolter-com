@@ -387,6 +387,28 @@ export interface Artist {
          */
         eventDate?: string | null;
         text: string;
+        /**
+         * Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.
+         */
+        slug?: string | null;
+        /**
+         * Curated pull from the session where this was recognized — not the full transcript. Authored at the abstract-proposal beat.
+         */
+        discoveryExcerpt?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
         sourceSessionRef?: (number | null) | Session;
         /**
          * Optional. The artwork(s) that prompted this fact, if any.
@@ -571,15 +593,46 @@ export interface Artist {
          */
         dateRecognized?: string | null;
         text: string;
+        /**
+         * Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.
+         */
+        slug?: string | null;
+        /**
+         * Curated pull from the originating session — not the full transcript. Authored at the abstract-proposal beat.
+         */
+        discoveryExcerpt?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
         linkedArtworkSlugs?: (number | Artwork)[] | null;
         /**
          * The session where this throughline was first named.
          */
         sourceSessionRef?: (number | null) | Session;
         /**
-         * Later sessions that independently corroborated this pattern. Grows over time; makes a throughline's strength as a real recurring pattern visible.
+         * Each later session that independently corroborated this pattern. Session gloss renders automatically; reinforcementNote is the semantic reason this session reinforces this throughline.
          */
-        reinforcingSessions?: (number | Session)[] | null;
+        reinforcingSessions?:
+          | {
+              session: number | Session;
+              /**
+               * E.g. "Confirmed via the Basel revisit — same inside/outside language used unprompted." Optional but strongly encouraged.
+               */
+              reinforcementNote?: string | null;
+              id?: string | null;
+            }[]
+          | null;
         visibility?: ('public' | 'private') | null;
         id?: string | null;
       }[]
@@ -4822,6 +4875,8 @@ export interface ArtistsSelect<T extends boolean = true> {
     | {
         eventDate?: T;
         text?: T;
+        slug?: T;
+        discoveryExcerpt?: T;
         sourceSessionRef?: T;
         linkedArtworkSlugs?: T;
         visibility?: T;
@@ -4871,9 +4926,17 @@ export interface ArtistsSelect<T extends boolean = true> {
     | {
         dateRecognized?: T;
         text?: T;
+        slug?: T;
+        discoveryExcerpt?: T;
         linkedArtworkSlugs?: T;
         sourceSessionRef?: T;
-        reinforcingSessions?: T;
+        reinforcingSessions?:
+          | T
+          | {
+              session?: T;
+              reinforcementNote?: T;
+              id?: T;
+            };
         visibility?: T;
         id?: T;
       };

@@ -82,6 +82,7 @@ function buildThroughlineProperties(
     .filter((entry) => (entry.visibility ?? 'public') === 'public' && entry.text?.trim())
     .map((entry) => {
       const basedOn = sessionHref(entry.sourceSessionRef, baseUrl)
+      const slug = entry.slug?.trim()
       return {
         '@type': 'PropertyValue',
         propertyID: 'artism:statementThroughline',
@@ -89,6 +90,7 @@ function buildThroughlineProperties(
         ...(entry.dateRecognized
           ? { 'artism:dateRecognized': entry.dateRecognized }
           : {}),
+        ...(slug ? { url: `${baseUrl}/statement/throughlines/${slug}` } : {}),
         ...(basedOn ? { isBasedOn: basedOn } : {}),
       }
     })
