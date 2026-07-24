@@ -108,7 +108,7 @@ const FALLBACK_SERIES_TIERS: Record<string, Array<Record<string, unknown>>> = {
       tierName: 'A0',
       tierOrder: 2,
       isOriginalTier: false,
-      editionSize: 200,
+      editionSize: 100,
       apCount: 0,
       substrate: 'Paper',
     },

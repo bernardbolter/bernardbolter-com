@@ -376,7 +376,7 @@ print: {
     {
       tier: enum ['full_size', 'a0', 'a1']
       dimensions: string          // "1.5m × 2m" / "A0" / "A1"
-      editionSize: number         // 4 / 200 / 500
+      editionSize: number         // 3+1AP / 100 / 500
       vendureProductId: string
       arEnabled: boolean
       available: boolean

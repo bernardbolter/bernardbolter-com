@@ -32,7 +32,7 @@ const TIER_DEFS = [
     tierName: 'A0',
     tierOrder: 2,
     isOriginalTier: false,
-    editionSize: 200,
+    editionSize: 100,
     apCount: 0,
     dimensionUnit: 'cm' as const,
     widthWhole: 84,
