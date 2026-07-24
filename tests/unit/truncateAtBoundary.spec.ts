@@ -3,6 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { truncateAtBoundary } from '@/lib/corpus/truncateAtBoundary'
 
 describe('truncateAtBoundary', () => {
+  it('returns null for null/undefined/blank input', () => {
+    expect(truncateAtBoundary(null, 200)).toBeNull()
+    expect(truncateAtBoundary(undefined, 200)).toBeNull()
+    expect(truncateAtBoundary('   ', 200)).toBeNull()
+  })
+
   it('returns short text unchanged', () => {
     expect(truncateAtBoundary('Short gist.', 200)).toBe('Short gist.')
   })
@@ -27,7 +33,7 @@ describe('truncateAtBoundary', () => {
     const text = 'abcdefghijklmnopqrstuvwxyz and then more words after that long token'
     const result = truncateAtBoundary(text, 20)
     // No space in the first 20 chars → hard slice + ellipsis (unavoidable)
-    expect(result.endsWith('…')).toBe(true)
-    expect(result.length).toBeLessThanOrEqual(21)
+    expect(result?.endsWith('…')).toBe(true)
+    expect(result!.length).toBeLessThanOrEqual(21)
   })
 })
