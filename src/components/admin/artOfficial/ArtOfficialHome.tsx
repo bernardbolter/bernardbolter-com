@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense, useCallback } from 'react'
 
 import { ArtOfficialInstructions } from './ArtOfficialInstructions'
+import { ArtOfficialSourceOfTruthPanel } from './ArtOfficialSourceOfTruthPanel'
 import { NewSessionButton } from './NewSessionButton'
 import { EventSessionLauncher } from './EventSessionLauncher'
 import { QuickEventIntake } from './QuickEventIntake'
@@ -89,6 +90,7 @@ function ArtOfficialHomeInner({
   artistCreateHref,
   artistExists,
   practiceKnowledgeEmpty,
+  sourceOfTruthMarkdown,
   inProgress,
   needsRefinement,
   completed,
@@ -99,6 +101,7 @@ function ArtOfficialHomeInner({
   artistCreateHref: string
   artistExists: boolean
   practiceKnowledgeEmpty: boolean
+  sourceOfTruthMarkdown: string
   inProgress: SessionRow[]
   needsRefinement: SessionRow[]
   completed: SessionRow[]
@@ -201,6 +204,7 @@ function ArtOfficialHomeInner({
             artistCreateHref={artistCreateHref}
             artistExists={artistExists}
           />
+          <ArtOfficialSourceOfTruthPanel markdown={sourceOfTruthMarkdown} />
           <NewSessionButton
             defaultSessionType={recommendation.sessionType}
             disabled={!artistExists}

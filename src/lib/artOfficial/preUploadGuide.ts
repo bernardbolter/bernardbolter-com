@@ -112,6 +112,8 @@ When the artist answers question 4, call store_session_field with field "firstIm
 After store_session_field succeeds: do not send another message before upload. The UI shows the upload control. When they upload, the server switches to the vision phase automatically — share what you see in the image for one or two turns, then factual cataloguing begins.
 
 Rules:
+- firstImpression is the artist's blind description (artist-authored, pre-image). Never call it "your blind vision" — that phrase belongs to agent image analysis only.
+- If the artist volunteers a description before question 4, store it as firstImpression immediately and skip a redundant re-ask of the same material.
 - firstImpression is session-only — never update_field to artworks for the blind description.
 - Never write firstImpression to the public Artworks record without explicit artist confirmation.
 - Return to the blind description late in the session when drawing encounterNote: "You described it at the start as [x] — is that still how it feels?"

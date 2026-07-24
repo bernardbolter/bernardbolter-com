@@ -7,6 +7,7 @@ import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 import { AdminViewShell } from './AdminViewShell'
 import { ArtOfficialHome } from './artOfficial/ArtOfficialHome'
 import { getStartRecommendation } from '@/lib/artOfficial/startRecommendation'
+import { loadArtOfficialSourceOfTruthMarkdown } from '@/lib/artOfficial/sourceOfTruth'
 
 export async function ArtOfficialView(props: AdminViewServerProps) {
   const { initPageResult, payload } = props
@@ -31,6 +32,14 @@ export async function ArtOfficialView(props: AdminViewServerProps) {
   const artistExists = artists.docs.length > 0
 
   const recommendation = await getStartRecommendation({ payload, req, user })
+  let sourceOfTruthMarkdown = ''
+  try {
+    sourceOfTruthMarkdown = loadArtOfficialSourceOfTruthMarkdown()
+  } catch (err) {
+    console.error('[art-official] failed to load source-of-truth markdown', err)
+    sourceOfTruthMarkdown =
+      '# Art/Official — Source of Truth\n\nCould not load `docs/corpus/art-official-source-of-truth.md` on this server.'
+  }
 
   const practiceKnowledgeCount = await payload.count({
     collection: 'practice-knowledge',
@@ -84,6 +93,7 @@ export async function ArtOfficialView(props: AdminViewServerProps) {
           artistCreateHref={artistCreateHref}
           artistExists={artistExists}
           practiceKnowledgeEmpty={practiceKnowledgeCount.totalDocs === 0}
+          sourceOfTruthMarkdown={sourceOfTruthMarkdown}
           inProgress={inProgress.docs}
           needsRefinement={needsRefinement.docs}
           completed={completed.docs}

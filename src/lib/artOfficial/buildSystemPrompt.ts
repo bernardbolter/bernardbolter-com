@@ -53,6 +53,7 @@ import {
   buildPlannedWorksContextBlock,
   collectPlannedWorksForPrompt,
 } from './plannedWorksContext'
+import { buildSourceOfTruthPromptBlock } from './sourceOfTruth'
 
 export type BuildSystemPromptArgs = {
   payload: Payload
@@ -127,7 +128,7 @@ export async function buildSystemPromptParts(
   ]
 
   if (sessionType !== 'event-enrichment') {
-    cachedPrefixParts.push(DIALOGUE_RULES, buildFieldRoadmap(careerStage))
+    cachedPrefixParts.push(DIALOGUE_RULES, buildSourceOfTruthPromptBlock(), buildFieldRoadmap(careerStage))
   }
 
   if (sessionType === 'artwork-cataloguing' || sessionType === 'corpus-revisit') {
