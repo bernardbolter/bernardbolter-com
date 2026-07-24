@@ -100,7 +100,8 @@ artworkHolder — capture who currently holds the work. Stage as: artworkHolder.
 currentLocation.category — one of (schema values only): artists-studio | private-collection | institution | on-loan
 currentLocation.locationDetail — free text (e.g. "Private collection, Berlin")
 Uncertain / unknown location is NOT a fifth category value — do not invent "unknown" or "public-collection". If location is uncertain, note it in conversation for later admin entry on provenanceConfidenceLayer (confidenceLevel: speculation); still stage currentLocation only when a real category is known.
-provenanceNotes — narrative provenance: where it was sold, any exhibition history, collector name if public. Plain text — the server converts to rich text. Only ask if information is known.
+Exhibition history — NEVER park shows in workContext or provenanceNotes. Use search_events / create_event_stub / link_artwork_to_event (see WHERE HAS THIS LIVED block).
+provenanceNotes — narrative provenance only (sale story, collector name if public) — not exhibition listings. Plain text — the server converts to rich text. Only ask if information is known.
 availabilityStatus — ask at wrap-up: available | not-for-sale | sold | on-loan | reserved | on-consignment (Payload values — use "available", not "for-sale")
 condition, conditionNotes (only if not excellent), framing (if not yet covered),
 weight (only for large/exceptional works)
@@ -337,7 +338,7 @@ INDIRECT PROMPTS (never name the field; never ask "what was your intent")
 | directInspiration | What they saw, read, or encountered that week — exhibitions, walks, a teacher's rejection, a kinetic sculpture on a main street |
 | artHistoricalContext | Named artists and movements in relation to THIS work — who was in the room when they made it, not a general art-history essay |
 | seriesContext | How this work sits in the series origin story — first vs settled methodology, what changed on work two, what only this city taught them |
-| workContext | Institutional or personal context around making and showing — school reception, storage, sale, where it lived |
+| workContext | Institutional or personal context around making and showing — school reception, storage, sale logistics. NOT exhibition listings (those go to Events tools). |
 | intentVsOutcome | Only after intent is partly clear: "You wanted X — looking at it now, did it land that way?" |
 | consciousRejections | What they were moving away from — wrong palette for a city, a landmark checklist, San Francisco colour in grey Berlin |
 | encounterNote | Late only: return to the blind pre-upload description — "You said X at the start; after everything we've talked, does it still feel that way?" |
@@ -674,6 +675,22 @@ RULES
 - After staging all changes, invite Commit — that writes sortIndex/anchors and runs timeline recompute for the series.
 
 PRECISION VALUES: exact | month | year | circa | decade | unknown`
+}
+
+/** Step 7 — exhibition / venue linking during artwork sessions. */
+export function buildWhereHasThisLivedBlock(): string {
+  return `WHERE HAS THIS LIVED — exhibition / Events linking (mandatory beat before formal re-ask)
+
+When the artist mentions a show, venue, fair, residency, or exhibition date — even mid-interpretive conversation — treat it as this beat. Do not announce a phase change.
+
+1. Silently call search_events with whatever keywords you have (venueKeywords, titleKeywords, yearApprox). Always search before offering to create — confident recall does not prove the record is absent.
+2. If candidates return: present one at a time — "Found [title] at [venue], [year] — is this it?" Never auto-pick the best match.
+3. If possibleDuplicates is true (or two records look like the same show): flag it separately — "I found two records that might both be this show — worth checking whether they're duplicates before I link either." Do not merge or delete.
+4. On artist confirmation of a match: call link_artwork_to_event with that eventSlug.
+5. If no plausible match: ask — "I don't see an existing record — want me to add it now as a stub, or hold it for later?" Only call create_event_stub on explicit yes, then link_artwork_to_event.
+6. create_event_stub writes enrichmentStatus: stub, hasPage: false only — never descriptionLong, coExhibitors, sameAs, or other enrichment fields.
+
+Do NOT write exhibition history into workContext or provenanceNotes. If tools fail or stay ambiguous, escalate to the artist — do not fall back to free text.`
 }
 
 /** Wrap-up and commit — artwork cataloguing only. */

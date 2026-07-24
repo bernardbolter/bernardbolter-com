@@ -19,6 +19,14 @@ import {
   searchWikidataSchema,
   setDateAnchorSchema,
   storeSessionFieldSchema,
+  confirmAuthorityProposalSchema,
+  proposeAuthorityFieldSchema,
+  transitionToReasoningPhaseSchema,
+  triggerImageAnalysisSchema,
+  updateFieldSchema,
+  searchEventsSchema,
+  createEventStubSchema,
+  linkArtworkToEventSchema,
   TOOL_ASSESS_FORMAL_CONTRIBUTION,
   TOOL_FETCH_WIKIPEDIA_ARTICLE,
   TOOL_FLAG_WEAK_PHASE,
@@ -40,13 +48,12 @@ import {
   TOOL_STORE_SESSION_FIELD,
   TOOL_TRIGGER_IMAGE_ANALYSIS,
   TOOL_UPDATE_FIELD,
-  confirmAuthorityProposalSchema,
-  proposeAuthorityFieldSchema,
-  transitionToReasoningPhaseSchema,
-  triggerImageAnalysisSchema,
-  updateFieldSchema,
+  TOOL_SEARCH_EVENTS,
+  TOOL_CREATE_EVENT_STUB,
+  TOOL_LINK_ARTWORK_TO_EVENT,
 } from './agentTools'
 import { applyStagedMediaUpload } from './applyStagedMediaUpload'
+import { createEventStub, linkArtworkToEvent } from './createEventStub'
 import { getMediaSlot } from './artworkMediaSlots'
 import {
   formatConflictQuestion,
@@ -88,6 +95,24 @@ import {
 } from './transitionEventDialoguePhase'
 import { estimateTimelineDateForWork } from './sequencing/estimateTimelineDate'
 import { findArtworkBySlug, resolveTargetArtworkSlug } from './sequencing/resolveArtwork'
+import { requiresArtwork } from './routing'
+import { rankEventSearchCandidates } from './searchEvents'
+
+function sessionArtworkId(session: Session): number | null {
+  if (typeof session.primaryArtwork === 'number') return session.primaryArtwork
+  if (session.primaryArtwork && typeof session.primaryArtwork === 'object') {
+    return session.primaryArtwork.id
+  }
+  if (typeof session.artworkRecord === 'number') return session.artworkRecord
+  if (session.artworkRecord && typeof session.artworkRecord === 'object') {
+    return session.artworkRecord.id
+  }
+  return null
+}
+
+function isArtworkEventLinkSession(session: Session): boolean {
+  return requiresArtwork(session.sessionType as Parameters<typeof requiresArtwork>[0])
+}
 
 const BIOGRAPHY_ARTIST_FIELDS = new Set(['bioFull', 'bioMedium', 'bioShort'])
 const STATEMENT_ARTIST_FIELDS = new Set([
@@ -1116,6 +1141,118 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
         })
         send('phase-transition', { phase: 'phase-b-reasoning', reason: 'Phase A complete' })
         return toolResult({ ok: true, phase: 'phase-b-reasoning' })
+      }
+
+      case TOOL_SEARCH_EVENTS: {
+        if (!isArtworkEventLinkSession(session)) {
+          return failTool(
+            tool.name,
+            'search_events is only for artwork-cataloguing / corpus-revisit sessions.',
+          )
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) return failTool(tool.name, parsed.error)
+        const args = searchEventsSchema.parse(parsed.data)
+
+        const events = await payload.find({
+          collection: 'events',
+          limit: 500,
+          depth: 0,
+          overrideAccess: false,
+          user,
+          select: {
+            slug: true,
+            title: true,
+            venueName: true,
+            venueCity: true,
+            yearStart: true,
+            eventType: true,
+            enrichmentStatus: true,
+          },
+        })
+
+        const ranked = rankEventSearchCandidates(events.docs, args)
+        send('tool-staged', { name: tool.name, input: args })
+        return toolResult({
+          ok: true,
+          candidates: ranked.candidates,
+          possibleDuplicates: ranked.possibleDuplicates,
+          note: ranked.note,
+          instruction:
+            'Present candidates one at a time for artist confirmation. Never auto-pick. If possibleDuplicates, flag before linking either. Do not write exhibition history to workContext.',
+        })
+      }
+
+      case TOOL_CREATE_EVENT_STUB: {
+        if (!isArtworkEventLinkSession(session)) {
+          return failTool(
+            tool.name,
+            'create_event_stub is only for artwork-cataloguing / corpus-revisit sessions.',
+          )
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) return failTool(tool.name, parsed.error)
+        const args = createEventStubSchema.parse(parsed.data)
+
+        try {
+          const created = await createEventStub(payload, user, args)
+          send('tool-staged', { name: tool.name, input: args })
+          return toolResult({
+            ok: true,
+            created: true,
+            id: created.id,
+            slug: created.slug,
+            title: created.title,
+            enrichmentStatus: 'stub',
+            hasPage: false,
+            next: 'Call link_artwork_to_event with this slug after confirming with the artist.',
+          })
+        } catch (err) {
+          return failTool(tool.name, err instanceof Error ? err.message : 'Could not create event stub')
+        }
+      }
+
+      case TOOL_LINK_ARTWORK_TO_EVENT: {
+        if (!isArtworkEventLinkSession(session)) {
+          return failTool(
+            tool.name,
+            'link_artwork_to_event is only for artwork-cataloguing / corpus-revisit sessions.',
+          )
+        }
+        const parsed = parseToolArgs(tool.name, tool.input)
+        if (!parsed.ok) return failTool(tool.name, parsed.error)
+        const args = linkArtworkToEventSchema.parse(parsed.data)
+        const artworkId = sessionArtworkId(session)
+        if (artworkId == null) {
+          return failTool(
+            tool.name,
+            'No artwork linked on this session — set primaryArtwork / artworkRecord first.',
+          )
+        }
+
+        try {
+          const linked = await linkArtworkToEvent(payload, user, {
+            eventSlug: args.eventSlug,
+            artworkId,
+          })
+          send('tool-staged', { name: tool.name, input: args })
+          return toolResult({
+            ok: true,
+            linked: true,
+            alreadyLinked: linked.alreadyLinked,
+            eventId: linked.eventId,
+            eventSlug: linked.eventSlug,
+            artworkId: linked.artworkId,
+            note: linked.alreadyLinked
+              ? 'Artwork was already on Events.artworks.'
+              : 'Wrote Events.artworks (authority). Artworks.events join will reflect this.',
+          })
+        } catch (err) {
+          return failTool(
+            tool.name,
+            err instanceof Error ? err.message : 'Could not link artwork to event',
+          )
+        }
       }
 
       default: {

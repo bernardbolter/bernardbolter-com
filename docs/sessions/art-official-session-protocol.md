@@ -88,7 +88,7 @@ Before the re-ask. One at a time:
 | Where is it now? | `currentLocation`, `locationDetail` |
 | Ownership / gift / sale chain | `ownershipHistory`, `provenanceOriginKnown`, `provenanceConfidenceLayer` |
 | Sale details if any (private) | `salesRecord` (price, buyer, channel — never public) |
-| Where has it been shown? | Prefer Events relation when known; do not dump exhibitions into free-text `workContext` if an Event exists or should |
+| Where has it been shown? | Admin: `search_events` → confirm → `link_artwork_to_event`; if none, ask before `create_event_stub`. Never dump exhibition history into `workContext`. Flag possible duplicate Events; never merge silently. Claude path: note the show for the envelope / later Events write — still do not park it in `workContext`. |
 | Insurance if relevant | `insuranceValue`, `insuranceValueDate` |
 
 Defer only if Bernard says so out loud.

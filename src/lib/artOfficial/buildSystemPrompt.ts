@@ -19,6 +19,7 @@ import {
   buildDialoguePhaseBlock,
   buildSequencingBlock,
   buildSessionCloseBlock,
+  buildWhereHasThisLivedBlock,
   buildTagClassificationBlock,
   buildTimeBasedWorkBlock,
   buildTriptychSessionBlock,
@@ -143,6 +144,7 @@ export async function buildSystemPromptParts(
       buildAchSessionBlock(),
       buildDcsSessionBlock(),
       buildMegacitiesSessionBlock(),
+      buildWhereHasThisLivedBlock(),
       buildSessionCloseBlock(),
     )
   }

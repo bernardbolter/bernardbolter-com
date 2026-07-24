@@ -2,8 +2,14 @@ import { z } from 'zod'
 
 import type { Tool } from '@anthropic-ai/sdk/resources/messages/messages'
 
+import { EVENT_TYPE_OPTIONS } from './eventTypeOptions'
 import { PRACTICE_KNOWLEDGE_SLUGS } from './practiceKnowledgeSlugs'
 import { SESSION_PHASES } from './sessionPhase'
+
+const EVENT_TYPE_ENUM = EVENT_TYPE_OPTIONS.map((o) => o.value) as [
+  (typeof EVENT_TYPE_OPTIONS)[number]['value'],
+  ...(typeof EVENT_TYPE_OPTIONS)[number]['value'][],
+]
 
 export const TOOL_UPDATE_FIELD = 'update_field'
 export const TOOL_STORE_SESSION_FIELD = 'store_session_field'
@@ -26,6 +32,9 @@ export const TOOL_LINK_MEDIA_TO_SLOT = 'link_media_to_slot'
 export const TOOL_PROPOSE_AUTHORITY_FIELD = 'propose_authority_field'
 export const TOOL_CONFIRM_AUTHORITY_PROPOSAL = 'confirm_authority_proposal'
 export const TOOL_TRANSITION_TO_REASONING_PHASE = 'transition_to_reasoning_phase'
+export const TOOL_SEARCH_EVENTS = 'search_events'
+export const TOOL_CREATE_EVENT_STUB = 'create_event_stub'
+export const TOOL_LINK_ARTWORK_TO_EVENT = 'link_artwork_to_event'
 
 const targetCollectionSchema = z.enum([
   'artworks',
@@ -212,6 +221,38 @@ export const confirmAuthorityProposalSchema = z
 
 export const transitionToReasoningPhaseSchema = z.object({})
 
+export const searchEventsSchema = z
+  .object({
+    venueKeywords: z.string().optional(),
+    yearApprox: z.number().int().optional(),
+    titleKeywords: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    const hasVenue = Boolean(data.venueKeywords?.trim())
+    const hasTitle = Boolean(data.titleKeywords?.trim())
+    const hasYear = data.yearApprox != null
+    if (!hasVenue && !hasTitle && !hasYear) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Provide at least one of venueKeywords, titleKeywords, or yearApprox',
+      })
+    }
+  })
+
+export const createEventStubSchema = z.object({
+  eventType: z.enum(EVENT_TYPE_ENUM),
+  title: z.string().min(1),
+  yearStart: z.number().int().min(1000).max(9999),
+  venueName: z.string().optional(),
+  venueCity: z.string().optional(),
+  venueCountry: z.string().optional(),
+  eventTypeCustom: z.string().optional(),
+})
+
+export const linkArtworkToEventSchema = z.object({
+  eventSlug: z.string().min(1),
+})
+
 const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_UPDATE_FIELD]: updateFieldSchema,
   [TOOL_STORE_SESSION_FIELD]: storeSessionFieldSchema,
@@ -231,6 +272,9 @@ const toolSchemas: Record<string, z.ZodType> = {
   [TOOL_PLACE_IN_SEQUENCE]: placeInSequenceSchema,
   [TOOL_SET_DATE_ANCHOR]: setDateAnchorSchema,
   [TOOL_LINK_MEDIA_TO_SLOT]: linkMediaToSlotSchema,
+  [TOOL_SEARCH_EVENTS]: searchEventsSchema,
+  [TOOL_CREATE_EVENT_STUB]: createEventStubSchema,
+  [TOOL_LINK_ARTWORK_TO_EVENT]: linkArtworkToEventSchema,
 }
 
 export type ParseToolResult<T> =
@@ -576,6 +620,65 @@ export const ANTHROPIC_TOOL_SCHEMAS: Tool[] = [
     input_schema: {
       type: 'object',
       properties: {},
+    },
+  },
+  {
+    name: TOOL_SEARCH_EVENTS,
+    description:
+      "Search existing Events by venue, year (±1), and/or title keywords when exhibition history surfaces in the 'where has this lived' beat. Always call before offering to create a stub — never assume no match. Returns all plausible candidates; never auto-pick. If multiple look like the same show, flag possible duplicates for artist review.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        venueKeywords: {
+          type: 'string',
+          description: 'Venue name or partial name as mentioned by the artist.',
+        },
+        yearApprox: {
+          type: 'number',
+          description: 'Year if known. Matching tolerates ±1 year.',
+        },
+        titleKeywords: {
+          type: 'string',
+          description: 'Exhibition or show title fragment.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
+    name: TOOL_CREATE_EVENT_STUB,
+    description:
+      'Create a Quick Event Intake stub (enrichmentStatus: stub, hasPage: false). Only after search_events found nothing plausible AND the artist explicitly confirmed creating one. Does not write enrichment fields. Call link_artwork_to_event after success.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        eventType: {
+          type: 'string',
+          enum: [...EVENT_TYPE_ENUM],
+        },
+        title: { type: 'string' },
+        yearStart: { type: 'number' },
+        venueName: { type: 'string' },
+        venueCity: { type: 'string' },
+        venueCountry: { type: 'string' },
+        eventTypeCustom: {
+          type: 'string',
+          description: 'Required when eventType is other.',
+        },
+      },
+      required: ['eventType', 'title', 'yearStart'],
+    },
+  },
+  {
+    name: TOOL_LINK_ARTWORK_TO_EVENT,
+    description:
+      "Link the session artwork to an Events record by slug. Writes Events.artworks (authority side); Artworks.events is a read-only join. Call after artist confirms a search_events match or after create_event_stub succeeds.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        eventSlug: { type: 'string' },
+      },
+      required: ['eventSlug'],
     },
   },
 ]
