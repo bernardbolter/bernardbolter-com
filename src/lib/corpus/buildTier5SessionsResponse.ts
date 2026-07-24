@@ -151,9 +151,68 @@ export function buildTier5SessionsResponse(options: {
 
 export type ProjectedTier5Session = NonNullable<ReturnType<typeof projectTier5Session>>
 
+/** Shared select for Tier 5 session projection (artwork-keyed or session-keyed). */
+export const TIER5_SESSION_SELECT = {
+  sessionId: true,
+  sessionType: true,
+  status: true,
+  createdAt: true,
+  completedAt: true,
+  primaryArtwork: true,
+  artworkRecord: true,
+  mentionedArtworks: true,
+  messages: true,
+  firstImpression: true,
+  secondDescription: true,
+  fieldUpdateTimeline: true,
+  sessionNotes: true,
+  weakPhases: true,
+  blindDescriptionUseful: true,
+  formalContributionAccuracy: true,
+  dialogueRefinementFlag: true,
+  refinementNotes: true,
+  agentDraftDescriptionShort: true,
+  agentDraftDescriptionLong: true,
+  agentDraftConceptualKeywords: true,
+  agentDraftFormalContributionAssessment: true,
+  agentModel: true,
+} as const
+
+export function sessionTier5ApiPath(sessionId: string): string {
+  return `/api/corpus/sessions/${encodeURIComponent(sessionId)}?tier=5`
+}
+
+/**
+ * Session-keyed Tier 5 response — works with or without primaryArtwork
+ * (event-enrichment, artist-statement, biography, etc.).
+ */
+export function buildTier5SessionByIdResponse(options: {
+  session: Tier5SessionSource
+  baseUrl: string
+}) {
+  const { session, baseUrl } = options
+  const projected = projectTier5Session(session)
+  if (!projected) return null
+
+  return {
+    '@type': 'artism:Session',
+    'artism:tier': 5,
+    url: `${baseUrl}${sessionTier5ApiPath(projected.sessionId)}`,
+    sessionId: projected.sessionId,
+    sessionType: projected.sessionType,
+    createdAt: projected.createdAt,
+    completedAt: projected.completedAt,
+    primaryArtwork: projected.primaryArtwork,
+    mentionedArtworks: projected.mentionedArtworks,
+    artistRecord: projected.artistRecord,
+    'artism:DialogueSelfAudit': projected['artism:DialogueSelfAudit'],
+    sameAs: `${baseUrl}/sessions/${projected.sessionId}`,
+  }
+}
+
 /**
  * Page-embedded JSON-LD for `/sessions/[sessionId]`.
- * Same streams as Tier 5; artwork refs are absolute URLs; `sameAs` points at the API.
+ * Same streams as Tier 5; artwork refs are absolute URLs; `sameAs` points at the session API.
  */
 export function buildSessionJsonLd(
   session: Tier5SessionSource,
@@ -164,9 +223,6 @@ export function buildSessionJsonLd(
 
   const primaryUrl = projected.primaryArtwork
     ? `${baseUrl}/${projected.primaryArtwork}`
-    : null
-  const sameAs = projected.primaryArtwork
-    ? `${baseUrl}/api/corpus/${encodeURIComponent(projected.primaryArtwork)}?tier=5`
     : null
 
   return {
@@ -179,6 +235,6 @@ export function buildSessionJsonLd(
     mentionedArtworks: projected.mentionedArtworks.map((slug) => `${baseUrl}/${slug}`),
     artistRecord: projected.artistRecord,
     'artism:DialogueSelfAudit': projected['artism:DialogueSelfAudit'],
-    ...(sameAs ? { sameAs } : {}),
+    sameAs: `${baseUrl}${sessionTier5ApiPath(projected.sessionId)}`,
   }
 }

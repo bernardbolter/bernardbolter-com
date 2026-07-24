@@ -190,7 +190,7 @@ Keep the existing filter UI (type, series, date range, linchpin) as-is; add a fi
 - [x] `revisitOf` is suggested (not forced) when a new session shares `primaryArtwork` with a completed session
 - [x] `/sessions` gloss line + `hasStruggle` filter
 - [x] Changelog entry present in `art-official-dialogue-spec.md` / field source-of-truth
-- [ ] Part 3e decision explicitly requested from Bernard, not defaulted **← open decision below**
+- [x] Part 3e decision explicitly requested from Bernard, not defaulted — **decided 2026-07-24: (a) public session-level Tier 5 at `/api/corpus/sessions/[sessionId]?tier=5`**
 
 ---
 

@@ -3,7 +3,7 @@ import { getPayload } from 'payload'
 
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
-import { buildTier5SessionsResponse } from '@/lib/corpus/buildTier5SessionsResponse'
+import { buildTier5SessionsResponse, TIER5_SESSION_SELECT } from '@/lib/corpus/buildTier5SessionsResponse'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 import config from '@payload-config'
 
@@ -56,31 +56,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       depth: 1,
       sort: '-completedAt',
       overrideAccess: true,
-      select: {
-        sessionId: true,
-        sessionType: true,
-        status: true,
-        createdAt: true,
-        completedAt: true,
-        primaryArtwork: true,
-        artworkRecord: true,
-        mentionedArtworks: true,
-        messages: true,
-        firstImpression: true,
-        secondDescription: true,
-        fieldUpdateTimeline: true,
-        sessionNotes: true,
-        weakPhases: true,
-        blindDescriptionUseful: true,
-        formalContributionAccuracy: true,
-        dialogueRefinementFlag: true,
-        refinementNotes: true,
-        agentDraftDescriptionShort: true,
-        agentDraftDescriptionLong: true,
-        agentDraftConceptualKeywords: true,
-        agentDraftFormalContributionAssessment: true,
-        agentModel: true,
-      },
+      select: TIER5_SESSION_SELECT,
     })
 
     const body = buildTier5SessionsResponse({

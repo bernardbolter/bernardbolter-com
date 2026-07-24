@@ -6,6 +6,7 @@ import config from '@payload-config'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { buildSessionGloss } from '@/lib/corpus/sessionGloss'
+import { sessionTier5ApiPath } from '@/lib/corpus/buildTier5SessionsResponse'
 import {
   buildSessionIndexQueryString,
   SESSION_INDEX_TYPE_OPTIONS,
@@ -213,9 +214,7 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                     day: 'numeric',
                   })
                 : '—'
-              const tier5Href = row.primary?.slug
-                ? `/api/corpus/${encodeURIComponent(row.primary.slug)}?tier=5`
-                : null
+              const tier5Href = sessionTier5ApiPath(row.sessionId)
               return (
                 <li key={row.id} className="corpus-page__row">
                   <div className="corpus-page__meta">
@@ -244,13 +243,11 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                         Mentioned: {row.mentioned.map((a) => a.title).join(', ')}
                       </p>
                     ) : null}
-                    {tier5Href ? (
-                      <p className="corpus-page__links">
-                        <a href={tier5Href} className="still-being-written__session-link">
-                          Full session data (JSON)
-                        </a>
-                      </p>
-                    ) : null}
+                    <p className="corpus-page__links">
+                      <a href={tier5Href} className="still-being-written__session-link">
+                        Full session data (JSON)
+                      </a>
+                    </p>
                   </div>
                 </li>
               )

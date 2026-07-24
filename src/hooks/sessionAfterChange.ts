@@ -67,6 +67,14 @@ export const sessionAfterChange: CollectionAfterChangeHook<Session> = async ({
   }
 
   const paths = ['/sessions', '/api/corpus/sessions']
+  if (typeof doc.sessionId === 'string' && doc.sessionId.trim()) {
+    const sid = doc.sessionId.trim()
+    paths.push(
+      `/sessions/${sid}`,
+      `/api/corpus/sessions/${sid}`,
+      `/api/corpus/sessions/${sid}?tier=5`,
+    )
+  }
   for (const slug of slugs) {
     paths.push(`/api/corpus/${slug}`, `/api/corpus/${slug}?tier=5`, `/sessions?artwork=${slug}`)
   }

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildSessionJsonLd,
+  buildTier5SessionByIdResponse,
   buildTier5SessionsResponse,
   projectTier5Session,
   sessionMatchesArtworkSlug,
@@ -159,11 +160,36 @@ describe('buildSessionJsonLd', () => {
       mentionedArtworks: [
         'https://bernardbolter.com/skulptur-projekte-m-nster-2007',
       ],
-      sameAs: 'https://bernardbolter.com/api/corpus/venice-biennale-2007?tier=5',
+      sameAs:
+        'https://bernardbolter.com/api/corpus/sessions/venice-session-1?tier=5',
     })
     expect(jsonLd).toHaveProperty('artistRecord')
     expect(jsonLd).toHaveProperty('artism:DialogueSelfAudit')
     expect((jsonLd!.artistRecord as { messages: unknown[] }).messages).toHaveLength(2)
+  })
+})
+
+describe('buildTier5SessionByIdResponse', () => {
+  it('exposes sessions without primaryArtwork', () => {
+    const body = buildTier5SessionByIdResponse({
+      session: session({
+        sessionId: 'statement-session-1',
+        sessionType: 'artist-statement',
+        primaryArtwork: null,
+        artworkRecord: null,
+        mentionedArtworks: [],
+      }),
+      baseUrl: 'https://bernardbolter.com',
+    })
+    expect(body).toMatchObject({
+      '@type': 'artism:Session',
+      'artism:tier': 5,
+      sessionId: 'statement-session-1',
+      primaryArtwork: null,
+      url: 'https://bernardbolter.com/api/corpus/sessions/statement-session-1?tier=5',
+    })
+    expect(body).toHaveProperty('artistRecord')
+    expect(body).toHaveProperty('artism:DialogueSelfAudit')
   })
 })
 

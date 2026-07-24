@@ -7,7 +7,7 @@ import config from '@payload-config'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
-import { buildSessionJsonLd } from '@/lib/corpus/buildTier5SessionsResponse'
+import { buildSessionJsonLd, sessionTier5ApiPath } from '@/lib/corpus/buildTier5SessionsResponse'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import type { Artwork } from '@/payload-types'
 
@@ -90,7 +90,10 @@ export default async function PublicSessionPage({ params }: PageProps) {
   const ladderSlug = primary?.slug ?? mentioned[0]?.slug ?? null
   const baseUrl = getSiteBaseUrl()
   const jsonLd = buildSessionJsonLd(session, baseUrl)
-  const tier5Href = primary?.slug
+  const tier5Href = session.sessionId
+    ? sessionTier5ApiPath(session.sessionId)
+    : null
+  const artworkTier5Href = primary?.slug
     ? `/api/corpus/${encodeURIComponent(primary.slug)}?tier=5`
     : null
 
@@ -146,6 +149,14 @@ export default async function PublicSessionPage({ params }: PageProps) {
                 <a href={tier5Href} className="bio__inline-link">
                   Full session data (JSON)
                 </a>
+                {artworkTier5Href ? (
+                  <>
+                    {' · '}
+                    <a href={artworkTier5Href} className="bio__inline-link">
+                      Artwork Tier 5 feed
+                    </a>
+                  </>
+                ) : null}
               </p>
             ) : null}
           </div>
