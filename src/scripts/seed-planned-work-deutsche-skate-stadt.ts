@@ -1,18 +1,26 @@
 /**
- * Seed Deutsche Skate Stadt planned work
+ * Seed Deutsche Skate Stadt planned work via SQL
  * (docs/corpus/planned-works-schema-addendum.md Section 4).
+ *
+ * Avoids Payload artist.update (which hydrates bioTimeline sourceSessionRef
+ * and fails when unrelated session schema columns are wrong).
  *
  * Idempotent on title match.
  *
  * Usage: npx tsx src/scripts/seed-planned-work-deutsche-skate-stadt.ts
  */
+import { randomBytes } from 'crypto'
 import dotenv from 'dotenv'
 
 dotenv.config({ path: '.env', override: true })
 dotenv.config({ path: '.env.local', override: true })
 
 import { getPayload } from 'payload'
-import config from '@payload-config'
+import config from '@/payload.config'
+
+type PgPool = {
+  query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }>
+}
 
 const TITLE = 'Deutsche Skate Stadt'
 
@@ -28,99 +36,107 @@ const DEUTSCHE_STADT_SLUG_CANDIDATES = [
   'megacities-deutsche-stadt',
 ]
 
+function getPgPool(payload: Awaited<ReturnType<typeof getPayload>>): PgPool {
+  const pool = (payload.db as { pool?: PgPool } | undefined)?.pool
+  if (!pool) throw new Error('Postgres pool not available on payload.db')
+  return pool
+}
+
+function newRowId(): string {
+  return randomBytes(12).toString('hex')
+}
+
 async function main() {
   const payload = await getPayload({ config })
+  const pool = getPgPool(payload)
 
-  const artists = await payload.find({
-    collection: 'artists',
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  })
-  const artist = artists.docs[0]
-  if (!artist) {
+  const { rows: artistRows } = await pool.query(
+    `SELECT id FROM artists ORDER BY created_at ASC LIMIT 1`,
+  )
+  const artistId = artistRows[0]?.id
+  if (typeof artistId !== 'number') {
     console.error('No artist record found.')
     process.exit(1)
   }
 
-  const existing = (artist.plannedWorks ?? []).find(
-    (entry) => entry.title?.trim().toLowerCase() === TITLE.toLowerCase(),
+  const { rows: existing } = await pool.query(
+    `SELECT id FROM artists_planned_works
+     WHERE _parent_id = $1 AND lower(trim(title)) = lower(trim($2))
+     LIMIT 1`,
+    [artistId, TITLE],
   )
-  if (existing) {
+  if (existing[0]) {
     console.log(`Planned work "${TITLE}" already present — skip.`)
     process.exit(0)
   }
 
-  const seriesResult = await payload.find({
-    collection: 'series',
-    where: { slug: { equals: 'megacities' } },
-    limit: 1,
-    depth: 0,
-    overrideAccess: true,
-  })
-  const megacities = seriesResult.docs[0]
-  if (!megacities) {
-    console.warn('Series "megacities" not found — seeding without relatedSeries.')
-  }
+  const { rows: seriesRows } = await pool.query(
+    `SELECT id FROM series WHERE slug = 'megacities' LIMIT 1`,
+  )
+  const seriesId = typeof seriesRows[0]?.id === 'number' ? seriesRows[0].id : null
+  if (!seriesId) console.warn('Series megacities not found — seeding without relatedSeries.')
 
-  let deutscheStadtId: number | null = null
+  let artworkId: number | null = null
   for (const slug of DEUTSCHE_STADT_SLUG_CANDIDATES) {
-    const found = await payload.find({
-      collection: 'artworks',
-      where: { slug: { equals: slug } },
-      limit: 1,
-      depth: 0,
-      overrideAccess: true,
-    })
-    if (found.docs[0]) {
-      deutscheStadtId = found.docs[0].id
-      console.log(`Linked related artwork ${slug} (id ${deutscheStadtId})`)
+    const { rows } = await pool.query(`SELECT id, slug FROM artworks WHERE slug = $1 LIMIT 1`, [
+      slug,
+    ])
+    if (typeof rows[0]?.id === 'number') {
+      artworkId = rows[0].id
+      console.log(`Linked related artwork ${rows[0].slug} (id ${artworkId})`)
       break
     }
   }
-  if (!deutscheStadtId) {
-    const byTitle = await payload.find({
-      collection: 'artworks',
-      where: { title: { contains: 'Deutsche Stadt' } },
-      limit: 5,
-      depth: 0,
-      overrideAccess: true,
-    })
-    const exact = byTitle.docs.find(
-      (doc) => doc.title?.trim().toLowerCase() === 'deutsche stadt',
+  if (!artworkId) {
+    const { rows } = await pool.query(
+      `SELECT id, title FROM artworks
+       WHERE lower(title) LIKE '%deutsche stadt%'
+       ORDER BY id ASC LIMIT 5`,
     )
-    if (exact) {
-      deutscheStadtId = exact.id
-      console.log(`Linked related artwork by title "${exact.title}" (id ${deutscheStadtId})`)
-    } else if (byTitle.docs[0]) {
-      deutscheStadtId = byTitle.docs[0].id
-      console.log(
-        `Linked related artwork by fuzzy title "${byTitle.docs[0].title}" (id ${deutscheStadtId})`,
-      )
+    const exact = rows.find(
+      (row) => String(row.title ?? '').trim().toLowerCase() === 'deutsche stadt',
+    )
+    const pick = exact ?? rows[0]
+    if (typeof pick?.id === 'number') {
+      artworkId = pick.id
+      console.log(`Linked related artwork by title "${pick.title}" (id ${artworkId})`)
     } else {
       console.warn('Deutsche Stadt artwork not found — seeding without relatedArtworks.')
     }
   }
 
-  const next = [
-    ...(artist.plannedWorks ?? []),
-    {
-      title: TITLE,
-      motivatingNote: MOTIVATING_NOTE,
-      blocker: BLOCKER,
-      relatedSeries: megacities?.id,
-      relatedArtworks: deutscheStadtId ? [deutscheStadtId] : [],
-      status: 'idea' as const,
-      dateNamed: '2026-07-24',
-    },
-  ]
+  const { rows: orderRows } = await pool.query(
+    `SELECT COALESCE(MAX(_order), -1)::int AS max FROM artists_planned_works WHERE _parent_id = $1`,
+    [artistId],
+  )
+  const nextOrder = Number(orderRows[0]?.max ?? -1) + 1
+  const rowId = newRowId()
 
-  await payload.update({
-    collection: 'artists',
-    id: artist.id,
-    data: { plannedWorks: next },
-    overrideAccess: true,
-  })
+  await pool.query(
+    `INSERT INTO artists_planned_works
+      (_order, _parent_id, id, title, motivating_note, blocker, related_series_id, status, date_named, migrated_artwork_id_id)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, 'idea', $8::timestamptz, NULL)`,
+    [
+      nextOrder,
+      artistId,
+      rowId,
+      TITLE,
+      MOTIVATING_NOTE,
+      BLOCKER,
+      seriesId,
+      '2026-07-24T00:00:00.000Z',
+    ],
+  )
+  console.log(`Inserted planned work row ${rowId}`)
+
+  if (artworkId != null) {
+    await pool.query(
+      `INSERT INTO artists_planned_works_rels ("order", parent_id, path, artworks_id)
+       VALUES (0, $1, 'relatedArtworks', $2)`,
+      [rowId, artworkId],
+    )
+    console.log(`Linked relatedArtworks → artwork ${artworkId}`)
+  }
 
   console.log(`Seeded planned work "${TITLE}".`)
   process.exit(0)
