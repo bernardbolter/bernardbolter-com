@@ -112,6 +112,7 @@ async function main() {
           note: LINCHPIN_NOTE,
         },
         completedAt: new Date().toISOString(),
+        agentModel: process.env.ART_OFFICIAL_MODEL ?? 'claude-sonnet-4-6',
       },
       overrideAccess: true,
     })
@@ -129,6 +130,7 @@ async function main() {
         primaryArtwork: venice.id,
         artworkRecord: venice.id,
         mentionedArtworks: [munster.id],
+        agentModel: process.env.ART_OFFICIAL_MODEL ?? 'claude-sonnet-4-6',
       },
       overrideAccess: true,
     })

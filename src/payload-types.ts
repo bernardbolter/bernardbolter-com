@@ -3734,7 +3734,7 @@ export interface CapturePreset {
   createdAt: string;
 }
 /**
- * Art/Official session transcripts (not exposed to anonymous API).
+ * Art/Official session transcripts. Direct collection access is staff-only; completed sessions are exposed via the public Tier 5 corpus API (`/api/corpus/[slug]?tier=5`).
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "sessions".
@@ -3931,6 +3931,10 @@ export interface Session {
       }[]
     | null;
   agentDraftFormalContributionAssessment?: string | null;
+  /**
+   * Model string captured at session start (e.g. claude-sonnet-4-6). Required on public artism:DialogueSelfAudit nodes.
+   */
+  agentModel?: string | null;
   sessionNotes?: string | null;
   weakPhases?:
     | (
@@ -6556,6 +6560,7 @@ export interface SessionsSelect<T extends boolean = true> {
         id?: T;
       };
   agentDraftFormalContributionAssessment?: T;
+  agentModel?: T;
   sessionNotes?: T;
   weakPhases?: T;
   blindDescriptionUseful?: T;

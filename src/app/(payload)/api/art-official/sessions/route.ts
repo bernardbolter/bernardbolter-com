@@ -1,6 +1,10 @@
 import { z } from 'zod'
 
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
+import {
+  defaultSessionPhase,
+  resolveModel,
+} from '@/lib/artOfficial/sessionPhase'
 const createSessionSchema = z.object({
   sessionType: z.enum([
     'artwork-cataloguing',
@@ -57,11 +61,18 @@ export async function POST(request: Request) {
   }
 
   const artworkId = parsed.data.primaryArtwork ?? parsed.data.artworkRecord
+  const sessionType = parsed.data.sessionType
+  const initialPhase = defaultSessionPhase(sessionType, Boolean(artworkId))
+  const agentModel = resolveModel(
+    initialPhase,
+    sessionType,
+    sessionType === 'event-enrichment' ? 'phase-a-research' : undefined,
+  )
 
   const session = await payload.create({
     collection: 'sessions',
     data: {
-      sessionType: parsed.data.sessionType,
+      sessionType,
       artistId: artist.id,
       artworkRecord: artworkId,
       primaryArtwork: artworkId,
@@ -70,11 +81,12 @@ export async function POST(request: Request) {
       eventRecord: parsed.data.eventRecord,
       status: 'in-progress',
       messages: [],
-      ...(parsed.data.sessionType === 'event-enrichment'
+      agentModel,
+      ...(sessionType === 'event-enrichment'
         ? { eventDialoguePhase: 'phase-a-research' as const }
         : {}),
       // Pre-upload questionnaire only runs for new artworks — skip when refining an existing one.
-      ...(parsed.data.sessionType === 'artwork-cataloguing'
+      ...(sessionType === 'artwork-cataloguing'
         ? {
             currentPhase: artworkId ? 'identity' : 'pre-upload',
             ...(!artworkId ? { preUploadStep: 1 } : {}),
@@ -91,6 +103,7 @@ export async function POST(request: Request) {
     sessionType: session.sessionType,
     status: session.status,
     artworkRecord: session.artworkRecord ?? null,
+    agentModel: session.agentModel ?? agentModel,
   })
 }
 

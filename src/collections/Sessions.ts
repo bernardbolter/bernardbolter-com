@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { randomUUID } from 'crypto'
 
 import { authenticatedReadStaffWrite } from '@/access/staffAccess'
+import { sessionAfterChange } from '@/hooks/sessionAfterChange'
 
 export const Sessions: CollectionConfig = {
   slug: 'sessions',
@@ -15,7 +16,8 @@ export const Sessions: CollectionConfig = {
       'dialogueRefinementFlag',
       'createdAt',
     ],
-    description: 'Art/Official session transcripts (not exposed to anonymous API).',
+    description:
+      'Art/Official session transcripts. Direct collection access is staff-only; completed sessions are exposed via the public Tier 5 corpus API (`/api/corpus/[slug]?tier=5`).',
   },
   access: authenticatedReadStaffWrite,
   fields: [
@@ -335,6 +337,15 @@ export const Sessions: CollectionConfig = {
       fields: [{ name: 'keyword', type: 'text', required: true }],
     },
     { name: 'agentDraftFormalContributionAssessment', type: 'textarea' },
+    {
+      name: 'agentModel',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Model string captured at session start (e.g. claude-sonnet-4-6). Required on public artism:DialogueSelfAudit nodes.',
+      },
+    },
     { name: 'sessionNotes', type: 'textarea' },
     {
       name: 'weakPhases',
@@ -404,5 +415,6 @@ export const Sessions: CollectionConfig = {
         return data
       },
     ],
+    afterChange: [sessionAfterChange],
   },
 }

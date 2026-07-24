@@ -838,7 +838,7 @@ These fields are filled by the artist after the session, not during it. They are
 \
 ### 10.3 Access control\
 \
-Sessions are private to the artist and admin role. Never returned in public API responses. The `messages` and `firstImpression` fields are particularly sensitive \'97 they contain unguarded, pre-conscious material that the artist did not intend for any audience.\
+Sessions are private to the artist and admin role for direct collection access (read/create/update/delete via Payload admin or local API). A separate, public Tier 5 API path exists for machine-readable corpus access (see `sessions-tier5-machine-access-spec.md`), keyed by artwork slug, for `completed` sessions only. This path exposes both the artist's reasoning trail (`artistRecord`) and the dialogue system's own process-integrity notes (`artism:DialogueSelfAudit`), kept in clearly separated, distinctly-namespaced nodes so the two are never confused with one another. The `messages` and `firstImpression` fields remain sensitive in the collection itself \'97 they are only released through that labeled Tier 5 path, never via anonymous collection REST.\
 \
 ```typescript\
 access: \{\

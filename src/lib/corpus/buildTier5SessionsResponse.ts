@@ -1,0 +1,150 @@
+import type { Artwork, Session } from '@/payload-types'
+
+export type Tier5SessionSource = Pick<
+  Session,
+  | 'sessionId'
+  | 'sessionType'
+  | 'status'
+  | 'createdAt'
+  | 'completedAt'
+  | 'primaryArtwork'
+  | 'artworkRecord'
+  | 'mentionedArtworks'
+  | 'messages'
+  | 'firstImpression'
+  | 'secondDescription'
+  | 'fieldUpdateTimeline'
+  | 'sessionNotes'
+  | 'weakPhases'
+  | 'blindDescriptionUseful'
+  | 'formalContributionAccuracy'
+  | 'dialogueRefinementFlag'
+  | 'refinementNotes'
+  | 'agentDraftDescriptionShort'
+  | 'agentDraftDescriptionLong'
+  | 'agentDraftConceptualKeywords'
+  | 'agentDraftFormalContributionAssessment'
+> & {
+  agentModel?: string | null
+}
+
+function readArtwork(value: number | Artwork | null | undefined): Artwork | null {
+  if (!value || typeof value !== 'object') return null
+  return value
+}
+
+function artworkSlug(value: number | Artwork | null | undefined): string | null {
+  const artwork = readArtwork(value)
+  if (!artwork?.slug || typeof artwork.slug !== 'string') return null
+  const slug = artwork.slug.trim()
+  return slug || null
+}
+
+/** True when this completed session is primary for or mentions the queried artwork slug. */
+export function sessionMatchesArtworkSlug(
+  session: Tier5SessionSource,
+  artworkSlugQuery: string,
+): boolean {
+  const primary =
+    artworkSlug(session.primaryArtwork) ?? artworkSlug(session.artworkRecord)
+  if (primary === artworkSlugQuery) return true
+  return (session.mentionedArtworks ?? []).some(
+    (entry) => artworkSlug(entry) === artworkSlugQuery,
+  )
+}
+
+function projectMessages(messages: Session['messages']): Array<{
+  role: string
+  content: unknown
+}> {
+  if (!Array.isArray(messages)) return []
+  return messages
+    .map((entry) => {
+      if (!entry || typeof entry !== 'object') return null
+      const record = entry as Record<string, unknown>
+      const role = typeof record.role === 'string' ? record.role : null
+      if (!role || !('content' in record)) return null
+      return { role, content: record.content }
+    })
+    .filter((entry): entry is { role: string; content: unknown } => entry !== null)
+}
+
+function projectKeywords(
+  keywords: Session['agentDraftConceptualKeywords'],
+): string[] | null {
+  if (!Array.isArray(keywords) || keywords.length === 0) return null
+  const values = keywords
+    .map((row) => (typeof row?.keyword === 'string' ? row.keyword.trim() : ''))
+    .filter(Boolean)
+  return values.length > 0 ? values : null
+}
+
+/**
+ * Project a completed session into the Tier 5 machine-readable shape:
+ * `artistRecord` (reasoning trail) and `artism:DialogueSelfAudit` (process integrity)
+ * as clearly separated, distinctly-namespaced nodes.
+ */
+export function projectTier5Session(session: Tier5SessionSource) {
+  const sessionId = session.sessionId
+  if (!sessionId) return null
+  if (session.status !== 'completed') return null
+
+  const primary =
+    artworkSlug(session.primaryArtwork) ?? artworkSlug(session.artworkRecord)
+  const mentioned = (session.mentionedArtworks ?? [])
+    .map((entry) => artworkSlug(entry))
+    .filter((slug): slug is string => Boolean(slug))
+
+  return {
+    sessionId,
+    sessionType: session.sessionType,
+    createdAt: session.createdAt ?? null,
+    completedAt: session.completedAt ?? null,
+    primaryArtwork: primary,
+    mentionedArtworks: mentioned,
+    artistRecord: {
+      firstImpression: session.firstImpression ?? null,
+      secondDescription: session.secondDescription ?? null,
+      messages: projectMessages(session.messages),
+      fieldUpdateTimeline: Array.isArray(session.fieldUpdateTimeline)
+        ? session.fieldUpdateTimeline
+        : session.fieldUpdateTimeline ?? null,
+    },
+    'artism:DialogueSelfAudit': {
+      agentModel: session.agentModel ?? null,
+      sessionNotes: session.sessionNotes ?? null,
+      weakPhases: session.weakPhases ?? null,
+      blindDescriptionUseful: session.blindDescriptionUseful ?? null,
+      formalContributionAccuracy: session.formalContributionAccuracy ?? null,
+      dialogueRefinementFlag: session.dialogueRefinementFlag ?? null,
+      refinementNotes: session.refinementNotes ?? null,
+      agentDraftDescriptionShort: session.agentDraftDescriptionShort ?? null,
+      agentDraftDescriptionLong: session.agentDraftDescriptionLong ?? null,
+      agentDraftConceptualKeywords: projectKeywords(session.agentDraftConceptualKeywords),
+      agentDraftFormalContribution:
+        session.agentDraftFormalContributionAssessment ?? null,
+    },
+  }
+}
+
+export function buildTier5SessionsResponse(options: {
+  artworkSlug: string
+  sessions: Tier5SessionSource[]
+  baseUrl: string
+}) {
+  const { artworkSlug, sessions, baseUrl } = options
+
+  const projected = sessions
+    .filter((session) => sessionMatchesArtworkSlug(session, artworkSlug))
+    .map((session) => projectTier5Session(session))
+    .filter((session): session is NonNullable<typeof session> => session !== null)
+
+  return {
+    '@type': 'DataFeed',
+    'artism:tier': 5,
+    artworkSlug,
+    url: `${baseUrl}/api/corpus/${encodeURIComponent(artworkSlug)}?tier=5`,
+    'artism:totalSessions': projected.length,
+    sessions: projected,
+  }
+}
