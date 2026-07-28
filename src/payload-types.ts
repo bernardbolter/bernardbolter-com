@@ -1667,11 +1667,31 @@ export interface Artwork {
    */
   dinov2EmbeddingGeneratedAt?: string | null;
   /**
+   * Reasoning-text embedding stored as vector(1536) — OpenAI-compatible text-embedding-3-small (or compatible). Use SQL/API for similarity, not this cell.
+   */
+  reasoningTextEmbedding?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * When the reasoning-text embedding was last generated for this artwork.
+   */
+  reasoningTextEmbeddingGeneratedAt?: string | null;
+  /**
+   * Which source text produced the current reasoning-text embedding (best-available wins).
+   */
+  reasoningTextEmbeddingSource?: ('formal-contribution-assessment' | 'vision-analysis-preferred') | null;
+  /**
    * Metadata for each embedding model run. Vectors stored in pgvector columns, not here.
    */
   embeddings?:
     | {
-        model: 'clip-vit-large-patch14' | 'dinov2-large';
+        model: 'clip-vit-large-patch14' | 'dinov2-large' | 'text-embedding-3-small';
         dimensions: number;
         /**
          * The pgvector column name where this model's vector is stored, e.g. clip_embedding
@@ -5814,6 +5834,9 @@ export interface ArtworksSelect<T extends boolean = true> {
   clipEmbeddingGeneratedAt?: T;
   dinov2Embedding?: T;
   dinov2EmbeddingGeneratedAt?: T;
+  reasoningTextEmbedding?: T;
+  reasoningTextEmbeddingGeneratedAt?: T;
+  reasoningTextEmbeddingSource?: T;
   embeddings?:
     | T
     | {

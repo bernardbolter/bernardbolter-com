@@ -4,6 +4,7 @@ import config from '@payload-config'
 
 import { CLIP_EMBEDDING_DIMENSIONS } from '@/utilities/generateClipEmbedding'
 import { DINOV2_EMBEDDING_DIMENSIONS } from '@/utilities/generateDinov2Embedding'
+import { REASONING_TEXT_EMBEDDING_DIMENSIONS } from '@/utilities/generateReasoningTextEmbedding'
 
 function getPool(payload: Awaited<ReturnType<typeof getPayload>>): Pool {
   const pool = (payload.db as unknown as { pool?: Pool }).pool
@@ -13,7 +14,16 @@ function getPool(payload: Awaited<ReturnType<typeof getPayload>>): Pool {
   return pool
 }
 
-export type SimilarityColumn = 'clip_embedding' | 'dinov2_embedding'
+export type SimilarityColumn =
+  | 'clip_embedding'
+  | 'dinov2_embedding'
+  | 'reasoning_text_embedding'
+
+function expectedDimensionsForColumn(column: SimilarityColumn): number {
+  if (column === 'dinov2_embedding') return DINOV2_EMBEDDING_DIMENSIONS
+  if (column === 'reasoning_text_embedding') return REASONING_TEXT_EMBEDDING_DIMENSIONS
+  return CLIP_EMBEDDING_DIMENSIONS
+}
 
 /**
  * Nearest neighbours by cosine distance (`<=>`) on a pgvector column.
@@ -25,8 +35,7 @@ export async function findSimilarArtworks(
   excludeArtworkId?: number,
   column: SimilarityColumn = 'clip_embedding',
 ): Promise<Array<{ id: number; similarity: number }>> {
-  const expected =
-    column === 'dinov2_embedding' ? DINOV2_EMBEDDING_DIMENSIONS : CLIP_EMBEDDING_DIMENSIONS
+  const expected = expectedDimensionsForColumn(column)
   if (embedding.length !== expected) {
     throw new Error(`Expected ${expected}-dimensional embedding, got ${embedding.length}`)
   }

@@ -20,6 +20,8 @@
     "migrate:people-schema": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-people-schema.ts",
     "backfill:clip": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillClipEmbeddings.ts",
     "backfill:dinov2": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillDinov2Embeddings.ts",
+    "backfill:reasoning-text": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillReasoningTextEmbeddings.ts",
+    "migrate:reasoning-text-embedding": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-reasoning-text-embedding-schema.ts",
     "backfill:vision": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillArtworkVisionMoondream.ts",
     "migrate:studio-social-phase1": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-studio-social-phase1-schema.ts",
     "push:studio-social-phase1": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/push-studio-social-phase1-schema.ts",

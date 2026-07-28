@@ -1053,6 +1053,47 @@ export const Artworks: CollectionConfig = {
               },
             },
             {
+              name: 'reasoningTextEmbedding',
+              type: 'json',
+              admin: {
+                hidden: true,
+                readOnly: true,
+                description:
+                  'Reasoning-text embedding stored as vector(1536) — OpenAI-compatible text-embedding-3-small (or compatible). Use SQL/API for similarity, not this cell.',
+              },
+              custom: { dbType: 'vector(1536)' },
+            },
+            {
+              name: 'reasoningTextEmbeddingGeneratedAt',
+              type: 'date',
+              admin: {
+                hidden: true,
+                readOnly: true,
+                description:
+                  'When the reasoning-text embedding was last generated for this artwork.',
+              },
+            },
+            {
+              name: 'reasoningTextEmbeddingSource',
+              type: 'select',
+              options: [
+                {
+                  label: 'Formal contribution assessment',
+                  value: 'formal-contribution-assessment',
+                },
+                {
+                  label: 'Preferred vision analysis',
+                  value: 'vision-analysis-preferred',
+                },
+              ],
+              admin: {
+                hidden: true,
+                readOnly: true,
+                description:
+                  'Which source text produced the current reasoning-text embedding (best-available wins).',
+              },
+            },
+            {
               name: 'embeddings',
               type: 'array',
               admin: {
@@ -1067,6 +1108,10 @@ export const Artworks: CollectionConfig = {
                   options: [
                     { label: 'CLIP ViT-L/14', value: 'clip-vit-large-patch14' },
                     { label: 'DINOv2 Large', value: 'dinov2-large' },
+                    {
+                      label: 'Reasoning text (embedding-3-small)',
+                      value: 'text-embedding-3-small',
+                    },
                   ],
                 },
                 {

@@ -19,6 +19,15 @@ export const DINOV2_EMBEDDING_METADATA = {
   shortDescription: 'Self-supervised visual embedding, no language influence — 1024 dimensions',
 } as const
 
+export const REASONING_TEXT_EMBEDDING_METADATA = {
+  model: 'text-embedding-3-small',
+  dimensions: 1536,
+  pgVectorColumn: 'reasoning_text_embedding',
+  specUrl: 'https://platform.openai.com/docs/guides/embeddings',
+  shortDescription:
+    'Conceptual text embedding from formalContributionAssessment or preferred vision analysis — 1536 dimensions',
+} as const
+
 export type EmbeddingMetadata = {
   model: string
   dimensions: number
@@ -37,6 +46,7 @@ export type VisionAnalysisEntry = {
 const EMBEDDING_MODEL_LABELS: Record<string, string> = {
   'clip-vit-large-patch14': 'CLIP ViT-L/14',
   'dinov2-large': 'DINOv2 Large',
+  'text-embedding-3-small': 'Reasoning text (embedding-3-small)',
 }
 
 const VISION_MODEL_LABELS: Record<string, string> = {

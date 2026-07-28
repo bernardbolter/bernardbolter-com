@@ -52,9 +52,9 @@ Add on `artworks` (hidden/read-only admin like existing embeddings):
   )
 
 Decision needed:
-- [ ] Choose model + dimensionality for text embedding (`<N>`).
-  - Option A: provider already used in stack (operationally simpler).
-  - Option B: dedicated text-embedding model (potentially better conceptual recall).
+- [x] Choose model + dimensionality for text embedding (`<N>`).
+  - **Chosen (Option A / field-notes aligned):** OpenAI-compatible `text-embedding-3-small` via `REASONING_TEXT_EMBEDDING_URL` → **vector(1536)**.
+  - Rationale: CLIP local sidecar is image-only and CLIP text is too short-context for formal assessments; Anthropic has no embeddings API; OpenAI-compatible endpoint matches `docs/fieldNotes/small-model-architecture.md`.
 
 ### 3.2 Source-precedence contract
 
@@ -119,10 +119,12 @@ The corpus brief says `visionAnalyses[last]`, while current code often prefers h
 Before implementation, decide one policy for reasoning embedding fallback:
 
 - [ ] **Strict latest row** (`latestVisionAnalysis`) for mechanical “last wins”.
-- [ ] **Preferred analysis** (`preferredVisionAnalysis`) for quality-biased fallback.
+- [x] **Preferred analysis** (`preferredVisionAnalysis`) for quality-biased fallback.
 
 Recommendation:
 - choose one and document it in code comments + this brief to avoid split behavior between Tier 1 gist and reasoning embedding source.
+
+**Decision:** use `preferredVisionAnalysis` so reasoning embeddings and Tier-1 gist share the same quality-biased vision source.
 
 ---
 
@@ -172,10 +174,22 @@ Open a separate brief if any of the following appears:
 
 ## 9) Suggested Execution Order
 
-1. Finalize source-policy decision (`latest` vs `preferred` vision fallback).
-2. Add schema fields + regenerate types.
-3. Implement source resolver + generator + persistence helper.
-4. Add backfill script and run dry-run.
-5. Extend similarity SQL helper column enum.
-6. Add tests for precedence + persistence.
-7. Run initial backfill when DB connectivity is available.
+1. [x] Finalize source-policy decision (`latest` vs `preferred` vision fallback).
+2. [x] Add schema fields + regenerate types.
+3. [x] Implement source resolver + generator + persistence helper.
+4. [x] Add backfill script and run dry-run. *(dry-run/runtime backfill still needs DB + `REASONING_TEXT_EMBEDDING_URL`)*
+5. [x] Extend similarity SQL helper column enum.
+6. [x] Add tests for precedence + persistence. *(precedence unit tests added; persistence is SQL helper)*
+7. [ ] Run initial backfill when DB connectivity + embedding endpoint are available.
+
+### Env required for runtime
+
+```
+REASONING_TEXT_EMBEDDING_URL=https://api.openai.com/v1/embeddings
+REASONING_TEXT_EMBEDDING_API_KEY=sk-...
+# optional:
+REASONING_TEXT_EMBEDDING_MODEL=text-embedding-3-small
+```
+
+Schema migration: `npm run migrate:reasoning-text-embedding`  
+Backfill: `npm run backfill:reasoning-text -- --dry-run`
