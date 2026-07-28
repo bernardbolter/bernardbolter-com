@@ -22,7 +22,7 @@ export const revalidate = 3600
 export const metadata: Metadata = {
   title: 'Sessions',
   description:
-    'Completed Art/Official sessions — human-readable crumbs; full data via JSON-LD and the corpus API.',
+    'Completed Art/Official sessions — human-readable crumbs; full transcripts via the corpus Tier 5 API.',
   alternates: { canonical: '/sessions' },
 }
 
@@ -185,8 +185,8 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                 : 'Completed sessions'}
           </p>
           <p className="bio__masonry-caption corpus-page__lede">
-            Full session data is machine-readable via JSON-LD and the corpus API; this page shows
-            a human-readable summary only.
+            Human-readable session crumbs. Full transcripts are public at the machine endpoint
+            linked on each row.
           </p>
 
           <SessionsFilterForm filters={filters} seriesList={seriesList} />
@@ -215,6 +215,7 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                     <SessionGlossLine
                       session={row.session}
                       passNumber={row.passNumber}
+                      artworkSlug={row.primary?.slug ?? null}
                       showJsonLink
                       className="session-gloss-line session-gloss-line--index"
                     />

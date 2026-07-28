@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: 'Session',
     description:
-      'Human-readable session summary. Full session data is machine-readable via JSON-LD and the corpus API.',
+      'Human-readable session summary. Full transcripts are public via the corpus Tier 5 API.',
     alternates: { canonical: `/sessions/${sessionId}` },
   }
 }
@@ -113,8 +113,7 @@ export default async function PublicSessionPage({ params }: PageProps) {
             <p className="bio__masonry-caption">Completed {completedLabel}</p>
           ) : null}
           <p className="bio__masonry-caption">
-            Full session data is machine-readable via JSON-LD and the corpus API; this page
-            shows a human-readable summary only.
+            Human-readable crumb. Full transcripts are public via the machine endpoint below.
           </p>
 
           <div className="bio__main-content" style={{ paddingTop: '1.5rem' }}>
@@ -144,19 +143,22 @@ export default async function PublicSessionPage({ params }: PageProps) {
                 This session contributed facts to the archive without a primary artwork.
               </p>
             ) : null}
-            {tier5Href ? (
-              <p style={{ paddingTop: '1rem' }}>
-                <a href={tier5Href} className="bio__inline-link">
+            {artworkTier5Href ? (
+              <p style={{ paddingTop: '1rem' }} className="corpus-page__links">
+                <a href={artworkTier5Href} className="still-being-written__session-link">
                   Full session data (JSON)
                 </a>
-                {artworkTier5Href ? (
-                  <>
-                    {' · '}
-                    <a href={artworkTier5Href} className="bio__inline-link">
-                      Artwork Tier 5 feed
-                    </a>
-                  </>
+                {tier5Href ? (
+                  <a href={tier5Href} className="still-being-written__session-link">
+                    This session (JSON)
+                  </a>
                 ) : null}
+              </p>
+            ) : tier5Href ? (
+              <p style={{ paddingTop: '1rem' }} className="corpus-page__links">
+                <a href={tier5Href} className="still-being-written__session-link">
+                  Full session data (JSON)
+                </a>
               </p>
             ) : null}
           </div>

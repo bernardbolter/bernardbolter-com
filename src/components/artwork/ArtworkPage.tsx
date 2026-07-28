@@ -5,15 +5,15 @@ import Layer2StatusAndProvenance from '@/components/artwork/Layer2StatusAndProve
 import Layer3ArtistAccount from '@/components/artwork/Layer3ArtistAccount'
 import Layer4History from '@/components/artwork/Layer4History'
 import SeriesCard from '@/components/artwork/SeriesCard'
+import CorpusMachineLinks from '@/components/corpus/CorpusMachineLinks'
 import { getEditionTierLabelMaps } from '@/lib/artwork/getEditionTierLabelMaps'
 import {
   artworkHasClipEmbedding,
   getSimilarArtworksForPage,
 } from '@/lib/payload/similarArtworksPage'
-import {
-  isVideoPrimaryArtwork,
-} from '@/lib/artwork/artworkGalleryImages'
+import { isVideoPrimaryArtwork } from '@/lib/artwork/artworkGalleryImages'
 import { artworkShowsProseColumn } from '@/lib/artwork/layer3Prose'
+import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
 import type { Artist, Artwork } from '@/payload-types'
 import config from '@payload-config'
 import { getPayload } from 'payload'
@@ -28,16 +28,19 @@ export type ArtworkPageProps = {
 
 export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps) {
   const payload = await getPayload({ config })
-  const [similarWorksResult, hasClipEmbedding, editionTierLabelMaps] = await Promise.all([
-    typeof artwork.id === 'number'
-      ? getSimilarArtworksForPage(artwork.id, 3)
-      : Promise.resolve([]),
-    typeof artwork.id === 'number'
-      ? artworkHasClipEmbedding(artwork.id)
-      : Promise.resolve(false),
-    getEditionTierLabelMaps(payload),
-  ])
+  const [similarWorksResult, hasClipEmbedding, editionTierLabelMaps, sessionCountBySlug] =
+    await Promise.all([
+      typeof artwork.id === 'number'
+        ? getSimilarArtworksForPage(artwork.id, 3)
+        : Promise.resolve([]),
+      typeof artwork.id === 'number'
+        ? artworkHasClipEmbedding(artwork.id)
+        : Promise.resolve(false),
+      getEditionTierLabelMaps(payload),
+      fetchSessionCountBySlug(payload),
+    ])
   const similarWorks = similarWorksResult ?? []
+  const hasSessions = (sessionCountBySlug.get(artwork.slug) ?? 0) > 0
 
   const showVideo = isVideoPrimaryArtwork(artwork)
   const hasProseColumn = artworkShowsProseColumn({
@@ -64,6 +67,11 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
               editionTierLabelMaps={editionTierLabelMaps}
             />
             <Layer4History artwork={artwork} />
+            <CorpusMachineLinks
+              slug={artwork.slug}
+              hasSessions={hasSessions}
+              className="corpus-page__links artwork-page__corpus-machine-links"
+            />
           </div>
 
           <div className="artwork-page__column artwork-page__column--prose">

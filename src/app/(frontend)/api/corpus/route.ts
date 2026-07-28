@@ -20,7 +20,7 @@ import {
   fetchCorpusTotalArtworks,
 } from '@/lib/corpus/fetchCorpusData'
 import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
-import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
+import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import { parsePageParam, parsePerPageParam } from '@/lib/corpus/pagination'
 import config from '@payload-config'
 
@@ -32,6 +32,7 @@ function parseFormat(value: string | null): CorpusFormat {
 }
 
 export async function GET(request: Request) {
+  const headers = corpusResponseHeaders(request)
   const { searchParams } = new URL(request.url)
   const format = parseFormat(searchParams.get('format'))
   const filters = parseCorpusIndexFilters(searchParams)
@@ -44,7 +45,7 @@ export async function GET(request: Request) {
         accepted: ['survey'],
         message: 'Only ?depth=survey is accepted. Omit depth for Tier 1 triage.',
       },
-      { status: 400, headers: CORPUS_LD_JSON_HEADERS },
+      { status: 400, headers },
     )
   }
 
@@ -78,5 +79,5 @@ export async function GET(request: Request) {
     sessionCountBySlug,
   })
 
-  return NextResponse.json(body, { headers: CORPUS_LD_JSON_HEADERS })
+  return NextResponse.json(body, { headers })
 }

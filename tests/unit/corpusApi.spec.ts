@@ -228,9 +228,13 @@ describe('buildCorpusJsonLdResponse', () => {
     expect(entries).toHaveLength(1)
     expect(entries[0]?.['@type']).toBe('VisualArtwork')
     expect(entries[0]?.name).toBe('Basel Switzerland')
-    expect(entries[0]?.['artism:scope']).toBe('work')
-    expect(entries[0]?.['artism:depth']).toBe('record')
-    expect(entries[0]?.['artism:tier']).toBe(4)
+    // Envelope fields must not leak onto embedded records
+    expect(entries[0]).not.toHaveProperty('artism:scope')
+    expect(entries[0]).not.toHaveProperty('artism:depth')
+    expect(entries[0]).not.toHaveProperty('artism:tier')
+    expect(entries[0]).not.toHaveProperty('artism:feedRole')
+    expect(entries[0]).not.toHaveProperty('artism:tierMap')
+    expect(entries[0]).toHaveProperty('artism:availableTiers')
     expect(entries[0]?.isPartOf).toMatchObject({
       '@type': 'CreativeWorkSeries',
       '@id': `${baseUrl}/series/digital-city-series#series`,

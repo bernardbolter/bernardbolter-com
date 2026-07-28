@@ -35,8 +35,15 @@ export type BuildArtworkJsonLdOptions = {
   baseUrl?: string
   /** Completed sessions where this slug is primary or mentioned. */
   sessionCount?: number
-  /** Add index/sessions traversal links + tier metadata (corpus Tier 4). */
+  /**
+   * Standalone Tier 4 response: traversal links + scope/depth/tier + tierMap.
+   * Prefer this only when the artwork *is* the HTTP response body.
+   */
   includeTraversalLinks?: boolean
+  /**
+   * Embedded in a list feed: per-work availableTiers only — never scope/depth/tier/feedRole/tierMap.
+   */
+  embedded?: boolean
 }
 
 function trimString(value: unknown): string {
@@ -195,6 +202,7 @@ export function buildArtworkJsonLd(
     trimString(location?.country)
   const sessionCount = options.sessionCount ?? 0
   const includeTraversal = options.includeTraversalLinks === true
+  const embedded = options.embedded === true
 
   const doc: Record<string, unknown> = {
     '@context': ARTISM_CONTEXT,
@@ -278,6 +286,9 @@ export function buildArtworkJsonLd(
     Object.assign(doc, buildScopeDepthEnvelope('record'))
     doc['artism:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
     doc['artism:tierMap'] = buildTierMap(baseUrl)
+  } else if (embedded && slug) {
+    // List context: work property only — envelope fields stay on the DataFeed.
+    doc['artism:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
   }
 
   applyArtworkJsonLdExtensions(doc, artwork, baseUrl)

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
 import { CORPUS_BASE } from '@/lib/corpus/constants'
-import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
+import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import config from '@payload-config'
 import type { Artwork } from '@/payload-types'
 
@@ -60,6 +60,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const artworkSlug = searchParams.get('artwork')?.trim() || null
   const baseUrl = CORPUS_BASE
+  const headers = corpusResponseHeaders(request)
   const payload = await getPayload({ config })
 
   const result = await payload.find({
@@ -101,6 +102,6 @@ export async function GET(request: Request) {
       'artism:totalSessions': sessions.length,
       dataFeedElement: sessions,
     },
-    { headers: CORPUS_LD_JSON_HEADERS },
+    { headers },
   )
 }

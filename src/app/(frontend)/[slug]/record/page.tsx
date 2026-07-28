@@ -3,12 +3,16 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import CorpusLadder from '@/components/corpus/CorpusLadder'
+import CorpusMachineLinks from '@/components/corpus/CorpusMachineLinks'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
 import { resolveVisionAnalyses } from '@/lib/artwork/visionPage'
+import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtworkForPage, getPublishedArtworkSlugs } from '@/lib/payload/artworkPage'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 
 export const revalidate = 3600
 
@@ -39,8 +43,16 @@ export default async function ArtworkRecordPage({ params }: Props) {
   const artwork = await getArtworkForPage(slug)
   if (!artwork || artwork.status !== 'published') notFound()
 
+  const payload = await getPayload({ config })
+  const sessionCountBySlug = await fetchSessionCountBySlug(payload)
+  const hasSessions = (sessionCountBySlug.get(slug) ?? 0) > 0
+
   const baseUrl = getSiteBaseUrl()
-  const jsonLd = buildArtworkJsonLd(artwork, null, { baseUrl })
+  const jsonLd = buildArtworkJsonLd(artwork, null, {
+    baseUrl,
+    sessionCount: sessionCountBySlug.get(slug) ?? 0,
+    includeTraversalLinks: true,
+  })
   const analyses = resolveVisionAnalyses(artwork)
   const seriesName =
     artwork.series && typeof artwork.series === 'object' ? artwork.series.name : null
@@ -147,6 +159,7 @@ export default async function ArtworkRecordPage({ params }: Props) {
               Sessions
             </Link>
           </p>
+          <CorpusMachineLinks slug={slug} hasSessions={hasSessions} includeIndex />
         </div>
       </DocumentScrollShell>
     </div>

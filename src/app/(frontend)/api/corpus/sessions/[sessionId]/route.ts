@@ -6,7 +6,7 @@ import {
   TIER5_SESSION_SELECT,
 } from '@/lib/corpus/buildTier5SessionsResponse'
 import { CORPUS_BASE } from '@/lib/corpus/constants'
-import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
+import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import config from '@payload-config'
 
 /** Always live from Payload — never an ISR snapshot shared with HTML pages. */
@@ -22,10 +22,11 @@ type RouteParams = { params: Promise<{ sessionId: string }> }
  * GET /api/corpus/sessions/[sessionId]?tier=5
  */
 export async function GET(request: Request, { params }: RouteParams) {
+  const headers = corpusResponseHeaders(request)
   const { sessionId: raw } = await params
   const sessionId = raw?.trim()
   if (!sessionId) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
   const { searchParams } = new URL(request.url)
@@ -33,7 +34,7 @@ export async function GET(request: Request, { params }: RouteParams) {
   if (tier != null && tier !== '' && tier !== '5') {
     return NextResponse.json(
       { error: 'Only tier=5 is supported on this path' },
-      { status: 400, headers: CORPUS_LD_JSON_HEADERS },
+      { status: 400, headers },
     )
   }
 
@@ -54,7 +55,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   const session = result.docs[0]
   if (!session) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
   const body = buildTier5SessionByIdResponse({
@@ -62,8 +63,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     baseUrl: CORPUS_BASE,
   })
   if (!body) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
-  return NextResponse.json(body, { headers: CORPUS_LD_JSON_HEADERS })
+  return NextResponse.json(body, { headers })
 }

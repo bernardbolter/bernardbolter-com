@@ -3,7 +3,7 @@ import { getPayload } from 'payload'
 
 import { CORPUS_BASE } from '@/lib/corpus/constants'
 import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
-import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
+import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 import config from '@payload-config'
@@ -18,10 +18,11 @@ type RouteParams = { params: Promise<{ slug: string }> }
  * `?tier=5` permanently redirects to `/api/corpus/[slug]/sessions`.
  */
 export async function GET(request: Request, { params }: RouteParams) {
+  const headers = corpusResponseHeaders(request)
   const { slug: rawSlug } = await params
   const slug = rawSlug?.trim()
   if (!slug || !isPublicCatalogueSlug(slug)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
   const { searchParams } = new URL(request.url)
@@ -42,7 +43,7 @@ export async function GET(request: Request, { params }: RouteParams) {
         message:
           'Tier 4 is the default record. Tier 5 lives at /api/corpus/{slug}/sessions.',
       },
-      { status: 400, headers: CORPUS_LD_JSON_HEADERS },
+      { status: 400, headers },
     )
   }
 
@@ -64,7 +65,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   const artwork = result.docs[0]
   if (!artwork) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
   const body = buildArtworkJsonLd(artwork, null, {
@@ -73,5 +74,5 @@ export async function GET(request: Request, { params }: RouteParams) {
     includeTraversalLinks: true,
   })
 
-  return NextResponse.json(body, { headers: CORPUS_LD_JSON_HEADERS })
+  return NextResponse.json(body, { headers })
 }

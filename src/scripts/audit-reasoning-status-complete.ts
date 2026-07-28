@@ -1,5 +1,5 @@
 /**
- * Part 10 audit — list artworks marked complete with empty intent.
+ * reasoningStatus audit — both directions.
  * Report only; does not auto-correct.
  *
  * Usage: npx tsx src/scripts/audit-reasoning-status-complete.ts
@@ -11,10 +11,13 @@ dotenv.config({ path: '.env' })
 import { getPayload } from 'payload'
 import config from '@/payload.config'
 
+type Row = { slug: string; catalogueNumber: string | null; reasoningStatus: string | null }
+
 async function main() {
   const payload = await getPayload({ config })
 
-  const mismatches: Array<{ slug: string; catalogueNumber: string | null }> = []
+  const completeWithoutIntent: Row[] = []
+  const intentNotComplete: Row[] = []
   let page = 1
   let scanned = 0
 
@@ -22,12 +25,7 @@ async function main() {
     const { docs, hasNextPage } = await payload.find({
       collection: 'artworks',
       locale: 'en',
-      where: {
-        and: [
-          { status: { equals: 'published' } },
-          { reasoningStatus: { equals: 'complete' } },
-        ],
-      },
+      where: { status: { equals: 'published' } },
       limit: 100,
       page,
       depth: 0,
@@ -42,11 +40,19 @@ async function main() {
 
     for (const doc of docs) {
       scanned += 1
-      if (!doc.intent?.trim()) {
-        mismatches.push({
-          slug: doc.slug,
-          catalogueNumber: doc.catalogueNumber ?? null,
-        })
+      const hasIntent = Boolean(doc.intent?.trim())
+      const status = doc.reasoningStatus ?? null
+      const row: Row = {
+        slug: doc.slug,
+        catalogueNumber: doc.catalogueNumber ?? null,
+        reasoningStatus: status,
+      }
+
+      if (status === 'complete' && !hasIntent) {
+        completeWithoutIntent.push(row)
+      }
+      if (hasIntent && status !== 'complete') {
+        intentNotComplete.push(row)
       }
     }
 
@@ -54,14 +60,24 @@ async function main() {
     page += 1
   }
 
-  console.log('=== reasoningStatus audit (Part 10) ===')
-  console.log(`Scanned published artworks with reasoningStatus=complete: ${scanned}`)
-  console.log(`complete + empty intent: ${mismatches.length}`)
+  console.log('=== reasoningStatus audit (both directions) ===')
+  console.log(`Scanned published artworks: ${scanned}`)
   console.log('')
-  for (const row of mismatches) {
+
+  console.log(`1) complete + empty intent: ${completeWithoutIntent.length}`)
+  for (const row of completeWithoutIntent) {
     console.log(`${row.slug}\t${row.catalogueNumber ?? '—'}`)
   }
   console.log('')
+
+  console.log(`2) intent present + reasoningStatus !== complete: ${intentNotComplete.length}`)
+  for (const row of intentNotComplete) {
+    console.log(
+      `${row.slug}\t${row.catalogueNumber ?? '—'}\t${row.reasoningStatus ?? 'null'}`,
+    )
+  }
+  console.log('')
+
   console.log('=== partial reachability ===')
   console.log(
     'Artworks.reasoningStatus options include stub / partial / complete (schema OK).',
@@ -73,10 +89,7 @@ async function main() {
     'Studio envelope import (applyEnvelopeImport) can write reasoningStatus including partial.',
   )
   console.log(
-    'Art/Official quick-upload sets stub; commit paths typically set complete.',
-  )
-  console.log(
-    'If partial appears unused in data, that is an operational gap — not a missing enum value.',
+    'Decoupling in either direction is why availableTiers uses field presence, not reasoningStatus.',
   )
   console.log('')
   console.log('No auto-correction performed.')

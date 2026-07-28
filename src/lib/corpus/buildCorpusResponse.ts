@@ -70,7 +70,7 @@ function artworkFeedElement(artwork: Artwork, baseUrl: string, sessionCount: num
   const jsonLd = buildArtworkJsonLd(artwork, null, {
     baseUrl,
     sessionCount,
-    includeTraversalLinks: true,
+    embedded: true,
   })
   const { '@context': _context, ...entry } = jsonLd
   return entry

@@ -7,6 +7,8 @@ import type { Session } from '@/payload-types'
 type Props = {
   session: Session | null | undefined
   passNumber?: number | null
+  /** Primary artwork slug — preferred target for the Tier 5 JSON link. */
+  artworkSlug?: string | null
   showJsonLink?: boolean
   className?: string
 }
@@ -28,10 +30,12 @@ function glossInputFromSession(
 
 /**
  * Shared session summary line — identical on /sessions, bio entries, and throughlines.
+ * When `artworkSlug` is set, the JSON link points at `/api/corpus/{slug}/sessions`.
  */
 export default function SessionGlossLine({
   session,
   passNumber,
+  artworkSlug,
   showJsonLink = false,
   className,
 }: Props) {
@@ -39,7 +43,10 @@ export default function SessionGlossLine({
 
   const gloss = buildSessionGloss(glossInputFromSession(session, passNumber))
   const href = `/sessions/${session.sessionId}`
-  const jsonHref = sessionTier5ApiPath(session.sessionId)
+  const slug = artworkSlug?.trim()
+  const jsonHref = slug
+    ? `/api/corpus/${encodeURIComponent(slug)}/sessions`
+    : sessionTier5ApiPath(session.sessionId)
 
   return (
     <div className={className ?? 'session-gloss-line'}>

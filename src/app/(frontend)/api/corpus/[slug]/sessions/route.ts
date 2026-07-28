@@ -6,7 +6,7 @@ import {
   TIER5_SESSION_SELECT,
 } from '@/lib/corpus/buildTier5SessionsResponse'
 import { CORPUS_BASE } from '@/lib/corpus/constants'
-import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
+import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import config from '@payload-config'
 
@@ -19,11 +19,12 @@ type RouteParams = { params: Promise<{ slug: string }> }
  * Tier 5 — completed session transcripts for one artwork.
  * GET /api/corpus/[slug]/sessions
  */
-export async function GET(_request: Request, { params }: RouteParams) {
+export async function GET(request: Request, { params }: RouteParams) {
+  const headers = corpusResponseHeaders(request)
   const { slug: rawSlug } = await params
   const slug = rawSlug?.trim()
   if (!slug || !isPublicCatalogueSlug(slug)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
   const payload = await getPayload({ config })
@@ -41,7 +42,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
   })
 
   if (!artworkResult.docs[0]) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
   const sessionsResult = await payload.find({
@@ -60,5 +61,5 @@ export async function GET(_request: Request, { params }: RouteParams) {
     baseUrl: CORPUS_BASE,
   })
 
-  return NextResponse.json(body, { headers: CORPUS_LD_JSON_HEADERS })
+  return NextResponse.json(body, { headers })
 }
