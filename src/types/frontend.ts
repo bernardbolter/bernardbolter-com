@@ -50,6 +50,37 @@ export interface ArtistInfoData {
   socialLinks?: ArtistSocialLinks
 }
 
+export type TimelineBioEntryMarker = {
+  id: string
+  eventDate: string
+  year: number | null
+  text: string
+  permalinkHref: string | null
+  sourceSessionHref: string | null
+  linkedArtworkIds: number[]
+}
+
+export type TimelineThroughlineMarker = {
+  id: string
+  text: string
+  permalinkHref: string | null
+  linkedArtworkIds: number[]
+}
+
+export type TimelineHistoricalReadingMarker = {
+  id: string
+  date: string
+  year: number | null
+  type: 'bio' | 'statement'
+  href: string
+}
+
+export interface TimelineMarkersData {
+  bioEntries: TimelineBioEntryMarker[]
+  throughlines: TimelineThroughlineMarker[]
+  historicalReadings: TimelineHistoricalReadingMarker[]
+}
+
 export interface ArtworksState {
   filterSeries: FilterCategory[]
   original: CatalogueArtwork[]
@@ -76,6 +107,7 @@ export interface ArtworksState {
   statementData: { content?: string } | null
   contactData: { content?: string } | null
   datenschutzData: { content?: string } | null
+  timelineMarkers: TimelineMarkersData
   viewportWidth: number
   viewportHeight: number
   artworkContainerWidth: number
@@ -90,10 +122,16 @@ export interface ArtworksState {
 export type ArtworksContextType = [ArtworksState, Dispatch<SetStateAction<ArtworksState>>]
 
 export const DEFAULT_ARTIST_INFO: ArtistInfoData = {}
+export const EMPTY_TIMELINE_MARKERS: TimelineMarkersData = {
+  bioEntries: [],
+  throughlines: [],
+  historicalReadings: [],
+}
 
 export function createInitialArtworksState(
   artworks: CatalogueArtwork[],
   artist: ArtistInfoData = DEFAULT_ARTIST_INFO,
+  timelineMarkers: TimelineMarkersData = EMPTY_TIMELINE_MARKERS,
   filterSeries: FilterCategory[] = [],
 ): ArtworksState {
   const sorting: SortingType = 'latest'
@@ -137,6 +175,7 @@ export function createInitialArtworksState(
     statementData: null,
     contactData: null,
     datenschutzData: null,
+    timelineMarkers,
     ...viewport,
     savedTimelineIndex: 0,
     savedTimelineFiltersHash: '',

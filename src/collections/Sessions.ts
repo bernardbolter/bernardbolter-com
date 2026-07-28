@@ -45,6 +45,7 @@ export const Sessions: CollectionConfig = {
         { label: 'Episode assembly', value: 'episode-assembly' },
         { label: 'Event enrichment', value: 'event-enrichment' },
         { label: 'Corpus revisit', value: 'corpus-revisit' },
+        { label: 'System design', value: 'system-design' },
       ],
       admin: { position: 'sidebar' },
     },

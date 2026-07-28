@@ -641,6 +641,7 @@ h6 {
   display: flex;
   flex-direction: row-reverse;
   overflow: scroll;
+  position: relative;
   padding: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -702,6 +703,76 @@ h6 {
   position: relative;
   flex-shrink: 0;
   pointer-events: none;
+}
+
+.artworks-timeline__marker-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.artworks-timeline__throughline-svg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.artworks-timeline__throughline-segment line {
+  stroke: color-mix(in srgb, var(--ui-timeline) 55%, transparent);
+  stroke-width: 1;
+}
+
+.artworks-timeline__throughline-segment circle {
+  fill: color-mix(in srgb, var(--ui-timeline) 70%, transparent);
+}
+
+.artworks-timeline__marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  text-decoration: none;
+}
+
+.artworks-timeline__marker--bio {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ui-timeline) 72%, transparent);
+  opacity: 0.88;
+}
+
+.artworks-timeline__marker--historical {
+  width: 9px;
+  height: 11px;
+  border: 1px solid color-mix(in srgb, var(--ui-timeline) 70%, transparent);
+  border-radius: 1px;
+  background: color-mix(in srgb, white 86%, var(--ui-timeline) 14%);
+}
+
+.artworks-timeline__marker--historical::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 3px;
+  border-top: 1px solid color-mix(in srgb, var(--ui-timeline) 55%, transparent);
+}
+
+.artworks-timeline__marker--historical-bio {
+  border-color: color-mix(in srgb, #6c7a89 68%, transparent);
+}
+
+.artworks-timeline__marker--historical-statement {
+  border-color: color-mix(in srgb, #7b6b92 68%, transparent);
+}
+
+.artworks-timeline__marker--bio:hover,
+.artworks-timeline__marker--historical:hover {
+  opacity: 1;
+  filter: saturate(1.05);
 }
 
 @media screen and (min-width: 768px) {

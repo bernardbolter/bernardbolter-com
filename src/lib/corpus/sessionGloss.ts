@@ -13,6 +13,7 @@ const SESSION_TYPE_LABELS: Record<string, string> = {
   'triptych-cataloguing': 'Triptych cataloguing',
   'episode-storyboard': 'Episode storyboard',
   'episode-assembly': 'Episode assembly',
+  'system-design': 'System design',
 }
 
 function ordinal(n: number): string {

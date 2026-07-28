@@ -13,6 +13,8 @@ export function wrapUpSummary(sessionType: string | null | undefined): string {
       return 'When the text is ready, commit to update your Artist record with the staged biography or statement fields.'
     case 'event-enrichment':
       return 'When the event narrative, tags, and keywords are staged, commit to update the Events record. Complete the tag wrap-up pass before committing.'
+    case 'system-design':
+      return 'When planning outputs are complete, commit to mark the session complete and preserve transcript/sessionNotes as the record.'
     default:
       return 'When you are done in chat, commit to save staged fields to the CMS.'
   }
@@ -28,6 +30,8 @@ export function commitButtonHint(sessionType: string | null | undefined): string
       return 'Applies staged sortIndex and date anchors, recomputes timelineDate/dateDisplay, and marks the session complete.'
     case 'event-enrichment':
       return 'Writes staged event fields to the linked Events record and marks the session complete.'
+    case 'system-design':
+      return 'Marks this planning session complete and keeps transcript + session notes for audit.'
     default:
       return 'Saves staged fields from this session to the CMS and marks the session complete.'
   }

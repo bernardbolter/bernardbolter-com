@@ -80,6 +80,7 @@ export const envelopeSessionTypeSchema = z.enum([
   'artwork',
   'statement',
   'event',
+  'system-design',
   'artwork-cataloguing',
   'artist-statement',
   'event-enrichment',
@@ -162,7 +163,7 @@ export type EnvelopeWrite = z.infer<typeof envelopeWriteSchema>
 /** Map envelope sessionType shorthand → live Sessions.sessionType values. */
 export function mapEnvelopeSessionType(
   value: z.infer<typeof envelopeSessionTypeSchema>,
-): 'artwork-cataloguing' | 'artist-statement' | 'event-enrichment' {
+): 'artwork-cataloguing' | 'artist-statement' | 'event-enrichment' | 'system-design' {
   switch (value) {
     case 'artwork':
     case 'artwork-cataloguing':
@@ -173,6 +174,8 @@ export function mapEnvelopeSessionType(
     case 'event':
     case 'event-enrichment':
       return 'event-enrichment'
+    case 'system-design':
+      return 'system-design'
     default: {
       const _exhaustive: never = value
       return _exhaustive

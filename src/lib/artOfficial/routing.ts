@@ -11,6 +11,7 @@ export type SessionType =
   | 'episode-assembly'
   | 'event-enrichment'
   | 'corpus-revisit'
+  | 'system-design'
 
 export const SESSION_TYPES: SessionType[] = [
   'artwork-cataloguing',
@@ -25,6 +26,7 @@ export const SESSION_TYPES: SessionType[] = [
   'episode-assembly',
   'event-enrichment',
   'corpus-revisit',
+  'system-design',
 ]
 
 export function requiresArtwork(t: SessionType): boolean {
@@ -71,6 +73,7 @@ export function commitTarget(t: SessionType): CommitTarget {
       return { kind: 'update-event' }
     case 'onboarding':
     case 'connected-reading':
+    case 'system-design':
       return { kind: 'no-record-write' }
     case 'corpus-revisit':
       return { kind: 'create-artwork' }

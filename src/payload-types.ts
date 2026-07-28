@@ -3844,7 +3844,8 @@ export interface Session {
     | 'episode-storyboard'
     | 'episode-assembly'
     | 'event-enrichment'
-    | 'corpus-revisit';
+    | 'corpus-revisit'
+    | 'system-design';
   /**
    * Set only when sessionType is corpus-revisit. Points to the original session being reopened in light of new corpus context.
    */

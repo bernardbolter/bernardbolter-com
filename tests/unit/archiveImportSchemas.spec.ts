@@ -136,6 +136,91 @@ describe('archiveImportSchemas strict validation', () => {
     expect(parsed.success).toBe(true)
   })
 
+  it('accepts sessions fields for mentioned artworks and second description', () => {
+    const parsed = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'session-with-mentions',
+          fields: {
+            sessionType: 'artwork',
+            status: 'in-progress',
+            primaryArtwork: 'the-thinker',
+            mentionedArtworks: ['towers', 'shrine'],
+            firstImpression: 'Dense and vertical.',
+            secondDescription: 'A slower structural read with axis notes.',
+            sessionNotes: 'Resume from this state later.',
+            messages: [
+              { role: 'user', content: 'First pass' },
+              { role: 'assistant', content: 'What structure stands out?' },
+            ],
+          },
+        },
+      ],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('accepts sessions proposedAbstracts with strict row shape', () => {
+    const parsed = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'session-with-abstracts',
+          fields: {
+            sessionType: 'statement',
+            status: 'completed',
+            messages: [{ role: 'user', content: 'wrap-up' }],
+            proposedAbstracts: [
+              {
+                targetCollection: 'bio-timeline',
+                text: 'Early recurring concern with density.',
+                status: 'proposed',
+              },
+              {
+                targetCollection: 'statement-throughline',
+                text: 'Material restraint as ethical method.',
+                status: 'edited',
+              },
+            ],
+          },
+        },
+      ],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('rejects unknown keys inside sessions proposedAbstract rows', () => {
+    const parsed = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'session-with-bad-abstract',
+          fields: {
+            sessionType: 'event',
+            status: 'completed',
+            messages: [{ role: 'assistant', content: 'noted' }],
+            proposedAbstracts: [
+              {
+                targetCollection: 'bio-timeline',
+                text: 'A note',
+                status: 'accepted',
+                typoField: 'unexpected',
+              },
+            ],
+          },
+        },
+      ],
+    })
+    expect(parsed.success).toBe(false)
+    if (!parsed.success) {
+      expect(parsed.error.message).toMatch(/Unrecognized key/i)
+    }
+  })
+
   it('rejects unknown keys on sessions writes', () => {
     const parsed = envelopeImportSchema.safeParse({
       writes: [
@@ -162,6 +247,7 @@ describe('archiveImportSchemas strict validation', () => {
     expect(mapEnvelopeSessionType('artwork')).toBe('artwork-cataloguing')
     expect(mapEnvelopeSessionType('statement')).toBe('artist-statement')
     expect(mapEnvelopeSessionType('event')).toBe('event-enrichment')
+    expect(mapEnvelopeSessionType('system-design')).toBe('system-design')
     expect(mapEnvelopeSessionType('artwork-cataloguing')).toBe('artwork-cataloguing')
   })
 

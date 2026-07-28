@@ -73,6 +73,16 @@ describe('sessionMatchesArtworkSlug', () => {
     expect(sessionMatchesArtworkSlug(s, 'skulptur-projekte-m-nster-2007')).toBe(true)
     expect(sessionMatchesArtworkSlug(s, 'unrelated-work')).toBe(false)
   })
+
+  it('matches mentioned artwork when primary artwork is absent', () => {
+    const s = session({
+      primaryArtwork: null,
+      artworkRecord: null,
+      mentionedArtworks: [munster],
+    })
+    expect(sessionMatchesArtworkSlug(s, 'skulptur-projekte-m-nster-2007')).toBe(true)
+    expect(sessionMatchesArtworkSlug(s, 'venice-biennale-2007')).toBe(false)
+  })
 })
 
 describe('projectTier5Session', () => {

@@ -135,6 +135,14 @@ const KICKOFFS: Record<SessionType | 'artwork-cataloguing-refinement', SessionKi
     message:
       "I'd like to do an annual practice snapshot. Please ask what year we're reflecting on and what changed.",
   },
+  'system-design': {
+    title: 'System design',
+    intro:
+      'Architecture/planning session for pipeline, prompt, or schema strategy. This does not target a single artwork commit path.',
+    buttonLabel: 'Begin system-design session',
+    message:
+      "I'd like to run a system-design session. Please clarify the decision scope, constraints, and outputs, then ask one planning question at a time.",
+  },
   'corpus-revisit': {
     title: 'Corpus revisit',
     intro:

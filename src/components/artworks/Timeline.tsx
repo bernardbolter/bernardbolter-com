@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   useCallback,
@@ -19,6 +20,42 @@ import TimelineArtworkSlot from './TimelineArtworkSlot'
 
 const DRAG_THRESHOLD_PX = 5
 const WHEEL_SCROLL_SENSITIVITY = 0.85
+const TIMELINE_AXIS_OFFSET = 24
+const BIO_TRACK_OFFSET = 16
+const HISTORICAL_TRACK_OFFSET = -16
+const MOBILE_BIO_TRACK_OFFSET = 16
+const MOBILE_HISTORICAL_TRACK_OFFSET = -12
+
+type AnchorPoint = { x: number; y: number }
+
+function buildArtworkAnchorMap(args: {
+  isMobile: boolean
+  sideWidth: number
+  artworkContainerWidth: number
+  artworkContainerHeight: number
+  artworksArray: Array<{ id: number; marginRight: number; marginBottom: number }>
+}): Map<number, AnchorPoint> {
+  const { isMobile, sideWidth, artworkContainerWidth, artworkContainerHeight, artworksArray } = args
+  const anchors = new Map<number, AnchorPoint>()
+
+  if (isMobile) {
+    let currentY = 0
+    artworksArray.forEach((artwork) => {
+      const y = currentY + artworkContainerHeight / 2
+      anchors.set(artwork.id, { x: TIMELINE_AXIS_OFFSET, y })
+      currentY += artworkContainerHeight + artwork.marginBottom
+    })
+    return anchors
+  }
+
+  let currentX = sideWidth
+  artworksArray.forEach((artwork) => {
+    const x = currentX + artworkContainerWidth / 2
+    anchors.set(artwork.id, { x, y: TIMELINE_AXIS_OFFSET })
+    currentX += artworkContainerWidth + artwork.marginRight
+  })
+  return anchors
+}
 
 export default function Timeline() {
   const router = useRouter()
@@ -298,6 +335,135 @@ export default function Timeline() {
   const halfWidth = state.artworkContainerWidth / 2
   const halfHeight = state.artworkContainerHeight / 2
   const sideWidth = state.artworkDesktopSideWidth
+  const timelineMarkers = state.timelineMarkers
+
+  const yearAnchorByYear = useMemo(() => {
+    const map = new Map<number, number>()
+    timeline.timepointsArray.forEach((timepoint) => {
+      if (!map.has(timepoint.year)) {
+        map.set(timepoint.year, timepoint.distanceFromStart)
+      }
+    })
+    return map
+  }, [timeline.timepointsArray])
+
+  const artworkAnchors = useMemo(
+    () =>
+      buildArtworkAnchorMap({
+        isMobile,
+        sideWidth,
+        artworkContainerWidth: state.artworkContainerWidth,
+        artworkContainerHeight: state.artworkContainerHeight,
+        artworksArray: timeline.artworksArray.map((artwork) => ({
+          id: artwork.id,
+          marginRight: artwork.marginRight,
+          marginBottom: artwork.marginBottom,
+        })),
+      }),
+    [isMobile, sideWidth, state.artworkContainerWidth, state.artworkContainerHeight, timeline.artworksArray],
+  )
+
+  const bioMarkerLayout = useMemo(() => {
+    return timelineMarkers.bioEntries
+      .map((entry) => {
+        const linkedAnchor = entry.linkedArtworkIds
+          .map((artworkId) => artworkAnchors.get(artworkId))
+          .find(Boolean)
+        const yearDistance =
+          entry.year !== null && yearAnchorByYear.has(entry.year) ? yearAnchorByYear.get(entry.year)! : null
+
+        if (!linkedAnchor && yearDistance === null) return null
+
+        if (isMobile) {
+          const y = linkedAnchor?.y ?? halfHeight + (yearDistance ?? 0)
+          return {
+            id: entry.id,
+            href: entry.permalinkHref,
+            title: entry.text,
+            x: TIMELINE_AXIS_OFFSET + MOBILE_BIO_TRACK_OFFSET,
+            y,
+          }
+        }
+
+        const x = linkedAnchor?.x ?? sideWidth + (yearDistance ?? 0)
+        return {
+          id: entry.id,
+          href: entry.permalinkHref,
+          title: entry.text,
+          x,
+          y: TIMELINE_AXIS_OFFSET + BIO_TRACK_OFFSET,
+        }
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+  }, [artworkAnchors, halfHeight, isMobile, sideWidth, timelineMarkers.bioEntries, yearAnchorByYear])
+
+  const historicalMarkerLayout = useMemo(() => {
+    return timelineMarkers.historicalReadings
+      .map((entry) => {
+        if (entry.year === null) return null
+        const yearDistance = yearAnchorByYear.get(entry.year)
+        if (typeof yearDistance !== 'number') return null
+
+        if (isMobile) {
+          return {
+            id: entry.id,
+            href: entry.href,
+            title: `${entry.type} reading`,
+            x: TIMELINE_AXIS_OFFSET + MOBILE_HISTORICAL_TRACK_OFFSET,
+            y: halfHeight + yearDistance,
+            type: entry.type,
+          }
+        }
+
+        return {
+          id: entry.id,
+          href: entry.href,
+          title: `${entry.type} reading`,
+          x: sideWidth + yearDistance,
+          y: TIMELINE_AXIS_OFFSET + HISTORICAL_TRACK_OFFSET,
+          type: entry.type,
+        }
+      })
+      .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
+  }, [halfHeight, isMobile, sideWidth, timelineMarkers.historicalReadings, yearAnchorByYear])
+
+  const throughlineSegments = useMemo(() => {
+    return timelineMarkers.throughlines
+      .map((throughline) => {
+        const linkedPoints = throughline.linkedArtworkIds
+          .map((artworkId) => artworkAnchors.get(artworkId))
+          .filter((point): point is AnchorPoint => Boolean(point))
+        if (linkedPoints.length !== 2) return null
+        const [start, end] = linkedPoints
+
+        if (isMobile) {
+          const x = TIMELINE_AXIS_OFFSET + MOBILE_BIO_TRACK_OFFSET
+          return {
+            id: throughline.id,
+            href: throughline.permalinkHref,
+            title: throughline.text,
+            x1: x,
+            y1: start.y,
+            x2: x,
+            y2: end.y,
+            endpointX: x,
+          }
+        }
+
+        const y = TIMELINE_AXIS_OFFSET + BIO_TRACK_OFFSET
+        return {
+          id: throughline.id,
+          href: throughline.permalinkHref,
+          title: throughline.text,
+          x1: start.x,
+          y1: y,
+          x2: end.x,
+          y2: y,
+          endpointY: y,
+        }
+      })
+      .filter((segment): segment is NonNullable<typeof segment> => segment !== null)
+  }, [artworkAnchors, isMobile, timelineMarkers.throughlines])
 
   return (
     <div className="artworks-timeline__container">
@@ -335,6 +501,63 @@ export default function Timeline() {
               isLast={index === timeline.artworksArray.length - 1}
               isMobile={isMobile}
               onLinkClick={handleArtworkLinkClick}
+            />
+          ))}
+        </div>
+        <div
+          className="artworks-timeline__marker-layer"
+          aria-hidden={false}
+          style={{
+            width: !isMobile ? `${timeline.totalTimelineWidth}px` : '64px',
+            height: isMobile ? `${timeline.totalTimelineHeight}px` : '84px',
+          }}
+        >
+          <svg
+            className="artworks-timeline__throughline-svg"
+            width={!isMobile ? timeline.totalTimelineWidth : 64}
+            height={isMobile ? timeline.totalTimelineHeight : 84}
+            viewBox={`0 0 ${!isMobile ? timeline.totalTimelineWidth : 64} ${
+              isMobile ? timeline.totalTimelineHeight : 84
+            }`}
+            role="presentation"
+          >
+            {throughlineSegments.map((segment) => (
+              <g key={segment.id} className="artworks-timeline__throughline-segment">
+                <line x1={segment.x1} y1={segment.y1} x2={segment.x2} y2={segment.y2} />
+                <circle cx={segment.x1} cy={segment.y1} r="2.25" />
+                <circle cx={segment.x2} cy={segment.y2} r="2.25" />
+              </g>
+            ))}
+          </svg>
+
+          {bioMarkerLayout.map((marker) =>
+            marker.href ? (
+              <Link
+                key={marker.id}
+                href={marker.href}
+                className="artworks-timeline__marker artworks-timeline__marker--bio"
+                style={{ left: `${marker.x}px`, top: `${marker.y}px` }}
+                aria-label={marker.title}
+                title={marker.title}
+              />
+            ) : (
+              <span
+                key={marker.id}
+                className="artworks-timeline__marker artworks-timeline__marker--bio"
+                style={{ left: `${marker.x}px`, top: `${marker.y}px` }}
+                aria-hidden
+              />
+            ),
+          )}
+
+          {historicalMarkerLayout.map((marker) => (
+            <Link
+              key={marker.id}
+              href={marker.href}
+              className={`artworks-timeline__marker artworks-timeline__marker--historical artworks-timeline__marker--historical-${marker.type}`}
+              style={{ left: `${marker.x}px`, top: `${marker.y}px` }}
+              aria-label={marker.title}
+              title={marker.title}
             />
           ))}
         </div>

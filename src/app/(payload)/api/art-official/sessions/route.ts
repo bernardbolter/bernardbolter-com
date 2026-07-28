@@ -18,6 +18,7 @@ const createSessionSchema = z.object({
     'episode-storyboard',
     'episode-assembly',
     'event-enrichment',
+    'system-design',
   ]),
   artworkRecord: z.number().int().positive().optional(),
   primaryArtwork: z.number().int().positive().optional(),

@@ -161,7 +161,8 @@ export function sessionTypeOverride(
     | 'episode-storyboard'
     | 'episode-assembly'
     | 'event-enrichment'
-    | 'corpus-revisit',
+    | 'corpus-revisit'
+    | 'system-design',
 ): string {
   switch (sessionType) {
     case 'artwork-cataloguing':
@@ -193,6 +194,17 @@ update_field({ targetCollection: "artists", field: "bioFull", value: "Paragraph�
 Do not use practice-knowledge or invented field names. Do not write to Artworks.`
     case 'annual-snapshot':
       return `SESSION TYPE: Annual practice snapshot. Focus on what changed this year across the practice. Stage artist biography/statement updates when warranted; propose bio-timeline or statement-throughline abstracts only for genuine cross-work patterns or life-facts.`
+    case 'system-design':
+      return `SESSION TYPE: System design / architecture planning session.
+
+This session is for briefs, implementation planning, and operational decisions. Do not treat a single artwork as the commit target.
+
+Keep the dialogue concrete and decision-oriented:
+- clarify goals, constraints, trade-offs, and unresolved risks
+- produce explicit outputs (checklists, briefs, implementation deltas, acceptance criteria)
+- capture outcomes in sessionNotes via store_session_field at key milestones
+
+Unless the artist explicitly asks, do not stage artwork/artist/event field updates in this session type.`
     case 'onboarding':
       return `SESSION TYPE: You are running an onboarding interview to populate Practice Knowledge. No artwork image is involved.
 
@@ -683,6 +695,15 @@ PRECISION VALUES: exact | month | year | circa | decade | unknown`
 export function buildWhereHasThisLivedBlock(): string {
   return `WHERE HAS THIS LIVED — exhibition / Events linking (mandatory beat before formal re-ask)
 
+This block is mandatory in every artwork-cataloguing session before the formal re-ask. It may be deferred only when the artist explicitly says to come back later. Do not silently skip it because interpretive conversation feels complete.
+
+Cover, one at a time (not as a form dump):
+- Current location: currentLocation.category + currentLocation.locationDetail
+- Ownership and provenance traceability: ownershipHistory + provenanceOriginKnown + provenanceConfidenceLayer
+- Sale details when applicable (private fields still need answers): salesRecord (date, price, currency, buyer private, channel, gallery/auction house)
+- Exhibition history: link via Events tools (never free text in workContext)
+- Insurance value/date when relevant: insuranceValue + insuranceValueDate
+
 When the artist mentions a show, venue, fair, residency, or exhibition date — even mid-interpretive conversation — treat it as this beat. Do not announce a phase change.
 
 1. Silently call search_events with whatever keywords you have (venueKeywords, titleKeywords, yearApprox). Always search before offering to create — confident recall does not prove the record is absent.
@@ -721,12 +742,20 @@ MIDDLE REFLECTIVE (must all be resolved):
 LATE (must all be resolved before confirmation draft):
 - consciousRejections — through "what were you moving away from" if not already surfaced
 - encounterNote — return to the blind pre-upload description; compare then vs now
+- formal re-ask and second description — explicitly return to firstImpression ("you described it at the start as ... does that still hold?") and store the answer with store_session_field secondDescription. This is separate from the short post-upload acknowledgment.
 
 PRACTICAL (when dimensions are on the record):
 - sizeTier — must be staged from an explicit artist answer (xs | sm | md | lg | xl), or marked N/A only if there is no physical/output size to show on the site. Never skip the question because dimensions imply a tier.
 
 TAG CLASSIFICATION (always — every cataloguing session):
 - movementTags, styleTags, subjectTags, genreTags, periodTags — all five staged, or each marked N/A with one reason (rare). Never commit with zero tag fields addressed.
+
+WHERE-HAS-THIS-LIVED CLOSE-GATE (must be resolved or explicitly deferred):
+- current location
+- ownership/provenance traceability
+- sales details (if applicable)
+- exhibition linking via Events tools
+- insurance value/date (if relevant)
 
 If a field truly does not apply, stage a one-sentence confirmed note explaining why — never leave it silently empty.
 
@@ -757,6 +786,8 @@ Your job for the next one or two turns ONLY:
 - Ask ONE question that invites the artist to correct, extend, or contrast your reading — not catalogue metadata yet.
 - You may stage subjectTags when the artist confirms or refines vision inference (confidence "confirmed", source "conversation").
 - Do NOT ask title, year, dimensions, medium, series, or location yet.
+- Keep this post-upload acknowledgment short: 2-4 sentences total.
+- Do NOT perform the full blind-vs-image reconciliation here. Save that weight for the formal late-session re-ask tied to firstImpression.
 
 Do NOT call set_phase — the server advances to identity/physical cataloguing automatically after this phase.
 Do NOT repeat pre-upload questions.`

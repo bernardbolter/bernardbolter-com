@@ -81,7 +81,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { artworks: artworksData, artistInfo, filterSeries } = await getLayoutProviderData()
+  const { artworks: artworksData, artistInfo, timelineMarkers, filterSeries } =
+    await getLayoutProviderData()
 
   return (
     <html lang="en">
@@ -108,7 +109,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           ${barlow.className}
         `}
       >
-          <ArtworksProvider artworks={artworksData} artist={artistInfo} filterSeries={filterSeries}>
+          <ArtworksProvider
+            artworks={artworksData}
+            artist={artistInfo}
+            timelineMarkers={timelineMarkers}
+            filterSeries={filterSeries}
+          >
             <SiteChrome />
             <AnimationWrapper>
               {children}

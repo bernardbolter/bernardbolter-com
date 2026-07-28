@@ -7,12 +7,14 @@ import { getArtworkViewportLayout } from '@/helpers/artworkViewportLayout'
 import { generateTimeline, getArtworkSortKey } from '@/helpers/timeline'
 import {
   DEFAULT_ARTIST_INFO,
+  EMPTY_TIMELINE_MARKERS,
   createInitialArtworksState,
   type ArtistInfoData,
   type ArtworksContextType,
   type ArtworksState,
   type CatalogueArtwork,
   type FilterCategory,
+  type TimelineMarkersData,
 } from '@/types/frontend'
 
 const ArtworksContext = createContext<ArtworksContextType>([createInitialArtworksState([]), () => {}])
@@ -21,10 +23,17 @@ interface ArtworksProviderProps {
   children: ReactNode
   artworks: CatalogueArtwork[]
   artist: ArtistInfoData | null
+  timelineMarkers: TimelineMarkersData
   filterSeries: FilterCategory[]
 }
 
-export const ArtworksProvider = ({ children, artworks, artist, filterSeries }: ArtworksProviderProps) => {
+export const ArtworksProvider = ({
+  children,
+  artworks,
+  artist,
+  timelineMarkers,
+  filterSeries,
+}: ArtworksProviderProps) => {
   const catalogue = artworks ?? []
   const artworksWithImages = useMemo(
     () => catalogue.filter((artwork) => artworkHasDisplayImage(artwork)),
@@ -32,7 +41,12 @@ export const ArtworksProvider = ({ children, artworks, artist, filterSeries }: A
   )
 
   const [state, setState] = useState<ArtworksState>(() => ({
-    ...createInitialArtworksState(artworksWithImages, artist ?? DEFAULT_ARTIST_INFO, filterSeries),
+    ...createInitialArtworksState(
+      artworksWithImages,
+      artist ?? DEFAULT_ARTIST_INFO,
+      timelineMarkers ?? EMPTY_TIMELINE_MARKERS,
+      filterSeries,
+    ),
     totalCount: catalogue.length,
     withImagesCount: artworksWithImages.length,
   }))
@@ -44,10 +58,11 @@ export const ArtworksProvider = ({ children, artworks, artist, filterSeries }: A
       original: artworksWithImages,
       filtered: artworksWithImages,
       artistData: artist ?? DEFAULT_ARTIST_INFO,
+      timelineMarkers: timelineMarkers ?? EMPTY_TIMELINE_MARKERS,
       totalCount: catalogue.length,
       withImagesCount: artworksWithImages.length,
     }))
-  }, [artist, artworksWithImages, catalogue.length, filterSeries])
+  }, [artist, artworksWithImages, timelineMarkers, catalogue.length, filterSeries])
 
   // Keep viewport and artwork container sizing in provider state.
   useEffect(() => {

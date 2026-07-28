@@ -20,6 +20,7 @@ const LABELS: Record<string, string> = {
   'episode-assembly': 'Episode assembly',
   'event-enrichment': 'Event enrichment',
   'corpus-revisit': 'Corpus revisit',
+  'system-design': 'System design',
 }
 
 type ArtworkResult = {
