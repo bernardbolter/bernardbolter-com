@@ -40,7 +40,10 @@ EDITION / PRINT STATUS (step 7, when prints exist)
 
 BLOCKED FROM CHAT / ENVELOPE (admin-only — never stage or invent envelope writes for these)
 - salesRecord, insuranceValue, insuranceValueDate, askingPrice (and other financial/commerce fields)
-- artHistoricalReferences (relationship field — conversation may name artists; do not stage the relation)
+
+ALLOWED — artHistoricalReferences as structured array only (RE-RESOLVED 2026-07-27)
+- Stage [{ name, matchStrategy: "fuzzy-match-or-create", relevanceNote? }] — never a prose string
+- Put extended art-historical prose in artHistoricalContext
 
 ALLOWED FOR CHAT / ENVELOPE (where-has-this-lived provenance cluster — stage from conversation; manual audit later is fine)
 - ownershipHistory, provenanceOriginKnown, provenanceConfidenceLayer

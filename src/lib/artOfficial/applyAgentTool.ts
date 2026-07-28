@@ -72,7 +72,7 @@ import {
   searchGettyTgn,
   searchWikidata,
 } from './externalLookups'
-import { isFieldAllowedForAgent } from './fieldAllowlist'
+import { isFieldAllowedForAgent, validateArtHistoricalReferencesValue } from './fieldAllowlist'
 import { assertArtworkSeriesSlugExists } from './seriesSlugs'
 import { seriesMediaFlagsFromTimeline } from './seriesMediaFlags'
 import {
@@ -267,11 +267,16 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
           }
         }
         if (!isFieldAllowedForAgent(args.targetCollection, args.field)) {
-          const message =
-            args.field === 'artHistoricalReferences'
-              ? 'artHistoricalReferences is a curated relationship — never stage prose there. Put art-historical prose in artHistoricalContext instead.'
-              : `Field ${args.targetCollection}.${args.field} is not writable by the agent.`
-          return failTool(tool.name, message)
+          return failTool(
+            tool.name,
+            `Field ${args.targetCollection}.${args.field} is not writable by the agent.`,
+          )
+        }
+        if (args.field === 'artHistoricalReferences') {
+          const shapeCheck = validateArtHistoricalReferencesValue(args.value)
+          if (!shapeCheck.ok) {
+            return failTool(tool.name, shapeCheck.error)
+          }
         }
         if (args.targetCollection === 'artworks') {
           const enumCheck = validateSelectFieldValue(args.field, args.value)

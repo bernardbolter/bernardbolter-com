@@ -3451,6 +3451,10 @@ export interface ArtHistoricalReference {
    */
   wikidataUri?: string | null;
   notes?: string | null;
+  /**
+   * Set when Art/Official creates a stub from a staged name (fuzzy-match-or-create). Confirm spelling / canonical title before variants accumulate.
+   */
+  needsArtistReview?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -5501,6 +5505,7 @@ export interface ArtHistoricalReferencesSelect<T extends boolean = true> {
   referenceUrl?: T;
   wikidataUri?: T;
   notes?: T;
+  needsArtistReview?: T;
   updatedAt?: T;
   createdAt?: T;
 }

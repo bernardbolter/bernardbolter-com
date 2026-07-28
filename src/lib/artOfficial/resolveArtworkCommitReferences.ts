@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 
 import type { Session, User } from '@/payload-types'
 
+import { resolveArtHistoricalReferencesField } from './artHistoricalReferences'
 import { normalizeSizeTier } from './inferSizeTier'
 import { getCustomMediums, registerCustomMedium } from './artworkMediumOptions'
 import { normalizeArtworkSelectFields } from './normalizeArtworkSelects'
@@ -369,6 +370,7 @@ export async function resolveArtworkCommitReferences(
   ensureSlug(out)
   await resolveSeriesField(ctx, out)
   await resolveTagFields(ctx, out)
+  await resolveArtHistoricalReferencesField(ctx, out)
   await resolveRelatedWorksAtMaking(ctx, out)
   if (out.ach) {
     await resolveNestedImageCaptureTypes(ctx, out.ach, 'ach')

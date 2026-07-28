@@ -93,8 +93,10 @@ REFLECTIVE: intent, makingNote, directInspiration, artHistoricalContext,
             seriesContext, workContext, intentVsOutcome (after intent only)
 
 NOTE on art-historical fields:
-- artHistoricalContext (textarea) — stage prose here: named artists, movements, references, and why they matter to this work. This is what the agent drafts from conversation.
-- artHistoricalReferences (relationship to curated records) — DO NOT stage this field. It is managed in the admin by linking to specific artwork records in the art-historical-references collection. Never stage free text to artHistoricalReferences.
+- artHistoricalContext (textarea) — stage prose here: named artists, movements, references, and why they matter to this work.
+- artHistoricalReferences (relationship) — stage as a structured array only, same pattern as tag fields:
+  [{ "name": "Robert Rauschenberg", "matchStrategy": "fuzzy-match-or-create", "relevanceNote": "why this reference matters to THIS work" }]
+  Never stage a prose string to artHistoricalReferences (Brandenburger Tor bug). Import fuzzy-matches existing records or creates a needsArtistReview stub.
 
 SESSION CLOSE — provenance and practical wrap:
 artworkHolder — capture who currently holds the work. Stage as: artworkHolder.holderType ("Person" or "Organization"), artworkHolder.holderName, artworkHolder.holderUrl (if known). Ask naturally: "Where does this work live now — with you, or did it sell?"
@@ -720,7 +722,7 @@ EDITION / PRINT STATUS (when the work has numbered prints)
 - ACH / non-DCS / non-Megacities: ownershipRegistry[] with editionSize + copies[] rows for printed copies only.
 - DCS: dcs.editionTiers[]; Megacities: megacities.editionTiers[] — size field is totalEditionSize.
 - Studio-held printed copy: claimStatus artist-held. No printedCount field — unprinted is implied.
-- Never invent envelope writes for salesRecord / insurance / artHistoricalReferences.`
+- Never invent envelope writes for salesRecord / insurance.`
 }
 
 /** Wrap-up and commit — artwork cataloguing only. */

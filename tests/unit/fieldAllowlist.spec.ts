@@ -52,6 +52,11 @@ describe('isFieldAllowedForAgent', () => {
     }
   })
 
+  it('allows artHistoricalReferences on artworks (structured staging)', () => {
+    expect(isFieldAllowedForAgent('artworks', 'artHistoricalReferences')).toBe(true)
+    expect(isArtworkCommitRootField('artHistoricalReferences')).toBe(true)
+  })
+
   it('blocks all small-prints fields', () => {
     expect(isFieldAllowedForAgent('small-prints', 'artwork')).toBe(false)
     expect(isFieldAllowedForAgent('small-prints', 'available')).toBe(false)

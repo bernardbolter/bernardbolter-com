@@ -2,6 +2,8 @@ import type { Payload } from 'payload'
 
 import type { User } from '@/payload-types'
 
+import { resolveArtHistoricalReferencesField } from './artHistoricalReferences'
+
 type CommitContext = {
   payload: Payload
   user: User
@@ -82,38 +84,12 @@ async function resolveTagFields(
   }
 }
 
-async function resolveArtHistoricalReferences(
-  ctx: CommitContext,
-  patch: Record<string, unknown>,
-): Promise<void> {
-  const value = patch.artHistoricalReferences
-  if (!Array.isArray(value)) return
-
-  const ids: number[] = []
-  for (const item of value) {
-    if (typeof item === 'number') {
-      ids.push(item)
-      continue
-    }
-    if (typeof item === 'string' && /^\d+$/.test(item)) {
-      ids.push(Number(item))
-      continue
-    }
-    if (item && typeof item === 'object' && 'id' in item) {
-      const id = Number((item as { id: unknown }).id)
-      if (!Number.isNaN(id)) ids.push(id)
-    }
-  }
-  if (ids.length) patch.artHistoricalReferences = ids
-  else delete patch.artHistoricalReferences
-}
-
 export async function resolveEventCommitReferences(
   ctx: CommitContext,
   patch: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   const out = { ...patch }
   await resolveTagFields(ctx, out)
-  await resolveArtHistoricalReferences(ctx, out)
+  await resolveArtHistoricalReferencesField(ctx, out)
   return out
 }

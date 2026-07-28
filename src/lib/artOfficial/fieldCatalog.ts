@@ -81,7 +81,12 @@ export const ARTWORK_FIELD_CATALOG: CatalogField[] = [
   { field: 'processNotes', category: 'middle-practical', layer: 'artist', tier: 'studio' },
   { field: 'materialAndProcessMeaning', category: 'middle-practical', layer: 'artist', tier: 'studio' },
   { field: 'sourceMaterials', category: 'middle-practical', layer: 'artist', tier: 'studio' },
-  // artHistoricalReferences is a curated relationship — managed in admin, not agent-stageable
+  {
+    field: 'artHistoricalReferences',
+    category: 'middle-practical',
+    layer: 'agent',
+    tier: 'studio',
+  },
   { field: 'locationCreated', category: 'middle-practical', layer: 'artist', tier: 'studio' },
   { field: 'locationCreated.label', category: 'middle-practical', layer: 'artist', tier: 'studio' },
   { field: 'locationCreated.city', category: 'middle-practical', layer: 'artist', tier: 'studio' },

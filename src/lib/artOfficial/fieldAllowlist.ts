@@ -1,5 +1,10 @@
 import { isPracticeKnowledgeSlug } from './practiceKnowledgeSlugs'
 
+export {
+  validateArtHistoricalReferencesValue,
+} from './artHistoricalReferences'
+
+
 const FORBIDDEN = new Set([
   'artworks.timelineDate',
   'artworks.dateDisplay',
@@ -17,8 +22,8 @@ const FORBIDDEN = new Set([
   'artworks.recordOrigin',
   'artworks.status',
   'artworks._status',
-  // Curated relationship collections — managed in admin, not stageable as text
-  'artworks.artHistoricalReferences',
+  // artHistoricalReferences: allowed as structured array (2026-07-27) —
+  // prose/string values rejected by validateArtHistoricalReferencesValue.
   'sessions.messages',
   'sessions.sessionId',
   'sessions.createdAt',
@@ -39,10 +44,12 @@ const TRIPTYCH_AGENT_FIELDS = new Set([
   'descriptionLong',
   'intent',
   'conceptualKeywords',
+  'artHistoricalReferences',
   'artHistoricalContext',
   'seriesContext',
   'formalContributionAssessment',
 ])
+
 
 const TRIPTYCH_FORBIDDEN = new Set([
   'slug',
@@ -134,10 +141,12 @@ export const ARTWORK_COMMIT_ROOT_FIELDS = [
   'subjectTags',
   'genreTags',
   'periodTags',
+  'artHistoricalReferences',
   'support',
   'medium',
   'measurementType',
 ] as const
+
 
 export function isArtworkCommitRootField(field: string): boolean {
   return (ARTWORK_COMMIT_ROOT_FIELDS as readonly string[]).includes(field)

@@ -14,14 +14,15 @@ Separately, discovering a real cross-work pattern (as happened in this session �
 |---|---|---|---|---|
 | 1 | All 216 | Title, series, year, catalogue number, reasoning status, one-sentence gist (see Part 3) | ~20–50 tokens | Full-corpus triage/orientation |
 | 2 | Filtered subset (series/date/tag/similarity) | Short description, tags, dominant colors, one-line intent, a couple of paragraphs | ~150–300 tokens | Narrowing once Tier 1 raises a hypothesis |
-| 3 | Single artwork | Full text of `visionAnalyses[last]` | ~500–800 tokens | Deep look at one record's current best analysis |
+| 3 | Single artwork | Full text of `preferredVisionAnalysis()` | ~500–800 tokens | Deep look at one record's current best analysis |
 | 4 | Single artwork | Full structured record — all `additionalProperty` fields, entire `visionAnalyses[]` array (every model, every date) | Variable | Complete per-record detail, cross-model comparison |
 | 5 | Single artwork | Full session transcript(s) via `primaryArtwork`/`mentionedArtworks` relations | Variable, largest | "How was this known" — the reasoning behind the reasoning, not just its conclusions |
 
 ## Part 3 — Tier 1 gist generation
 
-- Generate from `visionAnalyses[last]` (the most recent model's analysis) — NOT hand-authored per record, and NOT drawn from full reasoning fields (most records won't have those).
-- This means Tier 1 content quality improves automatically as better vision models are run, with no policy change needed — "latest" is already computed at query time, same mechanism as the artwork-page description.
+- Generate from **`preferredVisionAnalysis()`** (quality-biased: higher-tier models outrank Moondream regardless of recency; among equal-tier analyses, the later array entry wins) — NOT hand-authored per record, and NOT drawn from full reasoning fields (most records won't have those).
+- **Corrected 2026-07-28:** earlier draft said `visionAnalyses[last]` / "latest wins." Live code and this brief now match `preferredVisionAnalysis` — protects against a fresh Moondream pass demoting a better older analysis.
+- This means Tier 1 content quality improves automatically as better vision models are run, with no policy change needed — preference is computed at query time, same mechanism as the artwork-page description.
 - Regenerate the gist whenever `visionAnalyses` gets a new entry (tie to the same `afterChange` hook already driving cache invalidation).
 
 ## Part 4 — Known limitation: Tier 1 will not reliably surface conceptual patterns on its own
@@ -36,13 +37,13 @@ The discovery that prompted this whole brief (The Thinker's architecture theme c
 |---|---|---|
 | **Visual (CLIP)** | Existing CLIP embeddings (215 of 216 present; one missing artwork to backfill) | Compositional/visual similarity — "looks alike" |
 | **Literal (tags)** | Controlled vocabulary (Getty AAT-aligned) subject/style/movement tags, currently populated on only ~12 records | Declared similarity — "labeled the same" |
-| **Conceptual (reasoning-text embedding)** | NEW — a second pgvector embedding per artwork, generated from `visionAnalyses[last].text` (or `formalContributionAssessment` where fuller reasoning exists), using the same "latest wins" mechanism as the display layer | Meaning-level similarity — "means something similar," independent of shared wording or visual likeness |
+| **Conceptual (reasoning-text embedding)** | NEW — a second pgvector embedding per artwork, generated from preferred vision-analysis text (or `formalContributionAssessment` where fuller reasoning exists), using the same preferred/best-available source pattern as the display layer | Meaning-level similarity — "means something similar," independent of shared wording or visual likeness |
 
 ### 5.1 Reasoning-text embedding — implementation notes
 
 - Store as a second pgvector column on the Artwork record, alongside the existing CLIP column.
-- Feed it from `visionAnalyses[last].text` for all 216 records as soon as the Moondream batch pipeline runs — this gives full-corpus coverage immediately, at Moondream's depth.
-- When a record goes through a real Art/Official reasoning session and gains `formalContributionAssessment` text, regenerate this embedding from the richer source — same "latest/best available source wins" pattern used elsewhere, requiring no manual precedence logic beyond "prefer reasoning text over vision-analysis text when both exist."
+- Feed it from preferred vision-analysis text for all 216 records as soon as the Moondream batch pipeline runs — this gives full-corpus coverage immediately, at Moondream's depth.
+- When a record goes through a real Art/Official reasoning session and gains `formalContributionAssessment` text, regenerate this embedding from the richer source — same "best available source wins" pattern used elsewhere, requiring no manual precedence logic beyond "prefer reasoning text over vision-analysis text when both exist."
 - Be explicit in any UI/documentation that Moondream-sourced embeddings represent visual/descriptive similarity (closer to what CLIP already offers), not the deeper, lived-memory kind of connection a real reasoning session can surface. Don't overstate what this signal catches.
 
 ## Part 6 — Filter mechanism (Tier 2)

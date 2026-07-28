@@ -26,7 +26,7 @@ When a session-to-Payload paste fails, or a chat session surfaces a discrepancy,
 | 6. Deep interpretive | `makingNote` | longText | confirmed | Distinct from intent — experience of making |
 | 6. Deep interpretive | `directInspiration` | **textarea** | confirmed | **Corrected 2026-07-23:** was `text` — session answers run to full paragraphs, doesn't fit a single-line field |
 | 6. Deep interpretive | `intentVsOutcome` | longText | confirmed | Only asked after `intent` is established |
-| 6. Deep interpretive | `artHistoricalContext`, `artHistoricalReferences` | longText / array | confirmed | Completed across steps 6 and (if needed) 7. **`artHistoricalReferences` is blocked from chat-envelope writes** — see Part 6 |
+| 6. Deep interpretive | `artHistoricalContext`, `artHistoricalReferences` | longText / array | confirmed | Completed across steps 6 and (if needed) 7. **`artHistoricalReferences` may be staged as a structured array** (RE-RESOLVED 2026-07-27) — prose still rejected; see Part 6 |
 | 6. Deep interpretive | `consciousRejections` | longText | confirmed | Never asked directly — synthesized from negative-space answers |
 | 6. Deep interpretive | `seriesContext`, `workContext` | longText | confirmed | Where this sits in the series/practice arc. **`workContext` should never carry exhibition history** — see Part 4, events linking |
 | 7. Where has this lived | `currentLocation` | **group: `{ category, locationDetail }`** | confirmed | **Corrected 2026-07-23:** written as a nested group, not two sibling top-level fields. **Skip entirely** if `isOriginalTier` edition |
@@ -77,13 +77,14 @@ Three distinct envelopes. Do not conflate them.
 - **Naming fork, resolved 2026-07-23:** envelope `collection` key is `statement-throughlines` (**plural**). The Session record's own field for a single item stays singular (`statement-throughline`). Using singular as a `collection` key silently fails.
 - **Validation, resolved 2026-07-23:** `.strict()` Zod validation shipped on vision, `artwork-fields`, and envelope schemas including nested entries — unknown/misspelled keys now reject with a named error instead of silently stripping.
 - **`artwork-fields` and the `{ items: [...] }` batch wrapper** — confirmed real 2026-07-23, same `.strict()` validation. Codebase's importer schema files are the authoritative shape reference for these two — not duplicated here, to avoid drift.
+- **UI copy, resolved 2026-07-28:** Studio Archive multi-collection panel hint now names all four destinations including `sessions` (was a copy mismatch only — execution already accepted sessions).
 
 ### 2c. Sessions collection — RESOLVED 2026-07-24
 `"collection": "sessions"` is a valid envelope discriminator. Upsert by `sessionId` with `operation: "set"`. Shape:
 ```json
 { "collection": "sessions", "operation": "set", "sessionId": "...", "fields": { "sessionType": "artwork", "status": "completed", "primaryArtwork": "...", "mentionedArtworks": [], "firstImpression": "...", "secondDescription": "...", "proposedAbstracts": [], "sessionNotes": "...", "messages": [{ "role": "user", "content": "…" }] } }
 ```
-`sessionType` shorthand: `artwork` → `artwork-cataloguing`, `statement` → `artist-statement`, `event` → `event-enrichment` (live Payload values also accepted). When the same paste includes a dependent `statement-throughlines` / `bio-timeline` write with matching `sourceSessionRef`, **sessions writes run first** regardless of array order. Full task: `cursor-task-sessions-import-bridge.md` (implemented).
+`sessionType` shorthand: `artwork` → `artwork-cataloguing`, `statement` → `artist-statement`, `event` → `event-enrichment`, `system-design` → `system-design` (live Payload values also accepted). When the same paste includes a dependent `statement-throughlines` / `bio-timeline` write with matching `sourceSessionRef`, **sessions writes run first** regardless of array order. Full task: `cursor-task-sessions-import-bridge.md` (implemented).
 
 ---
 
@@ -126,14 +127,97 @@ Three distinct envelopes. Do not conflate them.
 
 ## Part 6 — Fields blocked from chat-envelope writes, by design
 
-Not a bug — intentional friction for financial/relationship fields. These require the artist's own act in Payload admin, never a session-to-envelope paste:
+Not a bug — intentional friction for private financial fields. These require the artist's own act in Payload admin, never a session-to-envelope paste:
 - `salesRecord`, `askingPrice`, `listingCurrency`
 - `insuranceValue`, `insuranceValueDate`
-- `artHistoricalReferences`
+
+**Policy change 2026-07-27:** `artHistoricalReferences` is **allowed** for chat + Studio envelope writes as a **structured array** only (`[{ name, matchStrategy, relevanceNote? }]`). Prose/string values remain structurally rejected (Brandenburger Tor bug fix). Import fuzzy-matches or creates `ArtHistoricalReferences` records. See `docs/historicalReferences/addendum-art-historical-references-staging-2026-07-27.md`.
 
 **Policy change 2026-07-28:** `ownershipHistory`, `provenanceConfidenceLayer`, and `provenanceOriginKnown` are **allowed** for chat + Studio envelope writes (where-has-this-lived beat). Manual audit later is fine; financial fields stay locked.
 
 Separately, **career-stage gating** means some fields sit dormant/empty until `Artist.careerStage` (`studio | market | institutional`, defaults to `studio`) advances: Market tier unlocks `salesRecord` auction entries, `auctionHouse`, `auctionEstimateHistory`, `resaleDelta`, `consignmentDetails`, `galleryReference`; Institutional tier additionally unlocks `loanHistory` full context, `authenticationRecord`, `institutionalDependencyRecord`, `validationFlowRecord`. A dormant field is not a bug — but if a dormant field is showing up as an agent-asked question at Studio tier, that is a bug (tier filter not applied).
+
+---
+
+## Part 7 — Addendum log, 2026-07-28
+
+Merged from `docs/art-of-additions/art-official-source-of-truth-addendum-2026-07-28.md`. Items marked **needs decision** are left open — do not silently resolve. Same-sitting propagations noted inline.
+
+### 7.1 New session type
+
+- **`system-design`** added to `sessionType` enum (collection, routing, admin UI, kickoff, prompt override, envelope importer). `commitTarget('system-design') → 'no-record-write'` — never stages artwork/bio/statement fields. Used for sessions that design archive infrastructure itself rather than cataloguing a work. Confirmed low-frequency/exceptional — minimal enablement only.
+
+### 7.2 Sessions collection — new fields (confirmed live)
+
+| Field | Type | Notes |
+|---|---|---|
+| `primaryArtwork` | relation → artworks | The artwork a session is cataloguing. Empty for non-artwork sessions. |
+| `mentionedArtworks` | relation → artworks, hasMany | Every other artwork referenced during a session. Deliberately kept **separate** from `primaryArtwork`, not a combined array with a role flag — enables direct queries like "every session that ever mentioned Towers." |
+| `secondDescription` | textarea | The formal re-ask response (session-flow step 8), distinct from `firstImpression` (step 2). |
+| `proposedAbstracts` | array `{targetCollection, text, status}` | Abstracts proposed during session close, before being written to bio-timeline/statement-throughlines. |
+| `sessionNotes` | textarea | **Correct field name** — not `notes`. An earlier manual envelope paste failed on this exact confusion (2026-07-28). |
+
+### 7.3 Multi-collection import envelope (confirmed live behavior)
+
+- One envelope, `writes[]` array, can bundle `artworks` (`set`), `bio-timeline` (`append`), `statement-throughlines` (`append`), and `sessions` (`set`) in a single paste.
+- For `sessions` writes: `sessionId` is a **top-level property of the write object**, not nested inside `fields`. (`artworks` writes use `slug` the same way.)
+- Writes are independent/non-atomic — one failing write does not block others in the same batch.
+- `append` operations are idempotent on `sourceSessionRef` + identical text — re-pasting after fixing one section will not duplicate already-saved appends.
+- `reasoningStatus: complete` is a guarded write — confirmed via test (2026-07-28) that it does not apply when a prior field write in the same `set` operation fails.
+- **Ordering is real:** `sessions` writes execute before `bio-timeline`/`statement-throughlines` (`orderEnvelopeWrites`), because those appends validate against an existing `sourceSessionRef`. If the `sessions` write fails, dependent appends correctly report "Session not found" — downstream failure, not a separate bug; does not mean sessions must be pasted separately in normal operation.
+- **UI copy mismatch — resolved same sitting 2026-07-28:** Studio Archive panel hint now includes `sessions` (was naming only artworks + bio + throughlines).
+
+### 7.4 Field allowlist for Art/Official envelope/chat writes
+
+**As of 2026-07-28 (commit `05d90dc`):**
+
+| Field | Status |
+|---|---|
+| `currentLocation` | allowed |
+| `ownershipHistory` | **allowed** (changed 2026-07-28 — was forbidden) |
+| `provenanceConfidenceLayer` | **allowed** (changed 2026-07-28 — was forbidden) |
+| `provenanceOriginKnown` | allowed (was never on the forbidden list) |
+| `askingPrice`, `listingCurrency`, `salesRecord`, `insuranceValue`, `insuranceValueDate`, `galleryReference`/`galleryText` | forbidden — financial/commerce, admin-only by deliberate policy |
+| `artHistoricalReferences` | **allowed** as structured array only (RE-RESOLVED 2026-07-27) — prose/string values still rejected |
+| `loanHistory`, `exhibitionHistory` | forbidden as free-text paths — exhibitions go through Events tools instead |
+
+**Open item, needs decision:** whether `loanHistory` specifically (a work going out to an institution temporarily) should be reconsidered separately from `exhibitionHistory` — raised in passing 2026-07-28, not acted on, low priority.
+
+**Known gap:** `reinforcingSessions` (on `statementThroughlines`: `{session, reinforcementNote}`) is **not yet recognized by the envelope importer's validator** — a paste including it fails with "Unrecognized key." Only matters once a second session corroborates an existing throughline; not yet fixed.
+
+### 7.5 Bio & Statement capture layer
+
+**Confirmed already implemented prior to 2026-07-28** (repo scan, not built new this session): `bioTimelineEntries`, `statementThroughlines`, `historicalBios`, `historicalStatements` on Artist singleton; display via `StillBeingWritten`; JSON-LD live (`generateBioJsonLd.ts`, `generateStatementJsonLd.ts`).
+
+**Not yet done:** eval-style review of the "load-bearing abstract" threshold — judgment call on generated content, not unit-testable. No live review yet.
+
+### 7.6 Corpus tier system
+
+- Tier 1 index (`/api/corpus/index`) live with filters: `series`, `yearFrom`/`yearTo`, `status` (`reasoningStatus`), `hasVisionAnalyses`. `similarTo` not yet implemented — future work per originating brief.
+- **Correction propagated 2026-07-28:** `corpus-tier-system-brief.md` Part 3 previously said "latest wins" (`visionAnalyses[last]`). Live behavior is **`preferredVisionAnalysis()`** — higher-tier models outrank Moondream regardless of recency. Brief wording corrected to match code (not the reverse).
+- CLIP coverage (215/216 claimed) **not runtime-verified** — DB connection unavailable when checked 2026-07-28. Needs a live check.
+
+### 7.7 Reasoning-text embedding (corpus brief Part 5.1)
+
+- Follow-up brief: `docs/art-of-additions/reasoning-text-embedding-followup-brief.md`.
+- Scaffolding landed (schema fields, generate/persist helpers, backfill script, similarity column, precedence tests) with OpenAI-compatible `text-embedding-3-small` / `vector(1536)` as the initial target.
+- **Decision changed / paused 2026-07-28:** Bernard wants a self-hosted/local model path (e.g. Ollama) eventually, consistent with CLIP/DINOv2/Moondream. **Ollama swap not implemented.** Column migration (empty `vector(1536)` + metadata columns + enum value) **has been run on prod** — may need revisiting if a different local dimension is chosen later.
+- **Explicitly paused:** no backfill; wait until meaningfully more of the 216 artworks have real Art/Official reasoning text.
+
+### 7.8 Timeline multi-marker system
+
+- First pass implemented per `timeline-multi-marker-brief.md` build order (data layer → bio markers → static two-point throughline connectors → historical markers), committed 2026-07-28 (`d5e2098`), **deployed** same day; **visual review with Bernard still pending** — further polish blocked on that review.
+- Throughline connectors render **only when exactly 2 linked artworks resolve** in the current timeline (`Timeline.tsx`, strict `length !== 2`) — a 3+-artwork throughline (e.g. The Thinker candidate) renders as nothing, silently. Documented first-pass scope limit, not a bug. Extending to 3+ is a known follow-up trigger.
+- Private (`visibility: 'private'`) bio/throughline entries excluded from the public timeline marker feed.
+
+### 7.9 Session-flow revision (A2/A3/A4)
+
+- Prompt-logic changes in `promptBlocks.ts` per `session-flow-revision-brief.md`: light-acknowledgment guard, formal re-ask → `secondDescription`, mandatory where-has-this-lived (Events tools, not `workContext`).
+- Eval rubric scaffolding exists (`session-flow-transcript-eval-rubric.md`); **no live admin transcript eval has been run yet.** Biggest open item blocking full confidence in the new flow.
+
+### 7.10 The Thinker (BB-OGP-1993-005) — first artwork under partial new-flow discipline
+
+Session run manually in Claude chat (**not** Payload admin — so this does **not** count as a live A2/A3/A4 prompt eval). Full session shape completed: blind description, acknowledgment, small facts, deep interpretive, where-has-this-lived (including now-allowed ownership/provenance fields), formal re-ask, two abstracts accepted. All four envelope writes (`artworks`, `bio-timeline`, `statement-throughlines`, `sessions`) confirmed **saved** 2026-07-28, `reasoningStatus: complete`.
 
 ---
 
@@ -162,4 +246,4 @@ Separately, **career-stage gating** means some fields sit dormant/empty until `A
 5. When this file itself grows unwieldy, split by clear domain boundary (not by "which chat wrote it," which is what caused today's fragmentation) — and merge back here if that split turns out to just move the problem again.
 
 ---
-*Source of truth · unified 2026-07-24 · update whenever the dialogue spec, schema, or session flow changes*
+*Source of truth · unified 2026-07-24 · Part 7 addendum 2026-07-28 · update whenever the dialogue spec, schema, or session flow changes*

@@ -382,11 +382,13 @@ export function ArchiveImportPanel() {
       <form className="studio-archive__panel studio-archive__panel--primary" onSubmit={handleEnvelopeSubmit}>
         <h3>Multi-collection envelope</h3>
         <p className="studio-archive__hint">
-          One paste routes to artworks + bio timeline + statement throughlines. Writes succeed or
-          fail independently — not atomic across collections. Append is idempotent (same session +
-          text skips duplicates). Prefer <code>reasoningStatus: complete</code> in its own{' '}
-          <code>set</code> write after other artwork fields; a bundled artworks write still commits
-          other fields first, but complete does not wait for bio-timeline or throughline writes.
+          One paste routes to artworks + bio timeline + statement throughlines + sessions.
+          Writes succeed or fail independently — not atomic across collections. Append is
+          idempotent (same session + text skips duplicates). Sessions writes in a paste run
+          before bio/throughline appends that reference them. Prefer{' '}
+          <code>reasoningStatus: complete</code> in its own <code>set</code> write after other
+          artwork fields; a bundled artworks write still commits other fields first, but
+          complete does not wait for bio-timeline or throughline writes.
         </p>
         <textarea
           className="studio-archive__textarea"

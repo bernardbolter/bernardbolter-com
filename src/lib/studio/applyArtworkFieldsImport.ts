@@ -4,7 +4,7 @@ import {
   buildArtworkPatchFromTimeline,
   sanitizeArtworkCommitPatch,
 } from '@/lib/artOfficial/buildArtworkPatch'
-import { isFieldAllowedForAgent } from '@/lib/artOfficial/fieldAllowlist'
+import { isFieldAllowedForAgent, validateArtHistoricalReferencesValue } from '@/lib/artOfficial/fieldAllowlist'
 import { resolveArtworkCommitReferences } from '@/lib/artOfficial/resolveArtworkCommitReferences'
 import type { Session, User } from '@/payload-types'
 
@@ -22,9 +22,14 @@ export type ArtworkFieldsImportResult = {
 
 function assertAllowedFields(fields: Record<string, unknown>): string[] {
   const disallowed: string[] = []
-  for (const field of Object.keys(fields)) {
+  for (const [field, value] of Object.entries(fields)) {
     if (!isFieldAllowedForAgent('artworks', field)) {
       disallowed.push(field)
+      continue
+    }
+    if (field === 'artHistoricalReferences') {
+      const shape = validateArtHistoricalReferencesValue(value)
+      if (!shape.ok) throw new Error(shape.error)
     }
   }
   if (disallowed.length > 0) {
@@ -73,7 +78,6 @@ export async function applyArtworkFieldsImport(
 
     const timeline = timelineFromFields(item.fields)
     let patch = buildArtworkPatchFromTimeline(timeline)
-    patch = sanitizeArtworkCommitPatch(patch)
 
     const creatorId =
       typeof artwork.creator === 'object' && artwork.creator
@@ -85,7 +89,10 @@ export async function applyArtworkFieldsImport(
       artistId: creatorId ?? user.id,
     } as Session
 
+    // Resolve references first (tag labels / art-historical names → IDs)
+    // BEFORE sanitize, which strips non-id relationship values.
     patch = await resolveArtworkCommitReferences({ payload, user, session }, patch)
+    patch = sanitizeArtworkCommitPatch(patch)
 
     if (Object.keys(patch).length === 0) {
       throw new Error(`No valid fields to apply for slug "${slug}"`)

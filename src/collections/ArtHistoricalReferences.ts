@@ -4,7 +4,7 @@ export const ArtHistoricalReferences: CollectionConfig = {
   slug: 'art-historical-references',
   admin: {
     useAsTitle: 'artworkTitle',
-    defaultColumns: ['artworkTitle', 'artistName', 'yearCreated', 'updatedAt'],
+    defaultColumns: ['artworkTitle', 'artistName', 'needsArtistReview', 'yearCreated', 'updatedAt'],
     description: "Referenced artworks and artists in dialogue with Bernard's practice.",
   },
   fields: [
@@ -56,6 +56,16 @@ export const ArtHistoricalReferences: CollectionConfig = {
     {
       name: 'notes',
       type: 'text',
+    },
+    {
+      name: 'needsArtistReview',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description:
+          'Set when Art/Official creates a stub from a staged name (fuzzy-match-or-create). Confirm spelling / canonical title before variants accumulate.',
+        position: 'sidebar',
+      },
     },
   ],
 }
