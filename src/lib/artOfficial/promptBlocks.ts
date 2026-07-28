@@ -42,7 +42,6 @@ const TIER3_FIELDS = [
   'authenticationRecord',
   'institutionalDependencyRecord',
   'validationFlowRecord',
-  'provenanceConfidenceLayer (full form)',
 ]
 
 export function buildFieldRoadmap(careerStage: 'studio' | 'market' | 'institutional'): string {
@@ -101,7 +100,8 @@ SESSION CLOSE — provenance and practical wrap:
 artworkHolder — capture who currently holds the work. Stage as: artworkHolder.holderType ("Person" or "Organization"), artworkHolder.holderName, artworkHolder.holderUrl (if known). Ask naturally: "Where does this work live now — with you, or did it sell?"
 currentLocation.category — one of (schema values only): artists-studio | private-collection | institution | on-loan
 currentLocation.locationDetail — free text (e.g. "Private collection, Berlin")
-Uncertain / unknown location is NOT a fifth category value — do not invent "unknown" or "public-collection". If location is uncertain, note it in conversation for later admin entry on provenanceConfidenceLayer (confidenceLevel: speculation); still stage currentLocation only when a real category is known.
+Uncertain / unknown location is NOT a fifth category value — do not invent "unknown" or "public-collection". If location is uncertain, stage a provenanceConfidenceLayer claim with confidenceLevel: speculation (and still stage currentLocation only when a real category is known).
+Ownership / provenance cluster (allowed for chat + envelope): ownershipHistory, provenanceOriginKnown, provenanceConfidenceLayer — gather in the where-has-this-lived beat and stage via update_field / envelope; financial fields (salesRecord, askingPrice, insurance*) stay admin-only.
 Exhibition history — NEVER park shows in workContext or provenanceNotes. Use search_events / create_event_stub / link_artwork_to_event (see WHERE HAS THIS LIVED block).
 provenanceNotes — narrative provenance only (sale story, collector name if public) — not exhibition listings. Plain text — the server converts to rich text. Only ask if information is known.
 availabilityStatus — ask at wrap-up: available | not-for-sale | sold | on-loan | reserved | on-consignment (Payload values — use "available", not "for-sale")

@@ -3,6 +3,8 @@
 
 ## Changelog
 
+**2026-07-28** — Policy change: `ownershipHistory` and `provenanceConfidenceLayer` moved from forbidden → allowed for Art/Official chat + Studio envelope writes (where-has-this-lived beat). `provenanceOriginKnown` was already allowed. Financial fields (`salesRecord`, `askingPrice`, `insuranceValue`/`insuranceValueDate`) remain admin-only.
+
 **2026-07-24** — Full audit of all 20 completed sessions (see `sessions-audit-handoff.md` / `sessions-audit-cursor-spec.md`). Confirmed the Venice Biennale 2007 premature-closure pattern is one instance of a general rule: linchpin sessions need slower pacing throughout, not just as a one-off fix. Found a more common and previously undocumented failure: automatic fields (`dominantColors`, `paintedFieldColors`, `compositionalNotes`, all five tag fields) are re-derived from scratch every session with no check against already-committed values, producing silent contradictions across repeat sessions on the same artwork — confirmed on **Brandenburger Tor. 1899** (4 sessions, tags and overlay colors regenerated differently each time, concept copy rewritten twice with contradictory narratives) and, at lower severity, **BASEL switzerland** (2 sessions). Also found: repeated commit-time invalid-enum errors across unrelated fields (`availabilityStatus`, `artHistoricalReferences`, `dimensionUnit`) with no in-dialogue visibility into valid options before staging; one blind-description/upload mismatch not caught automatically (**South Elliott and Lafayette** — artist described a different painting than the one uploaded); transcript padding from unlogged tool-call turns logged as empty messages (also present in the June 24 **Venice in the Middle** session); and `artism:DialogueSelfAudit` unfilled in 19 of 20 sessions read, including several with concrete, nameable failures well-suited to `weakPhases`/`dialogueRefinementFlag`. Resulting schema and pipeline changes in `sessions-audit-cursor-spec.md`.
 
 **2026-07-23** — First live audit against Payload (`Artworks.ts`, `Sessions.ts`) and studio importers. Corrected: dimension field names, `sizeTier` (always-asked not inferred), `currentLocation` shape (nested group), `salesRecord` type. Marked admin-only by design: `salesRecord`, `insuranceValue`/`insuranceValueDate`, `provenanceConfidenceLayer` beyond studio default, `artHistoricalReferences`. Changed schema: `directInspiration` → `textarea`. Standardized envelope `collection` key on plural `statement-throughlines`. Flagged open: third `artwork-fields` importer undocumented, `{items:[...]}` batch shape unconfirmed, Zod schemas not strict (silent key-stripping — highest priority open fix), cross-collection `reasoningStatus: complete` guard is partial only.
@@ -37,9 +39,11 @@ When a session-to-Payload paste fails, the fastest diagnosis is checking it agai
 | 6. Deep interpretive | `consciousRejections` | longText | confirmed | Never asked directly — synthesized from negative-space answers |
 | 6. Deep interpretive | `seriesContext`, `workContext` | longText | confirmed | Where this sits in the series/practice arc |
 | 7. Where has this lived | `currentLocation.category` (select), `currentLocation.locationDetail` (text, nested) | group | confirmed | `category` enum RESOLVED 2026-07-23: `artists-studio \| private-collection \| institution \| on-loan` — schema is authoritative. Dialogue prompt corrected to match (previously drifted to `public-collection`/`unknown`). Uncertain location is not a category value — route to `provenanceConfidenceLayer` with `confidenceLevel: speculation` instead. Write as `currentLocation: { category, locationDetail }`. **Skip entirely** if `isOriginalTier` edition |
-| 7. Where has this lived | `provenanceConfidenceLayer[]` | json (array-shaped) `{claim, evidenceBasis, confidenceLevel}` | confirmed (claim) / inferred (confidenceLevel) | **ADMIN-ONLY, RESOLVED 2026-07-23**: forbidden in `fieldAllowlist.ts` for session-paste by design — session conversation can surface these claims, but they must be entered in Payload admin, not written via the envelope. Never remove from allowlist block. |
-| 7. Where has this lived | `salesRecord` | json (transaction array, not longText) | confirmed | **ADMIN-ONLY, RESOLVED 2026-07-23**: same allowlist block as above — private financial data requires the deliberate admin act, not a chat-envelope write |
-| 7. Where has this lived | `insuranceValue`, `insuranceValueDate` | number/date | confirmed | **ADMIN-ONLY, RESOLVED 2026-07-23**: same allowlist block |
+| 7. Where has this lived | `provenanceConfidenceLayer[]` | json (array-shaped) `{claim, evidenceBasis, confidenceLevel}` | confirmed (claim) / inferred (confidenceLevel) | **ALLOWED for chat + envelope (2026-07-28 policy)** — stage from the where-has-this-lived beat; manual audit later is fine. Financial fields remain admin-only. |
+| 7. Where has this lived | `ownershipHistory[]` | json array | confirmed | **ALLOWED for chat + envelope (2026-07-28 policy)** — gift/sale/ownership chain from conversation. |
+| 7. Where has this lived | `provenanceOriginKnown` | boolean | confirmed | **ALLOWED** (was never in FORBIDDEN; stage with the provenance cluster when the chain is/isn't traceable). |
+| 7. Where has this lived | `salesRecord` | json (transaction array, not longText) | confirmed | **ADMIN-ONLY** — private financial data requires the deliberate admin act, not a chat-envelope write |
+| 7. Where has this lived | `insuranceValue`, `insuranceValueDate` | number/date | confirmed | **ADMIN-ONLY** — same allowlist block |
 | 7. (edition works only) | per-copy ownership walk | — | confirmed | Each numbered copy + AP walked individually |
 | 8. Formal re-ask | `secondDescription` | longText | confirmed | Distinct from step 4 — the real comparison happens here |
 | 9. Abstract-proposal | `proposedAbstracts[]` → `bio-timeline` or `statement-throughline` | array | confirmed | Only genuine cross-work patterns, not restatements |
@@ -133,7 +137,7 @@ The dialogue reads `careerStage` (`studio` | `market` | `institutional`, set on 
 | Tier | Fields dormant until this tier is active |
 |---|---|
 | Market (skipped at Studio) | `salesRecord` auction entries, `auctionHouse`, `auctionEstimateHistory`, `resaleDelta`, `consignmentDetails`, `galleryReference` |
-| Institutional (skipped at Studio + Market) | `loanHistory` full institutional context, `authenticationRecord`, `institutionalDependencyRecord`, `validationFlowRecord`, `provenanceConfidenceLayer` beyond the default studio entry |
+| Institutional (skipped at Studio + Market) | `loanHistory` full institutional context, `authenticationRecord`, `institutionalDependencyRecord`, `validationFlowRecord` |
 
 **Two ways dormant fields get populated, neither through the live session:**
 1. Manual entry directly in Payload admin (all fields always visible there — tiering is a dialogue-layer filter only, never a schema restriction)
@@ -154,7 +158,7 @@ Unlike Part 2e, these aren't tier-gated — they're either meant to be silent/au
 | `mediumOther` | Fallback when medium doesn't fit | **RESOLVED 2026-07-23** — dialogue teaches `medium: "other"` + `mediumOther`; commit calls `registerCustomMedium` (same as Quick Upload). In `fieldCatalog` as early companion to `medium` |
 | `framing` | Middle practical + session-close if not yet covered | **OK by design** — early in cataloguing order; session-close repeats only "if not yet covered" (catch-up, not duplicate-ask) |
 | `catalogueNumber` | Auto-generated | **Confirmed** — `assignArtworkCatalogueIdentity` / `buildCatalogueIdentity` on create (and preserves on update) |
-| `provenanceOriginKnown` | Boolean, default `true` | **Admin-only flip** — `artworkBeforeChange` defaults null → `true`; public provenance honesty reads `false`; **no dialogue/session step sets it to `false`** — only useful if admin unchecks it |
+| `provenanceOriginKnown` | Boolean, default `true` | **Chat/envelope-allowed (2026-07-28)** with the provenance cluster; `artworkBeforeChange` still defaults null → `true`. Stage `false` when the studio-to-first-owner chain is not traceable. |
 
 ---
 

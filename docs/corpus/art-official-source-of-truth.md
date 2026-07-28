@@ -30,7 +30,9 @@ When a session-to-Payload paste fails, or a chat session surfaces a discrepancy,
 | 6. Deep interpretive | `consciousRejections` | longText | confirmed | Never asked directly — synthesized from negative-space answers |
 | 6. Deep interpretive | `seriesContext`, `workContext` | longText | confirmed | Where this sits in the series/practice arc. **`workContext` should never carry exhibition history** — see Part 4, events linking |
 | 7. Where has this lived | `currentLocation` | **group: `{ category, locationDetail }`** | confirmed | **Corrected 2026-07-23:** written as a nested group, not two sibling top-level fields. **Skip entirely** if `isOriginalTier` edition |
-| 7. Where has this lived | `provenanceConfidenceLayer[]` | array of `{claim, evidenceBasis, confidenceLevel}` | confirmed (claim) / inferred (confidenceLevel) | One array entry per discrete claim. **Blocked from chat-envelope writes beyond the default studio entry** — see Part 6 |
+| 7. Where has this lived | `provenanceConfidenceLayer[]` | array of `{claim, evidenceBasis, confidenceLevel}` | confirmed (claim) / inferred (confidenceLevel) | One array entry per discrete claim. **ALLOWED for chat + envelope (2026-07-28)** — see Part 6 |
+| 7. Where has this lived | `ownershipHistory[]` | json array | confirmed | **ALLOWED for chat + envelope (2026-07-28)** with the provenance cluster |
+| 7. Where has this lived | `provenanceOriginKnown` | boolean | confirmed | **ALLOWED** (stage with provenance cluster when chain is/isn't traceable) |
 | 7. Where has this lived | `salesRecord` | **json** (transaction array) | confirmed | **Corrected 2026-07-23:** type is `json`, not `longText` — doc was wrong, not schema. Always private, blocked from chat-envelope writes — see Part 6 |
 | 7. Where has this lived | `insuranceValue`, `insuranceValueDate` | number/date | confirmed | Private, blocked from chat-envelope writes — see Part 6 |
 | 7. Where has this lived (edition works) | `hasEditions`, plus `ownershipRegistry[]` **or** `dcs.editionTiers[]` **or** `megacities.editionTiers[]` | see Part 3 | confirmed 2026-07-24 | Which array depends on series — see Part 3, do not guess |
@@ -124,15 +126,14 @@ Three distinct envelopes. Do not conflate them.
 
 ## Part 6 — Fields blocked from chat-envelope writes, by design
 
-Not a bug — intentional friction. These require the artist's own act in Payload admin, never a session-to-envelope paste:
-- `salesRecord`
+Not a bug — intentional friction for financial/relationship fields. These require the artist's own act in Payload admin, never a session-to-envelope paste:
+- `salesRecord`, `askingPrice`, `listingCurrency`
 - `insuranceValue`, `insuranceValueDate`
-- `provenanceConfidenceLayer` beyond the default studio entry
 - `artHistoricalReferences`
 
-**Confirmed still enforced live, 2026-07-24** — the Almadinat Alearabia export attempt failed cleanly on `provenanceConfidenceLayer` with a named "Disallowed fields" error, exactly as designed. Do not loosen `fieldAllowlist.ts` for any of these.
+**Policy change 2026-07-28:** `ownershipHistory`, `provenanceConfidenceLayer`, and `provenanceOriginKnown` are **allowed** for chat + Studio envelope writes (where-has-this-lived beat). Manual audit later is fine; financial fields stay locked.
 
-Separately, **career-stage gating** means some fields sit dormant/empty until `Artist.careerStage` (`studio | market | institutional`, defaults to `studio`) advances: Market tier unlocks `salesRecord` auction entries, `auctionHouse`, `auctionEstimateHistory`, `resaleDelta`, `consignmentDetails`, `galleryReference`; Institutional tier additionally unlocks `loanHistory` full context, `authenticationRecord`, `institutionalDependencyRecord`, `validationFlowRecord`, `provenanceConfidenceLayer` beyond the default. A dormant field is not a bug — but if a dormant field is showing up as an agent-asked question at Studio tier, that is a bug (tier filter not applied).
+Separately, **career-stage gating** means some fields sit dormant/empty until `Artist.careerStage` (`studio | market | institutional`, defaults to `studio`) advances: Market tier unlocks `salesRecord` auction entries, `auctionHouse`, `auctionEstimateHistory`, `resaleDelta`, `consignmentDetails`, `galleryReference`; Institutional tier additionally unlocks `loanHistory` full context, `authenticationRecord`, `institutionalDependencyRecord`, `validationFlowRecord`. A dormant field is not a bug — but if a dormant field is showing up as an agent-asked question at Studio tier, that is a bug (tier filter not applied).
 
 ---
 

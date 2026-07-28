@@ -12,8 +12,17 @@ describe('isFieldAllowedForAgent', () => {
 
   it('blocks commerce fields on artworks', () => {
     expect(isFieldAllowedForAgent('artworks', 'askingPrice')).toBe(false)
+    expect(isFieldAllowedForAgent('artworks', 'salesRecord')).toBe(false)
+    expect(isFieldAllowedForAgent('artworks', 'insuranceValue')).toBe(false)
+    expect(isFieldAllowedForAgent('artworks', 'insuranceValueDate')).toBe(false)
     expect(isFieldAllowedForAgent('artworks', 'timelineDate')).toBe(false)
     expect(isFieldAllowedForAgent('artworks', 'dateDisplay')).toBe(false)
+  })
+
+  it('allows where-has-this-lived provenance cluster on artworks', () => {
+    expect(isFieldAllowedForAgent('artworks', 'ownershipHistory')).toBe(true)
+    expect(isFieldAllowedForAgent('artworks', 'provenanceConfidenceLayer')).toBe(true)
+    expect(isFieldAllowedForAgent('artworks', 'provenanceOriginKnown')).toBe(true)
   })
 
   it('allows triptych corpus fields only', () => {

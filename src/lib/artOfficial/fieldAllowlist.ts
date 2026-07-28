@@ -10,10 +10,10 @@ const FORBIDDEN = new Set([
   'artworks.insuranceValueDate',
   'artworks.galleryReference',
   'artworks.galleryText',
-  'artworks.ownershipHistory',
+  // ownershipHistory + provenanceConfidenceLayer + provenanceOriginKnown:
+  // allowed for envelope/chat (2026-07-28 policy) — where-has-this-lived beat.
   'artworks.loanHistory',
   'artworks.exhibitionHistory',
-  'artworks.provenanceConfidenceLayer',
   'artworks.recordOrigin',
   'artworks.status',
   'artworks._status',

@@ -39,9 +39,11 @@ EDITION / PRINT STATUS (step 7, when prints exist)
 - Studio-held copy → claimStatus artist-held (optional private notes for location detail).
 
 BLOCKED FROM CHAT / ENVELOPE (admin-only — never stage or invent envelope writes for these)
-- salesRecord, insuranceValue, insuranceValueDate
-- provenanceConfidenceLayer beyond the default studio entry
+- salesRecord, insuranceValue, insuranceValueDate, askingPrice (and other financial/commerce fields)
 - artHistoricalReferences (relationship field — conversation may name artists; do not stage the relation)
+
+ALLOWED FOR CHAT / ENVELOPE (where-has-this-lived provenance cluster — stage from conversation; manual audit later is fine)
+- ownershipHistory, provenanceOriginKnown, provenanceConfidenceLayer
 
 IMPORT ENVELOPE (Studio Archive paste)
 - Valid collections: artworks | bio-timeline | statement-throughlines | sessions
