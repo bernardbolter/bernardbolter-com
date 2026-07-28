@@ -1,6 +1,7 @@
 import type { CollectionAfterChangeHook, Payload } from 'payload'
 
 import { revalidateArchive } from '@/lib/cache/revalidateArchive'
+import { revalidateCorpusFeed } from '@/lib/cache/revalidateCorpusFeed'
 import type { Artwork, Session } from '@/payload-types'
 
 function artworkId(value: number | Artwork | null | undefined): number | null {
@@ -66,19 +67,19 @@ export const sessionAfterChange: CollectionAfterChangeHook<Session> = async ({
     if (slug) slugs.add(slug)
   }
 
-  const paths = ['/sessions', '/api/corpus/sessions']
+  const paths = ['/sessions']
   if (typeof doc.sessionId === 'string' && doc.sessionId.trim()) {
     const sid = doc.sessionId.trim()
-    paths.push(
-      `/sessions/${sid}`,
-      `/api/corpus/sessions/${sid}`,
-      `/api/corpus/sessions/${sid}?tier=5`,
-    )
+    paths.push(`/sessions/${sid}`)
   }
   for (const slug of slugs) {
-    paths.push(`/api/corpus/${slug}`, `/api/corpus/${slug}?tier=5`, `/sessions?artwork=${slug}`)
+    paths.push(`/sessions?artwork=${slug}`)
   }
 
-  revalidateArchive({ tags: ['corpus', 'artworks'], paths })
+  revalidateArchive({ tags: ['artworks'], paths })
+  revalidateCorpusFeed({
+    artworkSlugs: [...slugs],
+    sessionId: typeof doc.sessionId === 'string' ? doc.sessionId : undefined,
+  })
   return doc
 }

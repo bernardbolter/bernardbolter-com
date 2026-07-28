@@ -3,6 +3,7 @@ import type { Artwork, Media } from '@/payload-types'
 
 import { revalidateArchive } from '@/lib/cache/revalidateArchive'
 import { artworkPublicRevalidatePaths } from '@/lib/cache/artworkPublicRevalidatePaths'
+import { revalidateCorpusFeed } from '@/lib/cache/revalidateCorpusFeed'
 import { resolveReasoningEmbeddingSource } from '@/lib/artwork/reasoningEmbeddingSource'
 import {
   CLIP_EMBEDDING_METADATA,
@@ -115,7 +116,10 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
   const paths = artworkPublicRevalidatePaths(
     typeof doc.slug === 'string' ? doc.slug : '',
   )
-  revalidateArchive({ tags: ['artworks', 'corpus'], paths })
+  revalidateArchive({ tags: ['artworks'], paths })
+  revalidateCorpusFeed({
+    artworkSlug: typeof doc.slug === 'string' ? doc.slug : undefined,
+  })
 
   if (process.env.CLIP_EMBEDDING_URL && doc.primaryImage) {
     void (async () => {

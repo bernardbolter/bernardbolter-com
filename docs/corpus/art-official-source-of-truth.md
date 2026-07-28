@@ -199,15 +199,16 @@ Merged from `docs/art-of-additions/art-official-source-of-truth-addendum-2026-07
 
 ### 7.6b Corpus API refresh after session-import (standing note, 2026-07-28)
 
-**When does `/api/corpus` refresh?** On write — not a timer, not deploy-gated.
+**`/api/corpus` has its own regeneration trigger — it does not piggyback on individual page ISR.**
 
-| Path | Trigger |
+| Layer | Behavior |
 |---|---|
-| Artwork envelope / Studio fields import | Payload `artworkAfterChange` + Studio `revalidateArtworkPaths` (same path list: HTML pages + `/api/corpus`, `/api/corpus/index`, `/api/corpus/{slug}`) |
-| Completed session write | `sessionAfterChange` → Tier 5 + related slug corpus paths |
-| Fallback if invalidation missed | Route `revalidate = 3600` (ISR) + HTTP `Cache-Control: max-age=60` (was 3600; shortened so "did it save?" checks are not stuck for an hour) |
+| Corpus JSON APIs (`/api/corpus`, `/api/corpus/index`, `/api/corpus/{slug}`, sessions) | `dynamic = 'force-dynamic'` — always built from live Payload, never a multi-hour ISR snapshot |
+| Dedicated trigger | `revalidateCorpusFeed()` — called from artwork afterChange, session afterChange, and Studio `revalidateArtworkPaths` |
+| What the trigger does | `revalidateTag('corpus')` + path bust + Cloudflare purge of corpus feed URLs |
+| HTML artwork pages (`/{slug}`, vision, record) | Separate ISR path via `revalidateArchive` / page tags — can look “live” even when an old corpus snapshot was stuck; that split was the bug |
 
-No manual corpus rebuild step after a successful artworks paste. If a fetch still looks stale within ~60s, hard-refresh / bypass cache once; if still stale after that, treat it as a real write failure, not a cache lag.
+No manual corpus rebuild after a successful artworks paste. If an external crawler still sees stale JSON, check CDN (`s-maxage=60`) first; origin should already be current.
 
 ### 7.7 Reasoning-text embedding (corpus brief Part 5.1)
 

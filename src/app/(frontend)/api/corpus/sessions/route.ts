@@ -5,7 +5,8 @@ import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import config from '@payload-config'
 import type { Artwork } from '@/payload-types'
 
-export const revalidate = 3600
+/** Always live from Payload — never an ISR snapshot shared with HTML pages. */
+export const dynamic = 'force-dynamic'
 
 type SessionCrumbSource = {
   id: number
@@ -102,7 +103,7 @@ export async function GET(request: Request) {
     {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=60, stale-while-revalidate=3600',
+        'Cache-Control': 'public, max-age=0, s-maxage=60, must-revalidate',
       },
     },
   )

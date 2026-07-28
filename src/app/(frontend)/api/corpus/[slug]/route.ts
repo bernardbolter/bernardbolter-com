@@ -7,15 +7,14 @@ import { buildTier5SessionsResponse, TIER5_SESSION_SELECT } from '@/lib/corpus/b
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 import config from '@payload-config'
 
-export const revalidate = 3600
+/** Always live from Payload — never an ISR snapshot shared with HTML pages. */
+export const dynamic = 'force-dynamic'
 
 type RouteParams = { params: Promise<{ slug: string }> }
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json',
-  // Short browser/CDN TTL so post-import "did it save?" checks are not stuck for an hour.
-  // Full invalidation still happens on write via artworkAfterChange / revalidateArtworkPaths.
-  'Cache-Control': 'public, max-age=60, stale-while-revalidate=3600',
+  'Cache-Control': 'public, max-age=0, s-maxage=60, must-revalidate',
 } as const
 
 /**

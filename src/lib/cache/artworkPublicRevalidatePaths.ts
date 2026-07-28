@@ -1,16 +1,10 @@
-/** Public HTML + corpus API paths to bust after an artwork write. */
+/** Public HTML paths to bust after an artwork write (corpus APIs use revalidateCorpusFeed). */
 export function artworkPublicRevalidatePaths(slug: string): string[] {
   const trimmed = slug.trim()
-  const paths = ['/', '/corpus', '/sessions', '/api/corpus', '/api/corpus/index']
+  const paths = ['/', '/corpus', '/sessions']
   if (!trimmed) return paths
 
   const path = `/${trimmed}`
-  paths.push(
-    path,
-    `${path}/vision`,
-    `${path}/record`,
-    `/api/corpus/${trimmed}`,
-    `/api/corpus/${trimmed}?tier=5`,
-  )
+  paths.push(path, `${path}/vision`, `${path}/record`)
   return paths
 }

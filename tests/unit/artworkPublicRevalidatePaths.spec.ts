@@ -3,18 +3,18 @@ import { describe, expect, it } from 'vitest'
 import { artworkPublicRevalidatePaths } from '@/lib/cache/artworkPublicRevalidatePaths'
 
 describe('artworkPublicRevalidatePaths', () => {
-  it('includes corpus index and per-slug corpus APIs', () => {
+  it('covers HTML artwork paths without owning corpus API URLs', () => {
     const paths = artworkPublicRevalidatePaths('centraal-station-boats')
     expect(paths).toEqual(
       expect.arrayContaining([
-        '/api/corpus',
-        '/api/corpus/index',
-        '/api/corpus/centraal-station-boats',
-        '/api/corpus/centraal-station-boats?tier=5',
+        '/',
+        '/corpus',
+        '/sessions',
         '/centraal-station-boats',
         '/centraal-station-boats/vision',
         '/centraal-station-boats/record',
       ]),
     )
+    expect(paths.some((path) => path.startsWith('/api/corpus'))).toBe(false)
   })
 })
