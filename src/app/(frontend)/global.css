@@ -2606,20 +2606,19 @@ h6 {
   letter-spacing: 0.02em;
 }
 
-/* Optically hidden crawler entry — keep early in homepage DOM; do not use display:none */
+/* Crawler-only corpus entry — in DOM for truncating fetchers; zero layout / paint for humans.
+   Do not use display:none (some fetchers skip it). */
 .corpus-discovery-link {
   position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 0;
-  margin: 0;
+  width: 1px;
+  height: 1px;
   padding: 0;
-  max-width: 1px;
-  max-height: 1px;
+  margin: -1px;
   overflow: hidden;
-  font-size: 1px;
-  line-height: 1;
-  color: transparent;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -2627,58 +2626,5 @@ h6 {
 .corpus-discovery-link a {
   color: inherit;
   text-decoration: none;
-}
-
-/* Visible corpus sentence inside <main> — not nav/header/footer chrome */
-.corpus-archive-intro {
-  position: relative;
-  z-index: 1;
-  margin: 0;
-  padding: 0.85rem 1.5rem 0;
-  font-family: var(--font-barlow), system-ui, sans-serif;
-  font-size: 0.8125rem;
-  font-weight: 400;
-  line-height: 1.45;
-  text-align: center;
-  color: var(--text-muted);
-}
-
-.corpus-archive-intro a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.14em;
-}
-
-.corpus-archive-intro a:hover {
-  opacity: 0.75;
-}
-
-/* Visible corpus sentence inside <main> — not nav/header/footer chrome */
-.corpus-archive-intro {
-  position: absolute;
-  top: 0.85rem;
-  left: 50%;
-  z-index: 3;
-  margin: 0;
-  max-width: min(34rem, calc(100% - 7rem));
-  padding: 0;
-  transform: translateX(-50%);
-  font-family: var(--font-barlow), system-ui, sans-serif;
-  font-size: 0.8125rem;
-  font-weight: 400;
-  line-height: 1.45;
-  text-align: center;
-  color: var(--text-muted);
-  pointer-events: auto;
-}
-
-.corpus-archive-intro a {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.14em;
-}
-
-.corpus-archive-intro a:hover {
-  opacity: 0.75;
 }
 

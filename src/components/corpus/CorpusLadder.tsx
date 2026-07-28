@@ -1,4 +1,9 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
+
+import { readCorpusFiltersHref } from '@/components/corpus/CorpusFiltersPersist'
 
 type Props = {
   slug?: string | null
@@ -6,13 +11,19 @@ type Props = {
 }
 
 export default function CorpusLadder({ slug, current }: Props) {
+  const [corpusHref, setCorpusHref] = useState('/corpus')
+
+  useEffect(() => {
+    setCorpusHref(readCorpusFiltersHref())
+  }, [])
+
   const artworkHref = slug ? `/${slug}` : null
   const visionHref = slug ? `/${slug}/vision` : null
   const recordHref = slug ? `/${slug}/record` : null
   const sessionsHref = slug ? `/sessions?artwork=${encodeURIComponent(slug)}` : '/sessions'
 
   const items: Array<{ key: Props['current']; label: string; href: string | null }> = [
-    { key: 'corpus', label: 'Corpus', href: '/corpus' },
+    { key: 'corpus', label: 'Corpus', href: corpusHref },
     { key: 'artwork', label: 'Artwork', href: artworkHref },
     { key: 'vision', label: 'Vision', href: visionHref },
     { key: 'record', label: 'Record', href: recordHref },

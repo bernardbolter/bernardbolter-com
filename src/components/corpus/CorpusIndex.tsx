@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
+import CorpusFiltersClearLink from '@/components/corpus/CorpusFiltersClearLink'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { corpusGistFromArtwork } from '@/lib/corpus/corpusGist'
 import {
@@ -28,7 +29,6 @@ function resolveSeriesName(artwork: Artwork): string | null {
 
 export default function CorpusIndex({ rows, seriesList, filters }: Props) {
   const isTier2 = corpusIndexHasActiveFilters(filters)
-  const clearHref = '/corpus'
 
   return (
     <DocumentScrollShell
@@ -103,11 +103,7 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
           </label>
           <div className="corpus-page__filter-actions">
             <button type="submit">Apply</button>
-            {isTier2 ? (
-              <Link href={clearHref} className="bio__inline-link">
-                Clear
-              </Link>
-            ) : null}
+            {isTier2 ? <CorpusFiltersClearLink /> : null}
           </div>
         </form>
 

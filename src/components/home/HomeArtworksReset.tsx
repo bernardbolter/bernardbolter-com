@@ -4,7 +4,11 @@ import { useEffect, useRef } from 'react'
 
 import { useArtworks } from '@/providers/ArtworkProvider'
 
-/** Restores homepage defaults (timeline, no filters) on each visit to /. */
+/**
+ * Soft home reset: close overlays / leave slideshow when landing on `/`.
+ * Do NOT clear filters, search, or timeline position — those must survive
+ * artwork → home navigation.
+ */
 export default function HomeArtworksReset() {
   const [, setState] = useArtworks()
   const didReset = useRef(false)
@@ -15,16 +19,10 @@ export default function HomeArtworksReset() {
 
     setState((prev) => ({
       ...prev,
-      filtersArray: [],
-      isAvailableFilter: false,
-      searchValue: '',
       filterNavOpen: false,
       searchNavOpen: false,
       showSlideshow: false,
       slideshowPlaying: false,
-      currentArtworkIndex: 0,
-      savedTimelineIndex: 0,
-      savedTimelineFiltersHash: '',
     }))
   }, [setState])
 

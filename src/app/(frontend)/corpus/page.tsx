@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import CorpusFiltersPersist from '@/components/corpus/CorpusFiltersPersist'
 import CorpusIndex, { rowsFromArtworks } from '@/components/corpus/CorpusIndex'
 import { parseCorpusIndexFilters } from '@/lib/corpus/corpusIndexFilters'
 import { fetchCorpusArtworks, fetchCorpusSeries } from '@/lib/corpus/fetchCorpusData'
@@ -41,6 +43,9 @@ export default async function CorpusPage({ searchParams }: PageProps) {
 
   return (
     <div className="bio-page__container">
+      <Suspense fallback={null}>
+        <CorpusFiltersPersist />
+      </Suspense>
       <CorpusIndex
         rows={rowsFromArtworks(artworks)}
         seriesList={seriesList}
