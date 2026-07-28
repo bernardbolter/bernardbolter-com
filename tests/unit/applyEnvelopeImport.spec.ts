@@ -109,7 +109,9 @@ function buildPayloadForSessionUpsert() {
 describe('applyEnvelopeImport', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mocks.applyArtworkFieldsImport.mockResolvedValue(undefined)
+    mocks.applyArtworkFieldsImport.mockResolvedValue([
+      { slug: 'the-thinker', artworkId: 1, fieldsApplied: [] },
+    ])
   })
 
   it('returns mixed per-write results (non-atomic)', async () => {

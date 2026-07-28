@@ -13,7 +13,9 @@ type RouteParams = { params: Promise<{ slug: string }> }
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json',
-  'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+  // Short browser/CDN TTL so post-import "did it save?" checks are not stuck for an hour.
+  // Full invalidation still happens on write via artworkAfterChange / revalidateArtworkPaths.
+  'Cache-Control': 'public, max-age=60, stale-while-revalidate=3600',
 } as const
 
 /**

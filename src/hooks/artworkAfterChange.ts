@@ -2,6 +2,7 @@ import type { CollectionAfterChangeHook, Payload, PayloadRequest } from 'payload
 import type { Artwork, Media } from '@/payload-types'
 
 import { revalidateArchive } from '@/lib/cache/revalidateArchive'
+import { artworkPublicRevalidatePaths } from '@/lib/cache/artworkPublicRevalidatePaths'
 import { resolveReasoningEmbeddingSource } from '@/lib/artwork/reasoningEmbeddingSource'
 import {
   CLIP_EMBEDDING_METADATA,
@@ -111,18 +112,9 @@ export const artworkAfterChange: CollectionAfterChangeHook = async ({
     return doc
   }
 
-  const paths = ['/', '/corpus', '/sessions', '/api/corpus', '/api/corpus/index']
-  if (typeof doc.slug === 'string' && doc.slug.trim()) {
-    const slug = doc.slug.trim()
-    const path = `/${slug}`
-    paths.push(
-      path,
-      `${path}/vision`,
-      `${path}/record`,
-      `/api/corpus/${slug}`,
-      `/api/corpus/${slug}?tier=5`,
-    )
-  }
+  const paths = artworkPublicRevalidatePaths(
+    typeof doc.slug === 'string' ? doc.slug : '',
+  )
   revalidateArchive({ tags: ['artworks', 'corpus'], paths })
 
   if (process.env.CLIP_EMBEDDING_URL && doc.primaryImage) {

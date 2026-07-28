@@ -197,6 +197,18 @@ Merged from `docs/art-of-additions/art-official-source-of-truth-addendum-2026-07
 - **Correction propagated 2026-07-28:** `corpus-tier-system-brief.md` Part 3 previously said "latest wins" (`visionAnalyses[last]`). Live behavior is **`preferredVisionAnalysis()`** — higher-tier models outrank Moondream regardless of recency. Brief wording corrected to match code (not the reverse).
 - CLIP coverage (215/216 claimed) **not runtime-verified** — DB connection unavailable when checked 2026-07-28. Needs a live check.
 
+### 7.6b Corpus API refresh after session-import (standing note, 2026-07-28)
+
+**When does `/api/corpus` refresh?** On write — not a timer, not deploy-gated.
+
+| Path | Trigger |
+|---|---|
+| Artwork envelope / Studio fields import | Payload `artworkAfterChange` + Studio `revalidateArtworkPaths` (same path list: HTML pages + `/api/corpus`, `/api/corpus/index`, `/api/corpus/{slug}`) |
+| Completed session write | `sessionAfterChange` → Tier 5 + related slug corpus paths |
+| Fallback if invalidation missed | Route `revalidate = 3600` (ISR) + HTTP `Cache-Control: max-age=60` (was 3600; shortened so "did it save?" checks are not stuck for an hour) |
+
+No manual corpus rebuild step after a successful artworks paste. If a fetch still looks stale within ~60s, hard-refresh / bypass cache once; if still stale after that, treat it as a real write failure, not a cache lag.
+
 ### 7.7 Reasoning-text embedding (corpus brief Part 5.1)
 
 - Follow-up brief: `docs/art-of-additions/reasoning-text-embedding-followup-brief.md`.

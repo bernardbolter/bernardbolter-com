@@ -14,7 +14,7 @@ type RouteParams = { params: Promise<{ sessionId: string }> }
 
 const CACHE_HEADERS = {
   'Content-Type': 'application/json',
-  'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+  'Cache-Control': 'public, max-age=60, stale-while-revalidate=3600',
 } as const
 
 /**
