@@ -1,23 +1,38 @@
-import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
-import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
-import { CORPUS_CONTEXT, CORPUS_VERSION } from '@/lib/corpus/constants'
-import { corpusGistFromArtwork } from '@/lib/corpus/corpusGist'
+import { computeAvailableTiers } from '@/lib/corpus/availableTiers'
+import {
+  buildCorpusRecord,
+  buildUrlTemplates,
+} from '@/lib/corpus/buildCorpusRecord'
+import {
+  CORPUS_BASE,
+  CORPUS_CONTEXT,
+  CORPUS_INDEX_PER_PAGE,
+  CORPUS_ROOT_MAX_PER_PAGE,
+  CORPUS_ROOT_PER_PAGE,
+  CORPUS_SURVEY_PER_PAGE,
+  CORPUS_VERSION,
+} from '@/lib/corpus/constants'
+import { computeCoverage } from '@/lib/corpus/coverage'
 import {
   buildCorpusIndexQueryString,
+  corpusIndexHasActiveFilters,
   type CorpusIndexFilters,
 } from '@/lib/corpus/corpusIndexFilters'
+import {
+  buildPaginationEnvelope,
+  paginateItems,
+} from '@/lib/corpus/pagination'
+import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
+import { buildSeriesNode } from '@/lib/corpus/seriesIdentity'
+import { buildTierMap } from '@/lib/corpus/tierMap'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 import type { Artist, Artwork, Series } from '@/payload-types'
 
 export type CorpusFormat = 'jsonld' | 'index'
+export type CorpusDepth = 'index' | 'survey'
 
 function trimString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
-}
-
-function resolveSeries(artwork: Artwork): Series | null {
-  if (!artwork.series || typeof artwork.series !== 'object') return null
-  return artwork.series as Series
 }
 
 export function corpusDateModified(artworks: Artwork[]): string {
@@ -51,93 +66,156 @@ function buildAuthorBlock(artist: Artist | null, baseUrl: string): Record<string
   }
 }
 
-function buildSeriesAboutEntry(series: Series, baseUrl: string): Record<string, unknown> {
-  const description = lexicalToPlain(series.description)
-  const entry: Record<string, unknown> = {
-    '@type': 'Collection',
-    name: series.name,
-    url: `${baseUrl}/series/${series.slug}`,
-  }
-
-  if (series.yearStart != null) entry.startDate = String(series.yearStart)
-  if (series.yearEnd != null) entry.endDate = String(series.yearEnd)
-  if (description) entry.description = description
-
-  return entry
-}
-
-function artworkFeedElement(artwork: Artwork, baseUrl: string): Record<string, unknown> {
-  const jsonLd = buildArtworkJsonLd(artwork, null, { baseUrl })
+function artworkFeedElement(artwork: Artwork, baseUrl: string, sessionCount: number): Record<string, unknown> {
+  const jsonLd = buildArtworkJsonLd(artwork, null, {
+    baseUrl,
+    sessionCount,
+    includeTraversalLinks: true,
+  })
   const { '@context': _context, ...entry } = jsonLd
   return entry
 }
 
-export function buildCorpusIndexResponse(
-  artworks: Artwork[],
-  baseUrl: string,
-  filters: CorpusIndexFilters = {},
-): Record<string, unknown> {
+export type BuildCorpusListOptions = {
+  artworks: Artwork[]
+  /** Whole-corpus published count (unfiltered). */
+  totalArtworks: number
+  seriesList?: Series[]
+  artist?: Artist | null
+  baseUrl?: string
+  filters?: CorpusIndexFilters
+  depth?: CorpusDepth
+  page?: number
+  perPage?: number
+  sessionCountBySlug?: Map<string, number>
+}
+
+function sessionCountFor(
+  artwork: Artwork,
+  sessionCountBySlug: Map<string, number>,
+): number {
+  return sessionCountBySlug.get(artwork.slug) ?? 0
+}
+
+export function buildCorpusIndexResponse(options: BuildCorpusListOptions): Record<string, unknown> {
+  const baseUrl = options.baseUrl ?? CORPUS_BASE
+  const filters = options.filters ?? {}
+  const depth = options.depth ?? 'index'
+  const isSurvey = depth === 'survey'
+  const defaultPerPage = isSurvey ? CORPUS_SURVEY_PER_PAGE : CORPUS_INDEX_PER_PAGE
+  const perPage = options.perPage ?? defaultPerPage
+  const page = options.page ?? 1
+  const sessionCountBySlug = options.sessionCountBySlug ?? new Map()
+  const matched = options.artworks
+  const pageItems = paginateItems(matched, page, perPage)
+
   const qs = buildCorpusIndexQueryString(filters)
-  // Canonical Tier-1 path is /api/corpus/index (not ?format=index).
-  const url = `${baseUrl}/api/corpus/index${qs}`
+  const depthQs = isSurvey ? (qs ? `${qs}&depth=survey` : '?depth=survey') : qs
+  // Rebuild URL via pagination helper for consistency — keep canonical path here
+  const urlBase = `${baseUrl}/api/corpus/index`
+  const url =
+    depthQs.length > 0
+      ? `${urlBase}${depthQs}`
+      : urlBase
+
+  const coverage = computeCoverage(matched, sessionCountBySlug)
+  const pagination = buildPaginationEnvelope({
+    baseUrl,
+    path: 'index',
+    filters,
+    page,
+    perPage,
+    defaultPerPage,
+    totalMatched: matched.length,
+    depth: isSurvey ? 'survey' : null,
+  })
 
   return {
     '@context': CORPUS_CONTEXT,
     '@type': 'DataFeed',
-    name: 'Bernard Bolter — Artist Archive Index',
+    name: isSurvey
+      ? 'Bernard Bolter — Artist Archive Survey'
+      : 'Bernard Bolter — Artist Archive Index',
     url,
-    dateModified: corpusDateModified(artworks),
+    dateModified: corpusDateModified(matched),
     'artism:corpusVersion': CORPUS_VERSION,
-    'artism:totalArtworks': artworks.length,
-    'artism:totalPublished': artworks.length,
-    'artism:tier': 1,
-    dataFeedElement: artworks.map((artwork) => {
-      const series = resolveSeries(artwork)
-      return {
-        slug: artwork.slug,
-        title: artwork.title,
-        catalogueNumber: artwork.catalogueNumber ?? null,
-        year: artwork.yearCreated ?? null,
-        series: series?.slug ?? null,
-        seriesName: series?.name ?? null,
-        medium: resolveMediumLabel(artwork) || artwork.medium || null,
-        reasoningStatus: artwork.reasoningStatus ?? null,
-        hasEditions: artwork.hasEditions ?? null,
-        gist: corpusGistFromArtwork(artwork),
-        url: `${baseUrl}/${artwork.slug}`,
-        visionUrl: `${baseUrl}/${artwork.slug}/vision`,
-        recordUrl: `${baseUrl}/api/corpus/${artwork.slug}`,
-        sessionsUrl: `${baseUrl}/sessions?artwork=${encodeURIComponent(artwork.slug)}`,
-      }
+    'artism:totalArtworks': options.totalArtworks,
+    'artism:totalPublished': options.totalArtworks,
+    ...buildScopeDepthEnvelope(isSurvey ? 'survey' : 'index', {
+      hasActiveFilters: corpusIndexHasActiveFilters(filters),
     }),
+    'artism:tierMap': buildTierMap(baseUrl),
+    'artism:coverage': coverage,
+    ...pagination,
+    ...(isSurvey
+      ? {}
+      : { 'artism:urlTemplates': buildUrlTemplates(baseUrl) }),
+    ...(options.seriesList?.length
+      ? {
+          about: options.seriesList.map((series) =>
+            buildSeriesNode(series, baseUrl, { includeDescription: true }),
+          ),
+        }
+      : {}),
+    dataFeedElement: pageItems.map((artwork) =>
+      buildCorpusRecord(artwork, isSurvey ? 'survey' : 'index', {
+        baseUrl,
+        sessionCount: sessionCountFor(artwork, sessionCountBySlug),
+      }),
+    ),
   }
 }
 
-export function buildCorpusJsonLdResponse(
-  artworks: Artwork[],
-  seriesList: Series[],
-  artist: Artist | null,
-  baseUrl: string,
-  filters: CorpusIndexFilters = {},
-): Record<string, unknown> {
+export function buildCorpusJsonLdResponse(options: BuildCorpusListOptions): Record<string, unknown> {
+  const baseUrl = options.baseUrl ?? CORPUS_BASE
+  const filters = options.filters ?? {}
+  const artist = options.artist ?? null
+  const seriesList = options.seriesList ?? []
+  const defaultPerPage = CORPUS_ROOT_PER_PAGE
+  const perPage = Math.min(options.perPage ?? defaultPerPage, CORPUS_ROOT_MAX_PER_PAGE)
+  const page = options.page ?? 1
+  const sessionCountBySlug = options.sessionCountBySlug ?? new Map()
+  const matched = options.artworks
+  const pageItems = paginateItems(matched, page, perPage)
+
   const qs = buildCorpusIndexQueryString(filters)
   const url = `${baseUrl}/api/corpus${qs}`
+  const coverage = computeCoverage(matched, sessionCountBySlug)
+  const pagination = buildPaginationEnvelope({
+    baseUrl,
+    path: 'root',
+    filters,
+    page,
+    perPage,
+    defaultPerPage,
+    totalMatched: matched.length,
+  })
 
   return {
     '@context': CORPUS_CONTEXT,
     '@type': 'DataFeed',
     name: 'Bernard Bolter — Artist Archive Corpus',
     url,
-    dateModified: corpusDateModified(artworks),
+    dateModified: corpusDateModified(matched),
     'artism:corpusVersion': CORPUS_VERSION,
-    'artism:totalArtworks': artworks.length,
-    'artism:totalPublished': artworks.length,
+    'artism:totalArtworks': options.totalArtworks,
+    'artism:totalPublished': options.totalArtworks,
+    // Bulk export occupies corpus×record — not a ladder rung; omit artism:tier.
+    ...buildScopeDepthEnvelope('root'),
+    'artism:tierMap': buildTierMap(baseUrl),
+    'artism:coverage': coverage,
+    ...pagination,
     author: buildAuthorBlock(artist, baseUrl),
-    about: seriesList.map((series) => buildSeriesAboutEntry(series, baseUrl)),
-    dataFeedElement: artworks.map((artwork) => artworkFeedElement(artwork, baseUrl)),
+    about: seriesList.map((series) =>
+      buildSeriesNode(series, baseUrl, { includeDescription: true }),
+    ),
+    dataFeedElement: pageItems.map((artwork) =>
+      artworkFeedElement(artwork, baseUrl, sessionCountFor(artwork, sessionCountBySlug)),
+    ),
   }
 }
 
+/** @deprecated Prefer buildCorpusIndexResponse / buildCorpusJsonLdResponse options objects. */
 export function buildCorpusResponse(
   format: CorpusFormat,
   artworks: Artwork[],
@@ -145,10 +223,32 @@ export function buildCorpusResponse(
   artist: Artist | null,
   baseUrl: string,
   filters: CorpusIndexFilters = {},
+  extras: {
+    totalArtworks?: number
+    depth?: CorpusDepth
+    page?: number
+    perPage?: number
+    sessionCountBySlug?: Map<string, number>
+  } = {},
 ): Record<string, unknown> {
-  if (format === 'index') {
-    return buildCorpusIndexResponse(artworks, baseUrl, filters)
+  const options: BuildCorpusListOptions = {
+    artworks,
+    totalArtworks: extras.totalArtworks ?? artworks.length,
+    seriesList,
+    artist,
+    baseUrl,
+    filters,
+    depth: extras.depth,
+    page: extras.page,
+    perPage: extras.perPage,
+    sessionCountBySlug: extras.sessionCountBySlug,
   }
 
-  return buildCorpusJsonLdResponse(artworks, seriesList, artist, baseUrl, filters)
+  if (format === 'index') {
+    return buildCorpusIndexResponse(options)
+  }
+
+  return buildCorpusJsonLdResponse(options)
 }
+
+export { computeAvailableTiers }

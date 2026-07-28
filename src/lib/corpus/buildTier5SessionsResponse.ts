@@ -1,5 +1,9 @@
 import type { Artwork, Session } from '@/payload-types'
 
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
+import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
+import { buildTierMap } from '@/lib/corpus/tierMap'
+
 export type Tier5SessionSource = Pick<
   Session,
   | 'sessionId'
@@ -140,11 +144,14 @@ export function buildTier5SessionsResponse(options: {
     .filter((session): session is NonNullable<typeof session> => session !== null)
 
   return {
+    '@context': CORPUS_CONTEXT,
     '@type': 'DataFeed',
-    'artism:tier': 5,
-    artworkSlug,
-    url: `${baseUrl}/api/corpus/${encodeURIComponent(artworkSlug)}?tier=5`,
-    'artism:totalSessions': projected.length,
+    ...buildScopeDepthEnvelope('sessions'),
+    'artism:tierMap': buildTierMap(baseUrl),
+    'artism:artworkSlug': artworkSlug,
+    'artism:artworkUrl': `${baseUrl}/${artworkSlug}`,
+    'artism:recordUrl': `${baseUrl}/api/corpus/${artworkSlug}`,
+    'artism:coverage': { sessionCount: projected.length },
     sessions: projected,
   }
 }

@@ -17,7 +17,7 @@ export const Sessions: CollectionConfig = {
       'createdAt',
     ],
     description:
-      'Art/Official session transcripts. Direct collection access is staff-only; completed sessions are exposed via the public Tier 5 corpus API (`/api/corpus/[slug]?tier=5`).',
+      'Art/Official session transcripts. Direct collection access is staff-only; completed sessions are exposed via the public Tier 5 corpus API (`/api/corpus/[slug]/sessions`).',
   },
   access: authenticatedReadStaffWrite,
   fields: [

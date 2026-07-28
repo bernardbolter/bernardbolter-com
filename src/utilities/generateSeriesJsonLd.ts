@@ -1,10 +1,11 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
-import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { ARTISM_NS, CORPUS_BASE } from '@/lib/corpus/constants'
+import { seriesIdUrl, seriesPageUrl } from '@/lib/corpus/seriesIdentity'
 import type { Artist, Series } from '@/payload-types'
 
 const ARTISM_CONTEXT = {
   '@vocab': 'https://schema.org/',
-  artism: 'https://artism.org/schema/',
+  artism: ARTISM_NS,
 } as const
 
 const DESCRIPTION_MAX_LENGTH = 500
@@ -44,19 +45,22 @@ function seriesDescriptionPlain(series: Series): string | undefined {
   return `${plain.slice(0, DESCRIPTION_MAX_LENGTH - 1).trimEnd()}…`
 }
 
-/** CollectionPage JSON-LD for /series/[slug]. */
+/** CollectionPage JSON-LD for /series/[slug] — mainEntity shares corpus series `@id`. */
 export function generateSeriesJsonLd(
   series: Series,
   artist: Artist,
   options: GenerateSeriesJsonLdOptions = {},
 ): Record<string, unknown> {
-  const base = options.baseUrl ?? getSiteBaseUrl()
+  const base = options.baseUrl ?? CORPUS_BASE
   const identifiers = buildPersonIdentifiers(artist)
   const description = seriesDescriptionPlain(series)
+  const slug = series.slug?.trim() || ''
 
-  const collection: Record<string, unknown> = {
-    '@type': 'Collection',
+  const seriesNode: Record<string, unknown> = {
+    '@type': 'CreativeWorkSeries',
+    '@id': seriesIdUrl(slug, base),
     name: series.name,
+    url: seriesPageUrl(slug, base),
     creator: {
       '@type': 'Person',
       name: artist.name,
@@ -64,15 +68,15 @@ export function generateSeriesJsonLd(
     },
   }
 
-  if (description) collection.description = description
-  if (typeof series.yearStart === 'number') collection.startDate = String(series.yearStart)
-  if (typeof series.yearEnd === 'number') collection.endDate = String(series.yearEnd)
+  if (description) seriesNode.description = description
+  if (typeof series.yearStart === 'number') seriesNode.startDate = String(series.yearStart)
+  if (typeof series.yearEnd === 'number') seriesNode.endDate = String(series.yearEnd)
 
   return {
     '@context': ARTISM_CONTEXT,
     '@type': 'CollectionPage',
     name: series.name,
-    url: `${base}/series/${series.slug}`,
-    mainEntity: collection,
+    url: seriesPageUrl(slug, base),
+    mainEntity: seriesNode,
   }
 }

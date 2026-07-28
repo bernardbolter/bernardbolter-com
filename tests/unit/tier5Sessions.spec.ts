@@ -143,17 +143,30 @@ describe('buildTier5SessionsResponse', () => {
       baseUrl: 'https://bernardbolter.com',
     })
     expect(veniceResponse['artism:tier']).toBe(5)
-    expect(veniceResponse['artism:totalSessions']).toBe(1)
+    expect(veniceResponse['artism:scope']).toBe('work')
+    expect(veniceResponse['artism:depth']).toBe('sessions')
+    expect(veniceResponse['artism:artworkSlug']).toBe('venice-biennale-2007')
+    expect(veniceResponse['artism:artworkUrl']).toBe(
+      'https://bernardbolter.com/venice-biennale-2007',
+    )
+    expect(veniceResponse['artism:recordUrl']).toBe(
+      'https://bernardbolter.com/api/corpus/venice-biennale-2007',
+    )
+    expect(veniceResponse['artism:coverage']).toEqual({ sessionCount: 1 })
+    expect(veniceResponse['artism:tierMap']).toHaveProperty('5')
+    expect(veniceResponse['artism:tierMap']).not.toHaveProperty('3')
     expect(veniceResponse.sessions[0]?.mentionedArtworks).toEqual([
       'skulptur-projekte-m-nster-2007',
     ])
+    expect(veniceResponse).not.toHaveProperty('artworkSlug')
+    expect(veniceResponse).not.toHaveProperty('artism:totalSessions')
 
     const munsterResponse = buildTier5SessionsResponse({
       artworkSlug: 'skulptur-projekte-m-nster-2007',
       sessions,
       baseUrl: 'https://bernardbolter.com',
     })
-    expect(munsterResponse['artism:totalSessions']).toBe(1)
+    expect(munsterResponse['artism:coverage']).toEqual({ sessionCount: 1 })
     expect(munsterResponse.sessions[0]?.sessionId).toBe('venice-session-1')
     expect(munsterResponse.sessions[0]?.primaryArtwork).toBe('venice-biennale-2007')
   })

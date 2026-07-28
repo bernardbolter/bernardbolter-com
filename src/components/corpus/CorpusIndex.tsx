@@ -157,7 +157,7 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
                       Sessions
                     </Link>
                     <a
-                      href={`/api/corpus/${encodeURIComponent(artwork.slug)}?tier=5`}
+                      href={`/api/corpus/${encodeURIComponent(artwork.slug)}/sessions`}
                       className="still-being-written__session-link"
                     >
                       Full session data (JSON)

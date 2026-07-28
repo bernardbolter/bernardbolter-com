@@ -27,7 +27,7 @@ function minimalSeries(overrides: Partial<Series> = {}): Series {
 }
 
 describe('generateSeriesJsonLd', () => {
-  it('builds a CollectionPage with nested Collection', () => {
+  it('builds a CollectionPage with nested CreativeWorkSeries sharing corpus @id', () => {
     const jsonLd = generateSeriesJsonLd(
       minimalSeries({
         yearStart: 2018,
@@ -61,8 +61,10 @@ describe('generateSeriesJsonLd', () => {
       name: 'Megacities',
       url: 'https://bernardbolter.com/series/megacities',
       mainEntity: {
-        '@type': 'Collection',
+        '@type': 'CreativeWorkSeries',
+        '@id': 'https://bernardbolter.com/series/megacities#series',
         name: 'Megacities',
+        url: 'https://bernardbolter.com/series/megacities',
         description: 'Composite city collages.',
         startDate: '2018',
         creator: {

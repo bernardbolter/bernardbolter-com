@@ -337,6 +337,183 @@ The `model` field is mandatory in the response — omitting it would make the em
 
 ---
 
+## Corpus traversal terms
+
+These terms describe the machine archive API — how responses locate themselves on the scope × depth matrix, and how triage fields declare their provenance. They appear on `schema:DataFeed` envelopes and, where noted, on individual `schema:VisualArtwork` records. They ship with the July 2026 corpus tier-depth pass.
+
+The scope × depth matrix (not a single ladder):
+
+| | gist | survey | record | sessions |
+|---|---|---|---|---|
+| **corpus** | Tier 1 index | — | root bulk feed | — |
+| **subset** | filtered index | Tier 2 survey | — | — |
+| **work** | *(deferred)* | — | Tier 4 record | Tier 5 sessions |
+
+`artism:tier` is shorthand for the four addresses that sit on the ladder. The root feed occupies corpus × record and is **not** a rung — it omits `artism:tier` and declares `artism:feedRole: bulk-export` instead. An absent key means no such thing here (same rule as `artism:availableTiers`).
+
+---
+
+### artism:scope
+
+**URI:** `https://artism.org/schema/scope`
+**Type:** `rdf:Property`
+**Domain:** `schema:DataFeed`, `schema:VisualArtwork`
+**Range:** `xsd:string` (controlled vocabulary)
+**Status:** Active
+
+**Allowed values:**
+- `corpus` — the whole published archive (or an unfiltered corpus-level endpoint)
+- `subset` — a filtered or narrowing set of works
+- `work` — a single artwork
+
+**Definition:** Horizontal axis of a corpus response: how many works the payload addresses. Orthogonal to `artism:depth`. Together they locate a response in the scope × depth matrix without requiring a reader to have learned the tier numbering.
+
+**Relationship to schema.org:** No equivalent. Distinct from `schema:about` (topic) and from pagination counts — this is the addressing grain of the response itself.
+
+---
+
+### artism:depth
+
+**URI:** `https://artism.org/schema/depth`
+**Type:** `rdf:Property`
+**Domain:** `schema:DataFeed`, `schema:VisualArtwork`
+**Range:** `xsd:string` (controlled vocabulary)
+**Status:** Active
+
+**Allowed values:**
+- `gist` — triage identity: series, catalogue number, one-sentence gist
+- `survey` — narrowing fields: description, intent line, colours, keywords (same word as `?depth=survey`)
+- `record` — full artwork JSON-LD including all vision analyses
+- `sessions` — completed session transcripts for one work
+
+**Definition:** Vertical axis of a corpus response: how much is said about each addressed work. The controlled values are identical to the query vocabulary — a machine that reads `"artism:depth": "survey"` may request `?depth=survey` and succeed. There is no separate synonym.
+
+**Relationship to schema.org:** No equivalent. Not `schema:description` (content) and not HTTP content negotiation — this names which field set the archive chose to emit.
+
+---
+
+### artism:feedRole
+
+**URI:** `https://artism.org/schema/feedRole`
+**Type:** `rdf:Property`
+**Domain:** `schema:DataFeed`
+**Range:** `xsd:string` (controlled vocabulary)
+**Status:** Active
+
+**Allowed values:**
+- `bulk-export` — paginated full-record dump of the corpus; corpus × record cell; not a ladder rung
+
+**Definition:** Declares a specialised role for a DataFeed that is not one of the tier-ladder addresses. Present when `artism:tier` is omitted. Extensible — additional roles may be added when a new non-ladder feed appears; do not overload `artism:tier` for those cases.
+
+**Relationship to schema.org:** No equivalent. Complements `schema:DataFeed` by saying *why* this feed exists when it is not a triage/survey/record/sessions rung.
+
+---
+
+### artism:tier
+
+**URI:** `https://artism.org/schema/tier`
+**Type:** `rdf:Property`
+**Domain:** `schema:DataFeed`, `schema:VisualArtwork`
+**Range:** `xsd:integer`
+**Status:** Active
+
+**Allowed values:** `1` | `2` | `4` | `5`
+
+**Definition:** Shorthand for the four public ladder addresses. Maps onto the scope × depth matrix as: `1` = corpus|subset × gist; `2` = subset × survey; `4` = work × record; `5` = work × sessions. Tier `3` (work × gist, preferred vision analysis alone) is deferred and must not be emitted. Omit the key entirely when the response is not a ladder rung (see `artism:feedRole`) — do not emit `null`.
+
+**Relationship to schema.org:** No equivalent. Prefer `artism:scope` + `artism:depth` for machines that have not learned the numbering; keep `artism:tier` for compact human and agent shorthand.
+
+---
+
+### artism:tierMap
+
+**URI:** `https://artism.org/schema/tierMap`
+**Type:** `rdf:Property`
+**Domain:** `schema:DataFeed`, `schema:VisualArtwork`
+**Range:** JSON object whose keys are the active tier numbers (`"1"`, `"2"`, `"4"`, `"5"`), each value an object with `url` or `urlTemplate`, `scope`, `depth`, and `description`
+**Status:** Active
+
+**Definition:** Self-description of the public ladder from any single corpus response. A cold arrival at one URL learns the other addresses from this block. Keys follow the same absence rule as `artism:availableTiers`: do not include `"3"` while that rung is unbuilt. Nested `scope` / `depth` use the same controlled values as `artism:scope` / `artism:depth`.
+
+**Relationship to schema.org:** No equivalent. Related in spirit to site maps and `schema:EntryPoint`, but specific to this archive's depth ladder.
+
+---
+
+### artism:availableTiers
+
+**URI:** `https://artism.org/schema/availableTiers`
+**Type:** `rdf:Property`
+**Domain:** `schema:VisualArtwork`
+**Range:** JSON object with boolean values keyed by tier number string
+**Status:** Active
+
+**Definition:** Which ladder rungs hold content for this specific work, computed from field presence (not from `artism:reasoningStatus`, which can disagree with the data). Keys: `"1"` and `"4"` are always `true` (triage and record always exist); `"2"` is `true` when description, intent, colours, or tags are present; `"5"` is `true` when at least one completed session references the work. Omit key `"3"` entirely — an absent key means no such rung; `false` means the rung exists but is empty for this work.
+
+**Relationship to schema.org:** No equivalent. Prevents a machine from spending requests on empty depths.
+
+---
+
+### artism:gist
+
+**URI:** `https://artism.org/schema/gist`
+**Type:** `rdf:Property`
+**Domain:** `schema:VisualArtwork`
+**Range:** `xsd:string`
+**Status:** Active
+
+**Definition:** One-sentence triage prose for a work at gist depth. Boundary-aware truncated. Always paired with `artism:gistSource` when non-null so a reader can weigh whether the sentence is artist-authored or model-derived.
+
+**Relationship to schema.org:** Narrower than `schema:description`. A gist is explicitly triage-length and provenance-tagged; `schema:description` is the fuller account.
+
+---
+
+### artism:gistSource
+
+**URI:** `https://artism.org/schema/gistSource`
+**Type:** `rdf:Property`
+**Domain:** `schema:VisualArtwork`
+**Range:** `xsd:string` (controlled vocabulary pattern)
+**Status:** Active
+
+**Allowed values:**
+- `artist:descriptionShort` — first sentence of the artist's short description
+- `artist:intentLine` — the artist's intent field, used whole when ≤ 200 characters
+- `vision:{model}` — first sentence of the preferred vision analysis, where `{model}` is the concrete model id (e.g. `vision:claude-sonnet-4-6`, `vision:moondream-station`)
+
+**Definition:** Provenance of `artism:gist`. Precedence is artist prose before vision analysis: `descriptionShort` → short `intent` → preferred vision analysis. This field is what lets an outside reader tell whether a triage sentence is the archive speaking or a blind model guessing. Without it, the gist is an undifferentiated string.
+
+**Relationship to schema.org:** No equivalent. Related in spirit to provenance / `schema:creator` of a *statement*, not of the artwork.
+
+---
+
+### artism:coverage
+
+**URI:** `https://artism.org/schema/coverage`
+**Type:** `rdf:Property`
+**Domain:** `schema:DataFeed`
+**Range:** JSON object
+**Status:** Active
+
+**Definition:** Composition of the **matched** set on a list response (not the whole corpus unless the query is unfiltered). Typical keys: `matched`, `withArtistIntent`, `withVisionAnalysis`, `withSessions`, `reasoningComplete`. On Tier 5 feeds, may be `{ "sessionCount": N }`. Discloses selection bias: works with sessions and artist intent read as richer; coverage makes that visible so documentation effort is not mistaken for significance.
+
+**Relationship to schema.org:** Distinct from `schema:spatialCoverage` / `schema:temporalCoverage` (subject matter). This is meta-coverage of the archive's own field completeness for the current query.
+
+---
+
+### artism:urlTemplates
+
+**URI:** `https://artism.org/schema/urlTemplates`
+**Type:** `rdf:Property`
+**Domain:** `schema:DataFeed`
+**Range:** JSON object of string templates with `{slug}` substitution only
+**Status:** Active
+
+**Definition:** Published once on the Tier 1 index envelope so per-record derived URLs need not be repeated across hundreds of triage rows. Keys include `page`, `record`, `visionPage`, `sessions` (machine endpoint), and `sessionsPage` (human HTML). Substitution variable is `{slug}` only — no nesting. At survey and record depth, absolute URLs may still be emitted inline where payload pressure is lower.
+
+**Relationship to schema.org:** Related to `schema:url` / `schema:EntryPoint` templates; specific to this archive's slug-keyed address space.
+
+---
+
 ## Relationship to the Artism project
 
 This vocabulary is the schema layer of the Artism project — an infrastructure project for honest, machine-readable artist records structured by artists, outside the market validation system.
@@ -347,7 +524,7 @@ When the Artism platform is live, this vocabulary will migrate to `artism.org/sc
 
 ---
 
-*Artism Vocabulary — Placeholder · June 2026*
+*Artism Vocabulary — Placeholder · July 2026*
 *Namespace: https://artism.org/schema/*
 *Currently served at: bernardbolter.com/schema/*
 *Authored by: Bernard Bolter × Claude (Anthropic)*

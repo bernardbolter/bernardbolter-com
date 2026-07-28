@@ -3,8 +3,12 @@ import type { Artwork, Event, Media, Series, Tag } from '@/payload-types'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { buildArtMediumJsonLdValue } from '@/lib/artwork/mediumVocabulary'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
+import { computeAvailableTiers } from '@/lib/corpus/availableTiers'
+import { ARTISM_NS, CORPUS_BASE } from '@/lib/corpus/constants'
+import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
+import { buildSeriesNode } from '@/lib/corpus/seriesIdentity'
+import { buildTierMap } from '@/lib/corpus/tierMap'
 import { applyArtworkJsonLdExtensions } from '@/lib/jsonld/artworkExtensions'
-import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import {
   artworkHasEmbeddingMetadata,
   resolveEmbeddingMetadataList,
@@ -14,7 +18,7 @@ import { countryNameToIsoCode } from '@/utilities/countryNameToIsoCode'
 
 const ARTISM_CONTEXT = {
   '@vocab': 'https://schema.org/',
-  artism: 'https://artism.org/schema/',
+  artism: ARTISM_NS,
 } as const
 
 const BIO_PERSON_ID = '/bio#person'
@@ -29,6 +33,10 @@ const LICENSE_TO_URI: Record<string, string> = {
 
 export type BuildArtworkJsonLdOptions = {
   baseUrl?: string
+  /** Completed sessions where this slug is primary or mentioned. */
+  sessionCount?: number
+  /** Add index/sessions traversal links + tier metadata (corpus Tier 4). */
+  includeTraversalLinks?: boolean
 }
 
 function trimString(value: unknown): string {
@@ -173,7 +181,7 @@ export function buildArtworkJsonLd(
   _artist?: unknown,
   options: BuildArtworkJsonLdOptions = {},
 ): Record<string, unknown> {
-  const baseUrl = options.baseUrl ?? getSiteBaseUrl()
+  const baseUrl = options.baseUrl ?? CORPUS_BASE
   const slug = artwork.slug?.trim()
   const url = `${baseUrl}/${slug}`
   const description = artworkDescription(artwork)
@@ -185,6 +193,8 @@ export function buildArtworkJsonLd(
     trimString(location?.countryCode) ||
     countryNameToIsoCode(location?.country) ||
     trimString(location?.country)
+  const sessionCount = options.sessionCount ?? 0
+  const includeTraversal = options.includeTraversalLinks === true
 
   const doc: Record<string, unknown> = {
     '@context': ARTISM_CONTEXT,
@@ -210,11 +220,7 @@ export function buildArtworkJsonLd(
   if (height) doc.height = height
 
   if (series?.name && series.slug) {
-    doc.isPartOf = {
-      '@type': 'CreativeWorkSeries',
-      name: series.name,
-      url: `${baseUrl}/series/${series.slug}`,
-    }
+    doc.isPartOf = buildSeriesNode(series, baseUrl)
   }
 
   if (location?.city) {
@@ -263,6 +269,15 @@ export function buildArtworkJsonLd(
 
   if (artworkHasEmbeddingMetadata(artwork) && slug) {
     doc['artism:visionPageUrl'] = visionPageUrl(baseUrl, slug)
+  }
+
+  if (includeTraversal && slug) {
+    doc['artism:indexUrl'] = `${baseUrl}/api/corpus/index`
+    doc['artism:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
+    doc['artism:sessionsPageUrl'] = `${baseUrl}/sessions?artwork=${encodeURIComponent(slug)}`
+    Object.assign(doc, buildScopeDepthEnvelope('record'))
+    doc['artism:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
+    doc['artism:tierMap'] = buildTierMap(baseUrl)
   }
 
   applyArtworkJsonLdExtensions(doc, artwork, baseUrl)

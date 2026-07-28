@@ -74,6 +74,31 @@ export async function fetchCorpusArtworks(
   })
 }
 
+/** Published public-catalogue artwork count (unfiltered). */
+export async function fetchCorpusTotalArtworks(payload: Payload): Promise<number> {
+  const docs: Array<{ slug: string }> = []
+  let page = 1
+  let hasNextPage = true
+
+  while (hasNextPage) {
+    const result = await payload.find({
+      collection: 'artworks',
+      locale: defaultLocale,
+      where: { status: { equals: 'published' } },
+      limit: PAGE_SIZE,
+      page,
+      depth: 0,
+      select: { slug: true },
+      overrideAccess: true,
+    })
+    docs.push(...result.docs)
+    hasNextPage = result.hasNextPage
+    page += 1
+  }
+
+  return docs.filter((doc) => isPublicCatalogueSlug(doc.slug)).length
+}
+
 export async function fetchCorpusSeries(payload: Payload): Promise<Series[]> {
   const result = await payload.find({
     collection: 'series',

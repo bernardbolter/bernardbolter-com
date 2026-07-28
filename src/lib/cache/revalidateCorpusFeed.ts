@@ -37,7 +37,7 @@ export function revalidateCorpusFeed(options: RevalidateCorpusFeedOptions = {}):
 
   for (const slug of slugs) {
     paths.add(`/api/corpus/${slug}`)
-    paths.add(`/api/corpus/${slug}?tier=5`)
+    paths.add(`/api/corpus/${slug}/sessions`)
     paths.add(`/sessions?artwork=${encodeURIComponent(slug)}`)
   }
 

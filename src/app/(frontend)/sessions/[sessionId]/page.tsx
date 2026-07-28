@@ -94,7 +94,7 @@ export default async function PublicSessionPage({ params }: PageProps) {
     ? sessionTier5ApiPath(session.sessionId)
     : null
   const artworkTier5Href = primary?.slug
-    ? `/api/corpus/${encodeURIComponent(primary.slug)}?tier=5`
+    ? `/api/corpus/${encodeURIComponent(primary.slug)}/sessions`
     : null
 
   return (

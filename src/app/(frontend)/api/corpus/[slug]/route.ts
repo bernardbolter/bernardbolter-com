@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
+import { CORPUS_BASE } from '@/lib/corpus/constants'
+import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
+import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
-import { getSiteBaseUrl } from '@/lib/jsonld/site'
-import { buildTier5SessionsResponse, TIER5_SESSION_SELECT } from '@/lib/corpus/buildTier5SessionsResponse'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 import config from '@payload-config'
 
@@ -12,80 +13,65 @@ export const dynamic = 'force-dynamic'
 
 type RouteParams = { params: Promise<{ slug: string }> }
 
-const CACHE_HEADERS = {
-  'Content-Type': 'application/json',
-  'Cache-Control': 'public, max-age=0, s-maxage=60, must-revalidate',
-} as const
-
 /**
- * Per-artwork corpus record.
- * - default / missing tier → Tier 3/4 artwork JSON-LD
- * - `?tier=5` → completed session transcripts (artistRecord + artism:DialogueSelfAudit)
+ * Per-artwork corpus record (Tier 4).
+ * `?tier=5` permanently redirects to `/api/corpus/[slug]/sessions`.
  */
 export async function GET(request: Request, { params }: RouteParams) {
   const { slug: rawSlug } = await params
   const slug = rawSlug?.trim()
   if (!slug || !isPublicCatalogueSlug(slug)) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
   }
 
   const { searchParams } = new URL(request.url)
   const tier = searchParams.get('tier')?.trim()
-  const payload = await getPayload({ config })
 
   if (tier === '5') {
-    const artworkResult = await payload.find({
+    return NextResponse.redirect(
+      new URL(`/api/corpus/${encodeURIComponent(slug)}/sessions`, CORPUS_BASE),
+      308,
+    )
+  }
+
+  if (tier != null && tier !== '' && tier !== '4') {
+    return NextResponse.json(
+      {
+        error: 'Invalid tier',
+        accepted: ['4', '5'],
+        message:
+          'Tier 4 is the default record. Tier 5 lives at /api/corpus/{slug}/sessions.',
+      },
+      { status: 400, headers: CORPUS_LD_JSON_HEADERS },
+    )
+  }
+
+  const payload = await getPayload({ config })
+
+  const [result, sessionCountBySlug] = await Promise.all([
+    payload.find({
       collection: 'artworks',
       locale: 'en',
       where: {
         and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
       },
       limit: 1,
-      depth: 0,
-      select: { slug: true },
+      depth: 3,
       overrideAccess: true,
-    })
-
-    if (!artworkResult.docs[0]) {
-      return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    }
-
-    const sessionsResult = await payload.find({
-      collection: 'sessions',
-      where: { status: { equals: 'completed' } },
-      limit: 200,
-      depth: 1,
-      sort: '-completedAt',
-      overrideAccess: true,
-      select: TIER5_SESSION_SELECT,
-    })
-
-    const body = buildTier5SessionsResponse({
-      artworkSlug: slug,
-      sessions: sessionsResult.docs,
-      baseUrl: getSiteBaseUrl(),
-    })
-
-    return NextResponse.json(body, { headers: CACHE_HEADERS })
-  }
-
-  const result = await payload.find({
-    collection: 'artworks',
-    locale: 'en',
-    where: {
-      and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
-    },
-    limit: 1,
-    depth: 3,
-    overrideAccess: true,
-  })
+    }),
+    fetchSessionCountBySlug(payload),
+  ])
 
   const artwork = result.docs[0]
   if (!artwork) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
   }
 
-  const body = buildArtworkJsonLd(artwork, null, { baseUrl: getSiteBaseUrl() })
+  const body = buildArtworkJsonLd(artwork, null, {
+    baseUrl: CORPUS_BASE,
+    sessionCount: sessionCountBySlug.get(slug) ?? 0,
+    includeTraversalLinks: true,
+  })
 
-  return NextResponse.json(body, { headers: CACHE_HEADERS })
+  return NextResponse.json(body, { headers: CORPUS_LD_JSON_HEADERS })
 }

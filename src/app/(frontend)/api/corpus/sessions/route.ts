@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
-import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { CORPUS_BASE } from '@/lib/corpus/constants'
+import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
 import config from '@payload-config'
 import type { Artwork } from '@/payload-types'
 
@@ -58,7 +59,7 @@ function sessionPublicCrumb(session: SessionCrumbSource, baseUrl: string) {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const artworkSlug = searchParams.get('artwork')?.trim() || null
-  const baseUrl = getSiteBaseUrl()
+  const baseUrl = CORPUS_BASE
   const payload = await getPayload({ config })
 
   const result = await payload.find({
@@ -100,11 +101,6 @@ export async function GET(request: Request) {
       'artism:totalSessions': sessions.length,
       dataFeedElement: sessions,
     },
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=0, s-maxage=60, must-revalidate',
-      },
-    },
+    { headers: CORPUS_LD_JSON_HEADERS },
   )
 }

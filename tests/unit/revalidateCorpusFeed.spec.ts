@@ -33,6 +33,9 @@ describe('revalidateCorpusFeed', () => {
       expect(mocks.revalidatePath).toHaveBeenCalledWith(path)
     }
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/api/corpus/centraal-station-boats')
+    expect(mocks.revalidatePath).toHaveBeenCalledWith(
+      '/api/corpus/centraal-station-boats/sessions',
+    )
     expect(mocks.revalidatePath).toHaveBeenCalledWith('/api/corpus/sessions/sess-1')
   })
 })

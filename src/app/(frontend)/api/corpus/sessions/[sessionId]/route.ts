@@ -5,18 +5,14 @@ import {
   buildTier5SessionByIdResponse,
   TIER5_SESSION_SELECT,
 } from '@/lib/corpus/buildTier5SessionsResponse'
-import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { CORPUS_BASE } from '@/lib/corpus/constants'
+import { CORPUS_LD_JSON_HEADERS } from '@/lib/corpus/ldJsonHeaders'
 import config from '@payload-config'
 
 /** Always live from Payload — never an ISR snapshot shared with HTML pages. */
 export const dynamic = 'force-dynamic'
 
 type RouteParams = { params: Promise<{ sessionId: string }> }
-
-const CACHE_HEADERS = {
-  'Content-Type': 'application/json',
-  'Cache-Control': 'public, max-age=0, s-maxage=60, must-revalidate',
-} as const
 
 /**
  * Session-level Tier 5 — full transcript streams for any completed session,
@@ -29,7 +25,7 @@ export async function GET(request: Request, { params }: RouteParams) {
   const { sessionId: raw } = await params
   const sessionId = raw?.trim()
   if (!sessionId) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
   }
 
   const { searchParams } = new URL(request.url)
@@ -37,7 +33,7 @@ export async function GET(request: Request, { params }: RouteParams) {
   if (tier != null && tier !== '' && tier !== '5') {
     return NextResponse.json(
       { error: 'Only tier=5 is supported on this path' },
-      { status: 400 },
+      { status: 400, headers: CORPUS_LD_JSON_HEADERS },
     )
   }
 
@@ -58,16 +54,16 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   const session = result.docs[0]
   if (!session) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
   }
 
   const body = buildTier5SessionByIdResponse({
     session,
-    baseUrl: getSiteBaseUrl(),
+    baseUrl: CORPUS_BASE,
   })
   if (!body) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers: CORPUS_LD_JSON_HEADERS })
   }
 
-  return NextResponse.json(body, { headers: CACHE_HEADERS })
+  return NextResponse.json(body, { headers: CORPUS_LD_JSON_HEADERS })
 }
