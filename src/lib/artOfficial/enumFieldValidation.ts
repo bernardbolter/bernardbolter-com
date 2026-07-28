@@ -18,6 +18,7 @@ export const ARTWORK_SELECT_OPTIONS: Record<string, readonly string[]> = {
     'private-collection',
     'institution',
     'on-loan',
+    'unknown',
   ],
   sizeTier: ['xs', 'sm', 'md', 'lg', 'xl'],
   reasoningStatus: ['stub', 'partial', 'complete'],

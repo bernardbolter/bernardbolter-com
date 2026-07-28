@@ -233,6 +233,10 @@ export function buildCurrentHolderLine(artwork: Artwork, artist: Artist | null):
       return artwork.currentLocation?.locationDetail?.trim() || 'Institution'
     case 'on-loan':
       return 'Currently on loan'
+    case 'unknown': {
+      const detail = artwork.currentLocation?.locationDetail?.trim()
+      return detail || 'Whereabouts unknown'
+    }
     case 'private-collection':
     default: {
       const current = findCurrentOwnershipEntry(getOwnershipRows(artwork))

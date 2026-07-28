@@ -1925,7 +1925,10 @@ export interface Artwork {
     [k: string]: unknown;
   } | null;
   currentLocation?: {
-    category?: ('artists-studio' | 'private-collection' | 'institution' | 'on-loan') | null;
+    /**
+     * Use unknown when whereabouts are confirmed unknown (not merely unset). Distinct from provenanceOriginKnown.
+     */
+    category?: ('artists-studio' | 'private-collection' | 'institution' | 'on-loan' | 'unknown') | null;
     /**
      * Address or holder detail (private).
      */

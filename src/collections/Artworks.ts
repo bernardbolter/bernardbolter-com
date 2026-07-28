@@ -1548,7 +1548,15 @@ export const Artworks: CollectionConfig = {
                     { label: 'Private collection', value: 'private-collection' },
                     { label: 'Institution', value: 'institution' },
                     { label: 'On loan', value: 'on-loan' },
+                    {
+                      label: 'Unknown / unlocated',
+                      value: 'unknown',
+                    },
                   ],
+                  admin: {
+                    description:
+                      'Use unknown when whereabouts are confirmed unknown (not merely unset). Distinct from provenanceOriginKnown.',
+                  },
                 },
                 {
                   name: 'locationDetail',

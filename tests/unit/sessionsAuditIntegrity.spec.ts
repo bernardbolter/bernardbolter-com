@@ -54,6 +54,7 @@ describe('enum / descriptionShort validation', () => {
 
   it('accepts schema location categories', () => {
     expect(validateSelectFieldValue('currentLocation.category', 'artists-studio').ok).toBe(true)
+    expect(validateSelectFieldValue('currentLocation.category', 'unknown').ok).toBe(true)
   })
 
   it('clamps descriptionShort to 400 chars', () => {

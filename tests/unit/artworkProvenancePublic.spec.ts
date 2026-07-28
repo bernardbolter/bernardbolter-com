@@ -126,6 +126,29 @@ describe('ownership display', () => {
     ).toBe('Currently on loan')
   })
 
+  it('renders unknown / unlocated status headline', () => {
+    expect(
+      buildCurrentHolderLine(
+        artwork({
+          currentLocation: { category: 'unknown' },
+        }),
+        artist,
+      ),
+    ).toBe('Whereabouts unknown')
+
+    expect(
+      buildCurrentHolderLine(
+        artwork({
+          currentLocation: {
+            category: 'unknown',
+            locationDetail: 'last known: Amsterdam, mid-1990s',
+          },
+        }),
+        artist,
+      ),
+    ).toBe('last known: Amsterdam, mid-1990s')
+  })
+
   it('renders consignment availability headline', () => {
     expect(
       buildCurrentHolderLine(
