@@ -133,4 +133,40 @@ describe('resolveArtworkCommitReferences', () => {
     expect(out.medium).toBe('encaustic-on-panel')
     expect(out.mediumOther).toBeUndefined()
   })
+
+  it('soft-isolates artHistoricalReferences failures and keeps other fields', async () => {
+    const find = vi
+      .fn()
+      // series lookup
+      .mockResolvedValueOnce({ docs: [{ id: 7, slug: 'a-colorful-history' }] })
+      // art-historical-references fuzzy match — missing column
+      .mockRejectedValueOnce(
+        Object.assign(new Error('Failed query: select needs_artist_review'), {
+          cause: new Error(
+            'column art_historical_references.needs_artist_review does not exist',
+          ),
+        }),
+      )
+    const findByID = vi.fn().mockResolvedValue({ id: 7, slug: 'a-colorful-history' })
+    const payload = { find, findByID, create: vi.fn() } as never
+    const warnings: string[] = []
+
+    const out = await resolveArtworkCommitReferences(
+      { payload, user: { id: 1 } as never, session: { artistId: 2 } as never },
+      {
+        title: 'Centraal Station Boats',
+        series: 'a-colorful-history',
+        intent: 'Still lands',
+        artHistoricalReferences: [
+          { name: 'Robert Rauschenberg', matchStrategy: 'fuzzy-match-or-create' },
+        ],
+      },
+      { warnings },
+    )
+
+    expect(out.intent).toBe('Still lands')
+    expect(out.artHistoricalReferences).toBeUndefined()
+    expect(warnings[0]).toMatch(/artHistoricalReferences skipped/)
+    expect(warnings[0]).toMatch(/needs_artist_review does not exist/)
+  })
 })

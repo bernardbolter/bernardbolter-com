@@ -12,12 +12,14 @@ import {
   normalizeArtworkFieldsImportItems,
   type ArtworkFieldsImportInput,
 } from './archiveImportSchemas'
+import { formatDbError } from './formatDbError'
 import { revalidateArtworkPaths } from './revalidateArtworkPaths'
 
 export type ArtworkFieldsImportResult = {
   slug: string
   artworkId: number
   fieldsApplied: string[]
+  warnings?: string[]
 }
 
 function assertAllowedFields(fields: Record<string, unknown>): string[] {
@@ -89,29 +91,47 @@ export async function applyArtworkFieldsImport(
       artistId: creatorId ?? user.id,
     } as Session
 
+    const warnings: string[] = []
+
     // Resolve references first (tag labels / art-historical names → IDs)
     // BEFORE sanitize, which strips non-id relationship values.
-    patch = await resolveArtworkCommitReferences({ payload, user, session }, patch)
+    // artHistoricalReferences failures are soft-isolated inside resolve.
+    try {
+      patch = await resolveArtworkCommitReferences(
+        { payload, user, session },
+        patch,
+        { warnings },
+      )
+    } catch (err) {
+      throw new Error(formatDbError(err))
+    }
     patch = sanitizeArtworkCommitPatch(patch)
 
     if (Object.keys(patch).length === 0) {
       throw new Error(`No valid fields to apply for slug "${slug}"`)
     }
 
-    await payload.update({
-      collection: 'artworks',
-      id: artwork.id,
-      data: patch,
-      overrideAccess: false,
-      user,
-    })
+    try {
+      await payload.update({
+        collection: 'artworks',
+        id: artwork.id,
+        data: patch,
+        overrideAccess: false,
+        user,
+      })
+    } catch (err) {
+      throw new Error(formatDbError(err))
+    }
 
     revalidateArtworkPaths(slug)
 
     results.push({
       slug,
       artworkId: artwork.id,
-      fieldsApplied: fieldKeys,
+      fieldsApplied: fieldKeys.filter(
+        (key) => key !== 'artHistoricalReferences' || patch.artHistoricalReferences != null,
+      ),
+      ...(warnings.length ? { warnings } : {}),
     })
   }
 

@@ -9,6 +9,7 @@ import {
   orderEnvelopeWrites,
 } from './archiveImportSchemas'
 import { applyArtworkFieldsImport } from './applyArtworkFieldsImport'
+import { formatDbError } from './formatDbError'
 import { revalidateArtworkPaths } from './revalidateArtworkPaths'
 
 export type EnvelopeWriteResult = {
@@ -17,6 +18,7 @@ export type EnvelopeWriteResult = {
   sessionId?: string
   status: 'saved' | 'skipped' | 'failed'
   reason?: string
+  warnings?: string[]
 }
 
 function relationId(value: unknown): number | null {
@@ -245,23 +247,30 @@ async function applyArtworkSet(
   const fields = { ...write.fields }
   const reasoningStatus = fields.reasoningStatus
   const hasOtherFields = Object.keys(fields).some((key) => key !== 'reasoningStatus')
+  const warnings: string[] = []
 
   // Guarded final write: apply other fields first; only then flip reasoningStatus.
   if (reasoningStatus !== undefined && hasOtherFields) {
     delete fields.reasoningStatus
-    await applyArtworkFieldsImport(payload, user, {
+    const primary = await applyArtworkFieldsImport(payload, user, {
       slug: write.slug,
       fields,
     })
+    for (const row of primary) {
+      if (row.warnings?.length) warnings.push(...row.warnings)
+    }
     await applyArtworkFieldsImport(payload, user, {
       slug: write.slug,
       fields: { reasoningStatus },
     })
   } else {
-    await applyArtworkFieldsImport(payload, user, {
+    const rows = await applyArtworkFieldsImport(payload, user, {
       slug: write.slug,
       fields,
     })
+    for (const row of rows) {
+      if (row.warnings?.length) warnings.push(...row.warnings)
+    }
   }
 
   revalidateArtworkPaths(write.slug)
@@ -270,6 +279,7 @@ async function applyArtworkSet(
     collection: 'artworks',
     slug: write.slug,
     status: 'saved',
+    ...(warnings.length ? { warnings } : {}),
   }
 }
 
@@ -386,7 +396,7 @@ export async function applyEnvelopeImport(
         })
       }
     } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error)
+      const reason = formatDbError(error)
       results.push({
         collection: write.collection,
         slug: write.collection === 'artworks' ? write.slug : undefined,

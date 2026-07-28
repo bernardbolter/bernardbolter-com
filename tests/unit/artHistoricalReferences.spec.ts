@@ -104,4 +104,22 @@ describe('resolveArtHistoricalReferencesField', () => {
 
     expect(patch.artHistoricalReferences).toEqual([3])
   })
+
+  it('rethrows schema/query failures so callers can soft-isolate the field', async () => {
+    const find = vi.fn().mockRejectedValue(
+      Object.assign(new Error('Failed query: select … needs_artist_review …'), {
+        cause: new Error('column art_historical_references.needs_artist_review does not exist'),
+      }),
+    )
+    const payload = { find, create: vi.fn() } as never
+    const patch: Record<string, unknown> = {
+      artHistoricalReferences: [
+        { name: 'Robert Rauschenberg', matchStrategy: 'fuzzy-match-or-create' },
+      ],
+    }
+
+    await expect(
+      resolveArtHistoricalReferencesField({ payload, user: {} as never }, patch),
+    ).rejects.toThrow(/Failed query/)
+  })
 })

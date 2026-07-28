@@ -7,6 +7,7 @@ import { normalizeSizeTier } from './inferSizeTier'
 import { getCustomMediums, registerCustomMedium } from './artworkMediumOptions'
 import { normalizeArtworkSelectFields } from './normalizeArtworkSelects'
 import { findSeriesIdBySlug, seriesNotFoundMessage } from './seriesSlugs'
+import { formatDbError } from '@/lib/studio/formatDbError'
 
 type CommitContext = {
   payload: Payload
@@ -360,17 +361,29 @@ function ensureSlug(patch: Record<string, unknown>): void {
 
 /**
  * Resolve slugs → relationship ids and fill required defaults before artwork create/update.
+ * artHistoricalReferences resolution is soft-isolated: lookup/create failures drop that field
+ * and push a warning, so the rest of the patch can still save.
  */
 export async function resolveArtworkCommitReferences(
   ctx: CommitContext,
   patch: Record<string, unknown>,
+  options?: { warnings?: string[] },
 ): Promise<Record<string, unknown>> {
   const out = { ...patch }
   ensureCreator(out, ctx.session)
   ensureSlug(out)
   await resolveSeriesField(ctx, out)
   await resolveTagFields(ctx, out)
-  await resolveArtHistoricalReferencesField(ctx, out)
+  try {
+    await resolveArtHistoricalReferencesField(ctx, out, {
+      warnings: options?.warnings,
+    })
+  } catch (err) {
+    delete out.artHistoricalReferences
+    options?.warnings?.push(
+      `artHistoricalReferences skipped: ${formatDbError(err)}`,
+    )
+  }
   await resolveRelatedWorksAtMaking(ctx, out)
   if (out.ach) {
     await resolveNestedImageCaptureTypes(ctx, out.ach, 'ach')

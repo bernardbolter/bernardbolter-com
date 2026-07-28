@@ -222,10 +222,13 @@ function buildContextFromRelevanceNotes(
  * Fuzzy-matches existing records by artist/title name; creates needsArtistReview stubs otherwise.
  * When relevanceNotes are present and artHistoricalContext is empty, fills context from those notes
  * (schema has no per-link annotation on the relationship field).
+ *
+ * Per-entry failures are skipped so one bad lookup does not abort the whole array.
  */
 export async function resolveArtHistoricalReferencesField(
   ctx: ResolveContext,
   patch: Record<string, unknown>,
+  options?: { warnings?: string[] },
 ): Promise<void> {
   const value = patch.artHistoricalReferences
   if (value == null) return
@@ -255,13 +258,25 @@ export async function resolveArtHistoricalReferencesField(
     }
 
     namedEntries.push(parsed)
-    const existing = await findExistingReferenceId(ctx, parsed.name)
-    const id =
-      existing ??
-      (await createPendingReference(ctx, parsed.name, parsed.relevanceNote))
-    if (id != null && !seen.has(id)) {
-      seen.add(id)
-      ids.push(id)
+    try {
+      const existing = await findExistingReferenceId(ctx, parsed.name)
+      const id =
+        existing ??
+        (await createPendingReference(ctx, parsed.name, parsed.relevanceNote))
+      if (id != null && !seen.has(id)) {
+        seen.add(id)
+        ids.push(id)
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      // Schema/column failures abort the whole field so the outer soft-isolate path
+      // can drop artHistoricalReferences and keep the rest of the artwork patch.
+      if (/Failed query|does not exist|42703/i.test(message)) {
+        throw err
+      }
+      options?.warnings?.push(
+        `artHistoricalReferences entry "${parsed.name}" skipped: ${message}`,
+      )
     }
   }
 

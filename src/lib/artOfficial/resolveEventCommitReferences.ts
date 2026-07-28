@@ -3,6 +3,7 @@ import type { Payload } from 'payload'
 import type { User } from '@/payload-types'
 
 import { resolveArtHistoricalReferencesField } from './artHistoricalReferences'
+import { formatDbError } from '@/lib/studio/formatDbError'
 
 type CommitContext = {
   payload: Payload
@@ -87,9 +88,19 @@ async function resolveTagFields(
 export async function resolveEventCommitReferences(
   ctx: CommitContext,
   patch: Record<string, unknown>,
+  options?: { warnings?: string[] },
 ): Promise<Record<string, unknown>> {
   const out = { ...patch }
   await resolveTagFields(ctx, out)
-  await resolveArtHistoricalReferencesField(ctx, out)
+  try {
+    await resolveArtHistoricalReferencesField(ctx, out, {
+      warnings: options?.warnings,
+    })
+  } catch (err) {
+    delete out.artHistoricalReferences
+    options?.warnings?.push(
+      `artHistoricalReferences skipped: ${formatDbError(err)}`,
+    )
+  }
   return out
 }
