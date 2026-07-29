@@ -41,6 +41,18 @@ export async function getPublishedArtworkSlugs(): Promise<string[]> {
   return slugs
 }
 
+/**
+ * Fields excluded from the public artwork page fetch.
+ * Embedding vectors (768–1536 floats each) are fetched directly from pgvector
+ * for similarity queries — they must never reach the RSC flight payload.
+ */
+const ARTWORK_PAGE_OMIT = {
+  clipEmbedding: false,
+  dinov2Embedding: false,
+  reasoningTextEmbedding: false,
+  embedding: false,
+} as const
+
 export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
   return withDbRetry(async () => {
     const payload = await getPayload({ config })
@@ -52,6 +64,7 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
       },
       limit: 1,
       depth: ARTWORK_PAGE_DEPTH,
+      select: ARTWORK_PAGE_OMIT,
       overrideAccess: false,
     })
     return result.docs[0] ?? null
@@ -71,6 +84,7 @@ export async function getArtworkForPreview(slug: string): Promise<Artwork | null
       where: { slug: { equals: slug } },
       limit: 1,
       depth: ARTWORK_PAGE_DEPTH,
+      select: ARTWORK_PAGE_OMIT,
       overrideAccess: true,
     })
     return result.docs[0] ?? null

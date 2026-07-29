@@ -7,7 +7,34 @@ import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import type { Artist, Artwork, Series } from '@/payload-types'
 
 const defaultLocale = 'en' as const
-const PAGE_SIZE = 100
+const PAGE_SIZE = 200
+
+/**
+ * Fields required by buildCorpusRecord (Tier 1 + Tier 2) and resolveGist / computeAvailableTiers.
+ * depth:1 populates `series` (slug, name, description) only — no deeper chains.
+ */
+const CORPUS_ARTWORK_SELECT = {
+  slug: true,
+  title: true,
+  status: true,
+  yearCreated: true,
+  medium: true,
+  catalogueNumber: true,
+  catalogueSequence: true,
+  reasoningStatus: true,
+  series: true,
+  descriptionShort: true,
+  intent: true,
+  visionAnalyses: true,
+  dominantColors: true,
+  conceptualKeywords: true,
+  movementTags: true,
+  styleTags: true,
+  subjectTags: true,
+  genreTags: true,
+  periodTags: true,
+  updatedAt: true,
+} as const
 
 function publishedArtworkWhere(filters: CorpusIndexFilters = {}): Where {
   const and: Where[] = [{ status: { equals: 'published' } }]
@@ -57,12 +84,13 @@ export async function fetchCorpusArtworks(
       where,
       limit: PAGE_SIZE,
       page,
-      depth: 3,
+      depth: 1,
       sort: 'catalogueSequence',
+      select: CORPUS_ARTWORK_SELECT,
       overrideAccess: true,
     })
 
-    docs.push(...result.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)))
+    docs.push(...(result.docs.filter((doc) => isPublicCatalogueSlug(doc.slug)) as unknown as Artwork[]))
     hasNextPage = result.hasNextPage
     page += 1
   }
@@ -74,29 +102,24 @@ export async function fetchCorpusArtworks(
   })
 }
 
-/** Published public-catalogue artwork count (unfiltered). */
+/**
+ * Published public-catalogue artwork count (unfiltered).
+ * Uses a fast limit:1 count query and reads totalDocs from the result.
+ * Note: `__`-prefixed slugs are excluded application-side; they are
+ * negligible in count and this is used only for display metadata.
+ */
 export async function fetchCorpusTotalArtworks(payload: Payload): Promise<number> {
-  const docs: Array<{ slug: string }> = []
-  let page = 1
-  let hasNextPage = true
-
-  while (hasNextPage) {
-    const result = await payload.find({
-      collection: 'artworks',
-      locale: defaultLocale,
-      where: { status: { equals: 'published' } },
-      limit: PAGE_SIZE,
-      page,
-      depth: 0,
-      select: { slug: true },
-      overrideAccess: true,
-    })
-    docs.push(...result.docs)
-    hasNextPage = result.hasNextPage
-    page += 1
-  }
-
-  return docs.filter((doc) => isPublicCatalogueSlug(doc.slug)).length
+  const result = await payload.find({
+    collection: 'artworks',
+    locale: defaultLocale,
+    where: { status: { equals: 'published' } },
+    limit: 1,
+    page: 1,
+    depth: 0,
+    select: { slug: true },
+    overrideAccess: true,
+  })
+  return result.totalDocs
 }
 
 export async function fetchCorpusSeries(payload: Payload): Promise<Series[]> {

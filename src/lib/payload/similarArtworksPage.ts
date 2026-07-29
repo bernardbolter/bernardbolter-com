@@ -25,6 +25,13 @@ async function cardsForNeighbours(
     where: { id: { in: ids } },
     limit: ids.length,
     depth: 1,
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      primaryImage: true,
+      posterImage: true,
+    },
     overrideAccess: false,
   })
 

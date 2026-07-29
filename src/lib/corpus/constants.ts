@@ -24,7 +24,7 @@ export const CORPUS_CONTEXT = {
 } as const
 
 /** Default page sizes per list endpoint. */
-export const CORPUS_INDEX_PER_PAGE = 250
+export const CORPUS_INDEX_PER_PAGE = 50
 export const CORPUS_SURVEY_PER_PAGE = 50
 export const CORPUS_ROOT_PER_PAGE = 25
 export const CORPUS_ROOT_MAX_PER_PAGE = 50
