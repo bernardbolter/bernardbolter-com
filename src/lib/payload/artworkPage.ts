@@ -42,16 +42,20 @@ export async function getPublishedArtworkSlugs(): Promise<string[]> {
 }
 
 /**
- * Fields excluded from the public artwork page fetch.
- * Embedding vectors (768–1536 floats each) are fetched directly from pgvector
- * for similarity queries — they must never reach the RSC flight payload.
+ * Strip raw embedding vectors from a fetched artwork so they are never
+ * serialised into the RSC flight payload (each is 768–1536 floats, ~10–15 KB).
+ * These fields are queried directly from pgvector for similarity — the page
+ * never reads them.  We strip post-fetch rather than using select:{false} because
+ * Payload's denylist select mode corrupts join-field hydration (capturePhotos etc).
  */
-const ARTWORK_PAGE_OMIT = {
-  clipEmbedding: false,
-  dinov2Embedding: false,
-  reasoningTextEmbedding: false,
-  embedding: false,
-} as const
+function stripEmbeddings(artwork: Artwork): Artwork {
+  const copy = artwork as unknown as Record<string, unknown>
+  delete copy.clipEmbedding
+  delete copy.dinov2Embedding
+  delete copy.reasoningTextEmbedding
+  delete copy.embedding
+  return artwork
+}
 
 export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
   return withDbRetry(async () => {
@@ -64,10 +68,10 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
       },
       limit: 1,
       depth: ARTWORK_PAGE_DEPTH,
-      select: ARTWORK_PAGE_OMIT,
       overrideAccess: false,
     })
-    return result.docs[0] ?? null
+    const doc = result.docs[0]
+    return doc ? stripEmbeddings(doc) : null
   })
 }
 
@@ -84,10 +88,10 @@ export async function getArtworkForPreview(slug: string): Promise<Artwork | null
       where: { slug: { equals: slug } },
       limit: 1,
       depth: ARTWORK_PAGE_DEPTH,
-      select: ARTWORK_PAGE_OMIT,
       overrideAccess: true,
     })
-    return result.docs[0] ?? null
+    const doc = result.docs[0]
+    return doc ? stripEmbeddings(doc) : null
   })
 }
 
