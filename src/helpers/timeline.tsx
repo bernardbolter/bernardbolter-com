@@ -1,10 +1,8 @@
-import { JSX } from 'react'
 import type { Artwork } from '@/payload-types'
 
 import type {
   TimelineArtwork,
   TimelineTimepoint,
-  GenerateSmallLinesProps,
   TimelineConfig,
   TimelineResult,
 } from '@/types/timlineTypes'
@@ -356,65 +354,3 @@ export function getVisibleTimepoints(timepoints: TimelineTimepoint[]): TimelineT
   return timepoints.filter((tp) => tp.isVisible)
 }
 
-export const generateSmallLines = ({
-  isMobile,
-  totalTimelineHeight,
-  totalTimelineWidth,
-  artworkContainerHeight,
-  artworkContainerWidth,
-  artworkDesktopSideWidth,
-  targetSpacing = 10,
-}: GenerateSmallLinesProps): JSX.Element[] => {
-  const totalDimension = isMobile
-    ? totalTimelineHeight - artworkContainerHeight
-    : totalTimelineWidth - artworkContainerWidth - artworkDesktopSideWidth * 2
-
-  // Calculate optimal spacing closest to target spacing
-  const numberOfLines = Math.floor(totalDimension / targetSpacing)
-  const actualSpacing = totalDimension / numberOfLines
-
-  const lines: JSX.Element[] = []
-
-  for (let i = 0; i <= numberOfLines; i++) {
-    const position = i * actualSpacing
-
-    // Skip lines that would be too close to the start or end
-    if (position < 5 || position > totalDimension - 5) continue
-
-    // Create different sizes for visual hierarchy
-    const isLargeTick = i % 10 === 0 // Every 10th line is larger
-    const isMediumTick = i % 5 === 0 && !isLargeTick // Every 5th line is medium
-
-    let lineSize: { width: string; height: string }
-    let lineOpacity: number
-
-    if (isLargeTick) {
-      lineSize = isMobile ? { width: '14px', height: '1px' } : { width: '1px', height: '14px' }
-      lineOpacity = 0.8
-    } else if (isMediumTick) {
-      lineSize = isMobile ? { width: '12px', height: '1px' } : { width: '1px', height: '12px' }
-      lineOpacity = 0.7
-    } else {
-      lineSize = isMobile ? { width: '8px', height: '1px' } : { width: '1px', height: '8px' }
-      lineOpacity = 0.5
-    }
-
-    const lineStyle: React.CSSProperties = isMobile
-      ? {
-          top: `${position}px`,
-          ...lineSize,
-          opacity: lineOpacity,
-        }
-      : {
-          left: `${position}px`,
-          ...lineSize,
-          opacity: lineOpacity,
-        }
-
-    lines.push(
-      <div key={`small-line-${i}`} className="artworks-timeline__small-line" style={lineStyle} />,
-    )
-  }
-
-  return lines
-}

@@ -8,12 +8,12 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 
 import { LeftArrowSvg, RightArrowSvg } from '@/components/icons'
-import { generateSmallLines } from '@/helpers/timeline'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
 import TimelineArtworkSlot from './TimelineArtworkSlot'
@@ -25,6 +25,12 @@ const BIO_TRACK_OFFSET = 16
 const HISTORICAL_TRACK_OFFSET = -16
 const MOBILE_BIO_TRACK_OFFSET = 16
 const MOBILE_HISTORICAL_TRACK_OFFSET = -12
+/** Must match former generateSmallLines `targetSpacing` — drives CSS tick periods. */
+const TICK_SPACING_PX = 20
+/** Largest tick height/width from generateSmallLines (desktop vertical / mobile horizontal). */
+const TICK_LARGE_PX = 14
+/** Offset of ticks from the axis — former .artworks-timeline__small-line top/left. */
+const TICK_AXIS_OFFSET_PX = 18
 
 type AnchorPoint = { x: number; y: number }
 
@@ -285,26 +291,6 @@ export default function Timeline() {
     element.addEventListener('wheel', onWheel, { passive: false })
     return () => element.removeEventListener('wheel', onWheel)
   }, [timeline])
-
-  const smallLines = useMemo(() => {
-    if (!timeline) return null
-
-    return generateSmallLines({
-      isMobile,
-      totalTimelineHeight: timeline.totalTimelineHeight,
-      totalTimelineWidth: timeline.totalTimelineWidth,
-      artworkContainerHeight: state.artworkContainerHeight,
-      artworkContainerWidth: state.artworkContainerWidth,
-      artworkDesktopSideWidth: state.artworkDesktopSideWidth,
-      targetSpacing: 20,
-    })
-  }, [
-    isMobile,
-    state.artworkContainerHeight,
-    state.artworkContainerWidth,
-    state.artworkDesktopSideWidth,
-    timeline,
-  ])
 
   if (!timeline || timeline.artworksArray.length === 0) {
     return (
@@ -590,13 +576,20 @@ export default function Timeline() {
           />
           <div
             className="artworks-timeline__small-lines"
-            style={{
-              marginLeft: !isMobile ? `${halfWidth}px` : '0px',
-              marginTop: !isMobile ? '0px' : `${halfHeight}px`,
-            }}
-          >
-            {smallLines}
-          </div>
+            style={
+              {
+                '--tick-spacing': `${TICK_SPACING_PX}px`,
+                marginLeft: !isMobile ? `${halfWidth}px` : '0px',
+                marginTop: !isMobile ? '0px' : `${halfHeight}px`,
+                width: !isMobile
+                  ? `${timeline.totalTimelineWidth - state.artworkContainerWidth - sideWidth * 2}px`
+                  : `${TICK_AXIS_OFFSET_PX + TICK_LARGE_PX}px`,
+                height: !isMobile
+                  ? `${TICK_AXIS_OFFSET_PX + TICK_LARGE_PX}px`
+                  : `${timeline.totalTimelineHeight - state.artworkContainerHeight}px`,
+              } as CSSProperties
+            }
+          />
           <div
             className="artworks-timeline__year-markers"
             style={{

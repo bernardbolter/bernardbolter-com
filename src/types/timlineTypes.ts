@@ -44,15 +44,6 @@ export interface TimelineConfig {
   pixelsPerYear?: number
 }
 
-export interface GenerateSmallLinesProps {
-  isMobile: boolean
-  totalTimelineHeight: number
-  totalTimelineWidth: number
-  artworkContainerHeight: number
-  artworkContainerWidth: number
-  artworkDesktopSideWidth: number
-  targetSpacing?: number
-}
 
 // Provider state extensions
 export interface TimelineState {
