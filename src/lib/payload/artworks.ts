@@ -2,17 +2,20 @@ import { getPayload, type Payload, type Where } from 'payload'
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 
-import type { Artwork } from '@/payload-types'
+import type { Artwork, Media } from '@/payload-types'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const getPayloadInstance = async () => getPayload({ config })
 
-/** Fields required by the home grid, timeline, filters, and Info menu slug lookup. */
+/**
+ * Fields required by the home grid, timeline, filters, and Info menu slug lookup.
+ * Omits status / yearCompleted / dateDisplay (fetched for where/recompute only —
+ * never read by catalogue UI). Media relations are slimmed post-fetch.
+ */
 const CATALOGUE_ARTWORK_SELECT = {
   id: true,
   slug: true,
   title: true,
-  status: true,
   seriesSlug: true,
   sizeTier: true,
   orientation: true,
@@ -23,14 +26,12 @@ const CATALOGUE_ARTWORK_SELECT = {
   videos: true,
   availabilityStatus: true,
   yearCreated: true,
-  yearCompleted: true,
   city: true,
   country: true,
   medium: true,
   mediumOther: true,
   sortIndex: true,
   timelineDate: true,
-  dateDisplay: true,
   dateCreated: true,
   createdAt: true,
   widthPx: true,
@@ -42,6 +43,32 @@ const CATALOGUE_ARTWORK_SELECT = {
 } as const
 
 export type LayoutProviderArtworks = Artwork[]
+
+/** Catalogue consumers only need url/width/height (alt uses artwork.title). */
+type CatalogueMediaSlim = Pick<Media, 'url' | 'width' | 'height'>
+
+function slimCatalogueMedia(value: Artwork['primaryImage']): CatalogueMediaSlim | null {
+  if (!value || typeof value !== 'object') return null
+  return {
+    url: value.url ?? null,
+    width: value.width ?? null,
+    height: value.height ?? null,
+  }
+}
+
+/**
+ * Drop Media metadata that is never read by grid/timeline/slideshow.
+ * Post-fetch (not denylist select) — same pattern as stripEmbeddings /
+ * stripCreatorLinkedArtworkDocs. Nested allowlist on uploads is unused
+ * here so we keep the artwork-level select flat and safe.
+ */
+function shapeCatalogueArtwork(artwork: Artwork): Artwork {
+  return {
+    ...artwork,
+    primaryImage: slimCatalogueMedia(artwork.primaryImage) as Artwork['primaryImage'],
+    posterImage: slimCatalogueMedia(artwork.posterImage) as Artwork['posterImage'],
+  }
+}
 
 export async function fetchCatalogueArtworksWithPayload(
   payload: Payload,
@@ -66,7 +93,7 @@ export async function fetchCatalogueArtworksWithPayload(
     overrideAccess: false,
   })
 
-  return result.docs as Artwork[]
+  return result.docs.map((doc) => shapeCatalogueArtwork(doc as Artwork))
 }
 
 async function fetchCatalogueArtworks(seriesSlug?: string): Promise<Artwork[]> {
