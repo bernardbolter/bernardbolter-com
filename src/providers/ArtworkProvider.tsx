@@ -25,6 +25,8 @@ interface ArtworksProviderProps {
   artist: ArtistInfoData | null
   timelineMarkers: TimelineMarkersData
   filterSeries: FilterCategory[]
+  /** Series pages pass `[slug]` so SSR + first paint match the scoped catalogue. */
+  initialFiltersArray?: string[]
 }
 
 export const ArtworksProvider = ({
@@ -33,6 +35,7 @@ export const ArtworksProvider = ({
   artist,
   timelineMarkers,
   filterSeries,
+  initialFiltersArray,
 }: ArtworksProviderProps) => {
   const catalogue = artworks ?? []
   const artworksWithImages = useMemo(
@@ -46,6 +49,7 @@ export const ArtworksProvider = ({
       artist ?? DEFAULT_ARTIST_INFO,
       timelineMarkers ?? EMPTY_TIMELINE_MARKERS,
       filterSeries,
+      { filtersArray: initialFiltersArray },
     ),
     totalCount: catalogue.length,
     withImagesCount: artworksWithImages.length,

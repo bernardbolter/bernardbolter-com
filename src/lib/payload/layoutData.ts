@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
@@ -133,12 +134,15 @@ async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
   })
 }
 
-/** Single-connection fetch for root layout (avoids parallel getPayload pool exhaustion). */
-export async function getLayoutProviderData(): Promise<LayoutProviderData> {
+/**
+ * Single-connection fetch for root layout (avoids parallel getPayload pool exhaustion).
+ * React `cache` dedupes layout + series page reads in the same request.
+ */
+export const getLayoutProviderData = cache(async (): Promise<LayoutProviderData> => {
   try {
     return await fetchLayoutProviderData()
   } catch (err) {
     console.error('[layout-provider-data] falling back to empty data', err)
     return { ...EMPTY_LAYOUT_PROVIDER_DATA }
   }
-}
+})

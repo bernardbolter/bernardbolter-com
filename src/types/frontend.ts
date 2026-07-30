@@ -128,14 +128,21 @@ export const EMPTY_TIMELINE_MARKERS: TimelineMarkersData = {
   historicalReadings: [],
 }
 
+export type CreateInitialArtworksStateOptions = {
+  /** Pre-select series filter chips (e.g. `/series/[slug]` SSR). */
+  filtersArray?: string[]
+}
+
 export function createInitialArtworksState(
   artworks: CatalogueArtwork[],
   artist: ArtistInfoData = DEFAULT_ARTIST_INFO,
   timelineMarkers: TimelineMarkersData = EMPTY_TIMELINE_MARKERS,
   filterSeries: FilterCategory[] = [],
+  options: CreateInitialArtworksStateOptions = {},
 ): ArtworksState {
   const sorting: SortingType = 'latest'
   const viewport = getSsrArtworkViewportLayout()
+  const filtersArray = options.filtersArray ?? []
   const formattedArtworks =
     artworks.length > 0
       ? generateTimeline({
@@ -157,7 +164,7 @@ export function createInitialArtworksState(
     currentArtworkIndex: 0,
     sorting,
     artworkViewTimeline: true,
-    filtersArray: [],
+    filtersArray,
     isAvailableFilter: false,
     filterNavOpen: false,
     searchNavOpen: false,

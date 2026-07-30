@@ -3,13 +3,15 @@ import { notFound } from 'next/navigation'
 
 import Artworks from '@/components/artworks/Artworks'
 import { Nav } from '@/components/navs'
-import SeriesPageInit from '@/components/series/SeriesPageInit'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { getArtworks } from '@/lib/payload/artworks'
+import { getLayoutProviderData } from '@/lib/payload/layoutData'
 import { getPerson } from '@/lib/payload/person'
 import { getSeriesBySlug } from '@/lib/payload/seriesPage'
 import { getPublishedSeriesSlugs } from '@/lib/payload/staticParams'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { corpusAlternateTypes, corpusIndexUrl } from '@/lib/seo/corpusDiscovery'
+import ArtworksProvider from '@/providers/ArtworkProvider'
 import { generateSeriesJsonLd } from '@/utilities/generateSeriesJsonLd'
 
 export const revalidate = 3600
@@ -46,22 +48,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SeriesPage({ params }: Props) {
   const { slug } = await params
-  const [series, artist] = await Promise.all([getSeriesBySlug(slug), getPerson()])
+  const [series, artist, seriesArtworks, layout] = await Promise.all([
+    getSeriesBySlug(slug),
+    getPerson(),
+    getArtworks(slug),
+    getLayoutProviderData(),
+  ])
   if (!series) notFound()
 
   const jsonLd = artist ? generateSeriesJsonLd(series, artist, { baseUrl: getSiteBaseUrl() }) : null
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-surface-page text-dark">
-      {jsonLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-      ) : null}
-      <SeriesPageInit seriesSlug={series.slug} />
-      <Nav />
-      <Artworks />
-    </main>
+    <ArtworksProvider
+      artworks={seriesArtworks}
+      artist={layout.artistInfo}
+      timelineMarkers={layout.timelineMarkers}
+      filterSeries={layout.filterSeries}
+      initialFiltersArray={[series.slug]}
+    >
+      <main className="relative min-h-screen w-full overflow-hidden bg-surface-page text-dark">
+        {jsonLd ? (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        ) : null}
+        <Nav />
+        <Artworks />
+      </main>
+    </ArtworksProvider>
   )
 }
