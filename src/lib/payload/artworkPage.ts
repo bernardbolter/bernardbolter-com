@@ -6,8 +6,13 @@ import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const defaultLocale = 'en' as const
 
-/** Depth for series parent chain + populated events and tags on the artwork page. */
-export const ARTWORK_PAGE_DEPTH = 3
+/**
+ * Depth for series (incl. one parentSeries hop), relatedWorks, tags, events.
+ * Must stay ≤ 2: depth 3 populates creator → linkedArtworkSlugs as full Artwork
+ * docs (~319 KB unused on /[slug]). Bio/statement routes fetch the artist
+ * separately via getBioPageArtist / getStatementPageArtist — not this constant.
+ */
+export const ARTWORK_PAGE_DEPTH = 2
 
 export async function getPublishedArtworkSlugs(): Promise<string[]> {
   const payload = await getPayload({ config })
@@ -57,6 +62,45 @@ function stripEmbeddings(artwork: Artwork): Artwork {
   return artwork
 }
 
+function relationToId(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id: unknown }).id
+    if (typeof id === 'number' && Number.isFinite(id)) return id
+  }
+  return null
+}
+
+/**
+ * Depth 2 still populates creator.bioTimelineEntries / statementThroughlines
+ * → linkedArtworkSlugs as Artwork docs. Nothing on /[slug] renders those;
+ * coerce to IDs so they never enter the RSC flight. No select involved.
+ */
+function stripCreatorLinkedArtworkDocs(artwork: Artwork): Artwork {
+  const creator = artwork.creator
+  if (!creator || typeof creator !== 'object') return artwork
+
+  const coerce = (entries: unknown) => {
+    if (!Array.isArray(entries)) return
+    for (const entry of entries) {
+      if (!entry || typeof entry !== 'object') continue
+      const row = entry as { linkedArtworkSlugs?: unknown }
+      if (!Array.isArray(row.linkedArtworkSlugs)) continue
+      row.linkedArtworkSlugs = row.linkedArtworkSlugs
+        .map(relationToId)
+        .filter((id): id is number => id !== null)
+    }
+  }
+
+  coerce((creator as { bioTimelineEntries?: unknown }).bioTimelineEntries)
+  coerce((creator as { statementThroughlines?: unknown }).statementThroughlines)
+  return artwork
+}
+
+function prepareArtworkForPage(artwork: Artwork): Artwork {
+  return stripCreatorLinkedArtworkDocs(stripEmbeddings(artwork))
+}
+
 export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
   return withDbRetry(async () => {
     const payload = await getPayload({ config })
@@ -71,7 +115,7 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
       overrideAccess: false,
     })
     const doc = result.docs[0]
-    return doc ? stripEmbeddings(doc) : null
+    return doc ? prepareArtworkForPage(doc) : null
   })
 }
 
@@ -91,7 +135,7 @@ export async function getArtworkForPreview(slug: string): Promise<Artwork | null
       overrideAccess: true,
     })
     const doc = result.docs[0]
-    return doc ? stripEmbeddings(doc) : null
+    return doc ? prepareArtworkForPage(doc) : null
   })
 }
 
