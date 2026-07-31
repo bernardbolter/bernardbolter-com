@@ -34,7 +34,8 @@
     "list:fieldnotes": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/listRecentFieldNotes.ts",
     "recover:fieldnote-inbox": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/recoverOrphanInboxFieldNote.ts",
     "typecheck": "tsc --noEmit",
-    "worker": "cross-env NODE_OPTIONS=--no-deprecation tsx src/workers/index.ts"
+    "worker": "cross-env NODE_OPTIONS=--no-deprecation tsx src/workers/index.ts",
+    "deploy:netcup": "bash scripts/deploy-netcup.sh"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
