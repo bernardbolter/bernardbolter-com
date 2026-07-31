@@ -21,7 +21,7 @@ When a session-to-Payload paste fails, or a chat session surfaces a discrepancy,
 | 4. Light acknowledgment | *(no field write)* | — | — | Conversational only |
 | 5. Small facts | `title`, `yearCreated`, `yearCompleted`, `medium`, `support`, `widthWhole`, `heightWhole`, `dimensionUnit`, `series` | text/number/relation | confirmed | **Corrected 2026-07-23:** was `widthMm`/`heightMm` — those stay computed/readOnly via hook, never written directly. Read-back only if already stubbed. |
 | 5. (auto, on dimension entry) | `sizeTier` | select | confirmed always-asked | **Corrected 2026-07-23:** always asked directly, never silently inferred |
-| Analysis (background, step 3) | `dominantColors`, `paintedFieldColors`, `compositionalNotes`, `orientation`, `movementTags`, `styleTags`, `subjectTags`, `genreTags`, `periodTags`, `visionAnalyses` | various | inferred | Normally fires silently on upload via the automated pipeline. **As of 2026-07-24, this standalone pipeline step is retired** — vision analysis now happens as part of the artwork reasoning session itself. See Part 5, R2. |
+| Analysis (background, step 3) | `dominantColors`, `paintedFieldColors`, `compositionalNotes`, `orientation`, `movementTags`, `styleTags`, `subjectTags`, `genreTags`, `periodTags`, `visionAnalyses` | various | inferred | Normally fires silently on upload via the automated pipeline. **As of 2026-07-24, this standalone pipeline step is retired** — vision analysis now happens as part of the artwork reasoning session itself. See Part 5, R2. **See Part 9 for the unresolved integration gap this created.** |
 | 6. Deep interpretive | `intent` | longText | confirmed | Never inferred from image alone |
 | 6. Deep interpretive | `makingNote` | longText | confirmed | Distinct from intent — experience of making |
 | 6. Deep interpretive | `directInspiration` | **textarea** | confirmed | **Corrected 2026-07-23:** was `text` — session answers run to full paragraphs, doesn't fit a single-line field |
@@ -110,7 +110,7 @@ Three distinct envelopes. Do not conflate them.
 
 - Exhibition history writes to the `events[]` relation on Artworks — **never** to `workContext` free text. (`workContext` free-text exhibition mentions were a known, real bug — caught twice: The Thinker session's "exhibited at Vesuvios," and would have recurred with Herbstsalon im Frühling without the manual catch.)
 - `search_events` / `create_event_stub` / `link_artwork_to_event` tools: **RESOLVED 2026-07-24** — wired in Art/Official artwork sessions. Spec: `events-artwork-session-linking-addendum.md`.
-- **`coExhibitors` uses `person` relations, not `{ name }` inline objects.** Confirmed 2026-07-24 by Cursor while applying the Herbstsalon im Frühling merge. `events-intake-spec.md` Section 1.3 still describes the stale inline-object shape — **not yet propagated**.
+- **`coExhibitors` uses `person` relations, not `{ name }` inline objects.** Confirmed 2026-07-24 by Cursor while applying the Herbstsalon im Frühling merge. `events-intake-spec.md` Section 1.3 still describes the stale inline-object shape — **not yet propagated**. **This rule's scope (narrow vs. broad application) was tested and confirmed broad on 2026-07-31 — see Parts 8 and 10.**
 - One-off fix script `src/scripts/fix-duplicate-herbstsalon-event.ts` — **committed** as a reusable reference for the Herbstsalon merge.
 
 ---
@@ -119,7 +119,7 @@ Three distinct envelopes. Do not conflate them.
 
 **R1. The two "blind acts" are distinct, and were being conflated.** Confirmed 2026-07-24, flagged directly by the artist after recurring confusion. There are two separate blind acts: the **artist's** pre-upload blind text (`firstImpression`, artist-authored, before seeing the image) and the **agent's** blind vision analysis (spec A-1.0, agent-authored, image-only). The agent repeatedly said "your blind vision" when `firstImpression` was meant. **Not yet propagated** into `session-flow-revision-brief.md` itself — logged here as the correction to make.
 
-**R2. Standalone blind vision-analysis pipeline step is retired**, per artist decision 2026-07-24 ("that was just an idea to populate the art but didn't work"). Vision analysis now happens inside ordinary artwork reasoning sessions instead of a separate automated blind pass. `vision-analysis-prompt-spec.md` (A-1.0) should be marked superseded in its own header — **not yet done**.
+**R2. Standalone blind vision-analysis pipeline step is retired**, per artist decision 2026-07-24 ("that was just an idea to populate the art but didn't work"). Vision analysis now happens inside ordinary artwork reasoning sessions instead of a separate automated blind pass. `vision-analysis-prompt-spec.md` (A-1.0) should be marked superseded in its own header — **not yet done**. **This retirement created a real integration gap, surfaced and unresolved as of 2026-07-31 — see Part 9.**
 
 **R3. Retroactive `firstImpression` capture** — if the artist volunteers descriptive material before the formal four-question pre-upload ritual begins, capture it as `firstImpression` retroactively rather than forcing a redundant re-ask. Confirmed as the right handling live, 2026-07-24. **Not yet propagated** into `session-flow-revision-brief.md` Part 2.
 
@@ -236,42 +236,100 @@ Session run manually in Claude chat (**not** Payload admin — so this does **no
 
 ## Part 8 — Events cataloguing: first real test case (Mediamatic 2009 / ArtSpan 2017)
 
-**2026-07-31.** First two Event records run through a live Q1–Q4 dialogue (per `art-official-events-dialogue-spec.md` Part 3.4), conducted in chat rather than through the not-yet-built `/api/art-official/event-chat` route. Full content in `events-mediamatic-artspan-spec.md`.
+**2026-07-31.** First two Event records run through a live Q1–Q4 dialogue (per `art-official-events-dialogue-spec.md` Part 3.4), conducted in chat rather than through the not-yet-built `/api/art-official/event-chat` route. Full content in `events-mediamatic-artspan-spec.md`. This section logs what the test case surfaced.
 
-**`coExhibitors` shape:** `{ person → people, role }` (not inline `{ name }`). Bernard confirmed 2026-07-31 that the `person`-relation treatment applies broadly — not narrowly to direct collaborators only. New fields for non-co-exhibitor participants: `jurors`, `otherParticipants`. See also Part 10.
+**Numbering note (merge 2026-07-31):** Chat-side reading copy (`docs/events/art-official-source-of-truth-MERGED.md`) numbered this block as Part 7. The repo already had **Part 7 = 2026-07-28 addendum** (§7.1–7.10). Events narrative lives here as **Part 8** so that addendum is not overwritten. Cross-refs in the reading copy that said "see Part 7/8" for events/vision map to **Parts 8/9** here.
 
-**`Artist.nameLegal`:** full name of record (`Bernard John Bolter IV`), distinct from `name` (`Bernard Bolter`). CV print header only; everywhere else keeps `name`. Spec: `events-mediamatic-artspan-spec.md` Part 3.
+**Discrepancy found and resolved — `coExhibitors` shape mismatch.** The two Event records were initially drafted using `coExhibitors` as plain `{ name }` inline objects, reverting to the stale shape Part 4 above already flagged as corrected to `person` relations on 2026-07-24. **Resolved same session, 2026-07-31:** Bernard confirmed the `person`-relation treatment should apply broadly — not narrowly to direct collaborators only. Both Event records now use `{ person, role }` throughout, and two new fields were added to accommodate participants who aren't co-exhibitors in the strict sense:
+  - `jurors` — for named jury/selection panels (ArtSpan Selections 2017 jury: six named jurors, full list in `events-mediamatic-artspan-spec.md` Part 6.2)
+  - `otherParticipants` — for other real, named people present at the event who neither showed work alongside the artist nor judged it (Mediamatic's other Pecha Kucha presenters that night)
+  Thirteen `Person` records needed creating (list in `events-mediamatic-artspan-spec.md` Part 6.2) — dedup against existing Person records first per the same cross-reuse principle already governing Tags. **`Ransom & Mitchell` duo modeling — resolved 2026-07-31, see Part 10.3** (two Person records + two `coExhibitors` rows; no new schema).
+
+**Sessions collection extended for event enrichment; first real content.** Two Session records drafted (Part 6 of `events-mediamatic-artspan-spec.md`), same `artistRecord` / `artism:DialogueSelfAudit` split as Artwork sessions. Both run as a single continuous chat dialogue rather than the specced two-phase Phase A (Haiku research) / Phase B (Sonnet reasoning) split — authority-URI lookups happened earlier in the same conversation via ordinary `web_search`/`web_fetch`, then were treated as already-confirmed context going into the Q1–Q4 sequence. Functionally equivalent to a completed Phase A, but not structurally separated as one. Flagged in both records' `dialogueRefinementFlag` as worth a decision once the real route is built: whether the hard phase boundary is worth the added complexity, given this simpler single-pass shape produced clean results.
+
+**FLAG — `sessionType` naming (do not silently resolve):** Spec/dialogue often say `sessionType: 'event'`. Live Payload enum value is **`event-enrichment`**. Envelope shorthand maps `event` → `event-enrichment` (Part 2c). Seeded sessions use `event-enrichment`. Spec files that still say bare `'event'` as the stored value are stale relative to schema.
+
+**Tier 5 corpus access was artwork-only; extended to Events.** Draft in `events-mediamatic-artspan-spec.md` Part 7 proposed `GET /api/corpus/[slug]?tier=5`. **Superseded by the live implementation — see Part 10.1:** real path is `GET /api/corpus/[slug]/sessions`, resolving event slugs against `Events` / `eventRecord`. Same field-split rule (`artistRecord` / `artism:DialogueSelfAudit`, `completed`-only) and same cache-invalidation pattern (`corpus-caching-spec.md`) — scoped to `event-${slug}` instead of `artwork-${slug}`.
+
+**FLAG — chat-session-import-bridge status:** Reading copy said the bridge was still not started and transcripts needed manual paste. **Corpus Part 2c already marks Sessions envelope import RESOLVED 2026-07-24.** Separately, these two event sessions were seeded via `src/scripts/seed-mediamatic-artspan-events.ts` + `src/scripts/data/mediamaticArtspanSessionTranscripts.ts` (verbatim Part 6 text), not via Studio envelope paste. Do not collapse those two facts: envelope target exists; this intake used the seed path.
+
+**`Artist.nameLegal` (not `legalName`).** Full name of record, `Bernard John Bolter IV`, distinct from `name` (`Bernard Bolter`), which stays the sitewide working name. Only the CV page print header reads `nameLegal`; every other page continues reading `name`. Reason: the ArtSpan 2017 gala page itself lists the artist under the full legal name — the CV entry needs a way to acknowledge that without the whole site switching names (ArtSpan CV line also uses the parenthetical `(listed as Bernard John Bolter IV)`). Full addendum in `events-mediamatic-artspan-spec.md` Part 3. **FLAG:** Spec/reading copy often say `Artist.legalName` / "Not yet built." Live field is **`nameLegal`**, confirmed built and used by CV print header. Naming mismatch is flagged, not silently aliased in schema.
 
 ---
 
 ## Part 9 — Vision analysis: integration gap since the automated pipeline was retired
 
-**2026-07-31.** `art-official-consolidated-session-flow-spec.md` Step 3 still instructs `trigger_image_analysis` for the retired standalone pipeline (Part 5, R2). Replacement timing inside ordinary sessions was never specified — fields sit until asked. Proposed home: Step 4 light acknowledgment, write via `update_field` (`confidence: 'inferred'`, `source: 'image-analysis'`). **Open fork:** (a) retire blindness with the pipeline, or (b) preserve structural blindness. Not decided here. Not yet propagated into consolidated session-flow or `vision-analysis-prompt-spec.md`.
+**2026-07-31, surfaced during the Mediamatic/ArtSpan events work but applies to Artwork cataloguing sessions specifically.**
+
+**The gap:** `art-official-consolidated-session-flow-spec.md` Step 3 still instructs the agent to fire `trigger_image_analysis` "silently in the background" on image upload, to populate `dominantColors`, `paintedFieldColors`, `compositionalNotes`, `orientation`, and the tag fields (`movementTags`/`styleTags`/`subjectTags`/`genreTags`/`periodTags`). That instruction refers to the standalone automated pipeline — **already confirmed retired** by Part 5, R2 above ("vision analysis now happens inside ordinary artwork reasoning sessions instead of a separate automated blind pass"). R2's replacement was never given a mechanical instruction: nothing tells the agent *when*, within an ordinary session, to actually look at the image and generate this content itself. Result, confirmed live in the most recent chat-run cataloguing session: these fields sat unpopulated until the artist had to ask for them at the end, rather than the agent producing them proactively and early, the way the old pipeline used to guarantee.
+
+**Proposed fix, not yet applied to `art-official-consolidated-session-flow-spec.md` itself:** Step 4 (Light acknowledgment) is the natural home for this — it already runs immediately after image upload, before the deep interpretive conversation begins. Add an explicit instruction: at Step 4, in addition to the light acknowledgment text shown to the artist, the agent generates `dominantColors`, `paintedFieldColors`, `compositionalNotes`, `orientation`, and tag-field candidates directly from the image, and writes each via `update_field` (`confidence: 'inferred'`, `source: 'image-analysis'`) — silently, same as the retired pipeline used to, without waiting to be asked. A `visionAnalyses[]` entry gets written the same way, at the same moment.
+
+**Open decision, not resolved here — flagged for Bernard:** `vision-analysis-prompt-spec.md` (A-1.0) requires true blindness (image only, zero other context) to produce a comparable, independent reading. That's now structurally impossible if this generation happens inside the ordinary session flow, which already has Step 1's pre-upload answers loaded by the time the image arrives at Step 3. Two ways to resolve, neither decided yet:
+  (a) **Blindness is retired along with the standalone pipeline** — accept that the embedded version is informed by whatever minimal context exists at Step 4, mark A-1.0 fully superseded (not just "should be," as R2 already flagged as outstanding), and write a new, non-blind prompt version for the changelog.
+  (b) **Blindness is preserved structurally** — the agent makes the `trigger_image_analysis`-equivalent call in a way that genuinely isolates the image from prior turns (a fresh internal reasoning pass scoped to the image alone, if the tooling supports it), even though it's nominally "inside" the same session.
+  This session is not the place to decide between (a) and (b) — it's a real fork, not a formatting detail.
+
+**Not yet propagated:** into `art-official-consolidated-session-flow-spec.md` Step 3/4 text, or into `vision-analysis-prompt-spec.md`'s header. Both need updating once (a) or (b) above is decided.
 
 ---
 
 ## Part 10 — Cursor implementation confirmations + artwork-linking resolution (2026-07-31)
 
-Follows Parts 8–9. Logs what Cursor built and what was resolved the same day.
+Follows directly from Parts 8/9 above. Logs what Cursor actually built, and what got resolved after Cursor's pass — per this document's own rule that confirmations are authoritative over stale specs immediately, even before every source file reflects them.
 
 ### 10.1 — Schema and code, confirmed built by Cursor
 
-- `jurors` and `otherParticipants` on Events; `coExhibitors` visibility includes `talk-panel` / `performance`.
-- Migration: `src/scripts/add-event-jurors-participants-schema.ts`. Seed: `src/scripts/seed-mediamatic-artspan-events.ts`.
-- Tier 5: `GET /api/corpus/[slug]/sessions` resolves event slugs; `?type=artwork|event` on collision (`409` if both match and type omitted). Cache: `event-${slug}` via `sessionAfterChange`.
-- `Sessions.isExemplar` for event-enrichment Phase B reference prompts.
+- `jurors` and `otherParticipants` added to Events (`{ person → people, role }`), matching the shape proposed in `events-mediamatic-artspan-spec.md` Part 4.1.
+- `coExhibitors` admin visibility expanded to `talk-panel` / `performance` event types (previously exhibition-only).
+- Migration script: `src/scripts/add-event-jurors-participants-schema.ts`. Types regenerated. Separate migration: `src/scripts/add-session-is-exemplar-schema.ts` for `Sessions.isExemplar`.
+- Seed script: `src/scripts/seed-mediamatic-artspan-events.ts`. Rik seeded as a Person + `coExhibitors` entry (confirmed field name is `coExhibitors`, not `coSpeakers` — an earlier internal naming assumption corrected during implementation). Mediamatic `otherParticipants` seeded: Rory Hyde, Rogier Klomp, Bart-Jan Kazemier. ArtSpan jurors (6) and co-exhibitors seeded with a dedup search against existing Person records first, per Part 4's cross-reuse instruction.
+- **`Ransom & Mitchell` — resolved 2026-07-31 (see Part 10.3).** Seed creates two Person records and two `coExhibitors` rows with a shared credit string in `role`.
+- **Tier 5 extension, confirmed live:** route is `GET /api/corpus/[slug]/sessions`, resolving event slugs when no artwork slug matches. Slug-collision handling uses `?type=artwork|event`, returning `409` if both a matching artwork and event exist and `type` is omitted — a more precise mechanism than the Part 8 draft anticipated (which proposed `?type=event` only for the ambiguous case; the actual implementation applies the param check whenever both exist, not only when ambiguity is suspected). **Correction to draft route:** the real path is `/api/corpus/[slug]/sessions`, not `/api/corpus/[slug]?tier=5`.
+- Cache invalidation confirmed wired via `sessionAfterChange`, using `event-${slug}` tags as specified.
+- `Sessions.isExemplar` used for event-enrichment Phase B reference prompts (`src/lib/artOfficial/queryExemplarEventSession.ts`).
 
 ### 10.2 — Artwork-linking resolution (post-Cursor, same day)
 
-- ArtSpan works already live: `lombard-street-1922-v2`, `baker-beach-1935` — link only, do not stub. Spoken session "1925" left as-spoken; Event prose uses catalogue **1922**. Baker Beach sale was not at the gala — belongs on that artwork's `salesRecord` later.
+Cursor's implementation pass correctly declined to link the ArtSpan event to `lombard-street-1922` (the earlier original) rather than conflating it with the 2017 repaint — exactly per the Do NOT instruction it was given. This surfaced a real gap, resolved directly with Bernard rather than guessed at:
+
+- **Both artworks shown at ArtSpan Selections 2017 already exist as real, live records** — no stub needed. `lombard-street-1922-v2` ("Lombard Street . 1922 v2," 2017, `BB-ACH-2017-016`, id **241**) and `baker-beach-1935` ("Baker Beach . 1935," 2016, `BB-ACH-2016-019`, id **49**), both confirmed live, both correctly marked "Record not yet fully catalogued."
+- **Year correction:** the artist's own recollection in the session dialogue said "Lombard Street 1925." The live, confirmed title is **1922**. The Sessions transcript (Part 6, `messages`, in `events-mediamatic-artspan-spec.md`) is left exactly as spoken — an accurate record of the dialogue itself — while the Event record's `descriptionLong`/`artistNote`/`artworkPresentationNote` and the `artworks[]` relation use the correct 1922 title. Same principle already governing `firstImpression` elsewhere: the artist's live words aren't retroactively edited; the confirmed downstream record is what stays accurate.
+- **Baker Beach's sale:** confirmed 2026-07-31 that Baker Beach did **not** sell at the ArtSpan show itself — it sold later, separately. That sale belongs in Baker Beach's own `salesRecord` (blocked from chat-envelope writes by design, per Part 6 above — a manual Payload admin entry regardless of when it's added) whenever that piece gets its own full cataloguing session. The ArtSpan Event record correctly attributes the $800 sale and commission to Lombard Street only.
+
+**Artwork ↔ Event link — confirmed live 2026-07-31 (do not assume silently):**
+- Authority side is **`Events.artworks[]` only**. `Artworks.events` is a Payload **`join`** on `events.artworks` (`src/collections/Artworks.ts`) — reverse read, not a second writable relationship. There is no separate bidirectional write hook to "fire"; population is join semantics against `events_rels`.
+- Prod SQL (`events_rels` where `path = 'artworks'`): Event `artspan-selections-2017-heron-arts` → artwork ids **241** (`lombard-street-1922-v2`) and **49** (`baker-beach-1935`).
+- Payload Local API: Event `artworks[]` = `[241, 49]`; each artwork's `events.docs` length = **1** (join populated). Verify script: `src/scripts/verify-artspan-artwork-event-join.ts` (use `depth: 1` — at `depth: 0` join docs arrive without `id`/`slug`, which can look like a false negative).
+
+**Sessions transcripts — confirmed live 2026-07-31:**
+- `pecha-kucha-amsterdam-vol-9-mediamatic-2009-event-2026-07-31`: `sessionType=event-enrichment`, `status=completed`, **11** message turns, `agentModel=claude-sonnet-5`, `isExemplar=true`.
+- `artspan-selections-2017-heron-arts-event-2026-07-31`: same meta, **9** message turns, `isExemplar=true`.
+- Source: verbatim Part 6 of `events-mediamatic-artspan-spec.md` via seed data module — not placeholders.
 
 ### 10.3 — Open items and resolutions
 
 **Resolved 2026-07-31 — `Ransom & Mitchell` duo credit.** Confirmed via art.ransommitchell.com and independent press: San Francisco creative duo Jason Mitchell (photographer/director) and Stacey Ransom (set designer/digital artist), exhibiting jointly under that name. **Model:** two separate `People` records (`Jason Mitchell`, `Stacey Ransom` — dedup-search first), then **two** `Events.coExhibitors` rows on ArtSpan Selections 2017 — there is no joint-credit / duo object on the array (only `{ person, role }`). Shared credit context lives in each row's `role` string, e.g. `Ransom & Mitchell — photographer / director` and `Ransom & Mitchell — set designer / digital artist`. Do **not** create a single Person named "Ransom & Mitchell". Seed: `src/scripts/seed-mediamatic-artspan-events.ts`.
 
-**Still open:**
-- Whether the commission that followed the Lombard Street sale deserves its own Artwork and/or Event record.
-- Vision-analysis integration gap (Part 9) — blindness fork (a) vs. (b).
+**Still open, not resolved by this entry:**
+- Whether the commission that followed the Lombard Street sale deserves its own Artwork and/or Event record — untracked anywhere currently.
+- The vision-analysis integration gap (Part 9) — blindness-requirement fork (a) vs. (b) still undecided.
+
+### 10.4 — Merge notes: reading copy → repo (2026-07-31) — FLAG, do not silently resolve
+
+Merged from `docs/events/art-official-source-of-truth-MERGED.md` into this file. Conflicts where the reading copy was **stale relative to corpus** were **kept on the corpus side** and flagged rather than overwritten:
+
+| Topic | Reading copy (MERGED) | Kept here (corpus / live) |
+|---|---|---|
+| Part numbering | Events = Part 7; vision = Part 8 | Events = **Part 8**; vision = **Part 9**; Part 7 remains 2026-07-28 addendum |
+| `artHistoricalReferences` | Still listed as blocked | **Allowed** as structured array (RE-RESOLVED 2026-07-27); see Parts 1 and 6 |
+| Sessions envelope (Part 2c) | IN PROGRESS / not started | **RESOLVED 2026-07-24** |
+| Provenance cluster | Older blocked framing for `ownershipHistory` / `provenanceConfidenceLayer` | **Allowed** 2026-07-28 (Part 6 / §7.4) |
+| `Artist.legalName` | Named `legalName`, "Not yet built" | Live field **`nameLegal`**, built; CV uses it |
+| `sessionType: 'event'` | Spec shorthand as stored value | Live enum **`event-enrichment`** |
+| Standing process item 6 | Present in MERGED | Restored below |
+
+Reading copy may remain as a superseded chat handoff; **this file is canonical.**
 
 ---
 
@@ -298,6 +356,7 @@ Follows Parts 8–9. Logs what Cursor built and what was resolved the same day.
 3. Bernard is final arbiter on genuine spec-vs-schema intent disagreements.
 4. Periodic audits (like 2026-07-23's) sweep this whole file — table parity, open items, and whether "not yet propagated" corrections have actually been propagated — not just schema field names.
 5. When this file itself grows unwieldy, split by clear domain boundary (not by "which chat wrote it," which is what caused today's fragmentation) — and merge back here if that split turns out to just move the problem again.
+6. **Chat is where reasoning and new entries originate; the file Cursor edits in the repo is canonical.** Draft dated addenda in project-knowledge chat, same format as every existing entry. Hand to Cursor, who merges the addendum into the real file *and*, in the same pass, appends anything discovered while actually touching the schema (confirmations, discrepancies, corrections) — this is already rule 2 above, just stated here as an explicit sequencing step. Cursor's merged version is the one authoritative copy. Refresh the project-knowledge mirror from that canonical version before the next chat session that reasons about this document — don't reason against a copy that's already one Cursor-pass stale.
 
 ---
-*Source of truth · unified 2026-07-24 · Part 7 addendum 2026-07-28 · Parts 8–10 events + Ransom & Mitchell resolution 2026-07-31 · update whenever the dialogue spec, schema, or session flow changes*
+*Source of truth · unified 2026-07-24 · Part 7 addendum 2026-07-28 · Parts 8–10 events + merge from MERGED reading copy + join/session confirmations 2026-07-31 · update whenever the dialogue spec, schema, or session flow changes*
