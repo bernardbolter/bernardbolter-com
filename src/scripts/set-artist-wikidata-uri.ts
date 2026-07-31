@@ -63,10 +63,10 @@ async function main() {
 
   const artworkResult = await payload.find({
     collection: 'artworks',
-    where: { _status: { equals: 'published' } },
     limit: 1,
     depth: 0,
     overrideAccess: true,
+    sort: 'slug',
   })
   const artwork = artworkResult.docs[0]
   if (artwork) {
