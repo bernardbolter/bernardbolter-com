@@ -2,6 +2,20 @@ import type { Payload } from 'payload'
 
 import type { Session, User } from '@/payload-types'
 
+export type ExemplarEventSession = Pick<
+  Session,
+  | 'id'
+  | 'sessionId'
+  | 'sessionType'
+  | 'status'
+  | 'completedAt'
+  | 'eventRecord'
+  | 'messages'
+  | 'sessionNotes'
+  | 'isExemplar'
+  | 'fieldUpdateTimeline'
+>
+
 /**
  * Completed event-enrichment session marked isExemplar — used as Phase B reference.
  * Prefer the most recently completed exemplar when several exist.
@@ -10,7 +24,7 @@ export async function queryExemplarEventSession(args: {
   payload: Payload
   user: User
   excludeSessionId?: string | null
-}): Promise<Session | null> {
+}): Promise<ExemplarEventSession | null> {
   const { payload, user, excludeSessionId } = args
 
   const where: Record<string, unknown> = {
@@ -48,11 +62,13 @@ export async function queryExemplarEventSession(args: {
     },
   })
 
-  return result.docs[0] ?? null
+  return (result.docs[0] as ExemplarEventSession | undefined) ?? null
 }
 
 /** Compact prompt block — skip gracefully when none exist. */
-export function summarizeExemplarEventSessionForPrompt(session: Session | null): string {
+export function summarizeExemplarEventSessionForPrompt(
+  session: ExemplarEventSession | Session | null,
+): string {
   if (!session) {
     return 'EXEMPLAR EVENT SESSION — none yet. Skip this block; do not invent one.'
   }
