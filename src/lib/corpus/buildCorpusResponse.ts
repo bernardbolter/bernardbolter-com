@@ -147,6 +147,7 @@ export function buildCorpusIndexResponse(options: BuildCorpusListOptions): Recor
     'artism:tierMap': buildTierMap(baseUrl),
     'artism:coverage': coverage,
     ...pagination,
+    'artism:surveyUrl': `${baseUrl}/api/corpus/index?depth=survey`,
     ...(isSurvey
       ? {}
       : { 'artism:urlTemplates': buildUrlTemplates(baseUrl) }),

@@ -94,6 +94,9 @@ describe('buildCorpusIndexResponse', () => {
     })
     expect(entry).toHaveProperty('identifier')
     expect(entry).toHaveProperty('artism:availableTiers')
+    expect(entry['artism:recordUrl']).toBe(`${baseUrl}/api/corpus/basel-switzerland`)
+    expect(entry['artism:visionPageUrl']).toBe(`${baseUrl}/basel-switzerland/vision`)
+    expect(entry).not.toHaveProperty('artism:sessionsUrl')
     expect(entry).not.toHaveProperty('title')
     expect(entry).not.toHaveProperty('slug')
     expect(entry).not.toHaveProperty('hasEditions')
@@ -102,6 +105,21 @@ describe('buildCorpusIndexResponse', () => {
     expect(entry).not.toHaveProperty('sessionsUrl')
     expect(entry).not.toHaveProperty('descriptionShort')
     expect(entry).not.toHaveProperty('intentLine')
+    expect(response['artism:surveyUrl']).toBe(`${baseUrl}/api/corpus/index?depth=survey`)
+  })
+
+  it('emits sessionsUrl on index records only when Tier 5 is available', () => {
+    const response = buildCorpusIndexResponse({
+      artworks: [artwork()],
+      totalArtworks: 1,
+      baseUrl,
+      sessionCountBySlug: new Map([['basel-switzerland', 2]]),
+    })
+
+    const entry = (response.dataFeedElement as Array<Record<string, unknown>>)[0]!
+    expect(entry['artism:sessionsUrl']).toBe(
+      `${baseUrl}/api/corpus/basel-switzerland/sessions`,
+    )
   })
 
   it('includes series filter in the index URL when provided', () => {
@@ -148,6 +166,19 @@ describe('buildCorpusIndexResponse', () => {
     expect(entry['artism:dominantColors']).toEqual(['#87CEDC', '#2B2B2B'])
     expect(entry.keywords).toBe('city, memory')
     expect(entry['artism:recordUrl']).toBe(`${baseUrl}/api/corpus/basel-switzerland`)
+    expect(entry['artism:visionPageUrl']).toBe(`${baseUrl}/basel-switzerland/vision`)
+    expect(entry).not.toHaveProperty('artism:sessionsUrl')
+  })
+
+  it('emits sessionsUrl on survey records when Tier 5 is available', () => {
+    const response = buildCorpusIndexResponse({
+      artworks: [artwork({ descriptionShort: 'Short.' })],
+      totalArtworks: 1,
+      baseUrl,
+      depth: 'survey',
+      sessionCountBySlug: new Map([['basel-switzerland', 1]]),
+    })
+    const entry = (response.dataFeedElement as Array<Record<string, unknown>>)[0]!
     expect(entry['artism:sessionsUrl']).toBe(
       `${baseUrl}/api/corpus/basel-switzerland/sessions`,
     )

@@ -47,6 +47,8 @@ export function buildCorpusRecord(
   const gist = resolveGist(artwork)
   const medium = resolveMediumLabel(artwork) || artwork.medium || null
 
+  const availableTiers = computeAvailableTiers(artwork, sessionCount)
+
   const record: Record<string, unknown> = {
     '@type': 'VisualArtwork',
     '@id': pageUrl,
@@ -74,7 +76,7 @@ export function buildCorpusRecord(
           'artism:gistSource': gist.source,
         }
       : {}),
-    'artism:availableTiers': computeAvailableTiers(artwork, sessionCount),
+    'artism:availableTiers': availableTiers,
   }
 
   // Drop undefined dateCreated if year missing
@@ -92,9 +94,12 @@ export function buildCorpusRecord(
 
     const keywords = keywordsString(artwork)
     if (keywords) record.keywords = keywords
+  }
 
-    record['artism:recordUrl'] = `${baseUrl}/api/corpus/${slug}`
-    record['artism:visionPageUrl'] = `${baseUrl}/${slug}/vision`
+  // Literal per-record URLs — required for agents that refuse template-constructed fetches.
+  record['artism:recordUrl'] = `${baseUrl}/api/corpus/${slug}`
+  record['artism:visionPageUrl'] = `${baseUrl}/${slug}/vision`
+  if (availableTiers['5']) {
     record['artism:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
   }
 
