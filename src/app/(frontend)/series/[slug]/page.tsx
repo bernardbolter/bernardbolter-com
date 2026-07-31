@@ -5,13 +5,13 @@ import Artworks from '@/components/artworks/Artworks'
 import { Nav } from '@/components/navs'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtworks } from '@/lib/payload/artworks'
-import { getLayoutProviderData } from '@/lib/payload/layoutData'
+import { getCollectionLayoutData } from '@/lib/payload/layoutData'
 import { getPerson } from '@/lib/payload/person'
 import { getSeriesBySlug } from '@/lib/payload/seriesPage'
 import { getPublishedSeriesSlugs } from '@/lib/payload/staticParams'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { corpusAlternateTypes, corpusIndexUrl } from '@/lib/seo/corpusDiscovery'
-import ArtworksProvider from '@/providers/ArtworkProvider'
+import { CollectionArtworksProvider } from '@/providers/ArtworkProvider'
 import { generateSeriesJsonLd } from '@/utilities/generateSeriesJsonLd'
 
 export const revalidate = 3600
@@ -48,22 +48,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function SeriesPage({ params }: Props) {
   const { slug } = await params
-  const [series, artist, seriesArtworks, layout] = await Promise.all([
+  const [series, artist, seriesArtworks, collection] = await Promise.all([
     getSeriesBySlug(slug),
     getPerson(),
     getArtworks(slug),
-    getLayoutProviderData(),
+    getCollectionLayoutData(),
   ])
   if (!series) notFound()
 
   const jsonLd = artist ? generateSeriesJsonLd(series, artist, { baseUrl: getSiteBaseUrl() }) : null
 
   return (
-    <ArtworksProvider
+    <CollectionArtworksProvider
       artworks={seriesArtworks}
-      artist={layout.artistInfo}
-      timelineMarkers={layout.timelineMarkers}
-      filterSeries={layout.filterSeries}
+      filterSeries={collection.filterSeries}
+      timelineMarkers={collection.timelineMarkers}
       initialFiltersArray={[series.slug]}
     >
       <main className="relative min-h-screen w-full overflow-hidden bg-surface-page text-dark">
@@ -76,6 +75,6 @@ export default async function SeriesPage({ params }: Props) {
         <Nav />
         <Artworks />
       </main>
-    </ArtworksProvider>
+    </CollectionArtworksProvider>
   )
 }

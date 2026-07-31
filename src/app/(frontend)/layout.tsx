@@ -5,8 +5,8 @@ import { Barlow, Barlow_Condensed, Staatliches } from 'next/font/google'
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
 import { RouteStructuredData } from '@/components/seo/RouteStructuredData'
 import { SiteChrome } from '@/components/site/SiteChrome'
-import ArtworksProvider from '@/providers/ArtworkProvider'
-import { getLayoutProviderData } from '@/lib/payload/layoutData'
+import { ArtworkChromeProvider } from '@/providers/ArtworkChromeProvider'
+import { getRootChromeData } from '@/lib/payload/layoutData'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
 import AnimationWrapper from './AnimationWrapper'
@@ -81,8 +81,7 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { artworks: artworksData, artistInfo, timelineMarkers, filterSeries } =
-    await getLayoutProviderData()
+  const { artistInfo, seriesSlugByArtworkSlug, archiveMedianAreaMm2 } = await getRootChromeData()
 
   return (
     <html lang="en">
@@ -109,17 +108,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           ${barlow.className}
         `}
       >
-          <ArtworksProvider
-            artworks={artworksData}
+          <ArtworkChromeProvider
             artist={artistInfo}
-            timelineMarkers={timelineMarkers}
-            filterSeries={filterSeries}
+            seriesSlugByArtworkSlug={seriesSlugByArtworkSlug}
+            archiveMedianAreaMm2={archiveMedianAreaMm2}
           >
             <SiteChrome />
             <AnimationWrapper>
               {children}
             </AnimationWrapper>
-          </ArtworksProvider>
+          </ArtworkChromeProvider>
       </body>
     </html>
   );

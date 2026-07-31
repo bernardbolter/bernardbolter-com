@@ -2,6 +2,8 @@ import { cache } from 'react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import { computeArchiveMedianAreaMm2 } from '@/lib/artwork/archiveMedianArea'
+import { buildSeriesSlugByArtworkSlug } from '@/lib/artwork/seriesSlugMap'
 import { mapArtistToInfoData } from '@/helpers/mapArtistInfo'
 import {
   fetchCatalogueArtworksWithPayload,
@@ -11,6 +13,7 @@ import { fetchFilterSeriesWithPayload } from '@/lib/payload/series'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 import type { ArtistInfoData, FilterCategory, TimelineMarkersData } from '@/types/frontend'
 import type { Artist } from '@/payload-types'
+import { TIER_FALLBACK_AREA_MM2 } from '@/lib/artwork/gridRealSize'
 
 export type LayoutProviderData = {
   artworks: LayoutProviderArtworks
@@ -18,6 +21,22 @@ export type LayoutProviderData = {
   artistInfo: ArtistInfoData
   timelineMarkers: TimelineMarkersData
   filterSeries: FilterCategory[]
+  seriesSlugByArtworkSlug: Record<string, string>
+  archiveMedianAreaMm2: number
+}
+
+/** Lightweight root-layout payload — no catalogue rows for RSC. */
+export type RootChromeData = {
+  artistInfo: ArtistInfoData
+  seriesSlugByArtworkSlug: Record<string, string>
+  archiveMedianAreaMm2: number
+}
+
+/** Route-level collection payload for `/` and `/series/[slug]`. */
+export type CollectionLayoutData = {
+  artworks: LayoutProviderArtworks
+  filterSeries: FilterCategory[]
+  timelineMarkers: TimelineMarkersData
 }
 
 export const EMPTY_LAYOUT_PROVIDER_DATA: LayoutProviderData = {
@@ -26,6 +45,20 @@ export const EMPTY_LAYOUT_PROVIDER_DATA: LayoutProviderData = {
   artistInfo: mapArtistToInfoData(null),
   timelineMarkers: { bioEntries: [], throughlines: [], historicalReadings: [] },
   filterSeries: [],
+  seriesSlugByArtworkSlug: {},
+  archiveMedianAreaMm2: TIER_FALLBACK_AREA_MM2.md,
+}
+
+export const EMPTY_ROOT_CHROME_DATA: RootChromeData = {
+  artistInfo: EMPTY_LAYOUT_PROVIDER_DATA.artistInfo,
+  seriesSlugByArtworkSlug: {},
+  archiveMedianAreaMm2: TIER_FALLBACK_AREA_MM2.md,
+}
+
+export const EMPTY_COLLECTION_LAYOUT_DATA: CollectionLayoutData = {
+  artworks: [],
+  filterSeries: [],
+  timelineMarkers: EMPTY_LAYOUT_PROVIDER_DATA.timelineMarkers,
 }
 
 function relationId(value: unknown): number | null {
@@ -130,13 +163,15 @@ async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
       artistInfo: mapArtistToInfoData(person),
       timelineMarkers,
       filterSeries,
+      seriesSlugByArtworkSlug: buildSeriesSlugByArtworkSlug(artworks),
+      archiveMedianAreaMm2: computeArchiveMedianAreaMm2(artworks),
     }
   })
 }
 
 /**
- * Single-connection fetch for root layout (avoids parallel getPayload pool exhaustion).
- * React `cache` dedupes layout + series page reads in the same request.
+ * Single-connection fetch (avoids parallel getPayload pool exhaustion).
+ * React `cache` dedupes root layout + collection page reads in the same request.
  */
 export const getLayoutProviderData = cache(async (): Promise<LayoutProviderData> => {
   try {
@@ -144,5 +179,25 @@ export const getLayoutProviderData = cache(async (): Promise<LayoutProviderData>
   } catch (err) {
     console.error('[layout-provider-data] falling back to empty data', err)
     return { ...EMPTY_LAYOUT_PROVIDER_DATA }
+  }
+})
+
+/** Root layout: artist + slim map + scale anchor only (no catalogue rows to the client). */
+export const getRootChromeData = cache(async (): Promise<RootChromeData> => {
+  const data = await getLayoutProviderData()
+  return {
+    artistInfo: data.artistInfo,
+    seriesSlugByArtworkSlug: data.seriesSlugByArtworkSlug,
+    archiveMedianAreaMm2: data.archiveMedianAreaMm2,
+  }
+})
+
+/** `/` and series pages: full catalogue + filter chips + timeline markers. */
+export const getCollectionLayoutData = cache(async (): Promise<CollectionLayoutData> => {
+  const data = await getLayoutProviderData()
+  return {
+    artworks: data.artworks,
+    filterSeries: data.filterSeries,
+    timelineMarkers: data.timelineMarkers,
   }
 })

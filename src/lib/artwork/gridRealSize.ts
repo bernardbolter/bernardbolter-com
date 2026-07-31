@@ -193,22 +193,26 @@ export function getGridItemContentHeight(displayHeight: number): number {
 }
 
 /**
- * Compute per-item display sizes for the current filtered set.
- * Median recalculates when the filtered set changes, not on sort or resize.
+ * Compute per-item display sizes for the visible set.
+ * `archiveMedianAreaMm2` is the practice-wide scale anchor (from root chrome);
+ * per-item area / aspect / getScaleFactor still use the visible rows only.
  */
 export function buildGridItemLayouts(
   artworks: CatalogueArtwork[],
   columnWidth: number,
+  archiveMedianAreaMm2?: number,
 ): GridItemLayout[] {
   const areaResolutions = artworks.map(resolveArtworkArea)
   const medianInputAreas = artworks
     .map(getRealAreaMm2)
     .filter((area): area is number => area !== null)
-  const medianArea = getMedianArea(medianInputAreas)
+  const subsetMedian = getMedianArea(medianInputAreas)
   const safeMedian =
-    medianArea > 0
-      ? medianArea
-      : getMedianArea(areaResolutions.map((entry) => entry.areaMm2)) || TIER_FALLBACK_AREA_MM2.md
+    archiveMedianAreaMm2 != null && archiveMedianAreaMm2 > 0
+      ? archiveMedianAreaMm2
+      : subsetMedian > 0
+        ? subsetMedian
+        : getMedianArea(areaResolutions.map((entry) => entry.areaMm2)) || TIER_FALLBACK_AREA_MM2.md
 
   return artworks.map((artwork, index) => {
     const { areaMm2, usingFallbackSizing } = areaResolutions[index]

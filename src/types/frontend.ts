@@ -87,6 +87,8 @@ export interface ArtworksState {
   filtered: CatalogueArtwork[]
   formattedArtworks: TimelineResult | null
   currentArtworkIndex: number
+  /** Artwork slug for the timeline/grid focus — drives menu colour via slim map (Option A). */
+  currentArtworkSlug: string | null
   sorting: SortingType
   artworkViewTimeline: boolean
   filtersArray: string[]
@@ -117,6 +119,8 @@ export interface ArtworksState {
   savedTimelineFiltersHash: string
   totalCount: number
   withImagesCount: number
+  /** Practice-wide grid scale anchor (mm²). */
+  archiveMedianAreaMm2: number
 }
 
 export type ArtworksContextType = [ArtworksState, Dispatch<SetStateAction<ArtworksState>>]
@@ -131,6 +135,7 @@ export const EMPTY_TIMELINE_MARKERS: TimelineMarkersData = {
 export type CreateInitialArtworksStateOptions = {
   /** Pre-select series filter chips (e.g. `/series/[slug]` SSR). */
   filtersArray?: string[]
+  archiveMedianAreaMm2?: number
 }
 
 export function createInitialArtworksState(
@@ -162,6 +167,7 @@ export function createInitialArtworksState(
     filtered: artworks,
     formattedArtworks,
     currentArtworkIndex: 0,
+    currentArtworkSlug: artworks[0]?.slug?.trim() || null,
     sorting,
     artworkViewTimeline: true,
     filtersArray,
@@ -188,5 +194,6 @@ export function createInitialArtworksState(
     savedTimelineFiltersHash: '',
     totalCount: artworks.length,
     withImagesCount: artworks.length,
+    archiveMedianAreaMm2: options.archiveMedianAreaMm2 ?? 0,
   }
 }

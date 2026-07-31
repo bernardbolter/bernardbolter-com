@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
-import { resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { artworkSlugFromPathname } from '@/lib/routes/artworkSlugFromPathname'
+import { useArtworkChrome } from '@/providers/ArtworkChromeProvider'
 import { useArtworkPageMenuPlusColor } from '@/providers/ArtworkPageChromeContext'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
@@ -27,6 +27,7 @@ function pickRandomSeriesColor(): string {
 
 /** Series accent used by the hamburger plus and matching info-panel link icons. */
 export function useMenuPlusColor(): string {
+  const { chrome } = useArtworkChrome()
   const [state] = useArtworks()
   const pathname = usePathname()
   const pageMenuPlusColor = useArtworkPageMenuPlusColor()
@@ -47,20 +48,19 @@ export function useMenuPlusColor(): string {
     if (pageMenuPlusColor) return pageMenuPlusColor
     if (isHomeGrid) return gridPlusColor
 
+    const map = chrome.seriesSlugByArtworkSlug
+
+    // Artwork detail URL — prefer slim map (Option A); page chrome may also set colour.
     const detailSlug = artworkSlugFromPathname(pathname)
     if (detailSlug) {
-      const catalogue = state.original.length > 0 ? state.original : state.filtered
-      const artwork = catalogue.find((row) => row.slug === detailSlug)
-      if (artwork) {
-        return getSeriesColor(resolveSeriesSlug(artwork) ?? 'a-colorful-history')
-      }
+      const seriesSlug = map[detailSlug]
+      if (seriesSlug) return getSeriesColor(seriesSlug)
     }
 
-    const source = state.formattedArtworks?.artworksArray ?? state.filtered
-    if (pathname === '/' && state.artworkViewTimeline && source.length > 0) {
-      const safeIndex = Math.min(Math.max(0, state.currentArtworkIndex), source.length - 1)
-      const artwork = source[safeIndex]
-      return getSeriesColor(resolveSeriesSlug(artwork) ?? 'a-colorful-history')
+    // Home timeline: colour tracks focused artwork via currentArtworkSlug + slim map.
+    if (pathname === '/' && state.artworkViewTimeline && chrome.currentArtworkSlug) {
+      const seriesSlug = map[chrome.currentArtworkSlug]
+      if (seriesSlug) return getSeriesColor(seriesSlug)
     }
 
     return DEFAULT_PLUS_COLOR
@@ -69,10 +69,8 @@ export function useMenuPlusColor(): string {
     gridPlusColor,
     isHomeGrid,
     pathname,
+    chrome.seriesSlugByArtworkSlug,
+    chrome.currentArtworkSlug,
     state.artworkViewTimeline,
-    state.currentArtworkIndex,
-    state.filtered,
-    state.formattedArtworks?.artworksArray,
-    state.original,
   ])
 }

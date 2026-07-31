@@ -93,22 +93,23 @@ describe('gridRealSize', () => {
     expect(landscape.displayWidth).toBeGreaterThan(portrait.displayWidth)
   })
 
-  it('recalculates median against the filtered subset', () => {
+  it('uses archive median when provided so subset packing matches archive scale', () => {
     const a = artwork({ id: 1, widthMm: 400, heightMm: 400 })
     const b = artwork({ id: 2, widthMm: 600, heightMm: 600 })
     const outlier = artwork({ id: 3, widthMm: 3000, heightMm: 2000 })
 
-    const filteredMedian = getMedianArea([getRealAreaMm2(a)!, getRealAreaMm2(b)!])
-    const fullMedian = getMedianArea([
+    const archiveMedian = getMedianArea([
       getRealAreaMm2(a)!,
       getRealAreaMm2(b)!,
       getRealAreaMm2(outlier)!,
     ])
 
-    expect(filteredMedian).not.toBe(fullMedian)
-    expect(buildGridItemLayouts([a, b], 300)[0].scaleFactor).not.toBe(
-      buildGridItemLayouts([a, b, outlier], 300)[0].scaleFactor,
-    )
+    const subsetOnly = buildGridItemLayouts([a, b], 300)[0].scaleFactor
+    const withArchiveAnchor = buildGridItemLayouts([a, b], 300, archiveMedian)[0].scaleFactor
+    const fullSet = buildGridItemLayouts([a, b, outlier], 300)[0].scaleFactor
+
+    expect(subsetOnly).not.toBe(fullSet)
+    expect(withArchiveAnchor).toBe(fullSet)
   })
 
   it('uses tier fallback area when no dimensions are available', () => {

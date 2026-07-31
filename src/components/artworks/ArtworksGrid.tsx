@@ -13,8 +13,8 @@ export default function ArtworksGrid() {
   const gridMetrics = getGridItemContainerSize(state.viewportWidth)
 
   const layouts = useMemo(
-    () => buildGridItemLayouts(state.filtered, gridMetrics.width),
-    [state.filtered, gridMetrics.width],
+    () => buildGridItemLayouts(state.filtered, gridMetrics.width, state.archiveMedianAreaMm2),
+    [state.filtered, gridMetrics.width, state.archiveMedianAreaMm2],
   )
 
   const columns = useMemo(
