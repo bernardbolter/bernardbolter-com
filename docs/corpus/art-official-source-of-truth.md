@@ -234,6 +234,47 @@ Session run manually in Claude chat (**not** Payload admin — so this does **no
 
 ---
 
+## Part 8 — Events cataloguing: first real test case (Mediamatic 2009 / ArtSpan 2017)
+
+**2026-07-31.** First two Event records run through a live Q1–Q4 dialogue (per `art-official-events-dialogue-spec.md` Part 3.4), conducted in chat rather than through the not-yet-built `/api/art-official/event-chat` route. Full content in `events-mediamatic-artspan-spec.md`.
+
+**`coExhibitors` shape:** `{ person → people, role }` (not inline `{ name }`). Bernard confirmed 2026-07-31 that the `person`-relation treatment applies broadly — not narrowly to direct collaborators only. New fields for non-co-exhibitor participants: `jurors`, `otherParticipants`. See also Part 10.
+
+**`Artist.nameLegal`:** full name of record (`Bernard John Bolter IV`), distinct from `name` (`Bernard Bolter`). CV print header only; everywhere else keeps `name`. Spec: `events-mediamatic-artspan-spec.md` Part 3.
+
+---
+
+## Part 9 — Vision analysis: integration gap since the automated pipeline was retired
+
+**2026-07-31.** `art-official-consolidated-session-flow-spec.md` Step 3 still instructs `trigger_image_analysis` for the retired standalone pipeline (Part 5, R2). Replacement timing inside ordinary sessions was never specified — fields sit until asked. Proposed home: Step 4 light acknowledgment, write via `update_field` (`confidence: 'inferred'`, `source: 'image-analysis'`). **Open fork:** (a) retire blindness with the pipeline, or (b) preserve structural blindness. Not decided here. Not yet propagated into consolidated session-flow or `vision-analysis-prompt-spec.md`.
+
+---
+
+## Part 10 — Cursor implementation confirmations + artwork-linking resolution (2026-07-31)
+
+Follows Parts 8–9. Logs what Cursor built and what was resolved the same day.
+
+### 10.1 — Schema and code, confirmed built by Cursor
+
+- `jurors` and `otherParticipants` on Events; `coExhibitors` visibility includes `talk-panel` / `performance`.
+- Migration: `src/scripts/add-event-jurors-participants-schema.ts`. Seed: `src/scripts/seed-mediamatic-artspan-events.ts`.
+- Tier 5: `GET /api/corpus/[slug]/sessions` resolves event slugs; `?type=artwork|event` on collision (`409` if both match and type omitted). Cache: `event-${slug}` via `sessionAfterChange`.
+- `Sessions.isExemplar` for event-enrichment Phase B reference prompts.
+
+### 10.2 — Artwork-linking resolution (post-Cursor, same day)
+
+- ArtSpan works already live: `lombard-street-1922-v2`, `baker-beach-1935` — link only, do not stub. Spoken session "1925" left as-spoken; Event prose uses catalogue **1922**. Baker Beach sale was not at the gala — belongs on that artwork's `salesRecord` later.
+
+### 10.3 — Open items and resolutions
+
+**Resolved 2026-07-31 — `Ransom & Mitchell` duo credit.** Confirmed via art.ransommitchell.com and independent press: San Francisco creative duo Jason Mitchell (photographer/director) and Stacey Ransom (set designer/digital artist), exhibiting jointly under that name. **Model:** two separate `People` records (`Jason Mitchell`, `Stacey Ransom` — dedup-search first), then **two** `Events.coExhibitors` rows on ArtSpan Selections 2017 — there is no joint-credit / duo object on the array (only `{ person, role }`). Shared credit context lives in each row's `role` string, e.g. `Ransom & Mitchell — photographer / director` and `Ransom & Mitchell — set designer / digital artist`. Do **not** create a single Person named "Ransom & Mitchell". Seed: `src/scripts/seed-mediamatic-artspan-events.ts`.
+
+**Still open:**
+- Whether the commission that followed the Lombard Street sale deserves its own Artwork and/or Event record.
+- Vision-analysis integration gap (Part 9) — blindness fork (a) vs. (b).
+
+---
+
 ## What Cursor should check against this file
 
 1. **Field name/type parity** — for every field in Part 1, confirm the exact name and type match live Payload schema. Flag mismatches, don't silently rename.
@@ -259,4 +300,4 @@ Session run manually in Claude chat (**not** Payload admin — so this does **no
 5. When this file itself grows unwieldy, split by clear domain boundary (not by "which chat wrote it," which is what caused today's fragmentation) — and merge back here if that split turns out to just move the problem again.
 
 ---
-*Source of truth · unified 2026-07-24 · Part 7 addendum 2026-07-28 · update whenever the dialogue spec, schema, or session flow changes*
+*Source of truth · unified 2026-07-24 · Part 7 addendum 2026-07-28 · Parts 8–10 events + Ransom & Mitchell resolution 2026-07-31 · update whenever the dialogue spec, schema, or session flow changes*

@@ -1,4 +1,4 @@
-import type { Artwork, Session } from '@/payload-types'
+import type { Artwork, Event, Session } from '@/payload-types'
 
 import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
@@ -14,6 +14,7 @@ export type Tier5SessionSource = Pick<
   | 'primaryArtwork'
   | 'artworkRecord'
   | 'mentionedArtworks'
+  | 'eventRecord'
   | 'messages'
   | 'firstImpression'
   | 'secondDescription'
@@ -57,6 +58,26 @@ export function sessionMatchesArtworkSlug(
   )
 }
 
+function readEvent(value: number | Event | null | undefined): Event | null {
+  if (!value || typeof value !== 'object') return null
+  return value
+}
+
+function eventSlug(value: number | Event | null | undefined): string | null {
+  const event = readEvent(value)
+  if (!event?.slug || typeof event.slug !== 'string') return null
+  const slug = event.slug.trim()
+  return slug || null
+}
+
+/** True when this completed event-enrichment session targets the queried event slug. */
+export function sessionMatchesEventSlug(
+  session: Tier5SessionSource,
+  eventSlugQuery: string,
+): boolean {
+  return eventSlug(session.eventRecord) === eventSlugQuery
+}
+
 function projectMessages(messages: Session['messages']): Array<{
   role: string
   content: unknown
@@ -98,6 +119,7 @@ export function projectTier5Session(session: Tier5SessionSource) {
   const mentioned = (session.mentionedArtworks ?? [])
     .map((entry) => artworkSlug(entry))
     .filter((slug): slug is string => Boolean(slug))
+  const event = eventSlug(session.eventRecord)
 
   return {
     sessionId,
@@ -106,6 +128,7 @@ export function projectTier5Session(session: Tier5SessionSource) {
     completedAt: session.completedAt ?? null,
     primaryArtwork: primary,
     mentionedArtworks: mentioned,
+    eventRecord: event,
     artistRecord: {
       firstImpression: session.firstImpression ?? null,
       secondDescription: session.secondDescription ?? null,
@@ -156,6 +179,32 @@ export function buildTier5SessionsResponse(options: {
   }
 }
 
+/** Event-keyed Tier 5 list — same artistRecord / DialogueSelfAudit split as artwork sessions. */
+export function buildTier5EventSessionsResponse(options: {
+  eventSlug: string
+  sessions: Tier5SessionSource[]
+  baseUrl: string
+}) {
+  const { eventSlug, sessions, baseUrl } = options
+
+  const projected = sessions
+    .filter((session) => sessionMatchesEventSlug(session, eventSlug))
+    .map((session) => projectTier5Session(session))
+    .filter((session): session is NonNullable<typeof session> => session !== null)
+
+  return {
+    '@context': CORPUS_CONTEXT,
+    '@type': 'DataFeed',
+    ...buildScopeDepthEnvelope('sessions'),
+    'artism:tierMap': buildTierMap(baseUrl),
+    'artism:eventSlug': eventSlug,
+    'artism:eventUrl': `${baseUrl}/events/${eventSlug}`,
+    'artism:recordUrl': `${baseUrl}/api/corpus/${eventSlug}?type=event`,
+    'artism:coverage': { sessionCount: projected.length },
+    sessions: projected,
+  }
+}
+
 export type ProjectedTier5Session = NonNullable<ReturnType<typeof projectTier5Session>>
 
 /** Shared select for Tier 5 session projection (artwork-keyed or session-keyed). */
@@ -168,6 +217,7 @@ export const TIER5_SESSION_SELECT = {
   primaryArtwork: true,
   artworkRecord: true,
   mentionedArtworks: true,
+  eventRecord: true,
   messages: true,
   firstImpression: true,
   secondDescription: true,
@@ -211,6 +261,7 @@ export function buildTier5SessionByIdResponse(options: {
     completedAt: projected.completedAt,
     primaryArtwork: projected.primaryArtwork,
     mentionedArtworks: projected.mentionedArtworks,
+    eventRecord: projected.eventRecord,
     artistRecord: projected.artistRecord,
     'artism:DialogueSelfAudit': projected['artism:DialogueSelfAudit'],
     sameAs: `${baseUrl}/sessions/${projected.sessionId}`,
@@ -240,6 +291,9 @@ export function buildSessionJsonLd(
     completedAt: projected.completedAt,
     primaryArtwork: primaryUrl,
     mentionedArtworks: projected.mentionedArtworks.map((slug) => `${baseUrl}/${slug}`),
+    eventRecord: projected.eventRecord
+      ? `${baseUrl}/events/${projected.eventRecord}`
+      : null,
     artistRecord: projected.artistRecord,
     'artism:DialogueSelfAudit': projected['artism:DialogueSelfAudit'],
     sameAs: `${baseUrl}${sessionTier5ApiPath(projected.sessionId)}`,

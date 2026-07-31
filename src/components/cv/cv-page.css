@@ -253,6 +253,14 @@
   color: var(--cv-meta-color);
 }
 
+.cv-row__listed-as {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--cv-meta-color);
+}
+
 .ti-arrow-up-right {
   display: inline-block;
   vertical-align: baseline;

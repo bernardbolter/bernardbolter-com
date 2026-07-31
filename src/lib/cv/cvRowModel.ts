@@ -63,6 +63,8 @@ export type CvRowModel =
       title: string
       venue: string
       city: string
+      /** Parenthetical when an external source lists a different name (e.g. ArtSpan). */
+      listedAs?: string | null
       hasPage?: boolean
       slug?: string | null
     }
@@ -114,8 +116,19 @@ const VENUE_TITLE_SECTIONS = new Set<CvSectionSlug>([
   'other',
 ])
 
+/** External sources that list the legal name — only these CV lines get a parenthetical. */
+const CV_LISTED_AS_BY_SLUG: Record<string, string> = {
+  'artspan-selections-2017-heron-arts': 'Bernard John Bolter IV',
+}
+
 function displayTitle(event: Event): string {
   return (event.cvDisplayTitle ?? event.title).trim()
+}
+
+function listedAsNote(event: Event): string | null {
+  const slug = event.slug?.trim()
+  if (!slug) return null
+  return CV_LISTED_AS_BY_SLUG[slug] ?? null
 }
 
 function educationDegreeSubject(event: Event): string {
@@ -197,6 +210,7 @@ export function cvRowFromEvent(section: CvSectionSlug, event: Event): CvRowModel
       title: displayTitle(event),
       venue,
       city,
+      listedAs: listedAsNote(event),
       hasPage,
       slug,
     }
@@ -210,6 +224,7 @@ export function cvRowFromEvent(section: CvSectionSlug, event: Event): CvRowModel
     title: displayTitle(event),
     venue,
     city,
+    listedAs: listedAsNote(event),
     hasPage,
     slug,
   }
@@ -223,7 +238,10 @@ export function cvRowPlainText(row: CvRowModel): string {
     }
     case 'venue-title': {
       const place = [row.venue, row.city].filter(Boolean).join(', ')
-      return place ? `${row.year} ${row.title} — ${place}` : `${row.year} ${row.title}`
+      const listed = row.listedAs ? `  (listed as ${row.listedAs})` : ''
+      return place ?
+          `${row.year} ${row.title} — ${place}${listed}`
+        : `${row.year} ${row.title}${listed}`
     }
     case 'publication':
       return row.publicationName ?

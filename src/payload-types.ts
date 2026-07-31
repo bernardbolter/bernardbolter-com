@@ -253,7 +253,7 @@ export interface Artist {
    */
   name: string;
   /**
-   * Full legal name if different (e.g. Bernard John Bolter IV). Used for credits and formal records; optional.
+   * Full legal/artist name of record (e.g. Bernard John Bolter IV). Distinct from Professional name (`name`), which remains the working/display name sitewide. The CV print header reads this field; every other page continues reading `name`.
    */
   nameLegal?: string | null;
   /**
@@ -1061,7 +1061,7 @@ export interface Event {
       )
     | null;
   /**
-   * Other artists in this show. Link a People record for each co-exhibitor.
+   * Collaborators / co-exhibitors linked to this event. Link a People record for each. For talk-panel nights, use for genuine collaborators on the artist's piece (not fellow presenters — those go in otherParticipants).
    */
   coExhibitors?:
     | {
@@ -1071,6 +1071,32 @@ export interface Event {
         person?: (number | null) | Person;
         /**
          * Optional — e.g. painter, sculptor, video artist.
+         */
+        role?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Named jurors/selection panel for juried exhibitions or awards. Distinct from coExhibitors — jurors judge, they don't show work.
+   */
+  jurors?:
+    | {
+        person: number | Person;
+        /**
+         * Optional — e.g. Artistic Director, CounterPulse.
+         */
+        role?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Other named, real participants at the same event who were neither co-exhibitors (didn't show alongside the artist's own work) nor jurors — e.g. fellow presenters at a shared-bill talk/performance night.
+   */
+  otherParticipants?:
+    | {
+        person: number | Person;
+        /**
+         * Optional — e.g. fellow presenter, Pecha Kucha Vol. 9.
          */
         role?: string | null;
         id?: string | null;
@@ -3888,6 +3914,10 @@ export interface Session {
     note?: string | null;
   };
   status: 'in-progress' | 'completed' | 'abandoned';
+  /**
+   * Mark as a reference example for future event-enrichment Phase B prompts (see art-official-events-dialogue-spec.md). Prefer one strong completed event session.
+   */
+  isExemplar?: boolean | null;
   artistId?: (number | null) | Artist;
   /**
    * The single artwork this session was cataloguing, if any. Empty for biography/statement-only sessions. Kept in sync with artworkRecord.
@@ -3910,7 +3940,7 @@ export interface Session {
    */
   episodeRecord?: (number | null) | Episode;
   /**
-   * Event stub being enriched in an event-enrichment session.
+   * Event stub being enriched — also used for completed event-enrichment sessions exposed at Tier 5.
    */
   eventRecord?: (number | null) | Event;
   /**
@@ -5600,6 +5630,20 @@ export interface EventsSelect<T extends boolean = true> {
         role?: T;
         id?: T;
       };
+  jurors?:
+    | T
+    | {
+        person?: T;
+        role?: T;
+        id?: T;
+      };
+  otherParticipants?:
+    | T
+    | {
+        person?: T;
+        role?: T;
+        id?: T;
+      };
   catalogue?: T;
   catalogueUrl?: T;
   pressUrl?: T;
@@ -6718,6 +6762,7 @@ export interface SessionsSelect<T extends boolean = true> {
         note?: T;
       };
   status?: T;
+  isExemplar?: T;
   artistId?: T;
   primaryArtwork?: T;
   mentionedArtworks?: T;

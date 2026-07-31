@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
 import {
+  buildTier5EventSessionsResponse,
   buildTier5SessionsResponse,
   TIER5_SESSION_SELECT,
 } from '@/lib/corpus/buildTier5SessionsResponse'
@@ -16,8 +17,9 @@ export const dynamic = 'force-dynamic'
 type RouteParams = { params: Promise<{ slug: string }> }
 
 /**
- * Tier 5 — completed session transcripts for one artwork.
+ * Tier 5 — completed session transcripts for one artwork or event.
  * GET /api/corpus/[slug]/sessions
+ * Optional `?type=artwork|event` when the same slug exists in both collections.
  */
 export async function GET(request: Request, { params }: RouteParams) {
   const headers = corpusResponseHeaders(request)
@@ -27,23 +29,59 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
+  const typeParam = new URL(request.url).searchParams.get('type')?.trim().toLowerCase()
+  const preferArtwork = typeParam === 'artwork'
+  const preferEvent = typeParam === 'event'
+
   const payload = await getPayload({ config })
 
-  const artworkResult = await payload.find({
-    collection: 'artworks',
-    locale: 'en',
-    where: {
-      and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
-    },
-    limit: 1,
-    depth: 0,
-    select: { slug: true },
-    overrideAccess: true,
-  })
+  const [artworkResult, eventResult] = await Promise.all([
+    payload.find({
+      collection: 'artworks',
+      locale: 'en',
+      where: {
+        and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
+      },
+      limit: 1,
+      depth: 0,
+      select: { slug: true },
+      overrideAccess: true,
+    }),
+    payload.find({
+      collection: 'events',
+      locale: 'en',
+      where: {
+        and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
+      },
+      limit: 1,
+      depth: 0,
+      select: { slug: true },
+      overrideAccess: true,
+    }),
+  ])
 
-  if (!artworkResult.docs[0]) {
+  const artwork = artworkResult.docs[0] ?? null
+  const event = eventResult.docs[0] ?? null
+
+  if (!artwork && !event) {
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
+
+  if (artwork && event && !preferArtwork && !preferEvent) {
+    return NextResponse.json(
+      {
+        error: 'Ambiguous slug',
+        message:
+          'This slug matches both an artwork and an event. Pass ?type=artwork or ?type=event.',
+        artworkSessionsUrl: `${CORPUS_BASE}/api/corpus/${encodeURIComponent(slug)}/sessions?type=artwork`,
+        eventSessionsUrl: `${CORPUS_BASE}/api/corpus/${encodeURIComponent(slug)}/sessions?type=event`,
+      },
+      { status: 409, headers },
+    )
+  }
+
+  const asEvent =
+    preferEvent || (!preferArtwork && !artwork && Boolean(event))
 
   const sessionsResult = await payload.find({
     collection: 'sessions',
@@ -54,6 +92,19 @@ export async function GET(request: Request, { params }: RouteParams) {
     overrideAccess: true,
     select: TIER5_SESSION_SELECT,
   })
+
+  if (asEvent && event) {
+    const body = buildTier5EventSessionsResponse({
+      eventSlug: slug,
+      sessions: sessionsResult.docs,
+      baseUrl: CORPUS_BASE,
+    })
+    return NextResponse.json(body, { headers })
+  }
+
+  if (!artwork) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
+  }
 
   const body = buildTier5SessionsResponse({
     artworkSlug: slug,

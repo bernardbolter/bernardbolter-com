@@ -93,6 +93,8 @@ const EVENT_AGENT_FIELDS = new Set([
   'curator',
   'role',
   'coExhibitors',
+  'jurors',
+  'otherParticipants',
   'catalogue',
   'catalogueUrl',
   'pressUrl',

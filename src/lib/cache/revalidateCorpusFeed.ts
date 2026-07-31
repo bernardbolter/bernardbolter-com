@@ -16,6 +16,9 @@ export const CORPUS_FEED_PATHS = [
 export type RevalidateCorpusFeedOptions = {
   artworkSlug?: string
   artworkSlugs?: string[]
+  /** Event slugs — invalidate `/api/corpus/{slug}/sessions` under event-${slug} scope. */
+  eventSlug?: string
+  eventSlugs?: string[]
   sessionId?: string
 }
 
@@ -41,6 +44,18 @@ export function revalidateCorpusFeed(options: RevalidateCorpusFeedOptions = {}):
     paths.add(`/sessions?artwork=${encodeURIComponent(slug)}`)
   }
 
+  const eventSlugs = new Set<string>()
+  if (options.eventSlug?.trim()) eventSlugs.add(options.eventSlug.trim())
+  for (const slug of options.eventSlugs ?? []) {
+    if (slug.trim()) eventSlugs.add(slug.trim())
+  }
+  for (const slug of eventSlugs) {
+    paths.add(`/api/corpus/${slug}`)
+    paths.add(`/api/corpus/${slug}/sessions`)
+    paths.add(`/api/corpus/${slug}/sessions?type=event`)
+    paths.add(`/events/${slug}`)
+  }
+
   const sessionId = options.sessionId?.trim()
   if (sessionId) {
     paths.add(`/api/corpus/sessions/${sessionId}`)
@@ -50,6 +65,9 @@ export function revalidateCorpusFeed(options: RevalidateCorpusFeedOptions = {}):
 
   try {
     revalidateTag(CORPUS_FEED_TAG, 'max')
+    for (const path of eventSlugs) {
+      revalidateTag(`event-${path}`, 'max')
+    }
     for (const path of paths) {
       revalidatePath(path)
     }

@@ -46,6 +46,10 @@ import {
   summarizeRelatedEventsForPrompt,
 } from './assembleEventPhaseBPrompt'
 import { queryRelatedCompleteEvents } from './queryRelatedCompleteEvents'
+import {
+  queryExemplarEventSession,
+  summarizeExemplarEventSessionForPrompt,
+} from './queryExemplarEventSession'
 import { resolveToolsForSession } from './agentTools'
 import type { EventDialoguePhase } from './eventDialoguePhase'
 import { normalizeEventDialoguePhase } from './eventDialoguePhase'
@@ -63,6 +67,8 @@ export type BuildSystemPromptArgs = {
   episodeId?: number
   artworkRecordId?: number
   eventRecordId?: number
+  /** Current sessionId — excluded when loading an exemplar for Phase B. */
+  sessionId?: string | null
   weakPhases?: string[] | null
   isLinchpin?: boolean
   linchpinNote?: string | null
@@ -293,8 +299,14 @@ export async function buildSystemPromptParts(
         user,
         eventId: args.eventRecordId,
       })
+      const exemplar = await queryExemplarEventSession({
+        payload,
+        user,
+        excludeSessionId: args.sessionId,
+      })
       dynamicParts.push(
         assembleEventPhaseBPrompt(summarizeRelatedEventsForPrompt(related)),
+        summarizeExemplarEventSessionForPrompt(exemplar),
         buildEventTagWrapUpBlock(),
         buildEventSessionCloseBlock(),
       )

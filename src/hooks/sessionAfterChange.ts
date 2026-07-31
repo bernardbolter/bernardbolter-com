@@ -2,7 +2,7 @@ import type { CollectionAfterChangeHook, Payload } from 'payload'
 
 import { revalidateArchive } from '@/lib/cache/revalidateArchive'
 import { revalidateCorpusFeed } from '@/lib/cache/revalidateCorpusFeed'
-import type { Artwork, Session } from '@/payload-types'
+import type { Artwork, Event, Session } from '@/payload-types'
 
 function artworkId(value: number | Artwork | null | undefined): number | null {
   if (typeof value === 'number') return value
@@ -11,6 +11,18 @@ function artworkId(value: number | Artwork | null | undefined): number | null {
 }
 
 function artworkSlug(value: number | Artwork | null | undefined): string | null {
+  if (!value || typeof value !== 'object') return null
+  if (typeof value.slug === 'string' && value.slug.trim()) return value.slug.trim()
+  return null
+}
+
+function eventId(value: number | Event | null | undefined): number | null {
+  if (typeof value === 'number') return value
+  if (value && typeof value === 'object' && typeof value.id === 'number') return value.id
+  return null
+}
+
+function eventSlugValue(value: number | Event | null | undefined): string | null {
   if (!value || typeof value !== 'object') return null
   if (typeof value.slug === 'string' && value.slug.trim()) return value.slug.trim()
   return null
@@ -37,8 +49,30 @@ async function resolveArtworkSlug(
   }
 }
 
+async function resolveEventSlug(
+  payload: Payload,
+  value: number | Event | null | undefined,
+): Promise<string | null> {
+  const fromDoc = eventSlugValue(value)
+  if (fromDoc) return fromDoc
+  const id = eventId(value)
+  if (!id) return null
+  try {
+    const event = await payload.findByID({
+      collection: 'events',
+      id,
+      depth: 0,
+      select: { slug: true },
+    })
+    return typeof event.slug === 'string' && event.slug.trim() ? event.slug.trim() : null
+  } catch {
+    return null
+  }
+}
+
 /**
- * Invalidate Tier 5 corpus caches for the primary artwork and every mentioned artwork.
+ * Invalidate Tier 5 corpus caches for the primary artwork, mentioned artworks,
+ * and linked event (event-${slug} tag scope).
  * Only completed sessions are public at Tier 5; in-progress never enters the public path.
  */
 export const sessionAfterChange: CollectionAfterChangeHook<Session> = async ({
@@ -67,6 +101,12 @@ export const sessionAfterChange: CollectionAfterChangeHook<Session> = async ({
     if (slug) slugs.add(slug)
   }
 
+  const eventSlugs = new Set<string>()
+  for (const entry of [doc.eventRecord, previousDoc?.eventRecord]) {
+    const slug = await resolveEventSlug(req.payload, entry)
+    if (slug) eventSlugs.add(slug)
+  }
+
   const paths = ['/sessions']
   if (typeof doc.sessionId === 'string' && doc.sessionId.trim()) {
     const sid = doc.sessionId.trim()
@@ -79,6 +119,7 @@ export const sessionAfterChange: CollectionAfterChangeHook<Session> = async ({
   revalidateArchive({ tags: ['artworks'], paths })
   revalidateCorpusFeed({
     artworkSlugs: [...slugs],
+    eventSlugs: [...eventSlugs],
     sessionId: typeof doc.sessionId === 'string' ? doc.sessionId : undefined,
   })
   return doc

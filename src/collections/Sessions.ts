@@ -96,6 +96,17 @@ export const Sessions: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
+      name: 'isExemplar',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Mark as a reference example for future event-enrichment Phase B prompts (see art-official-events-dialogue-spec.md). Prefer one strong completed event session.',
+        condition: (data) => data?.sessionType === 'event-enrichment',
+      },
+    },
+    {
       name: 'artistId',
       type: 'relationship',
       relationTo: 'artists',
@@ -156,7 +167,7 @@ export const Sessions: CollectionConfig = {
       relationTo: 'events',
       admin: {
         position: 'sidebar',
-        description: 'Event stub being enriched in an event-enrichment session.',
+        description: 'Event stub being enriched — also used for completed event-enrichment sessions exposed at Tier 5.',
       },
     },
     {

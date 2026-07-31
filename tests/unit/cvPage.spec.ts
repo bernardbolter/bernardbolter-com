@@ -18,6 +18,46 @@ function baseEvent(overrides: Partial<Event> = {}): Event {
   }
 }
 
+describe('cvRowFromEvent ArtSpan listed-as note', () => {
+  it('adds parenthetical only for the ArtSpan Selections 2017 slug', () => {
+    const artspan = cvRowFromEvent(
+      'group-exhibitions',
+      baseEvent({
+        id: 20,
+        slug: 'artspan-selections-2017-heron-arts',
+        title: 'ArtSpan Selections 2017 Juried Exhibition',
+        eventType: 'group-exhibition',
+        venueName: 'Heron Arts',
+        venueCity: 'San Francisco',
+        yearStart: 2017,
+        hasPage: true,
+      }),
+    )
+    expect(artspan.kind).toBe('venue-title')
+    if (artspan.kind !== 'venue-title') return
+    expect(artspan.listedAs).toBe('Bernard John Bolter IV')
+    expect(cvRowPlainText(artspan)).toContain('(listed as Bernard John Bolter IV)')
+
+    const other = cvRowFromEvent(
+      'talks-panels',
+      baseEvent({
+        id: 21,
+        slug: 'pecha-kucha-amsterdam-vol-9-mediamatic-2009',
+        title: 'Pecha Kucha Night Amsterdam Vol. 9',
+        eventType: 'talk-panel',
+        venueName: 'Mediamatic',
+        venueCity: 'Amsterdam',
+        yearStart: 2009,
+        hasPage: true,
+      }),
+    )
+    expect(other.kind).toBe('venue-title')
+    if (other.kind !== 'venue-title') return
+    expect(other.listedAs).toBeNull()
+    expect(cvRowPlainText(other)).not.toContain('listed as')
+  })
+})
+
 describe('cvRowFromEvent publication rows', () => {
   it('renders publication title once, not duplicated', () => {
     const event = baseEvent({

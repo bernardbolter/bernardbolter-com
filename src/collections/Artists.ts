@@ -86,7 +86,7 @@ export const Artists: CollectionConfig = {
       label: 'Legal / full name',
       admin: {
         description:
-          'Full legal name if different (e.g. Bernard John Bolter IV). Used for credits and formal records; optional.',
+          'Full legal/artist name of record (e.g. Bernard John Bolter IV). Distinct from Professional name (`name`), which remains the working/display name sitewide. The CV print header reads this field; every other page continues reading `name`.',
       },
     },
     slugField({ useAsSlug: 'name' }),

@@ -29,7 +29,7 @@ export default async function CvPage() {
       />
       <CV
         sections={sections}
-        printName={artist?.name ?? null}
+        printName={artist?.nameLegal?.trim() || artist?.name || null}
         printBirthLine={artist ? formatBioBirthLine(artist) : null}
         printLivesLine={artist ? formatBioLivesAndWorksLine(artist) : null}
       />

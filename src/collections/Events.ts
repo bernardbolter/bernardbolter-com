@@ -243,10 +243,13 @@ export const Events: CollectionConfig = {
               name: 'coExhibitors',
               type: 'array',
               admin: {
-                description: 'Other artists in this show. Link a People record for each co-exhibitor.',
+                description:
+                  'Collaborators / co-exhibitors linked to this event. Link a People record for each. For talk-panel nights, use for genuine collaborators on the artist\'s piece (not fellow presenters — those go in otherParticipants).',
                 condition: (_, sibling) =>
                   sibling?.eventType === 'group-exhibition' ||
-                  sibling?.eventType === 'art-fair',
+                  sibling?.eventType === 'art-fair' ||
+                  sibling?.eventType === 'talk-panel' ||
+                  sibling?.eventType === 'performance',
               },
               fields: [
                 {
@@ -261,7 +264,53 @@ export const Events: CollectionConfig = {
                 {
                   name: 'role',
                   type: 'text',
-                  admin: { description: 'Optional — e.g. painter, sculptor, video artist.' },
+                  admin: { description: 'Optional — e.g. painter, sculptor, or shared duo credit like "Ransom & Mitchell — photographer / director".' },
+                },
+              ],
+            },
+            {
+              name: 'jurors',
+              type: 'array',
+              admin: {
+                description:
+                  "Named jurors/selection panel for juried exhibitions or awards. Distinct from coExhibitors — jurors judge, they don't show work.",
+              },
+              fields: [
+                {
+                  name: 'person',
+                  type: 'relationship',
+                  relationTo: 'people',
+                  required: true,
+                },
+                {
+                  name: 'role',
+                  type: 'text',
+                  admin: {
+                    description: 'Optional — e.g. Artistic Director, CounterPulse.',
+                  },
+                },
+              ],
+            },
+            {
+              name: 'otherParticipants',
+              type: 'array',
+              admin: {
+                description:
+                  "Other named, real participants at the same event who were neither co-exhibitors (didn't show alongside the artist's own work) nor jurors — e.g. fellow presenters at a shared-bill talk/performance night.",
+              },
+              fields: [
+                {
+                  name: 'person',
+                  type: 'relationship',
+                  relationTo: 'people',
+                  required: true,
+                },
+                {
+                  name: 'role',
+                  type: 'text',
+                  admin: {
+                    description: 'Optional — e.g. fellow presenter, Pecha Kucha Vol. 9.',
+                  },
                 },
               ],
             },

@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildSessionJsonLd,
+  buildTier5EventSessionsResponse,
   buildTier5SessionByIdResponse,
   buildTier5SessionsResponse,
   projectTier5Session,
   sessionMatchesArtworkSlug,
+  sessionMatchesEventSlug,
   type Tier5SessionSource,
 } from '@/lib/corpus/buildTier5SessionsResponse'
 import {
@@ -65,6 +67,51 @@ function session(overrides: Partial<Tier5SessionSource> = {}): Tier5SessionSourc
     ...overrides,
   }
 }
+
+describe('sessionMatchesEventSlug', () => {
+  it('matches event-enrichment sessions by eventRecord slug', () => {
+    const s = session({
+      sessionType: 'event-enrichment',
+      primaryArtwork: null,
+      artworkRecord: null,
+      mentionedArtworks: [],
+      eventRecord: {
+        id: 40,
+        slug: 'pecha-kucha-amsterdam-vol-9-mediamatic-2009',
+        title: 'Pecha Kucha Night Amsterdam Vol. 9',
+      } as never,
+    })
+    expect(sessionMatchesEventSlug(s, 'pecha-kucha-amsterdam-vol-9-mediamatic-2009')).toBe(true)
+    expect(sessionMatchesEventSlug(s, 'artspan-selections-2017-heron-arts')).toBe(false)
+  })
+})
+
+describe('buildTier5EventSessionsResponse', () => {
+  it('returns event-scoped feed with DialogueSelfAudit namespaced', () => {
+    const s = session({
+      sessionId: 'mediamatic-session-1',
+      sessionType: 'event-enrichment',
+      primaryArtwork: null,
+      artworkRecord: null,
+      mentionedArtworks: [],
+      eventRecord: {
+        id: 40,
+        slug: 'pecha-kucha-amsterdam-vol-9-mediamatic-2009',
+        title: 'Pecha Kucha',
+      } as never,
+    })
+    const body = buildTier5EventSessionsResponse({
+      eventSlug: 'pecha-kucha-amsterdam-vol-9-mediamatic-2009',
+      sessions: [s],
+      baseUrl: 'https://example.com',
+    })
+    expect(body['artism:eventSlug']).toBe('pecha-kucha-amsterdam-vol-9-mediamatic-2009')
+    expect(body.sessions).toHaveLength(1)
+    expect(body.sessions[0].eventRecord).toBe('pecha-kucha-amsterdam-vol-9-mediamatic-2009')
+    expect(body.sessions[0]['artism:DialogueSelfAudit']).toBeDefined()
+    expect(body.sessions[0].artistRecord).toBeDefined()
+  })
+})
 
 describe('sessionMatchesArtworkSlug', () => {
   it('matches primary and mentioned artworks (bidirectional)', () => {

@@ -89,6 +89,9 @@ function CvRowContent({ row }: { row: CvRowModel }) {
               <span className="cv-row__venue">{place}</span>
             </>
           : null}
+          {row.listedAs ?
+            <span className="cv-row__listed-as"> (listed as {row.listedAs})</span>
+          : null}
         </>
       )
     }

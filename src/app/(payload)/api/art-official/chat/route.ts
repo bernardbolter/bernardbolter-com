@@ -221,6 +221,7 @@ export async function POST(request: Request) {
         episodeId,
         artworkRecordId,
         eventRecordId,
+        sessionId: typeof session.sessionId === 'string' ? session.sessionId : null,
         weakPhases: session.weakPhases,
         isLinchpin: session.linchpinFlag?.isLinchpin === true,
         linchpinNote: session.linchpinFlag?.note,
