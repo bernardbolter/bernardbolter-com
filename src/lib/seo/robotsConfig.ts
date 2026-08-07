@@ -39,9 +39,11 @@ export function robotsConfigToText(config: MetadataRoute.Robots): string {
   const lines: string[] = []
 
   if (isProductionRobotsHost()) {
+    const baseUrl = getSiteBaseUrl()
     lines.push(
       '# AI crawlers: preferred machine-readable entry point is',
       `# ${corpusIndexUrl()}`,
+      `# llms.txt: ${baseUrl}/llms.txt`,
       '',
     )
   }

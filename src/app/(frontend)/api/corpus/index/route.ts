@@ -10,6 +10,7 @@ import {
 import { parseCorpusIndexFilters } from '@/lib/corpus/corpusIndexFilters'
 import {
   fetchCorpusArtworks,
+  fetchCorpusArtistForReciprocalLinks,
   fetchCorpusSeries,
   fetchCorpusTotalArtworks,
 } from '@/lib/corpus/fetchCorpusData'
@@ -45,17 +46,19 @@ export async function GET(request: Request) {
   const perPage = parsePerPageParam(searchParams.get('perPage'), defaultPerPage, defaultPerPage)
 
   const payload = await getPayload({ config })
-  const [artworks, seriesList, totalArtworks, sessionCountBySlug] = await Promise.all([
+  const [artworks, seriesList, totalArtworks, sessionCountBySlug, artist] = await Promise.all([
     fetchCorpusArtworks(payload, filters),
     fetchCorpusSeries(payload),
     fetchCorpusTotalArtworks(payload),
     fetchSessionCountBySlug(payload),
+    fetchCorpusArtistForReciprocalLinks(payload),
   ])
 
   const body = buildCorpusIndexResponse({
     artworks,
     totalArtworks,
     seriesList,
+    artist,
     baseUrl: CORPUS_BASE,
     filters,
     depth,

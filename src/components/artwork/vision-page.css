@@ -485,3 +485,23 @@
 .artwork-visual-similarity-card .clip-embedding-note__similar-header {
   display: none;
 }
+
+.artwork-reciprocal-links {
+  list-style: none;
+  margin: 0 0 0.85rem;
+  padding: 0;
+}
+
+.artwork-reciprocal-links li {
+  margin: 0 0 0.45rem;
+}
+
+.artwork-reciprocal-links li:last-child {
+  margin-bottom: 0;
+}
+
+.artwork-reciprocal-links + .artwork-reciprocal-links {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}

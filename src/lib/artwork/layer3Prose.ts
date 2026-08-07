@@ -47,6 +47,7 @@ type ProseColumnOptions = {
   artwork: Artwork
   hasClipEmbedding: boolean
   similarWorksCount: number
+  hasReciprocalLinks?: boolean
 }
 
 /** Gates the single-column desktop fallback — vision cards/similar works count; tags alone do not. */
@@ -54,10 +55,12 @@ export function artworkShowsProseColumn({
   artwork,
   hasClipEmbedding,
   similarWorksCount,
+  hasReciprocalLinks = false,
 }: ProseColumnOptions): boolean {
   if (artworkHasArtistAccountProse(artwork)) return true
   if (preferredVisionAnalysis(artwork)) return true
   if (hasClipEmbedding) return true
   if (similarWorksCount > 0) return true
+  if (hasReciprocalLinks) return true
   return false
 }

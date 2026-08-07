@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
 import { CORPUS_BASE } from '@/lib/corpus/constants'
+import { fetchCorpusArtistForReciprocalLinks } from '@/lib/corpus/fetchCorpusData'
 import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
 import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
@@ -69,7 +70,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     )
   }
 
-  const [result, sessionCountBySlug] = await Promise.all([
+  const [result, sessionCountBySlug, artist] = await Promise.all([
     payload.find({
       collection: 'artworks',
       locale: 'en',
@@ -81,6 +82,7 @@ export async function GET(request: Request, { params }: RouteParams) {
       overrideAccess: true,
     }),
     fetchSessionCountBySlug(payload),
+    fetchCorpusArtistForReciprocalLinks(payload),
   ])
 
   const artwork = result.docs[0]
@@ -115,6 +117,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     baseUrl: CORPUS_BASE,
     sessionCount: sessionCountBySlug.get(slug) ?? 0,
     includeTraversalLinks: true,
+    artist,
   })
 
   return NextResponse.json(body, { headers })

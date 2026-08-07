@@ -148,3 +148,26 @@ export async function fetchCorpusArtist(payload: Payload): Promise<Artist | null
 
   return result.docs[0] ?? null
 }
+
+/**
+ * Allowlisted artist fields for reciprocal throughline/bio reverse lookups.
+ * depth 0 keeps linkedArtworkSlugs as numeric IDs — enough to match artwork.id.
+ */
+export async function fetchCorpusArtistForReciprocalLinks(
+  payload: Payload,
+): Promise<Artist | null> {
+  const result = await payload.find({
+    collection: 'artists',
+    locale: defaultLocale,
+    limit: 1,
+    depth: 0,
+    sort: 'id',
+    select: {
+      bioTimelineEntries: true,
+      statementThroughlines: true,
+    },
+    overrideAccess: true,
+  })
+
+  return (result.docs[0] as Artist | undefined) ?? null
+}

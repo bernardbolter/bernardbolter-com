@@ -72,7 +72,12 @@ describe('buildCorpusIndexResponse', () => {
       sessionsPage: `${baseUrl}/sessions?artwork={slug}`,
     })
     expect(response['artism:tierMap']).toHaveProperty('1')
-    expect(response['artism:tierMap']).not.toHaveProperty('3')
+    expect(response['artism:tierMap']).toHaveProperty('3')
+    expect((response['artism:tierMap'] as Record<string, unknown>)['3']).toMatchObject({
+      urlTemplate: `${baseUrl}/{slug}/vision`,
+      scope: 'work',
+      depth: 'vision',
+    })
     expect(response['artism:coverage']).toMatchObject({ matched: 1 })
 
     const about = response.about as Array<Record<string, unknown>>

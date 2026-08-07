@@ -8,7 +8,7 @@ import { resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import type { TimelineArtwork } from '@/types/timlineTypes'
 
-/** Preload the first row — matches max column count on xl screens. */
+/** Eager image load for the first row — matches max column count on xl screens. */
 const TIMELINE_INITIAL_LOAD_COUNT = 6
 
 type TimelineArtworkSlotProps = {
@@ -24,6 +24,11 @@ type TimelineArtworkSlotProps = {
   onLinkClick: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
+/**
+ * SSR / pre-hydration: always render real title + thumbnail (crawler identity).
+ * After hydration settles: IntersectionObserver may unmount off-screen images
+ * to keep the live DOM lighter — without ever stubbing identity text.
+ */
 export default function TimelineArtworkSlot({
   artwork,
   index,
@@ -37,11 +42,19 @@ export default function TimelineArtworkSlot({
   onLinkClick,
 }: TimelineArtworkSlotProps) {
   const slotRef = useRef<HTMLDivElement>(null)
-  const [loadImage, setLoadImage] = useState(index < TIMELINE_INITIAL_LOAD_COUNT)
+  const [hasHydrated, setHasHydrated] = useState(false)
+  /** Start true so SSR + hydration match (full content). */
+  const [inView, setInView] = useState(true)
   const seriesColor = getSeriesColor(resolveSeriesSlug(artwork) ?? 'default')
+  const title = artwork.title?.trim() || artwork.slug
 
   useEffect(() => {
-    if (loadImage) return
+    setHasHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (!hasHydrated) return
+    if (index < TIMELINE_INITIAL_LOAD_COUNT) return
 
     const slot = slotRef.current
     const root = scrollRootRef.current
@@ -49,17 +62,16 @@ export default function TimelineArtworkSlot({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          setLoadImage(true)
-          observer.disconnect()
-        }
+        setInView(entry.isIntersecting)
       },
       { root, rootMargin: '400px' },
     )
 
     observer.observe(slot)
     return () => observer.disconnect()
-  }, [loadImage, scrollRootRef])
+  }, [hasHydrated, index, scrollRootRef])
+
+  const showImage = !hasHydrated || inView || index < TIMELINE_INITIAL_LOAD_COUNT
 
   return (
     <div
@@ -77,12 +89,14 @@ export default function TimelineArtworkSlot({
       <Link
         href={`/${artwork.slug}`}
         data-timeline-artwork-link
-        className="flex h-full w-full cursor-pointer items-center justify-center"
+        className="relative flex h-full w-full cursor-pointer items-center justify-center"
         draggable={false}
         onDragStart={(event) => event.preventDefault()}
         onClick={onLinkClick}
       >
-        {loadImage ? (
+        {/* Identity text for crawlers / no-JS — must not depend on image mount. */}
+        <span className="artwork-gateway-title">{title}</span>
+        {showImage ? (
           <ArtworkImage
             artwork={artwork}
             artworkContainerWidth={artworkContainerWidth}
@@ -99,9 +113,7 @@ export default function TimelineArtworkSlot({
               height: artworkContainerHeight,
               backgroundColor: seriesColor,
             }}
-          >
-            <p>loading…</p>
-          </div>
+          />
         )}
       </Link>
     </div>

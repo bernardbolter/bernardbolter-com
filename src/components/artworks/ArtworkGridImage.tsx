@@ -89,12 +89,13 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
           {(isImageLoading || imageFailed) && imagePair ? (
             <div
               className="artwork-grid__placeholer-overlay"
+              aria-hidden
               style={{
                 backgroundColor: getSeriesColor(seriesSlug),
                 zIndex: imageFailed ? 20 : 10,
               }}
             >
-              {imageFailed ? <p>image failed to load</p> : <p>image loading...</p>}
+              {imageFailed ? <p>image failed to load</p> : null}
             </div>
           ) : null}
 

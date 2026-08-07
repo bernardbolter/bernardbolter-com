@@ -1,10 +1,12 @@
 import Link from 'next/link'
 
+import ArtworkReciprocalLinksCard from '@/components/artwork/ArtworkReciprocalLinksCard'
 import ArtworkVisionAnalysisCard from '@/components/artwork/ArtworkVisionAnalysisCard'
 import ArtworkVisualSimilarityCard from '@/components/artwork/ArtworkVisualSimilarityCard'
 import type { SimilarWorkItem } from '@/components/artwork/similarWorkItem'
 import { getArtworkImagePair, resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
+import type { ReciprocalLink } from '@/lib/artist/reciprocalLinks'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { preferredVisionAnalysis } from '@/lib/artwork/visionPage'
 import type { SimilarArtworkCard } from '@/lib/payload/similarArtworksPage'
@@ -14,6 +16,8 @@ type Props = {
   artwork: Artwork
   similarWorks?: SimilarArtworkCard[] | null
   hasClipEmbedding: boolean
+  relatedThroughlines?: ReciprocalLink[]
+  relatedBioEvents?: ReciprocalLink[]
 }
 
 const TAG_COLORS: Record<Tag['type'], string> = {
@@ -71,7 +75,13 @@ function similarWorkItems(works: SimilarArtworkCard[] | null | undefined): Simil
     .filter((work): work is SimilarWorkItem => work !== null)
 }
 
-export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbedding }: Props) {
+export default function Layer3ArtistAccount({
+  artwork,
+  similarWorks,
+  hasClipEmbedding,
+  relatedThroughlines = [],
+  relatedBioEvents = [],
+}: Props) {
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
   const seriesColor = getSeriesColor(seriesSlug)
 
@@ -197,6 +207,12 @@ export default function Layer3ArtistAccount({ artwork, similarWorks, hasClipEmbe
             similarWorks={similarItems}
           />
         ) : null}
+
+        <ArtworkReciprocalLinksCard
+          seriesColor={seriesColor}
+          throughlines={relatedThroughlines}
+          bioEvents={relatedBioEvents}
+        />
 
         {latestAnalysis ? (
           <ArtworkVisionAnalysisCard artwork={artwork} seriesColor={seriesColor} />

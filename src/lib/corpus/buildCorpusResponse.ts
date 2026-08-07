@@ -81,6 +81,7 @@ export type BuildCorpusListOptions = {
   /** Whole-corpus published count (unfiltered). */
   totalArtworks: number
   seriesList?: Series[]
+  /** Used for Tier 1 hasThroughlineConnections signal (index) and author block (root). */
   artist?: Artist | null
   baseUrl?: string
   filters?: CorpusIndexFilters
@@ -162,6 +163,7 @@ export function buildCorpusIndexResponse(options: BuildCorpusListOptions): Recor
       buildCorpusRecord(artwork, isSurvey ? 'survey' : 'index', {
         baseUrl,
         sessionCount: sessionCountFor(artwork, sessionCountBySlug),
+        artist: options.artist ?? null,
       }),
     ),
   }

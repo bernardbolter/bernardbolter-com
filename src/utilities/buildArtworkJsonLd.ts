@@ -1,9 +1,13 @@
-import type { Artwork, Event, Media, Series, Tag } from '@/payload-types'
+import type { Artist, Artwork, Event, Media, Series, Tag } from '@/payload-types'
 
+import {
+  findRelatedBioEvents,
+  findRelatedThroughlines,
+} from '@/lib/artist/reciprocalLinks'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { buildArtMediumJsonLdValue } from '@/lib/artwork/mediumVocabulary'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
-import { computeAvailableTiers } from '@/lib/corpus/availableTiers'
+import { artworkHasVisionTier, computeAvailableTiers } from '@/lib/corpus/availableTiers'
 import { ARTISM_NS, CORPUS_BASE } from '@/lib/corpus/constants'
 import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
 import { buildSeriesNode } from '@/lib/corpus/seriesIdentity'
@@ -44,6 +48,8 @@ export type BuildArtworkJsonLdOptions = {
    * Embedded in a list feed: per-work availableTiers only — never scope/depth/tier/feedRole/tierMap.
    */
   embedded?: boolean
+  /** Artist row for live reciprocal throughline/bio reverse lookups (Tier 4). */
+  artist?: Artist | null
 }
 
 function trimString(value: unknown): string {
@@ -285,7 +291,19 @@ export function buildArtworkJsonLd(
     doc['artism:sessionsPageUrl'] = `${baseUrl}/sessions?artwork=${encodeURIComponent(slug)}`
     Object.assign(doc, buildScopeDepthEnvelope('record'))
     doc['artism:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
-    doc['artism:tierMap'] = buildTierMap(baseUrl)
+    doc['artism:tierMap'] = buildTierMap(baseUrl, {
+      includeVisionTier: artworkHasVisionTier(artwork),
+    })
+
+    const artist = options.artist ?? null
+    const relatedByThroughline = findRelatedThroughlines(artist, artwork, baseUrl)
+    if (relatedByThroughline.length) {
+      doc['artism:relatedByThroughline'] = relatedByThroughline
+    }
+    const relatedByBioEvent = findRelatedBioEvents(artist, artwork, baseUrl)
+    if (relatedByBioEvent.length) {
+      doc['artism:relatedByBioEvent'] = relatedByBioEvent
+    }
   } else if (embedded && slug) {
     // List context: work property only — envelope fields stay on the DataFeed.
     doc['artism:availableTiers'] = computeAvailableTiers(artwork, sessionCount)

@@ -1,15 +1,18 @@
+import { artworkHasThroughlineConnections } from '@/lib/artist/reciprocalLinks'
 import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
 import { computeAvailableTiers } from '@/lib/corpus/availableTiers'
 import { CORPUS_BASE } from '@/lib/corpus/constants'
 import { resolveGist } from '@/lib/corpus/corpusGist'
 import { buildSeriesNode, buildSeriesRef } from '@/lib/corpus/seriesIdentity'
-import type { Artwork, Series } from '@/payload-types'
+import type { Artist, Artwork, Series } from '@/payload-types'
 
 export type CorpusRecordDepth = 'index' | 'survey'
 
 export type BuildCorpusRecordContext = {
   baseUrl?: string
   sessionCount?: number
+  /** Artist row for Tier 1 reciprocal-connection signal (live reverse lookup). */
+  artist?: Artist | null
 }
 
 function resolveSeries(artwork: Artwork): Series | null {
@@ -101,6 +104,11 @@ export function buildCorpusRecord(
   record['artism:visionPageUrl'] = `${baseUrl}/${slug}/vision`
   if (availableTiers['5']) {
     record['artism:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
+  }
+
+  // Tier 1 signal only — full reciprocal detail stays on Tier 4.
+  if (ctx.artist && artworkHasThroughlineConnections(ctx.artist, artwork)) {
+    record['artism:hasThroughlineConnections'] = true
   }
 
   return record

@@ -36,6 +36,7 @@ describe('robots production gate', () => {
     const text = robotsConfigToText(rules)
     expect(text).toContain('Sitemap: https://bernardbolter.com/sitemap.xml')
     expect(text).toContain('https://bernardbolter.com/api/corpus/index')
+    expect(text).toContain('# llms.txt: https://bernardbolter.com/llms.txt')
   })
 
   it('allows AI crawlers on self-hosted production without VERCEL_ENV', async () => {

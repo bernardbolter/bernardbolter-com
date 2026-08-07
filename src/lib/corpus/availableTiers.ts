@@ -12,6 +12,11 @@ function hasTags(artwork: Artwork): boolean {
   return (artwork.conceptualKeywords ?? []).some((row) => Boolean(row?.keyword?.trim()))
 }
 
+/** Same rule as sitemap vision pages — ≥1 analysis with non-empty text. */
+export function artworkHasVisionTier(artwork: Pick<Artwork, 'visionAnalyses'>): boolean {
+  return (artwork.visionAnalyses ?? []).some((row) => Boolean(row?.text?.trim()))
+}
+
 /**
  * Field-presence tiers — not reasoningStatus.
  * Absent key `"3"` means no such rung; `"5": false` means empty for this work.
@@ -27,10 +32,16 @@ export function computeAvailableTiers(
       hasTags(artwork),
   )
 
-  return {
+  const tiers: Record<string, boolean> = {
     '1': true,
     '2': hasSurveyDepth,
     '4': true,
     '5': sessionCount > 0,
   }
+
+  if (artworkHasVisionTier(artwork)) {
+    tiers['3'] = true
+  }
+
+  return tiers
 }

@@ -201,7 +201,7 @@ describe('buildTier5SessionsResponse', () => {
     )
     expect(veniceResponse['artism:coverage']).toEqual({ sessionCount: 1 })
     expect(veniceResponse['artism:tierMap']).toHaveProperty('5')
-    expect(veniceResponse['artism:tierMap']).not.toHaveProperty('3')
+    expect(veniceResponse['artism:tierMap']).toHaveProperty('3')
     expect(veniceResponse.sessions[0]?.mentionedArtworks).toEqual([
       'skulptur-projekte-m-nster-2007',
     ])

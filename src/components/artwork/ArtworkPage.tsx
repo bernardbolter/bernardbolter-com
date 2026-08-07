@@ -6,6 +6,10 @@ import Layer3ArtistAccount from '@/components/artwork/Layer3ArtistAccount'
 import Layer4History from '@/components/artwork/Layer4History'
 import SeriesCard from '@/components/artwork/SeriesCard'
 import CorpusMachineLinks from '@/components/corpus/CorpusMachineLinks'
+import {
+  findRelatedBioEvents,
+  findRelatedThroughlines,
+} from '@/lib/artist/reciprocalLinks'
 import { getEditionTierLabelMaps } from '@/lib/artwork/getEditionTierLabelMaps'
 import {
   artworkHasClipEmbedding,
@@ -41,12 +45,15 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
     ])
   const similarWorks = similarWorksResult ?? []
   const hasSessions = (sessionCountBySlug.get(artwork.slug) ?? 0) > 0
+  const relatedThroughlines = findRelatedThroughlines(artist, artwork, '')
+  const relatedBioEvents = findRelatedBioEvents(artist, artwork, '')
 
   const showVideo = isVideoPrimaryArtwork(artwork)
   const hasProseColumn = artworkShowsProseColumn({
     artwork,
     hasClipEmbedding,
     similarWorksCount: similarWorks.length,
+    hasReciprocalLinks: relatedThroughlines.length > 0 || relatedBioEvents.length > 0,
   })
 
   return (
@@ -79,6 +86,8 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
               artwork={artwork}
               similarWorks={similarWorks}
               hasClipEmbedding={hasClipEmbedding}
+              relatedThroughlines={relatedThroughlines}
+              relatedBioEvents={relatedBioEvents}
             />
           </div>
         </div>
