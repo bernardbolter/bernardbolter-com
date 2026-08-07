@@ -10,14 +10,15 @@ import { attachPublicSessionRefs } from '@/lib/artist/attachPublicSessionRefs'
 import { formatBioBirthLine, formatBioLivesAndWorksLine } from '@/lib/bio/bioHeader'
 import { getBioPageArtist } from '@/lib/payload/bioPage'
 import { getPublishedSeriesMentions } from '@/lib/payload/series'
+import { buildPageMetadata } from '@/lib/seo/pageMetadata'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Bio',
   description: 'Biography of Bernard Bolter.',
-  alternates: { canonical: '/bio' },
-}
+  path: '/bio',
+})
 
 export default async function BioPage() {
   const [rawArtist, seriesMentions] = await Promise.all([

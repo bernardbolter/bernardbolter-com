@@ -6,15 +6,16 @@ import { formatBioBirthLine, formatBioLivesAndWorksLine } from '@/lib/bio/bioHea
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getCvEvents } from '@/lib/payload/cvEvents'
 import { getCvPageArtist } from '@/lib/payload/cvPage'
+import { buildPageMetadata } from '@/lib/seo/pageMetadata'
 import { buildCvJsonLd } from '@/utilities/buildCvJsonLd'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Curriculum vitae',
   description: 'Education, exhibitions, publications, awards, and professional activities.',
-  alternates: { canonical: '/cv' },
-}
+  path: '/cv',
+})
 
 export default async function CvPage() {
   const [events, artist] = await Promise.all([getCvEvents(), getCvPageArtist()])

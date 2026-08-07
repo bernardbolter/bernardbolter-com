@@ -16,15 +16,16 @@ import {
   getStatementAboutEventFromArtist,
   getStatementPageArtist,
 } from '@/lib/payload/statementPage'
+import { buildPageMetadata } from '@/lib/seo/pageMetadata'
 import { generateStatementJsonLd } from '@/utilities/generateStatementJsonLd'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Statement',
   description: 'Artist statement by Bernard Bolter.',
-  alternates: { canonical: '/statement' },
-}
+  path: '/statement',
+})
 
 export default async function StatementPage() {
   const rawArtist = await getStatementPageArtist()

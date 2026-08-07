@@ -3,15 +3,16 @@ import type { Metadata } from 'next'
 import Contact from '@/components/contact/Contact'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtistForContactPage } from '@/lib/payload/contactPage'
+import { buildPageMetadata } from '@/lib/seo/pageMetadata'
 import { generateContactPageJsonLd } from '@/utilities/generateContactPageJsonLd'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Contact',
   description: 'Contact Bernard Bolter for studio and artwork inquiries.',
-  alternates: { canonical: '/contact' },
-}
+  path: '/contact',
+})
 
 export default async function ContactPage() {
   const artist = await getArtistForContactPage()
