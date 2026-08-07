@@ -253,10 +253,10 @@ export default function Layer0Image({ artwork }: Props) {
                     {(!isLoaded || hasError) && (
                       <div
                         className="artwork-detail__placeholder-overlay"
+                        aria-hidden={!hasError}
                         style={{ zIndex: hasError ? 20 : 10 }}
                       >
-                        <p>{artwork.title}</p>
-                        <p>{hasError ? 'image failed to load' : 'loading...'}</p>
+                        {hasError ? <p>image failed to load</p> : null}
                       </div>
                     )}
                     <ArtworkR2Image

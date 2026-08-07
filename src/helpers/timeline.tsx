@@ -233,14 +233,16 @@ export function generateTimeline(config: TimelineConfig): TimelineResult {
       const isFirstArtworkOfYear = !seenYears.has(currentYear)
       seenYears.add(currentYear)
 
-      // Add artwork year timepoint (positioned at center of artwork)
+      // Add artwork year timepoint (positioned at center of artwork).
+      // Visible only for the first artwork of each year — not also for the
+      // last list item (that duplicated labels when the final work shared a year).
       const artworkCenterDistance = currentDistanceFromStart
       timepointsArray.push({
         id: `artwork-year-${currentYear}-${index}`,
         year: currentYear,
         type: 'artwork-year',
         distanceFromStart: artworkCenterDistance,
-        isVisible: index === sortedArtworks.length - 1 || isFirstArtworkOfYear, // Only show first artwork of year or last artwork
+        isVisible: isFirstArtworkOfYear,
       })
 
       // Update position for missing years and next artwork

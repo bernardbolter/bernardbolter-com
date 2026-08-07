@@ -115,4 +115,22 @@ describe('generateTimeline', () => {
     expect(result.artworksArray).toEqual([])
     expect(result.timeSpanInfo).toBeNull()
   })
+
+  it('shows only one visible year label when the last works share a year', () => {
+    const a = artwork({ id: 1, yearCreated: 1994 })
+    const b = artwork({ id: 2, yearCreated: 1993 })
+    const c = artwork({ id: 3, yearCreated: 1993 })
+
+    const { timepointsArray } = generateTimeline({
+      ...baseConfig,
+      sorting: 'latest',
+      artworks: [a, b, c],
+    })
+
+    const visibleYears = timepointsArray
+      .filter((tp) => tp.isVisible)
+      .map((tp) => tp.year)
+    expect(visibleYears.filter((year) => year === 1993)).toHaveLength(1)
+    expect(visibleYears).toEqual([1994, 1993])
+  })
 })

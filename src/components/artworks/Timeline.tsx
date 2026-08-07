@@ -525,7 +525,9 @@ export default function Timeline() {
                 style={{ left: `${marker.x}px`, top: `${marker.y}px` }}
                 aria-label={marker.title}
                 title={marker.title}
-              />
+              >
+                <span className="artwork-gateway-title">{marker.title}</span>
+              </Link>
             ) : (
               <span
                 key={marker.id}
@@ -544,7 +546,9 @@ export default function Timeline() {
               style={{ left: `${marker.x}px`, top: `${marker.y}px` }}
               aria-label={marker.title}
               title={marker.title}
-            />
+            >
+              <span className="artwork-gateway-title">{marker.title}</span>
+            </Link>
           ))}
         </div>
 
