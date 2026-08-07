@@ -205,12 +205,21 @@ export async function runFieldNotePipeline(
     let extractedKeyframes: { timestamp: number; path: string }[] = []
 
     if (isVideoMediaType(fieldNote.mediaType)) {
-      if (stepEnabled(steps, 'keyframes') || stepEnabled(steps, 'whisper')) {
+      const wantKeyframes = stepEnabled(steps, 'keyframes')
+      const wantWhisper = stepEnabled(steps, 'whisper')
+
+      if (wantKeyframes) {
+        // One ffmpeg pass: keyframes + 16 kHz WAV (also covers whisper when both are on).
         const extract = await extractKeyframesAndAudio(localMediaPath, {
           intervalSec: resolveKeyframeIntervalSec(preset),
           workDir: scratchDir,
         })
         extractedKeyframes = extract.keyframes
+        audioPath = extract.audioPath
+        result.duration = Math.round(extract.durationSec)
+      } else if (wantWhisper) {
+        // Whisper-only presets (e.g. Rap Critic TikTok) — no keyframe extraction / R2 upload.
+        const extract = await extractAudioOnly(localMediaPath, scratchDir)
         audioPath = extract.audioPath
         result.duration = Math.round(extract.durationSec)
       }

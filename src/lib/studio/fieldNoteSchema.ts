@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { FIELD_NOTE_SHOT_TYPES } from '@/lib/workers/fieldNotePipelineConstants'
+
 export const fieldNoteMediaTypes = [
   'text',
   'photo',
@@ -30,6 +32,11 @@ export const fieldNoteConceptualThreads = [
   'historical-angle',
 ] as const
 
+/** Rap Critic TikTok clip labels (subset of FIELD_NOTE_SHOT_TYPES). */
+export const rapCriticShotTypes = ['ARRIVE', 'HOOK', 'VERSE', 'DEPART'] as const
+
+export const fieldNoteCameraAngles = ['front', 'rear', 'single'] as const
+
 const locationSchema = z.object({
   lat: z.number(),
   lng: z.number(),
@@ -47,6 +54,9 @@ export const createFieldNoteSchema = z
     capturedAt: z.string().optional(),
     relatedArtwork: z.number().int().positive().optional(),
     relatedEpisode: z.number().int().positive().optional(),
+    shotType: z.enum(FIELD_NOTE_SHOT_TYPES).optional(),
+    take: z.number().int().positive().optional(),
+    cameraAngle: z.enum(fieldNoteCameraAngles).optional(),
     lines: z.array(z.number().int().positive()).optional(),
     register: z.enum(fieldNoteRegisters).optional(),
     processStage: z.enum(fieldNoteProcessStages).optional(),

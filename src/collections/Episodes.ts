@@ -44,6 +44,36 @@ export const Episodes: CollectionConfig = {
       admin: { position: 'sidebar' },
     },
     {
+      name: 'locationName',
+      type: 'text',
+      admin: {
+        description: 'Display name for the pin — e.g. Tiergarten, Neptunbrunnen.',
+      },
+    },
+    {
+      name: 'location',
+      type: 'group',
+      fields: [
+        { name: 'lat', type: 'number' },
+        { name: 'lng', type: 'number' },
+      ],
+    },
+    {
+      name: 'description',
+      type: 'textarea',
+      admin: {
+        description: 'Notes on the artwork / location (separate from concept).',
+      },
+    },
+    {
+      name: 'coverPhoto',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description: 'Optional clean reference still of the artwork — not a video clip.',
+      },
+    },
+    {
       name: 'concept',
       type: 'textarea',
     },

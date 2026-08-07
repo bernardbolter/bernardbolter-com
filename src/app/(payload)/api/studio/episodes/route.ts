@@ -7,6 +7,15 @@ const bodySchema = z.object({
   title: z.string().min(1),
   series: z.enum(['outsider-art-review', 'rap-critic', 'studio-fails', 'studio-series']),
   concept: z.string().optional(),
+  description: z.string().optional(),
+  locationName: z.string().optional(),
+  location: z
+    .object({
+      lat: z.number(),
+      lng: z.number(),
+    })
+    .optional(),
+  coverPhotoId: z.number().int().positive().optional(),
 })
 
 export async function POST(request: Request) {

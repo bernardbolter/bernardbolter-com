@@ -6,7 +6,7 @@ import type {
 import { FIELD_NOTE_SHOT_TYPES, FIELD_NOTE_VERDICTS } from '@/lib/workers/fieldNotePipelineConstants'
 
 const HEAD_SLATE_REGEX =
-  /slate[.,]?\s*episode\s+(\w+)[.,]?\s*(hook|verse|arrive|detail|wide|walk|crowd|talk|ambient|bts)[.,]?\s*(?:take\s+(\w+))?/i
+  /slate[.,]?\s*episode\s+(\w+)[.,]?\s*(hook|verse|arrive|depart|detail|wide|walk|crowd|talk|ambient|bts)[.,]?\s*(?:take\s+(\w+))?/i
 
 const BROLL_LIBRARY_REGEX = /slate[.,]?\s*b-?roll\s+library/i
 

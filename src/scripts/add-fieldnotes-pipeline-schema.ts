@@ -49,6 +49,7 @@ const SHOT_TYPES = [
   'HOOK',
   'VERSE',
   'ARRIVE',
+  'DEPART',
   'DETAIL',
   'WIDE',
   'WALK',

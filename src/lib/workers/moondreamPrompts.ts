@@ -10,6 +10,7 @@ const SHOT_TYPE_PROMPT_BODY: Record<FieldNoteShotType, string> = {
   HOOK: 'List: is a person visible, are they facing the camera, is the background in focus or blurred, what is the lighting (bright/dim/golden/overcast), is text or a location landmark visible.',
   VERSE: "List: person's position in frame (left/center/right), person's pose (standing/gesturing/moving), the artwork or artwork type visible behind them, how much of the artwork is visible (full/partial/cropped), lighting quality, any crowd or bystanders visible.",
   ARRIVE: 'List: direction of movement if visible, what is approaching or coming into frame, foreground/background separation, walking or stationary, any landmark visible.',
+  DEPART: 'List: direction of movement if visible, what is leaving or exiting frame, skating or walking away, foreground/background separation, any landmark still visible.',
   DETAIL: 'List: which part of the object is shown (face/hands/texture/inscription/surface/other), material if identifiable (bronze/stone/paint/other), lighting direction and quality, any visible wear, patina, or damage, dominant colors.',
   WIDE: 'List: how small or large the person appears relative to the artwork or setting, overall setting type (park/street/museum exterior/gallery/urban), sky visible or not, time-of-day light cues, symmetry or framing notes.',
   WALK: 'List: setting type, motion blur present or not, people count visible, notable background elements, lighting.',

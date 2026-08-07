@@ -266,9 +266,32 @@
 }
 
 .studio-form__field label,
+.studio-form__field-label,
 .studio-filters__field label {
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.studio-location-map {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.studio-location-map__canvas {
+  height: 280px;
+  width: 100%;
+  border: 1px solid #d9e1ea;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  z-index: 0;
+}
+
+.studio-location-map__coords {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
 }
 
 .studio-form__field input,

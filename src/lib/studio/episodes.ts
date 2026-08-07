@@ -62,7 +62,15 @@ export async function listEpisodeClips(payload: Payload, user: User, episodeId: 
 export async function createStudioEpisode(
   payload: Payload,
   user: User,
-  input: { title: string; series: Episode['series']; concept?: string },
+  input: {
+    title: string
+    series: Episode['series']
+    concept?: string
+    description?: string
+    locationName?: string
+    location?: { lat: number; lng: number }
+    coverPhotoId?: number
+  },
 ) {
   return payload.create({
     collection: 'episodes',
@@ -70,9 +78,31 @@ export async function createStudioEpisode(
       title: input.title.trim(),
       series: input.series,
       concept: input.concept?.trim(),
+      description: input.description?.trim(),
+      locationName: input.locationName?.trim(),
+      location: input.location,
+      coverPhoto: input.coverPhotoId,
       status: 'concept',
     },
     overrideAccess: false,
     user,
   })
+}
+
+export const RAP_CRITIC_TIKTOK_PRESET_NAME = 'Rap Critic — TikTok'
+
+export async function findCapturePresetByName(
+  payload: Payload,
+  user: User,
+  name: string,
+): Promise<number | null> {
+  const { docs } = await payload.find({
+    collection: 'capture-presets',
+    where: { name: { equals: name } },
+    limit: 1,
+    depth: 0,
+    overrideAccess: false,
+    user,
+  })
+  return docs[0]?.id ?? null
 }

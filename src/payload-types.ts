@@ -1070,7 +1070,7 @@ export interface Event {
          */
         person?: (number | null) | Person;
         /**
-         * Optional — e.g. painter, sculptor, video artist.
+         * Optional — e.g. painter, sculptor, or shared duo credit like "Ransom & Mitchell — photographer / director".
          */
         role?: string | null;
         id?: string | null;
@@ -3548,11 +3548,15 @@ export interface FieldNote {
   /**
    * Parsed from spoken slate — closed vocabulary.
    */
-  shotType?: ('HOOK' | 'VERSE' | 'ARRIVE' | 'DETAIL' | 'WIDE' | 'WALK' | 'CROWD' | 'TALK' | 'AMBIENT' | 'BTS') | null;
+  shotType?: ('HOOK' | 'VERSE' | 'ARRIVE' | 'DEPART' | 'DETAIL' | 'WIDE' | 'WALK' | 'CROWD' | 'TALK' | 'AMBIENT' | 'BTS') | null;
   /**
    * Parsed from slate ("take two" → 2). Blank if not stated.
    */
   take?: number | null;
+  /**
+   * Rap Critic VERSE dual-cam: front (performer) / rear (artwork). Pair via relatedEpisode + VERSE + take.
+   */
+  cameraAngle?: ('front' | 'rear' | 'single') | null;
   /**
    * Parsed from clip tail. Blank if not yet spoken.
    */
@@ -3781,6 +3785,22 @@ export interface Episode {
   title: string;
   series: 'outsider-art-review' | 'rap-critic' | 'studio-fails' | 'studio-series';
   status: 'concept' | 'storyboard' | 'shot' | 'uploaded' | 'edited' | 'posted';
+  /**
+   * Display name for the pin — e.g. Tiergarten, Neptunbrunnen.
+   */
+  locationName?: string | null;
+  location?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  /**
+   * Notes on the artwork / location (separate from concept).
+   */
+  description?: string | null;
+  /**
+   * Optional clean reference still of the artwork — not a video clip.
+   */
+  coverPhoto?: (number | null) | Media;
   concept?: string | null;
   shotList?: string | null;
   storyboard?:
@@ -5266,6 +5286,15 @@ export interface EpisodesSelect<T extends boolean = true> {
   title?: T;
   series?: T;
   status?: T;
+  locationName?: T;
+  location?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  description?: T;
+  coverPhoto?: T;
   concept?: T;
   shotList?: T;
   storyboard?:
@@ -5340,6 +5369,7 @@ export interface FieldNotesSelect<T extends boolean = true> {
   episode?: T;
   shotType?: T;
   take?: T;
+  cameraAngle?: T;
   verdict?: T;
   slateParseStatus?: T;
   processingStatus?: T;

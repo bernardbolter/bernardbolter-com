@@ -107,6 +107,7 @@ export const FieldNotes: CollectionConfig = {
         { label: 'Hook', value: 'HOOK' },
         { label: 'Verse', value: 'VERSE' },
         { label: 'Arrive', value: 'ARRIVE' },
+        { label: 'Depart', value: 'DEPART' },
         { label: 'Detail', value: 'DETAIL' },
         { label: 'Wide', value: 'WIDE' },
         { label: 'Walk', value: 'WALK' },
@@ -116,7 +117,8 @@ export const FieldNotes: CollectionConfig = {
         { label: 'BTS', value: 'BTS' },
       ],
       admin: {
-        description: 'Parsed from spoken slate — closed vocabulary.',
+        description:
+          'Closed vocabulary — slate-parsed or set at upload. Rap Critic: ARRIVE / HOOK / VERSE / DEPART.',
       },
     },
     {
@@ -124,6 +126,20 @@ export const FieldNotes: CollectionConfig = {
       type: 'number',
       admin: {
         description: 'Parsed from slate ("take two" → 2). Blank if not stated.',
+      },
+    },
+    {
+      name: 'cameraAngle',
+      type: 'select',
+      defaultValue: 'single',
+      options: [
+        { label: 'Single', value: 'single' },
+        { label: 'Front', value: 'front' },
+        { label: 'Rear', value: 'rear' },
+      ],
+      admin: {
+        description:
+          'Rap Critic VERSE dual-cam: front (performer) / rear (artwork). Pair via relatedEpisode + VERSE + take.',
       },
     },
     {

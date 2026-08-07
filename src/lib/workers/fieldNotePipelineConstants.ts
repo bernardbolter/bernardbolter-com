@@ -3,6 +3,7 @@ export const FIELD_NOTE_SHOT_TYPES = [
   'HOOK',
   'VERSE',
   'ARRIVE',
+  'DEPART',
   'DETAIL',
   'WIDE',
   'WALK',

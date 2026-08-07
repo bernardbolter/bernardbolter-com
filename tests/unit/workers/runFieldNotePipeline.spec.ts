@@ -4,6 +4,11 @@ import {
   defaultPipelineStepsForMediaType,
   defaultTranscriptTypeForMediaType,
 } from '@/lib/workers/runFieldNotePipeline'
+import type { CapturePresetPipelineStep } from '@/lib/workers/fieldNotePipelineConstants'
+
+function stepEnabled(steps: CapturePresetPipelineStep[], step: CapturePresetPipelineStep): boolean {
+  return steps.includes(step)
+}
 
 describe('runFieldNotePipeline defaults', () => {
   it('maps media types to default pipeline steps', () => {
@@ -23,5 +28,13 @@ describe('runFieldNotePipeline defaults', () => {
     expect(defaultTranscriptTypeForMediaType('video-performance')).toBe('speech')
     expect(defaultTranscriptTypeForMediaType('voice-memo')).toBe('speech')
     expect(defaultTranscriptTypeForMediaType('photo')).toBe('none')
+  })
+
+  it('Rap Critic TikTok preset is whisper-only (no keyframes/moondream/slate)', () => {
+    const steps: CapturePresetPipelineStep[] = ['whisper']
+    expect(stepEnabled(steps, 'whisper')).toBe(true)
+    expect(stepEnabled(steps, 'keyframes')).toBe(false)
+    expect(stepEnabled(steps, 'moondream')).toBe(false)
+    expect(stepEnabled(steps, 'slateParse')).toBe(false)
   })
 })

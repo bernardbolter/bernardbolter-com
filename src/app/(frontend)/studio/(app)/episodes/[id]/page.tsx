@@ -2,7 +2,12 @@ import { notFound } from 'next/navigation'
 
 import { EpisodeDetail } from '@/components/studio/EpisodeDetail'
 import { getStudioPayload } from '@/lib/studio/getStudioPayload'
-import { getStudioEpisode, listEpisodeClips } from '@/lib/studio/episodes'
+import {
+  findCapturePresetByName,
+  getStudioEpisode,
+  listEpisodeClips,
+  RAP_CRITIC_TIKTOK_PRESET_NAME,
+} from '@/lib/studio/episodes'
 
 type PageProps = {
   params: Promise<{ id: string }>
@@ -21,11 +26,18 @@ export default async function EpisodeDetailPage({ params }: PageProps) {
     notFound()
   }
 
-  const clips = await listEpisodeClips(payload, user, episodeId)
+  const [clips, rapCriticPresetId] = await Promise.all([
+    listEpisodeClips(payload, user, episodeId),
+    findCapturePresetByName(payload, user, RAP_CRITIC_TIKTOK_PRESET_NAME),
+  ])
 
   return (
     <section>
-      <EpisodeDetail episode={episode} clips={clips} />
+      <EpisodeDetail
+        episode={episode}
+        clips={clips}
+        rapCriticPresetId={rapCriticPresetId}
+      />
     </section>
   )
 }

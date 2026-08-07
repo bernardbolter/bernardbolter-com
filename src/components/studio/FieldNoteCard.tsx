@@ -34,6 +34,9 @@ export function FieldNoteCard({ note }: FieldNoteCardProps) {
         <h3>{note.mediaType}</h3>
         <p className="studio-note-card__meta">
           {new Date(note.capturedAt ?? note.createdAt).toLocaleString()} · {note.processingStatus}
+          {note.shotType ? ` · ${note.shotType}` : ''}
+          {note.cameraAngle && note.cameraAngle !== 'single' ? ` · ${note.cameraAngle}` : ''}
+          {note.take != null ? ` · take ${note.take}` : ''}
         </p>
         {note.writtenNote ? <p>{note.writtenNote.slice(0, 80)}</p> : null}
         {artwork?.title || episode?.title ? (
