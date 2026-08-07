@@ -1,7 +1,6 @@
 import Link from 'next/link'
 
 import EditionTierRegistry from '@/components/artwork/EditionTierRegistry'
-import { reasoningStatusCopy } from '@/components/artwork/ReasoningStatusBadge'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import { getArtworkExhibitionEvents } from '@/lib/artwork/artworkExhibitionEvents'
 import {
@@ -28,6 +27,7 @@ import type { EditionTierLabelMaps } from '@/lib/artwork/editionTierDisplay'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { labelForSameAsUri } from '@/lib/artwork/sameAsDomainLabel'
 import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
+import { resolveRecordCataloguingLabel } from '@/lib/artwork/recordCataloguingLabel'
 import { formatMonthYear } from '@/utilities/formatMonthYear'
 import type { Artist, Artwork } from '@/payload-types'
 
@@ -203,9 +203,7 @@ function OriginalTierBlock({
 }
 
 function RecordMetaFooter({ artwork }: { artwork: Artwork }) {
-  const reasoningLabel = artwork.reasoningStatus
-    ? reasoningStatusCopy[artwork.reasoningStatus]
-    : null
+  const reasoningLabel = resolveRecordCataloguingLabel(artwork)
   const lastUpdated = formatMonthYear(artwork.updatedAt)
 
   if (!artwork.catalogueNumber && !reasoningLabel && !lastUpdated) return null
@@ -264,7 +262,11 @@ export default function Layer2StatusAndProvenance({
     exhibitions.length > 0 ||
     loans.length > 0 ||
     externalLinks.length > 0 ||
-    Boolean(artwork.catalogueNumber || artwork.reasoningStatus || artwork.updatedAt)
+    Boolean(
+      artwork.catalogueNumber ||
+        resolveRecordCataloguingLabel(artwork) ||
+        artwork.updatedAt,
+    )
 
   if (!hasContent) return null
 

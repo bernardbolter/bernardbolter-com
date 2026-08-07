@@ -13,7 +13,8 @@ export const revalidate = 3600
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Curriculum vitae',
-  description: 'Education, exhibitions, publications, awards, and professional activities.',
+  description:
+    "Bernard Bolter's CV: education at Gerrit Rietveld Akademie, exhibitions in Berlin, San Francisco, and Amsterdam, and the Digital City Series book.",
   path: '/cv',
 })
 

@@ -16,7 +16,8 @@ export const revalidate = 3600
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Bio',
-  description: 'Biography of Bernard Bolter.',
+  description:
+    'Bernard Bolter: contemporary American artist working between photo-transfer painting and large-format digital collage, using cities as both subject and material. Based in Berlin and San Francisco.',
   path: '/bio',
 })
 

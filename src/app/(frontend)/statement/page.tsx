@@ -23,7 +23,8 @@ export const revalidate = 3600
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Statement',
-  description: 'Artist statement by Bernard Bolter.',
+  description:
+    "Bernard Bolter's artist statement — from an unauthorized 1996 installation inside SFMOMA to a practice built on ideas that outlast any single work.",
   path: '/statement',
 })
 

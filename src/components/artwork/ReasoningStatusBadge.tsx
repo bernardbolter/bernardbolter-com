@@ -1,5 +1,8 @@
 import type { Artwork } from '@/payload-types'
 
+import { resolveRecordCataloguingLabel } from '@/lib/artwork/recordCataloguingLabel'
+
+/** @deprecated Prefer resolveRecordCataloguingLabel — kept for transitional imports. */
 export const reasoningStatusCopy: Record<NonNullable<Artwork['reasoningStatus']>, string> = {
   complete: 'Record fully catalogued via Art/Official',
   partial: 'Record partially catalogued',
@@ -7,12 +10,11 @@ export const reasoningStatusCopy: Record<NonNullable<Artwork['reasoningStatus']>
 }
 
 type Props = {
-  status: Artwork['reasoningStatus']
+  artwork: Artwork
 }
 
-export default function ReasoningStatusBadge({ status }: Props) {
-  if (!status) return null
-  const label = reasoningStatusCopy[status]
+export default function ReasoningStatusBadge({ artwork }: Props) {
+  const label = resolveRecordCataloguingLabel(artwork)
   if (!label) return null
 
   return <p className="reasoning-badge">{label}</p>
