@@ -150,24 +150,19 @@ export async function fetchCorpusArtist(payload: Payload): Promise<Artist | null
 }
 
 /**
- * Allowlisted artist fields for reciprocal throughline/bio reverse lookups.
- * depth 0 keeps linkedArtworkSlugs as numeric IDs — enough to match artwork.id.
+ * Artist row for reciprocal throughline/bio reverse lookups.
+ *
+ * Do NOT add a Payload `select` here. Selecting array fields as
+ * `{ bioTimelineEntries: true, statementThroughlines: true }` returns the
+ * rows but strips nested relationship values — `linkedArtworkSlugs` arrives
+ * as `[]` even when the DB has IDs. Full doc at depth 0 keeps those as
+ * numeric IDs, which is enough to match `artwork.id`.
+ *
+ * (Same danger zone as the denylist-select incident, different shape: this
+ * was an allowlist that silently dropped joined fields.)
  */
 export async function fetchCorpusArtistForReciprocalLinks(
   payload: Payload,
 ): Promise<Artist | null> {
-  const result = await payload.find({
-    collection: 'artists',
-    locale: defaultLocale,
-    limit: 1,
-    depth: 0,
-    sort: 'id',
-    select: {
-      bioTimelineEntries: true,
-      statementThroughlines: true,
-    },
-    overrideAccess: true,
-  })
-
-  return (result.docs[0] as Artist | undefined) ?? null
+  return fetchCorpusArtist(payload)
 }
