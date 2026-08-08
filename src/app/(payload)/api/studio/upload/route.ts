@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises'
 import path from 'node:path'
 
 import { requireStudio } from '@/lib/studio/requireStudio'
@@ -62,8 +61,8 @@ export async function POST(request: Request) {
     const mimeType = resolveMediaMimeType(
       new File([bytes], originalName, { type: reportedType || undefined }),
     )
+    const filesize = bytes.length
     const absolute = resolveAbsolutePathUnderRoot(root, relativePath)
-    const filesize = (await fs.stat(absolute)).size
 
     const media = await createLocalFieldNoteMediaDoc({
       payload,
