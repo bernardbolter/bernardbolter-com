@@ -11,6 +11,7 @@ import { registerProcessFieldNoteWorker } from '@/workers/handlers/processFieldN
 import { registerSuggestLinesWorker } from '@/workers/handlers/suggestLines'
 import { registerSuggestTagsWorker } from '@/workers/handlers/suggestTags'
 import { registerResizeImageWorkers } from '@/workers/handlers/resizeArtworkImage'
+import { registerTranscodeStudioVideoWorker } from '@/workers/handlers/transcodeStudioVideo'
 import { startFieldNoteQueuePoller } from '@/workers/fieldNoteQueuePoller'
 
 async function main() {
@@ -23,6 +24,7 @@ async function main() {
   await registerGenerateEmbeddingsWorker(boss)
   await registerSuggestLinesWorker(boss)
   await registerPatternReportWorker(boss)
+  await registerTranscodeStudioVideoWorker(boss)
 
   startFieldNoteQueuePoller(() => getPayload({ config }))
 

@@ -79,12 +79,10 @@ export async function POST(request: Request) {
       converting = await shouldConvertInboxVideo(absolute, mimeType)
       if (converting) {
         console.log(
-          `[studio/upload] media #${media.id} saved; scheduling background convert`,
+          `[studio/upload] media #${media.id} saved; queueing convert on worker`,
         )
-        scheduleInboxVideoTranscode({
-          payload,
+        await scheduleInboxVideoTranscode({
           mediaId: media.id,
-          root,
           relativePath,
           mimeType,
         })

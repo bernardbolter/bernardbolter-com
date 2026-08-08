@@ -1,7 +1,5 @@
-import type { Payload } from 'payload'
-
 import { needsBrowserVideoTranscode } from '@/lib/workers/ffmpeg'
-import { maybeTranscodeInboxVideo } from '@/lib/studio/ingestStudioVideo'
+import { enqueueTranscodeStudioVideo } from '@/lib/queue/enqueue'
 
 export async function shouldConvertInboxVideo(
   absolutePath: string,
@@ -11,51 +9,20 @@ export async function shouldConvertInboxVideo(
 }
 
 /**
- * Convert .mov/HEVC after the upload response is sent so Cloudflare/proxy
- * timeouts (~100s) do not kill the client connection mid-ffmpeg.
+ * Queue .mov/HEVC conversion on the worker process so the Next.js web app
+ * stays responsive (in-process ffmpeg was pegging CPU/RAM and timing out Postgres).
  */
-export function scheduleInboxVideoTranscode(args: {
-  payload: Payload
+export async function scheduleInboxVideoTranscode(args: {
   mediaId: number
-  root: string
   relativePath: string
   mimeType: string
-}): void {
-  const { payload, mediaId, root, relativePath, mimeType } = args
-
-  setImmediate(() => {
-    void (async () => {
-      const started = Date.now()
-      console.log(`[studio/ingest] background convert start media #${mediaId} (${relativePath})`)
-      try {
-        const result = await maybeTranscodeInboxVideo({ root, relativePath, mimeType })
-        if (
-          result.relativePath === relativePath &&
-          result.mimeType === mimeType
-        ) {
-          console.log(`[studio/ingest] background convert noop media #${mediaId}`)
-          return
-        }
-
-        await payload.update({
-          collection: 'media',
-          id: mediaId,
-          data: {
-            filename: result.relativePath,
-            mimeType: result.mimeType,
-            filesize: result.filesize,
-          },
-          overrideAccess: true,
-        })
-        console.log(
-          `[studio/ingest] background convert done media #${mediaId} → ${result.relativePath} in ${Date.now() - started}ms`,
-        )
-      } catch (error) {
-        console.error(
-          `[studio/ingest] background convert failed media #${mediaId}`,
-          error,
-        )
-      }
-    })()
+}): Promise<void> {
+  const jobId = await enqueueTranscodeStudioVideo({
+    mediaId: args.mediaId,
+    relativePath: args.relativePath,
+    mimeType: args.mimeType,
   })
+  console.log(
+    `[studio/ingest] queued convert media #${args.mediaId} job=${jobId ?? 'null'} (${args.relativePath})`,
+  )
 }

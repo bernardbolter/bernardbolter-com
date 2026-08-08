@@ -4,6 +4,7 @@ import {
   type GenerateTimelapsePayload,
   type ProcessFieldNotePayload,
   type ResizeImageOnUploadPayload,
+  type TranscodeStudioVideoPayload,
 } from '@/lib/queue/jobs'
 
 export async function enqueueProcessFieldNote(fieldNoteId: number): Promise<string | null> {
@@ -30,4 +31,11 @@ export async function enqueueResizeImageOnUpload(
 export async function enqueueResizeImageBackfill(): Promise<string | null> {
   const boss = await getBoss()
   return boss.send(JOB_NAMES.RESIZE_IMAGE_BACKFILL, {})
+}
+
+export async function enqueueTranscodeStudioVideo(
+  input: TranscodeStudioVideoPayload,
+): Promise<string | null> {
+  const boss = await getBoss()
+  return boss.send(JOB_NAMES.TRANSCODE_STUDIO_VIDEO, input)
 }

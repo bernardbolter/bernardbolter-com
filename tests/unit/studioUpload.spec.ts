@@ -27,7 +27,7 @@ vi.mock('@/lib/studio/ingestStudioVideo', () => ({
 
 vi.mock('@/lib/studio/backgroundTranscode', () => ({
   shouldConvertInboxVideo: vi.fn(async () => false),
-  scheduleInboxVideoTranscode: vi.fn(),
+  scheduleInboxVideoTranscode: vi.fn(async () => undefined),
 }))
 
 import { requireStudio } from '@/lib/studio/requireStudio'

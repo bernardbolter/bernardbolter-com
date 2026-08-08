@@ -9,6 +9,7 @@ export const JOB_NAMES = {
   PATTERN_REPORT: 'pattern-report',
   RESIZE_IMAGE_BACKFILL: 'resize-image-backfill',
   RESIZE_IMAGE_ON_UPLOAD: 'resize-image-on-upload',
+  TRANSCODE_STUDIO_VIDEO: 'transcode-studio-video',
 } as const
 
 export type JobName = (typeof JOB_NAMES)[keyof typeof JOB_NAMES]
@@ -47,6 +48,12 @@ export type ResizeImageOnUploadPayload = {
 
 export type ResizeImageBackfillPayload = Record<string, never>
 
+export type TranscodeStudioVideoPayload = {
+  mediaId: number
+  relativePath: string
+  mimeType: string
+}
+
 export type JobPayloadMap = {
   [JOB_NAMES.PROCESS_FIELD_NOTE]: ProcessFieldNotePayload
   [JOB_NAMES.GENERATE_TIMELAPSE]: GenerateTimelapsePayload
@@ -56,4 +63,5 @@ export type JobPayloadMap = {
   [JOB_NAMES.PATTERN_REPORT]: PatternReportPayload
   [JOB_NAMES.RESIZE_IMAGE_ON_UPLOAD]: ResizeImageOnUploadPayload
   [JOB_NAMES.RESIZE_IMAGE_BACKFILL]: ResizeImageBackfillPayload
+  [JOB_NAMES.TRANSCODE_STUDIO_VIDEO]: TranscodeStudioVideoPayload
 }
