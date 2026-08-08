@@ -35,6 +35,13 @@ export const Media: CollectionConfig = {
       'video/x-m4v',
       'video/m4v',
       'application/mp4',
+      'audio/*',
+      'audio/mpeg',
+      'audio/mp4',
+      'audio/wav',
+      'audio/aac',
+      'audio/ogg',
+      'audio/flac',
     ],
   },
   hooks: {

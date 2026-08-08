@@ -22,6 +22,23 @@ export async function POST(request: Request) {
   }
 
   const data = parsed.data
+  const isBeatTrack = data.cameraAngle === 'beat'
+
+  // Instrumental beat for VERSE — store with the take, skip Whisper/ffmpeg pipeline.
+  if (isBeatTrack) {
+    if (data.mediaType !== 'voice-memo') {
+      return Response.json(
+        { error: 'Beat track must use mediaType voice-memo' },
+        { status: 400 },
+      )
+    }
+    if (data.capturePresetId != null) {
+      return Response.json(
+        { error: 'Beat track cannot use a capture preset' },
+        { status: 400 },
+      )
+    }
+  }
 
   const capturePreset =
     data.capturePresetId != null
@@ -40,23 +57,31 @@ export async function POST(request: Request) {
   }
 
   try {
+    const createData = buildFieldNoteCreateData({
+      ...data,
+      capturePreset: isBeatTrack ? null : capturePreset,
+    })
+    if (isBeatTrack) {
+      createData.processingStatus = 'complete'
+      createData.transcriptType = 'none'
+    }
+
     const fieldNote = await payload.create({
       collection: 'field-notes',
-      data: buildFieldNoteCreateData({
-        ...data,
-        capturePreset,
-      }),
+      data: createData,
       overrideAccess: false,
       user,
     })
 
     let queueError: string | undefined
-    try {
-      await queueProcessFieldNote(fieldNote.id)
-    } catch (error) {
-      queueError =
-        error instanceof Error ? error.message : 'Failed to enqueue processing job'
-      console.error(`[studio] field note ${fieldNote.id} created but queue failed`, error)
+    if (!isBeatTrack) {
+      try {
+        await queueProcessFieldNote(fieldNote.id)
+      } catch (error) {
+        queueError =
+          error instanceof Error ? error.message : 'Failed to enqueue processing job'
+        console.error(`[studio] field note ${fieldNote.id} created but queue failed`, error)
+      }
     }
 
     return Response.json({

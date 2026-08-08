@@ -29,6 +29,14 @@ describe('ffmpeg helpers', () => {
   it('rejects invalid ffprobe duration', () => {
     expect(() => parseFfprobeDurationOutput('n/a')).toThrow(/Invalid ffprobe/)
   })
+
+  it('flags .mov paths as needing browser transcode', async () => {
+    const { needsBrowserVideoTranscode } = await import('@/lib/workers/ffmpeg')
+    await expect(needsBrowserVideoTranscode('/tmp/clip.mov')).resolves.toBe(true)
+    await expect(
+      needsBrowserVideoTranscode('/tmp/clip.mp4', 'video/quicktime'),
+    ).resolves.toBe(true)
+  })
 })
 
 describe('ffmpeg integration', () => {

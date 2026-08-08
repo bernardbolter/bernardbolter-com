@@ -148,3 +148,84 @@ export async function extractAudioOnly(
   const durationSec = await probeMediaDurationSec(inputPath)
   return { audioPath, durationSec }
 }
+
+/** Primary video codec name (e.g. h264, hevc) or null if none. */
+export async function probeVideoCodecName(inputPath: string): Promise<string | null> {
+  try {
+    const { stdout } = await execFileAsync(getFfprobePath(), [
+      '-v',
+      'error',
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=codec_name',
+      '-of',
+      'default=noprint_wrappers=1:nokey=1',
+      inputPath,
+    ])
+    const codec = stdout.trim().toLowerCase()
+    return codec || null
+  } catch {
+    return null
+  }
+}
+
+const BROWSER_UNFRIENDLY_CODECS = new Set(['hevc', 'h265', 'prores', 'av1'])
+
+/**
+ * True when the file is likely to fail in Chrome `<video>` (QuickTime/.mov or HEVC/etc.).
+ */
+export async function needsBrowserVideoTranscode(
+  inputPath: string,
+  mimeType?: string,
+): Promise<boolean> {
+  const ext = path.extname(inputPath).toLowerCase()
+  if (ext === '.mov') return true
+  if (mimeType?.toLowerCase() === 'video/quicktime') return true
+
+  const codec = await probeVideoCodecName(inputPath)
+  if (codec && BROWSER_UNFRIENDLY_CODECS.has(codec)) return true
+  return false
+}
+
+/**
+ * Transcode to H.264 + AAC MP4 with faststart for studio preview playback.
+ * Keeps resolution; uses a studio-friendly preset (not archival lossless).
+ */
+export async function transcodeToBrowserMp4(
+  inputPath: string,
+  outputPath: string,
+): Promise<void> {
+  await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  await execFileAsync(
+    getFfmpegPath(),
+    [
+      '-hide_banner',
+      '-loglevel',
+      'error',
+      '-y',
+      '-i',
+      inputPath,
+      '-map',
+      '0:v:0',
+      '-map',
+      '0:a:0?',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'fast',
+      '-crf',
+      '23',
+      '-pix_fmt',
+      'yuv420p',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '192k',
+      '-movflags',
+      '+faststart',
+      outputPath,
+    ],
+    { maxBuffer: 16 * 1024 * 1024 },
+  )
+}

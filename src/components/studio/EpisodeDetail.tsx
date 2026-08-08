@@ -19,8 +19,24 @@ function coverSrc(episode: Episode): string | null {
   return resolveMediaUrl(cover as Media)
 }
 
+function beatEntries(episode: Episode): { url: string; label: string }[] {
+  const entries: { url: string; label: string }[] = []
+  for (const [index, row] of (episode.beatTracks ?? []).entries()) {
+    const media = row.track && typeof row.track === 'object' ? (row.track as Media) : null
+    const url = resolveMediaUrl(media)
+    if (!url) continue
+    entries.push({
+      url,
+      label: row.label?.trim() || `Beat ${index + 1}`,
+    })
+  }
+  return entries
+}
+
 export function EpisodeDetail({ episode, clips, rapCriticPresetId }: EpisodeDetailProps) {
   const image = coverSrc(episode)
+  const beats = beatEntries(episode)
+  const isRapCritic = episode.series === 'rap-critic'
   const hasPin = episode.location?.lat != null && episode.location?.lng != null
 
   return (
@@ -67,14 +83,36 @@ export function EpisodeDetail({ episode, clips, rapCriticPresetId }: EpisodeDeta
         </section>
       ) : null}
 
+      {isRapCritic ? (
+        <section>
+          <h3>Beat tracks ({beats.length}/3)</h3>
+          {beats.length === 0 ? (
+            <p className="studio-muted">No beats yet — upload with a freestyle take, or in admin.</p>
+          ) : (
+            <ul>
+              {beats.map((beat) => (
+                <li key={beat.url}>
+                  <p>{beat.label}</p>
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio controls src={beat.url} className="studio-timelapse" />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
+
       <section>
         <h3>Upload clip</h3>
         <p className="studio-muted">
           ARRIVE / HOOK / VERSE / DEPART — Whisper-only via Rap Critic — TikTok preset.
+          Freestyle (VERSE) takes front + rear together; optional beat appends to the episode (max 3).
+          .mov / HEVC clips are transcoded to MP4 on upload for preview.
         </p>
         <EpisodeClipUpload
           episodeId={episode.id}
           capturePresetId={rapCriticPresetId}
+          beatTrackCount={episode.beatTracks?.length ?? 0}
           clips={clips.map((clip) => ({
             shotType: clip.shotType,
             take: clip.take,

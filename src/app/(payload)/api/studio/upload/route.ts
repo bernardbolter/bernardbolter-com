@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises'
+import path from 'node:path'
 
 import { requireStudio } from '@/lib/studio/requireStudio'
-import { normalizeVideoMimeType } from '@/lib/artOfficial/mediaMime'
+import { resolveMediaMimeType } from '@/lib/artOfficial/mediaMime'
+import { maybeTranscodeInboxVideo } from '@/lib/studio/ingestStudioVideo'
 import {
   buildInboxRelativePath,
   createLocalFieldNoteMediaDoc,
@@ -39,32 +41,67 @@ export async function POST(request: Request) {
   }
 
   let relativePath: string | null = null
+  const root = getFieldNotesMediaRoot()
 
   try {
     const bytes = Buffer.from(await entry.arrayBuffer())
     const originalName = entry instanceof File ? entry.name : 'upload'
+    const reportedType =
+      typeof (entry as { type?: unknown }).type === 'string'
+        ? ((entry as { type: string }).type || '').trim()
+        : ''
     relativePath = buildInboxRelativePath(originalName)
     await writeInboxFile(bytes, relativePath)
 
-    const mimeType = entry.type
-      ? normalizeVideoMimeType(entry.type)
-      : 'application/octet-stream'
+    let mimeType = resolveMediaMimeType(
+      new File([bytes], originalName, { type: reportedType || undefined }),
+    )
+
+    if (mimeType.startsWith('video/')) {
+      const transcoded = await maybeTranscodeInboxVideo({
+        root,
+        relativePath,
+        mimeType,
+      })
+      relativePath = transcoded.relativePath
+      mimeType = transcoded.mimeType
+
+      const media = await createLocalFieldNoteMediaDoc({
+        payload,
+        user,
+        relativePath,
+        mimeType,
+        filesize: transcoded.filesize,
+        alt: mediaAltFromInboxPath(relativePath),
+      })
+
+      return Response.json({ id: media.id, relativePath, mimeType })
+    }
+
+    const absolute = resolveAbsolutePathUnderRoot(root, relativePath)
+    const filesize = (await fs.stat(absolute)).size
 
     const media = await createLocalFieldNoteMediaDoc({
       payload,
       user,
       relativePath,
       mimeType,
-      filesize: bytes.length,
+      filesize,
       alt: mediaAltFromInboxPath(relativePath),
     })
 
-    return Response.json({ id: media.id, relativePath })
+    return Response.json({ id: media.id, relativePath, mimeType })
   } catch (error) {
     if (relativePath) {
       try {
-        const absolute = resolveAbsolutePathUnderRoot(getFieldNotesMediaRoot(), relativePath)
+        const absolute = resolveAbsolutePathUnderRoot(root, relativePath)
         await fs.unlink(absolute)
+        // If .mov was replaced by .mp4 mid-flight, also try the sibling mp4.
+        const parsed = path.parse(relativePath)
+        if (parsed.ext.toLowerCase() === '.mov') {
+          const mp4Relative = path.posix.join(parsed.dir, `${parsed.name}.mp4`)
+          await fs.unlink(resolveAbsolutePathUnderRoot(root, mp4Relative)).catch(() => {})
+        }
       } catch {
         // Best-effort cleanup if media registration failed.
       }

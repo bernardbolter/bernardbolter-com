@@ -76,8 +76,12 @@ export function FieldNoteDetailEditor({ note: initial }: FieldNoteDetailEditorPr
 
       {mediaUrl ? (
         <section>
-          {note.mediaType.startsWith('video') || note.mediaType === 'voice-memo' ? (
-            <video controls src={mediaUrl} className="studio-timelapse" />
+          {note.mediaType === 'voice-memo' || note.cameraAngle === 'beat' ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <audio controls src={mediaUrl} className="studio-timelapse" />
+          ) : note.mediaType.startsWith('video') ? (
+            // eslint-disable-next-line jsx-a11y/media-has-caption
+            <video controls playsInline src={mediaUrl} className="studio-timelapse" />
           ) : note.mediaType === 'photo' ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={mediaUrl} alt="" className="studio-detail__hero" />

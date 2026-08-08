@@ -74,6 +74,32 @@ export const Episodes: CollectionConfig = {
       },
     },
     {
+      name: 'beatTracks',
+      type: 'array',
+      maxRows: 3,
+      labels: { singular: 'Beat', plural: 'Beats' },
+      admin: {
+        description:
+          'Rap Critic: instrumental beats for freestyle (up to 3). Not sent to Whisper.',
+        condition: (data) => data?.series === 'rap-critic',
+      },
+      fields: [
+        {
+          name: 'track',
+          type: 'upload',
+          relationTo: 'media',
+          required: true,
+        },
+        {
+          name: 'label',
+          type: 'text',
+          admin: {
+            description: 'Optional — e.g. “main”, “alt”, “slower”.',
+          },
+        },
+      ],
+    },
+    {
       name: 'concept',
       type: 'textarea',
     },

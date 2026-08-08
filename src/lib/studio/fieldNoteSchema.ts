@@ -35,7 +35,7 @@ export const fieldNoteConceptualThreads = [
 /** Rap Critic TikTok clip labels (subset of FIELD_NOTE_SHOT_TYPES). */
 export const rapCriticShotTypes = ['ARRIVE', 'HOOK', 'VERSE', 'DEPART'] as const
 
-export const fieldNoteCameraAngles = ['front', 'rear', 'single'] as const
+export const fieldNoteCameraAngles = ['front', 'rear', 'single', 'beat'] as const
 
 const locationSchema = z.object({
   lat: z.number(),

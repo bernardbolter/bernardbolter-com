@@ -5,6 +5,15 @@ const VIDEO_EXT_MIME: Record<string, string> = {
   mov: 'video/quicktime',
 }
 
+const AUDIO_EXT_MIME: Record<string, string> = {
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  m4a: 'audio/mp4',
+  aac: 'audio/aac',
+  ogg: 'audio/ogg',
+  flac: 'audio/flac',
+}
+
 /** Browser/OS variants that Payload `media` upload mimeTypes do not list explicitly. */
 const VIDEO_MIME_ALIASES: Record<string, string> = {
   'video/x-m4v': 'video/mp4',
@@ -24,7 +33,8 @@ export function resolveMediaMimeType(file: File): string {
     mime = type
   } else {
     const ext = file.name.split('.').pop()?.toLowerCase()
-    mime = (ext && VIDEO_EXT_MIME[ext]) || 'application/octet-stream'
+    mime =
+      (ext && (VIDEO_EXT_MIME[ext] || AUDIO_EXT_MIME[ext])) || 'application/octet-stream'
   }
 
   if (mime.toLowerCase().startsWith('video/')) {
@@ -35,4 +45,8 @@ export function resolveMediaMimeType(file: File): string {
 
 export function isVideoMediaFile(file: File): boolean {
   return resolveMediaMimeType(file).startsWith('video/')
+}
+
+export function isAudioMediaFile(file: File): boolean {
+  return resolveMediaMimeType(file).startsWith('audio/')
 }

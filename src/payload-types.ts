@@ -3554,9 +3554,9 @@ export interface FieldNote {
    */
   take?: number | null;
   /**
-   * Rap Critic VERSE dual-cam: front (performer) / rear (artwork). Pair via relatedEpisode + VERSE + take.
+   * Rap Critic VERSE: front (performer) / rear (artwork) / beat (instrumental). Pair via relatedEpisode + VERSE + take.
    */
-  cameraAngle?: ('front' | 'rear' | 'single') | null;
+  cameraAngle?: ('front' | 'rear' | 'single' | 'beat') | null;
   /**
    * Parsed from clip tail. Blank if not yet spoken.
    */
@@ -3801,6 +3801,19 @@ export interface Episode {
    * Optional clean reference still of the artwork — not a video clip.
    */
   coverPhoto?: (number | null) | Media;
+  /**
+   * Rap Critic: instrumental beats for freestyle (up to 3). Not sent to Whisper.
+   */
+  beatTracks?:
+    | {
+        track: number | Media;
+        /**
+         * Optional — e.g. “main”, “alt”, “slower”.
+         */
+        label?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   concept?: string | null;
   shotList?: string | null;
   storyboard?:
@@ -5295,6 +5308,13 @@ export interface EpisodesSelect<T extends boolean = true> {
       };
   description?: T;
   coverPhoto?: T;
+  beatTracks?:
+    | T
+    | {
+        track?: T;
+        label?: T;
+        id?: T;
+      };
   concept?: T;
   shotList?: T;
   storyboard?:

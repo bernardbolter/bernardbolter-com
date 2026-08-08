@@ -17,6 +17,14 @@ vi.mock('@/lib/studio/fieldNoteLocalStorage', async (importOriginal) => {
   }
 })
 
+vi.mock('@/lib/studio/ingestStudioVideo', () => ({
+  maybeTranscodeInboxVideo: vi.fn(async (args: { relativePath: string; mimeType: string }) => ({
+    relativePath: args.relativePath,
+    mimeType: args.mimeType,
+    filesize: 5,
+  })),
+}))
+
 import { requireStudio } from '@/lib/studio/requireStudio'
 import { POST } from '@/app/(payload)/api/studio/upload/route'
 
@@ -65,6 +73,7 @@ describe('POST /api/studio/upload', () => {
     expect(await response.json()).toEqual({
       id: 9,
       relativePath: 'inbox/2026/07/uuid-test.jpg',
+      mimeType: 'video/mp4',
     })
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({

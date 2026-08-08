@@ -136,10 +136,11 @@ export const FieldNotes: CollectionConfig = {
         { label: 'Single', value: 'single' },
         { label: 'Front', value: 'front' },
         { label: 'Rear', value: 'rear' },
+        { label: 'Beat', value: 'beat' },
       ],
       admin: {
         description:
-          'Rap Critic VERSE dual-cam: front (performer) / rear (artwork). Pair via relatedEpisode + VERSE + take.',
+          'Rap Critic VERSE: front (performer) / rear (artwork) / beat (instrumental). Pair via relatedEpisode + VERSE + take.',
       },
     },
     {
