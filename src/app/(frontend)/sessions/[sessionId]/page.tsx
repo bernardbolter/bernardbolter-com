@@ -7,6 +7,7 @@ import config from '@payload-config'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
+import SessionTranscript from '@/components/shared/SessionTranscript'
 import { buildSessionJsonLd, sessionTier5ApiPath } from '@/lib/corpus/buildTier5SessionsResponse'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import type { Artwork } from '@/payload-types'
@@ -161,6 +162,8 @@ export default async function PublicSessionPage({ params }: PageProps) {
                 </a>
               </p>
             ) : null}
+
+            <SessionTranscript messages={session.messages} />
           </div>
         </div>
       </DocumentScrollShell>
