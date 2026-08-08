@@ -3,7 +3,10 @@ import path from 'node:path'
 
 import { requireStudio } from '@/lib/studio/requireStudio'
 import { resolveMediaMimeType } from '@/lib/artOfficial/mediaMime'
-import { maybeTranscodeInboxVideo } from '@/lib/studio/ingestStudioVideo'
+import {
+  scheduleInboxVideoTranscode,
+  shouldConvertInboxVideo,
+} from '@/lib/studio/backgroundTranscode'
 import {
   buildInboxRelativePath,
   createLocalFieldNoteMediaDoc,
@@ -56,38 +59,9 @@ export async function POST(request: Request) {
     )
     await writeInboxFile(bytes, relativePath)
 
-    let mimeType = resolveMediaMimeType(
+    const mimeType = resolveMediaMimeType(
       new File([bytes], originalName, { type: reportedType || undefined }),
     )
-
-    if (mimeType.startsWith('video/')) {
-      console.log(`[studio/upload] video received; checking whether to convert…`)
-      const transcoded = await maybeTranscodeInboxVideo({
-        root,
-        relativePath,
-        mimeType,
-      })
-      relativePath = transcoded.relativePath
-      mimeType = transcoded.mimeType
-
-      const media = await createLocalFieldNoteMediaDoc({
-        payload,
-        user,
-        relativePath,
-        mimeType,
-        filesize: transcoded.filesize,
-        alt: mediaAltFromInboxPath(relativePath),
-      })
-
-      console.log(`[studio/upload] media #${media.id} ready (${mimeType})`)
-      return Response.json({
-        id: media.id,
-        relativePath,
-        mimeType,
-        transcoded: mimeType === 'video/mp4' && originalName.toLowerCase().endsWith('.mov'),
-      })
-    }
-
     const absolute = resolveAbsolutePathUnderRoot(root, relativePath)
     const filesize = (await fs.stat(absolute)).size
 
@@ -100,13 +74,37 @@ export async function POST(request: Request) {
       alt: mediaAltFromInboxPath(relativePath),
     })
 
-    return Response.json({ id: media.id, relativePath, mimeType })
+    let converting = false
+    if (mimeType.startsWith('video/')) {
+      converting = await shouldConvertInboxVideo(absolute, mimeType)
+      if (converting) {
+        console.log(
+          `[studio/upload] media #${media.id} saved; scheduling background convert`,
+        )
+        scheduleInboxVideoTranscode({
+          payload,
+          mediaId: media.id,
+          root,
+          relativePath,
+          mimeType,
+        })
+      }
+    }
+
+    console.log(
+      `[studio/upload] media #${media.id} ready (${mimeType}${converting ? ', converting' : ''})`,
+    )
+    return Response.json({
+      id: media.id,
+      relativePath,
+      mimeType,
+      converting,
+    })
   } catch (error) {
     if (relativePath) {
       try {
         const absolute = resolveAbsolutePathUnderRoot(root, relativePath)
         await fs.unlink(absolute)
-        // If .mov was replaced by .mp4 mid-flight, also try the sibling mp4.
         const parsed = path.parse(relativePath)
         if (parsed.ext.toLowerCase() === '.mov') {
           const mp4Relative = path.posix.join(parsed.dir, `${parsed.name}.mp4`)

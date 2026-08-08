@@ -25,6 +25,11 @@ vi.mock('@/lib/studio/ingestStudioVideo', () => ({
   })),
 }))
 
+vi.mock('@/lib/studio/backgroundTranscode', () => ({
+  shouldConvertInboxVideo: vi.fn(async () => false),
+  scheduleInboxVideoTranscode: vi.fn(),
+}))
+
 import { requireStudio } from '@/lib/studio/requireStudio'
 import { POST } from '@/app/(payload)/api/studio/upload/route'
 
@@ -74,6 +79,7 @@ describe('POST /api/studio/upload', () => {
       id: 9,
       relativePath: 'inbox/2026/07/uuid-test.jpg',
       mimeType: 'video/mp4',
+      converting: false,
     })
     expect(create).toHaveBeenCalledWith(
       expect.objectContaining({

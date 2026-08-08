@@ -65,15 +65,10 @@ function formatElapsed(seconds: number): string {
   return m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
-function looksLikeMov(file: File): boolean {
-  const name = file.name.toLowerCase()
-  return name.endsWith('.mov') || file.type === 'video/quicktime'
-}
-
 function uploadStudioFile(
   file: File,
   onProgress?: (progress: UploadProgress) => void,
-): Promise<number> {
+): Promise<{ id: number; converting: boolean }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', '/api/studio/upload')
@@ -98,9 +93,13 @@ function uploadStudioFile(
     }
 
     xhr.onload = () => {
-      let payload: { id?: number; error?: string } = {}
+      let payload: { id?: number; error?: string; converting?: boolean } = {}
       try {
-        payload = JSON.parse(xhr.responseText) as { id?: number; error?: string }
+        payload = JSON.parse(xhr.responseText) as {
+          id?: number
+          error?: string
+          converting?: boolean
+        }
       } catch {
         // ignore parse errors — fall through to status message
       }
@@ -112,17 +111,45 @@ function uploadStudioFile(
         reject(new Error(`Could not upload ${file.name}.`))
         return
       }
-      resolve(payload.id)
+      resolve({ id: payload.id, converting: Boolean(payload.converting) })
     }
 
-    xhr.onerror = () => reject(new Error(`Network error uploading ${file.name}.`))
+    xhr.onerror = () =>
+      reject(
+        new Error(
+          `Network error uploading ${file.name}. Large .mov uploads can fail through the CDN — retry; conversion now runs after upload so it should succeed.`,
+        ),
+      )
     xhr.ontimeout = () =>
-      reject(new Error(`Upload timed out for ${file.name} (server may still be converting).`))
+      reject(new Error(`Upload timed out for ${file.name}. Try again on a stronger connection.`))
 
     const formData = new FormData()
     formData.append('file', file)
     xhr.send(formData)
   })
+}
+
+async function waitForConvert(
+  mediaId: number,
+  onTick?: (elapsedSec: number) => void,
+): Promise<void> {
+  const started = Date.now()
+  const timeoutMs = 20 * 60 * 1000
+
+  while (Date.now() - started < timeoutMs) {
+    onTick?.(Math.floor((Date.now() - started) / 1000))
+    const res = await fetch(`/api/studio/upload-status/${mediaId}`, {
+      credentials: 'include',
+    })
+    if (!res.ok) {
+      throw new Error('Could not check conversion status.')
+    }
+    const data = (await res.json()) as { status?: string }
+    if (data.status === 'ready') return
+    await new Promise((resolve) => window.setTimeout(resolve, 2000))
+  }
+
+  throw new Error('Conversion is taking too long. The file may still finish on the server — refresh in a few minutes.')
 }
 
 async function createFieldNote(body: Record<string, unknown>): Promise<{
@@ -208,7 +235,7 @@ export function EpisodeClipUpload({
   useEffect(() => {
     if (!submitting || !status?.includes('converting')) return
     setDetail(
-      `Server is remuxing/transcoding for browser playback. Dual-cam HEVC can take several minutes. Elapsed ${formatElapsed(elapsedSec)}.`,
+      `Still converting for browser playback. Dual-cam HEVC can take several minutes. Elapsed ${formatElapsed(elapsedSec)}.`,
     )
   }, [elapsedSec, submitting, status])
 
@@ -242,23 +269,31 @@ export function EpisodeClipUpload({
       return
     }
 
-    if (looksLikeMov(fileToUpload)) {
-      setStatus(`Uploaded ${label} — converting .mov to MP4…`)
-      setDetail(
-        `Server is remuxing/transcoding for browser playback. Dual-cam HEVC can take several minutes. Elapsed ${elapsedLabel()}.`,
-      )
-    } else {
-      setStatus(`Uploaded ${label} — saving on server…`)
-      setDetail(`Elapsed ${elapsedLabel()}.`)
-    }
+    setStatus(`Uploaded ${label} — saving on server…`)
+    setDetail(`Elapsed ${elapsedLabel()}.`)
   }
 
   async function uploadWithProgress(label: string, fileToUpload: File): Promise<number> {
     setStatus(`Uploading ${label}… 0%`)
     setDetail(`${formatBytes(0)} / ${formatBytes(fileToUpload.size)}`)
-    return uploadStudioFile(fileToUpload, (progress) => {
+    const uploaded = await uploadStudioFile(fileToUpload, (progress) => {
       reportFileProgress(label, fileToUpload, progress)
     })
+
+    if (uploaded.converting) {
+      setStatus(`Uploaded ${label} — converting .mov to MP4 on server…`)
+      setDetail(
+        `Upload finished. Conversion runs in the background so the connection won’t drop. Elapsed ${elapsedLabel()}.`,
+      )
+      await waitForConvert(uploaded.id, () => {
+        setStatus(`Uploaded ${label} — converting .mov to MP4 on server…`)
+        setDetail(
+          `Still converting for browser playback. Dual-cam HEVC can take several minutes. Elapsed ${elapsedLabel()}.`,
+        )
+      })
+    }
+
+    return uploaded.id
   }
 
   async function onSubmit(event: FormEvent) {
