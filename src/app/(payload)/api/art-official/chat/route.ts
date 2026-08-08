@@ -440,9 +440,13 @@ export async function POST(request: Request) {
 
           const finalPhase = phaseTransition ?? currentPhase
 
-          // Part 3d: omit empty-content tool_results turns from the persisted transcript
+          // Part 3d: omit blank turns from the persisted transcript, but keep
+          // tool_results rows (they use empty `content` + `toolResults[]` for Anthropic replay).
           const messagesToPersist = [userTurn, ...newStored].filter((msg) => {
-            if (msg.kind === 'tool_results' && !msg.content?.trim()) return false
+            if (msg.kind === 'tool_results') {
+              return Boolean(msg.toolResults?.length)
+            }
+            if (!msg.content?.trim() && !msg.toolUses?.length) return false
             return true
           })
 

@@ -22,6 +22,61 @@ export type StoredMessage = {
   timestamp?: string
 }
 
+/**
+ * Anthropic requires every assistant `tool_use` to be followed immediately by a user
+ * message of `tool_result` blocks. Older sessions sometimes dropped those rows (empty
+ * `content` filter). Repair before sending history.
+ */
+export function repairToolUseResultPairing(messages: StoredMessage[]): StoredMessage[] {
+  const out: StoredMessage[] = []
+
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i]!
+
+    if (m.role === 'assistant' && m.toolUses?.length) {
+      out.push(m)
+      const next = messages[i + 1]
+      if (next?.kind === 'tool_results') {
+        const byId = new Map((next.toolResults ?? []).map((tr) => [tr.tool_use_id, tr]))
+        const toolResults = m.toolUses.map(
+          (tu) =>
+            byId.get(tu.id) ?? {
+              tool_use_id: tu.id,
+              content: JSON.stringify({
+                ok: false,
+                error: 'Missing tool_result in session history (repaired)',
+              }),
+            },
+        )
+        out.push({ ...next, toolResults })
+        i += 1
+        continue
+      }
+
+      out.push({
+        role: 'user',
+        content: '',
+        kind: 'tool_results',
+        toolResults: m.toolUses.map((tu) => ({
+          tool_use_id: tu.id,
+          content: JSON.stringify({
+            ok: false,
+            error: 'Missing tool_result in session history (repaired)',
+          }),
+        })),
+      })
+      continue
+    }
+
+    // Skip orphan tool_results rows that were not consumed above.
+    if (m.kind === 'tool_results') continue
+
+    out.push(m)
+  }
+
+  return out
+}
+
 export function buildAnthropicMessageHistory(
   messages: StoredMessage[],
   latestUserText: string,
@@ -29,7 +84,7 @@ export function buildAnthropicMessageHistory(
 ): MessageParam[] {
   const out: MessageParam[] = []
 
-  for (const m of messages) {
+  for (const m of repairToolUseResultPairing(messages)) {
     if (m.kind === 'tool_results' && m.toolResults?.length) {
       const blocks: ToolResultBlockParam[] = m.toolResults.map((tr) => ({
         type: 'tool_result',
