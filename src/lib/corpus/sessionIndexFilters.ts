@@ -100,6 +100,60 @@ export function resolveSessionsIndexCanonical(options: {
   return `/sessions${buildSessionIndexQueryString(filters)}`
 }
 
+type ArtworkLike = { id?: number; slug?: string | null } | number | null | undefined
+
+function artworkSlug(value: ArtworkLike): string | null {
+  if (!value || typeof value !== 'object') return null
+  const slug = value.slug?.trim()
+  return slug || null
+}
+
+/**
+ * Prefer a relationship that actually carries a slug.
+ * Early sessions often have `primaryArtwork: null` and only `artworkRecord` set;
+ * never short-circuit on a populated-but-slugless primary object.
+ */
+export function resolveSessionPrimaryArtwork<T extends { slug?: string | null }>(
+  primaryArtwork: number | T | null | undefined,
+  artworkRecord: number | T | null | undefined,
+): T | null {
+  const primary = primaryArtwork && typeof primaryArtwork === 'object' ? primaryArtwork : null
+  const legacy = artworkRecord && typeof artworkRecord === 'object' ? artworkRecord : null
+  if (primary && artworkSlug(primary)) return primary
+  if (legacy && artworkSlug(legacy)) return legacy
+  return primary ?? legacy
+}
+
+/** Slugs this session should match for `/sessions?artwork=` (primary + mentioned). */
+export function sessionArtworkFilterSlugs(options: {
+  primaryArtwork?: ArtworkLike
+  artworkRecord?: ArtworkLike
+  mentionedArtworks?: ArtworkLike[] | null
+}): string[] {
+  const slugs = new Set<string>()
+  const primary = resolveSessionPrimaryArtwork(options.primaryArtwork, options.artworkRecord)
+  const primarySlug = artworkSlug(primary)
+  if (primarySlug) slugs.add(primarySlug)
+  for (const entry of options.mentionedArtworks ?? []) {
+    const slug = artworkSlug(entry)
+    if (slug) slugs.add(slug)
+  }
+  return [...slugs]
+}
+
+export function sessionMatchesArtworkFilter(
+  session: {
+    primaryArtwork?: ArtworkLike
+    artworkRecord?: ArtworkLike
+    mentionedArtworks?: ArtworkLike[] | null
+  },
+  artworkSlugFilter: string,
+): boolean {
+  const needle = artworkSlugFilter.trim()
+  if (!needle) return true
+  return sessionArtworkFilterSlugs(session).includes(needle)
+}
+
 export function buildSessionIndexQueryString(filters: SessionIndexFilters): string {
   const params = new URLSearchParams()
   if (filters.artwork) params.set('artwork', filters.artwork)

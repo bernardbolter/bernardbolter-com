@@ -2,6 +2,7 @@ import type { Artwork, Event, Session } from '@/payload-types'
 
 import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
+import { resolveSessionPrimaryArtwork } from '@/lib/corpus/sessionIndexFilters'
 import { buildTierMap } from '@/lib/corpus/tierMap'
 
 export type Tier5SessionSource = Pick<
@@ -50,8 +51,11 @@ export function sessionMatchesArtworkSlug(
   session: Tier5SessionSource,
   artworkSlugQuery: string,
 ): boolean {
-  const primary =
-    artworkSlug(session.primaryArtwork) ?? artworkSlug(session.artworkRecord)
+  const primaryDoc = resolveSessionPrimaryArtwork(
+    readArtwork(session.primaryArtwork),
+    readArtwork(session.artworkRecord),
+  )
+  const primary = primaryDoc?.slug?.trim() || null
   if (primary === artworkSlugQuery) return true
   return (session.mentionedArtworks ?? []).some(
     (entry) => artworkSlug(entry) === artworkSlugQuery,
@@ -114,8 +118,11 @@ export function projectTier5Session(session: Tier5SessionSource) {
   if (!sessionId) return null
   if (session.status !== 'completed') return null
 
-  const primary =
-    artworkSlug(session.primaryArtwork) ?? artworkSlug(session.artworkRecord)
+  const primaryDoc = resolveSessionPrimaryArtwork(
+    readArtwork(session.primaryArtwork),
+    readArtwork(session.artworkRecord),
+  )
+  const primary = primaryDoc?.slug?.trim() || null
   const mentioned = (session.mentionedArtworks ?? [])
     .map((entry) => artworkSlug(entry))
     .filter((slug): slug is string => Boolean(slug))

@@ -11,9 +11,11 @@ import {
   buildSessionIndexQueryString,
   SESSION_INDEX_TYPE_OPTIONS,
   parseSessionIndexFilters,
+  resolveSessionPrimaryArtwork,
   resolveSessionsIndexCanonical,
   sessionFilterYearDisplay,
   sessionIndexHasActiveFilters,
+  sessionMatchesArtworkFilter,
   type SessionIndexFilters,
 } from '@/lib/corpus/sessionIndexFilters'
 import { fetchCorpusSeries } from '@/lib/corpus/fetchCorpusData'
@@ -54,10 +56,18 @@ type SessionRow = {
 function filterSessionRows(rows: SessionRow[], filters: SessionIndexFilters): SessionRow[] {
   return rows.filter((row) => {
     if (filters.artwork) {
-      const matchesArtwork =
-        row.primary?.slug === filters.artwork ||
-        row.mentioned.some((artwork) => artwork.slug === filters.artwork)
-      if (!matchesArtwork) return false
+      if (
+        !sessionMatchesArtworkFilter(
+          {
+            primaryArtwork: row.session.primaryArtwork,
+            artworkRecord: row.session.artworkRecord,
+            mentionedArtworks: row.session.mentionedArtworks,
+          },
+          filters.artwork,
+        )
+      ) {
+        return false
+      }
     }
     if (filters.sessionType && row.sessionType !== filters.sessionType) return false
     if (filters.series) {
@@ -132,8 +142,10 @@ const loadSessionsIndex = cache(async (raw: Record<string, string | string[] | u
   const chronologicalPass = new Map<number, number>()
   const seenPerArtwork = new Map<number, number>()
   for (const session of [...result.docs].reverse()) {
-    const primary =
-      readArtwork(session.primaryArtwork) ?? readArtwork(session.artworkRecord)
+    const primary = resolveSessionPrimaryArtwork(
+      readArtwork(session.primaryArtwork),
+      readArtwork(session.artworkRecord),
+    )
     if (!primary) continue
     const next = (seenPerArtwork.get(primary.id) ?? 0) + 1
     seenPerArtwork.set(primary.id, next)
@@ -143,8 +155,10 @@ const loadSessionsIndex = cache(async (raw: Record<string, string | string[] | u
   const allRows: SessionRow[] = result.docs
     .filter((session) => Boolean(session.sessionId))
     .map((session) => {
-      const primary =
-        readArtwork(session.primaryArtwork) ?? readArtwork(session.artworkRecord)
+      const primary = resolveSessionPrimaryArtwork(
+        readArtwork(session.primaryArtwork),
+        readArtwork(session.artworkRecord),
+      )
       const mentioned = (session.mentionedArtworks ?? [])
         .map((entry) => readArtwork(entry))
         .filter((artwork): artwork is Artwork => artwork !== null)

@@ -78,9 +78,6 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
   },
-  verification: {
-    google: 'YOUR_GOOGLE_SITE_VERIFICATION_CODE', // From Google Search Console
-  },
 }
 
 export const dynamic = 'force-dynamic'

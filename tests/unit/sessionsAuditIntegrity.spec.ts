@@ -12,7 +12,11 @@ import {
   validateSelectFieldValue,
 } from '@/lib/artOfficial/enumFieldValidation'
 import { buildSessionGloss } from '@/lib/corpus/sessionGloss'
-import { resolveSessionsIndexCanonical } from '@/lib/corpus/sessionIndexFilters'
+import {
+  resolveSessionPrimaryArtwork,
+  resolveSessionsIndexCanonical,
+  sessionMatchesArtworkFilter,
+} from '@/lib/corpus/sessionIndexFilters'
 
 describe('automatic field conflicts', () => {
   it('only checks image-analysis / knowledge-base sources', () => {
@@ -158,5 +162,62 @@ describe('resolveSessionsIndexCanonical', () => {
         unfilteredCount: 58,
       }),
     ).toBe('/sessions')
+  })
+})
+
+describe('session artwork filter matching', () => {
+  it('matches legacy sessions that only set artworkRecord', () => {
+    expect(
+      sessionMatchesArtworkFilter(
+        {
+          primaryArtwork: null,
+          artworkRecord: { id: 240, slug: 'venice-in-the-middle' },
+          mentionedArtworks: [],
+        },
+        'venice-in-the-middle',
+      ),
+    ).toBe(true)
+  })
+
+  it('matches mentionedArtworks without requiring primary', () => {
+    expect(
+      sessionMatchesArtworkFilter(
+        {
+          primaryArtwork: { id: 1, slug: 'cliff-house-1902' },
+          artworkRecord: { id: 1, slug: 'cliff-house-1902' },
+          mentionedArtworks: [{ id: 2, slug: 'color-theory' }],
+        },
+        'color-theory',
+      ),
+    ).toBe(true)
+  })
+
+  it('does not stick on a slugless primary when artworkRecord has the slug', () => {
+    const primary = resolveSessionPrimaryArtwork(
+      { id: 240 },
+      { id: 240, slug: 'venice-in-the-middle' },
+    )
+    expect(primary?.slug).toBe('venice-in-the-middle')
+    expect(
+      sessionMatchesArtworkFilter(
+        {
+          primaryArtwork: { id: 240 },
+          artworkRecord: { id: 240, slug: 'venice-in-the-middle' },
+        },
+        'venice-in-the-middle',
+      ),
+    ).toBe(true)
+  })
+
+  it('does not false-positive on unrelated slugs', () => {
+    expect(
+      sessionMatchesArtworkFilter(
+        {
+          primaryArtwork: null,
+          artworkRecord: { id: 240, slug: 'venice-in-the-middle' },
+        },
+        'color-theory',
+      ),
+    ).toBe(false)
   })
 })
