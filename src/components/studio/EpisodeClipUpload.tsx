@@ -65,68 +65,109 @@ function formatElapsed(seconds: number): string {
   return m > 0 ? `${m}m ${s}s` : `${s}s`
 }
 
-function uploadStudioFile(
+function putChunk(
+  uploadId: string,
+  index: number,
+  chunk: Blob,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('PUT', `/api/studio/upload-session/${uploadId}/chunk?index=${index}`)
+    xhr.withCredentials = true
+    xhr.timeout = 5 * 60 * 1000
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve()
+        return
+      }
+      let message = `Chunk ${index} failed (HTTP ${xhr.status})`
+      try {
+        const payload = JSON.parse(xhr.responseText) as { error?: string }
+        if (payload.error) message = payload.error
+      } catch {
+        // ignore
+      }
+      reject(new Error(message))
+    }
+    xhr.onerror = () => reject(new Error(`Network error on chunk ${index}`))
+    xhr.ontimeout = () => reject(new Error(`Timed out uploading chunk ${index}`))
+    xhr.setRequestHeader('Content-Type', 'application/octet-stream')
+    xhr.send(chunk)
+  })
+}
+
+async function uploadStudioFile(
   file: File,
   onProgress?: (progress: UploadProgress) => void,
 ): Promise<{ id: number; converting: boolean }> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest()
-    xhr.open('POST', '/api/studio/upload')
-    xhr.withCredentials = true
-    xhr.timeout = 30 * 60 * 1000
-
-    xhr.upload.onprogress = (event) => {
-      if (!event.lengthComputable) return
-      onProgress?.({
-        phase: 'uploading',
-        loaded: event.loaded,
-        total: event.total,
-      })
-    }
-
-    xhr.upload.onload = () => {
-      onProgress?.({
-        phase: 'processing',
-        loaded: file.size,
-        total: file.size,
-      })
-    }
-
-    xhr.onload = () => {
-      let payload: { id?: number; error?: string; converting?: boolean } = {}
-      try {
-        payload = JSON.parse(xhr.responseText) as {
-          id?: number
-          error?: string
-          converting?: boolean
-        }
-      } catch {
-        // ignore parse errors — fall through to status message
-      }
-      if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new Error(payload.error || `Could not upload ${file.name} (HTTP ${xhr.status}).`))
-        return
-      }
-      if (typeof payload.id !== 'number') {
-        reject(new Error(`Could not upload ${file.name}.`))
-        return
-      }
-      resolve({ id: payload.id, converting: Boolean(payload.converting) })
-    }
-
-    xhr.onerror = () =>
-      reject(
-        new Error(
-          `Network error uploading ${file.name}. Large .mov uploads can fail through the CDN — retry; conversion now runs after upload so it should succeed.`,
-        ),
-      )
-    xhr.ontimeout = () =>
-      reject(new Error(`Upload timed out for ${file.name}. Try again on a stronger connection.`))
-
-    const formData = new FormData()
-    formData.append('file', file)
-    xhr.send(formData)
+  const contentType = file.type || 'application/octet-stream'
+  const initRes = await fetch('/api/studio/upload-session', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename: file.name,
+      contentType,
+      totalBytes: file.size,
+    }),
   })
+  if (!initRes.ok) {
+    const payload = (await initRes.json().catch(() => ({}))) as { error?: string }
+    throw new Error(payload.error || `Could not start upload for ${file.name}.`)
+  }
+
+  const session = (await initRes.json()) as {
+    uploadId: string
+    chunkSize: number
+    totalChunks: number
+  }
+
+  let uploaded = 0
+  for (let index = 0; index < session.totalChunks; index++) {
+    const start = index * session.chunkSize
+    const end = Math.min(start + session.chunkSize, file.size)
+    const chunk = file.slice(start, end)
+    // Retry a chunk a couple times — Cloudflare sometimes drops a single request.
+    let lastError: Error | null = null
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await putChunk(session.uploadId, index, chunk)
+        lastError = null
+        break
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        await new Promise((resolve) => window.setTimeout(resolve, 500 * (attempt + 1)))
+      }
+    }
+    if (lastError) throw lastError
+
+    uploaded = end
+    onProgress?.({
+      phase: 'uploading',
+      loaded: uploaded,
+      total: file.size,
+    })
+  }
+
+  onProgress?.({
+    phase: 'processing',
+    loaded: file.size,
+    total: file.size,
+  })
+
+  const completeRes = await fetch(`/api/studio/upload-session/${session.uploadId}/complete`, {
+    method: 'POST',
+    credentials: 'include',
+  })
+  if (!completeRes.ok) {
+    const payload = (await completeRes.json().catch(() => ({}))) as { error?: string }
+    throw new Error(payload.error || `Could not finish upload for ${file.name}.`)
+  }
+  const data = (await completeRes.json()) as { id?: number; converting?: boolean }
+  if (typeof data.id !== 'number') {
+    throw new Error(`Could not finish upload for ${file.name}.`)
+  }
+  return { id: data.id, converting: Boolean(data.converting) }
 }
 
 async function waitForConvert(
@@ -264,7 +305,7 @@ export function EpisodeClipUpload({
         progress.total > 0 ? Math.min(100, Math.round((progress.loaded / progress.total) * 100)) : 0
       setStatus(`Uploading ${label}… ${pct}%`)
       setDetail(
-        `${formatBytes(progress.loaded)} / ${formatBytes(progress.total)} · elapsed ${elapsedLabel()}`,
+        `${formatBytes(progress.loaded)} / ${formatBytes(progress.total)} in 2MB chunks · elapsed ${elapsedLabel()}`,
       )
       return
     }
