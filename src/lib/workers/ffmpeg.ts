@@ -190,13 +190,40 @@ export async function needsBrowserVideoTranscode(
 
 /**
  * Transcode to H.264 + AAC MP4 with faststart for studio preview playback.
- * Keeps resolution; uses a studio-friendly preset (not archival lossless).
+ * H.264-in-.mov remuxes quickly; HEVC/other codecs re-encode with a fast preset.
  */
 export async function transcodeToBrowserMp4(
   inputPath: string,
   outputPath: string,
 ): Promise<void> {
   await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  const codec = await probeVideoCodecName(inputPath)
+
+  if (codec === 'h264') {
+    await execFileAsync(
+      getFfmpegPath(),
+      [
+        '-hide_banner',
+        '-loglevel',
+        'error',
+        '-y',
+        '-i',
+        inputPath,
+        '-map',
+        '0:v:0',
+        '-map',
+        '0:a:0?',
+        '-c',
+        'copy',
+        '-movflags',
+        '+faststart',
+        outputPath,
+      ],
+      { maxBuffer: 16 * 1024 * 1024 },
+    )
+    return
+  }
+
   await execFileAsync(
     getFfmpegPath(),
     [
@@ -213,15 +240,15 @@ export async function transcodeToBrowserMp4(
       '-c:v',
       'libx264',
       '-preset',
-      'fast',
+      'veryfast',
       '-crf',
-      '23',
+      '26',
       '-pix_fmt',
       'yuv420p',
       '-c:a',
       'aac',
       '-b:a',
-      '192k',
+      '160k',
       '-movflags',
       '+faststart',
       outputPath,

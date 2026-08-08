@@ -3,6 +3,7 @@ import path from 'node:path'
 
 import {
   needsBrowserVideoTranscode,
+  probeVideoCodecName,
   transcodeToBrowserMp4,
 } from '@/lib/workers/ffmpeg'
 
@@ -26,6 +27,12 @@ export async function maybeTranscodeInboxVideo(args: {
     }
   }
 
+  const codec = await probeVideoCodecName(absolute)
+  console.log(
+    `[studio/ingest] converting ${args.relativePath} (codec=${codec ?? 'unknown'}) to browser MP4…`,
+  )
+  const started = Date.now()
+
   const parsed = path.parse(args.relativePath)
   const mp4Relative = path.posix.join(parsed.dir, `${parsed.name}.mp4`)
   const mp4Absolute = path.resolve(args.root, mp4Relative)
@@ -36,6 +43,7 @@ export async function maybeTranscodeInboxVideo(args: {
     await transcodeToBrowserMp4(absolute, tmpAbsolute)
     await fs.rename(tmpAbsolute, absolute)
     const stat = await fs.stat(absolute)
+    console.log(`[studio/ingest] done ${args.relativePath} in ${Date.now() - started}ms`)
     return {
       relativePath: args.relativePath,
       mimeType: 'video/mp4',
@@ -49,6 +57,7 @@ export async function maybeTranscodeInboxVideo(args: {
   })
 
   const stat = await fs.stat(mp4Absolute)
+  console.log(`[studio/ingest] done ${mp4Relative} in ${Date.now() - started}ms`)
   return {
     relativePath: mp4Relative,
     mimeType: 'video/mp4',

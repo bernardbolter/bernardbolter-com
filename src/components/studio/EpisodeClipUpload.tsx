@@ -1,6 +1,6 @@
 'use client'
 
-import { FormEvent, useMemo, useRef, useState } from 'react'
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { rapCriticShotTypes } from '@/lib/studio/fieldNoteSchema'
@@ -26,6 +26,12 @@ type EpisodeClipUploadProps = {
   beatTrackCount?: number
 }
 
+type UploadProgress = {
+  phase: 'uploading' | 'processing'
+  loaded: number
+  total: number
+}
+
 function maxTakeForShot(clips: EpisodeClipTakeInfo[], shotType: string): number {
   let max = 0
   for (const clip of clips) {
@@ -41,20 +47,82 @@ function nextDualVerseTake(clips: EpisodeClipTakeInfo[]): number {
   return maxTakeForShot(clips, 'VERSE') + 1 || 1
 }
 
-async function uploadStudioFile(file: File): Promise<number> {
-  const uploadFormData = new FormData()
-  uploadFormData.append('file', file)
-  const uploadRes = await fetch('/api/studio/upload', {
-    method: 'POST',
-    credentials: 'include',
-    body: uploadFormData,
-  })
-  if (!uploadRes.ok) {
-    const payload = (await uploadRes.json().catch(() => ({}))) as { error?: string }
-    throw new Error(payload.error || `Could not upload ${file.name}.`)
+function formatBytes(bytes: number): string {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  let value = bytes
+  let unit = 0
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024
+    unit += 1
   }
-  const uploadData = (await uploadRes.json()) as { id: number }
-  return uploadData.id
+  return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`
+}
+
+function formatElapsed(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return m > 0 ? `${m}m ${s}s` : `${s}s`
+}
+
+function looksLikeMov(file: File): boolean {
+  const name = file.name.toLowerCase()
+  return name.endsWith('.mov') || file.type === 'video/quicktime'
+}
+
+function uploadStudioFile(
+  file: File,
+  onProgress?: (progress: UploadProgress) => void,
+): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', '/api/studio/upload')
+    xhr.withCredentials = true
+    xhr.timeout = 30 * 60 * 1000
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return
+      onProgress?.({
+        phase: 'uploading',
+        loaded: event.loaded,
+        total: event.total,
+      })
+    }
+
+    xhr.upload.onload = () => {
+      onProgress?.({
+        phase: 'processing',
+        loaded: file.size,
+        total: file.size,
+      })
+    }
+
+    xhr.onload = () => {
+      let payload: { id?: number; error?: string } = {}
+      try {
+        payload = JSON.parse(xhr.responseText) as { id?: number; error?: string }
+      } catch {
+        // ignore parse errors — fall through to status message
+      }
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject(new Error(payload.error || `Could not upload ${file.name} (HTTP ${xhr.status}).`))
+        return
+      }
+      if (typeof payload.id !== 'number') {
+        reject(new Error(`Could not upload ${file.name}.`))
+        return
+      }
+      resolve(payload.id)
+    }
+
+    xhr.onerror = () => reject(new Error(`Network error uploading ${file.name}.`))
+    xhr.ontimeout = () =>
+      reject(new Error(`Upload timed out for ${file.name} (server may still be converting).`))
+
+    const formData = new FormData()
+    formData.append('file', file)
+    xhr.send(formData)
+  })
 }
 
 async function createFieldNote(body: Record<string, unknown>): Promise<{
@@ -111,8 +179,11 @@ export function EpisodeClipUpload({
   const [shotType, setShotType] = useState<(typeof rapCriticShotTypes)[number]>('ARRIVE')
   const [submitting, setSubmitting] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
+  const [detail, setDetail] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [elapsedSec, setElapsedSec] = useState(0)
+  const startedAtRef = useRef<number>(0)
 
   const isVerse = shotType === 'VERSE'
   const canAddBeat = beatTrackCount < 3
@@ -121,6 +192,25 @@ export function EpisodeClipUpload({
     if (isVerse) return nextDualVerseTake(clips)
     return maxTakeForShot(clips, shotType) + 1 || 1
   }, [clips, shotType, isVerse])
+
+  useEffect(() => {
+    if (!submitting) {
+      setElapsedSec(0)
+      return
+    }
+    startedAtRef.current = Date.now()
+    const id = window.setInterval(() => {
+      setElapsedSec(Math.floor((Date.now() - startedAtRef.current) / 1000))
+    }, 1000)
+    return () => window.clearInterval(id)
+  }, [submitting])
+
+  useEffect(() => {
+    if (!submitting || !status?.includes('converting')) return
+    setDetail(
+      `Server is remuxing/transcoding for browser playback. Dual-cam HEVC can take several minutes. Elapsed ${formatElapsed(elapsedSec)}.`,
+    )
+  }, [elapsedSec, submitting, status])
 
   function clearInputs() {
     setFile(null)
@@ -133,12 +223,51 @@ export function EpisodeClipUpload({
     if (beatRef.current) beatRef.current.value = ''
   }
 
+  function elapsedLabel(): string {
+    const sec =
+      startedAtRef.current > 0
+        ? Math.floor((Date.now() - startedAtRef.current) / 1000)
+        : elapsedSec
+    return formatElapsed(sec)
+  }
+
+  function reportFileProgress(label: string, fileToUpload: File, progress: UploadProgress) {
+    if (progress.phase === 'uploading') {
+      const pct =
+        progress.total > 0 ? Math.min(100, Math.round((progress.loaded / progress.total) * 100)) : 0
+      setStatus(`Uploading ${label}… ${pct}%`)
+      setDetail(
+        `${formatBytes(progress.loaded)} / ${formatBytes(progress.total)} · elapsed ${elapsedLabel()}`,
+      )
+      return
+    }
+
+    if (looksLikeMov(fileToUpload)) {
+      setStatus(`Uploaded ${label} — converting .mov to MP4…`)
+      setDetail(
+        `Server is remuxing/transcoding for browser playback. Dual-cam HEVC can take several minutes. Elapsed ${elapsedLabel()}.`,
+      )
+    } else {
+      setStatus(`Uploaded ${label} — saving on server…`)
+      setDetail(`Elapsed ${elapsedLabel()}.`)
+    }
+  }
+
+  async function uploadWithProgress(label: string, fileToUpload: File): Promise<number> {
+    setStatus(`Uploading ${label}… 0%`)
+    setDetail(`${formatBytes(0)} / ${formatBytes(fileToUpload.size)}`)
+    return uploadStudioFile(fileToUpload, (progress) => {
+      reportFileProgress(label, fileToUpload, progress)
+    })
+  }
+
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
     setSubmitting(true)
     setError(null)
     setSuccess(null)
     setStatus(null)
+    setDetail(null)
 
     try {
       if (capturePresetId == null) {
@@ -158,9 +287,9 @@ export function EpisodeClipUpload({
         const createdIds: number[] = []
         let queueNote = ''
 
-        setStatus('Uploading front (may transcode .mov)…')
-        const frontMediaId = await uploadStudioFile(frontFile)
-        setStatus('Saving front clip…')
+        const frontMediaId = await uploadWithProgress('front', frontFile)
+        setStatus('Saving front clip note…')
+        setDetail(null)
         const frontNote = await createFieldNote({
           mediaType: 'video-performance',
           mediaFileId: frontMediaId,
@@ -173,9 +302,9 @@ export function EpisodeClipUpload({
         createdIds.push(frontNote.id)
         if (frontNote.queueWarning) queueNote = ' Queue warning — notes saved; worker may pick up later.'
 
-        setStatus('Uploading rear (may transcode .mov)…')
-        const rearMediaId = await uploadStudioFile(rearFile)
-        setStatus('Saving rear clip…')
+        const rearMediaId = await uploadWithProgress('rear', rearFile)
+        setStatus('Saving rear clip note…')
+        setDetail(null)
         const rearNote = await createFieldNote({
           mediaType: 'video-performance',
           mediaFileId: rearMediaId,
@@ -192,9 +321,9 @@ export function EpisodeClipUpload({
           if (!canAddBeat) {
             throw new Error('Episode already has 3 beat tracks.')
           }
-          setStatus('Uploading beat track…')
-          const beatMediaId = await uploadStudioFile(beatFile)
+          const beatMediaId = await uploadWithProgress('beat', beatFile)
           setStatus('Saving beat on episode…')
+          setDetail(null)
           await addEpisodeBeatTrack(episodeId, beatMediaId)
         }
 
@@ -213,9 +342,9 @@ export function EpisodeClipUpload({
         return
       }
 
-      setStatus('Uploading…')
-      const mediaFileId = await uploadStudioFile(file)
-      setStatus('Saving clip…')
+      const mediaFileId = await uploadWithProgress(shotType.toLowerCase(), file)
+      setStatus('Saving clip note…')
+      setDetail(null)
       const created = await createFieldNote({
         mediaType: 'video-performance',
         mediaFileId,
@@ -238,6 +367,7 @@ export function EpisodeClipUpload({
     } finally {
       setSubmitting(false)
       setStatus(null)
+      setDetail(null)
     }
   }
 
@@ -272,7 +402,11 @@ export function EpisodeClipUpload({
               disabled={submitting}
               onChange={(e) => setFrontFile(e.target.files?.[0] ?? null)}
             />
-            {frontFile ? <p className="studio-muted">{frontFile.name}</p> : null}
+            {frontFile ? (
+              <p className="studio-muted">
+                {frontFile.name} · {formatBytes(frontFile.size)}
+              </p>
+            ) : null}
           </div>
           <div className="studio-form__field">
             <label htmlFor={`episode-clip-rear-${episodeId}`}>Rear (artwork)</label>
@@ -284,7 +418,11 @@ export function EpisodeClipUpload({
               disabled={submitting}
               onChange={(e) => setRearFile(e.target.files?.[0] ?? null)}
             />
-            {rearFile ? <p className="studio-muted">{rearFile.name}</p> : null}
+            {rearFile ? (
+              <p className="studio-muted">
+                {rearFile.name} · {formatBytes(rearFile.size)}
+              </p>
+            ) : null}
           </div>
           <div className="studio-form__field">
             <label htmlFor={`episode-clip-beat-${episodeId}`}>
@@ -298,7 +436,11 @@ export function EpisodeClipUpload({
               disabled={submitting || !canAddBeat}
               onChange={(e) => setBeatFile(e.target.files?.[0] ?? null)}
             />
-            {beatFile ? <p className="studio-muted">{beatFile.name}</p> : null}
+            {beatFile ? (
+              <p className="studio-muted">
+                {beatFile.name} · {formatBytes(beatFile.size)}
+              </p>
+            ) : null}
             <p className="studio-muted">
               {canAddBeat
                 ? 'Adds one instrumental to this episode (max 3). Not sent to Whisper.'
@@ -317,16 +459,24 @@ export function EpisodeClipUpload({
             disabled={submitting}
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           />
-          {file ? <p className="studio-muted">{file.name}</p> : null}
+          {file ? (
+            <p className="studio-muted">
+              {file.name} · {formatBytes(file.size)}
+            </p>
+          ) : null}
         </div>
       )}
 
       {error ? <p className="studio-form__error">{error}</p> : null}
       {status ? <p className="studio-muted">{status}</p> : null}
+      {detail ? <p className="studio-muted">{detail}</p> : null}
+      {submitting ? (
+        <p className="studio-muted">Total elapsed: {formatElapsed(elapsedSec)}</p>
+      ) : null}
       {success ? <p className="studio-muted">{success}</p> : null}
       <button type="submit" className="studio-form__submit" disabled={submitting}>
         {submitting
-          ? 'Uploading…'
+          ? 'Working…'
           : isVerse
             ? 'Upload freestyle take'
             : 'Upload clip'}

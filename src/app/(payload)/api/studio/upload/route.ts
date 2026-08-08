@@ -51,6 +51,9 @@ export async function POST(request: Request) {
         ? ((entry as { type: string }).type || '').trim()
         : ''
     relativePath = buildInboxRelativePath(originalName)
+    console.log(
+      `[studio/upload] writing ${originalName} (${bytes.length} bytes) → ${relativePath}`,
+    )
     await writeInboxFile(bytes, relativePath)
 
     let mimeType = resolveMediaMimeType(
@@ -58,6 +61,7 @@ export async function POST(request: Request) {
     )
 
     if (mimeType.startsWith('video/')) {
+      console.log(`[studio/upload] video received; checking whether to convert…`)
       const transcoded = await maybeTranscodeInboxVideo({
         root,
         relativePath,
@@ -75,7 +79,13 @@ export async function POST(request: Request) {
         alt: mediaAltFromInboxPath(relativePath),
       })
 
-      return Response.json({ id: media.id, relativePath, mimeType })
+      console.log(`[studio/upload] media #${media.id} ready (${mimeType})`)
+      return Response.json({
+        id: media.id,
+        relativePath,
+        mimeType,
+        transcoded: mimeType === 'video/mp4' && originalName.toLowerCase().endsWith('.mov'),
+      })
     }
 
     const absolute = resolveAbsolutePathUnderRoot(root, relativePath)
