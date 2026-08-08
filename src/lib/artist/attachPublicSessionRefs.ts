@@ -33,6 +33,7 @@ type PublicSession = Pick<
   | 'sessionType'
   | 'completedAt'
   | 'fieldsCoveredThisSession'
+  | 'fieldUpdateTimeline'
   | 'revisitOf'
   | 'linchpinFlag'
   | 'sessionStruggleFlag'
@@ -64,6 +65,7 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
             sessionType: true,
             completedAt: true,
             fieldsCoveredThisSession: true,
+            fieldUpdateTimeline: true,
             revisitOf: true,
             linchpinFlag: true,
             sessionStruggleFlag: true,
@@ -78,6 +80,7 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
             sessionType: session.sessionType,
             completedAt: session.completedAt,
             fieldsCoveredThisSession: session.fieldsCoveredThisSession,
+            fieldUpdateTimeline: session.fieldUpdateTimeline,
             revisitOf: session.revisitOf,
             linchpinFlag: session.linchpinFlag,
             sessionStruggleFlag: session.sessionStruggleFlag,

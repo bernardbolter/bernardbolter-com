@@ -1,3 +1,4 @@
+import { fieldsCoveredFromTimeline } from '@/lib/artOfficial/automaticFieldConflicts'
 import type { Session } from '@/payload-types'
 
 const SESSION_TYPE_LABELS: Record<string, string> = {
@@ -34,6 +35,8 @@ function ordinal(n: number): string {
 export type SessionGlossInput = {
   sessionType: string
   fieldsCoveredThisSession?: Array<{ field?: string | null } | null> | null
+  /** Fallback when `fieldsCoveredThisSession` was never backfilled at commit. */
+  fieldUpdateTimeline?: Array<{ field?: string | null } | null> | null
   revisitOf?: number | Session | null
   passNumber?: number | null
   linchpinFlag?: { isLinchpin?: boolean | null } | null
@@ -44,13 +47,23 @@ export type SessionGlossInput = {
   priorFieldConflicts?: Array<unknown> | null
 }
 
+function confirmedFieldCount(input: SessionGlossInput): number {
+  const fromCovered = (input.fieldsCoveredThisSession ?? []).filter(
+    (row) => row && typeof row.field === 'string' && row.field.trim(),
+  ).length
+  if (fromCovered > 0) return fromCovered
+  return fieldsCoveredFromTimeline(
+    (input.fieldUpdateTimeline ?? []).filter(
+      (row): row is { field?: string | null } => row != null,
+    ),
+  ).length
+}
+
 /**
  * Short honest gloss for /sessions index (sessions-audit-cursor-spec Part 4).
  */
 export function buildSessionGloss(input: SessionGlossInput): string {
-  const covered = (input.fieldsCoveredThisSession ?? []).filter(
-    (row) => row && typeof row.field === 'string' && row.field.trim(),
-  ).length
+  const covered = confirmedFieldCount(input)
   const typeLabel = SESSION_TYPE_LABELS[input.sessionType] ?? input.sessionType.replace(/-/g, ' ')
 
   let gloss = `${typeLabel} — ${covered} field${covered === 1 ? '' : 's'} confirmed`

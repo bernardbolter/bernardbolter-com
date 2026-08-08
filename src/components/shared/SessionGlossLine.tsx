@@ -17,9 +17,13 @@ function glossInputFromSession(
   session: Session,
   passNumber?: number | null,
 ): SessionGlossInput {
+  const timeline = Array.isArray(session.fieldUpdateTimeline)
+    ? (session.fieldUpdateTimeline as Array<{ field?: string | null }>)
+    : null
   return {
     sessionType: session.sessionType,
     fieldsCoveredThisSession: session.fieldsCoveredThisSession,
+    fieldUpdateTimeline: timeline,
     revisitOf: session.revisitOf,
     passNumber: passNumber ?? null,
     linchpinFlag: session.linchpinFlag,

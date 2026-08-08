@@ -4,6 +4,21 @@ import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 
 type JsonRow = Record<string, unknown>
 
+/** Top-level commerce / private fields — omit entirely for public reads (do not set `undefined`; RSC serializes that as `"$undefined"` and leaks field names). */
+export const PRIVATE_ARTWORK_COMMERCE_FIELDS = [
+  'askingPrice',
+  'salesRecord',
+  'consignmentDetails',
+  'totalRevenue',
+  'insuranceValue',
+  'insuranceValueDate',
+  'listingCurrency',
+  'originalAskingPrice',
+  'priceNotes',
+  'artworkHolder',
+  'provenanceNotes',
+] as const
+
 function asRows(value: unknown): JsonRow[] {
   return Array.isArray(value) ? (value as JsonRow[]) : []
 }
@@ -107,21 +122,31 @@ function sanitizeCurrentLocation(location: unknown): JsonRow | null {
   return { category }
 }
 
+/** Drop private commerce keys so they never enter RSC flight / public JSON. */
+export function omitPrivateArtworkCommerceFields<T extends Record<string, unknown>>(doc: T): T {
+  const out = { ...doc } as Record<string, unknown>
+  for (const key of PRIVATE_ARTWORK_COMMERCE_FIELDS) {
+    delete out[key]
+  }
+  return out as T
+}
+
 /** Strip private commerce and provenance detail from public artwork reads. */
 export const artworkAfterRead: CollectionAfterReadHook = async ({ doc, req }) => {
   if (isArtistOrAdmin(req.user)) return doc
 
-  const dcs = doc.dcs as JsonRow | null | undefined
-  const megacities = doc.megacities as JsonRow | null | undefined
+  const base = omitPrivateArtworkCommerceFields(doc as Record<string, unknown>)
+  const dcs = base.dcs as JsonRow | null | undefined
+  const megacities = base.megacities as JsonRow | null | undefined
   const megacitiesPrint = megacities?.print as JsonRow | null | undefined
 
   return {
-    ...doc,
-    currentLocation: sanitizeCurrentLocation(doc.currentLocation),
-    ownershipHistory: sanitizeOwnershipHistory(doc.ownershipHistory),
-    provenanceConfidenceLayer: sanitizeProvenanceConfidenceLayer(doc.provenanceConfidenceLayer),
-    loanHistory: sanitizeLoanHistory(doc.loanHistory),
-    ownershipRegistry: sanitizeOwnershipRegistry(doc.ownershipRegistry),
+    ...base,
+    currentLocation: sanitizeCurrentLocation(base.currentLocation),
+    ownershipHistory: sanitizeOwnershipHistory(base.ownershipHistory),
+    provenanceConfidenceLayer: sanitizeProvenanceConfidenceLayer(base.provenanceConfidenceLayer),
+    loanHistory: sanitizeLoanHistory(base.loanHistory),
+    ownershipRegistry: sanitizeOwnershipRegistry(base.ownershipRegistry),
     dcs: dcs
       ? {
           ...dcs,
@@ -139,9 +164,5 @@ export const artworkAfterRead: CollectionAfterReadHook = async ({ doc, req }) =>
             : megacitiesPrint,
         }
       : megacities,
-    askingPrice: undefined,
-    salesRecord: undefined,
-    consignmentDetails: undefined,
-    totalRevenue: undefined,
   }
 }

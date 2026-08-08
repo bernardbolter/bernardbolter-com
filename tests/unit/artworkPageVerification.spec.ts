@@ -248,6 +248,10 @@ describe('artwork page verification checklist', () => {
           title: 'Test',
           askingPrice: 5000,
           salesRecord: [{ netToArtist: 1000 }],
+          consignmentDetails: 'gallery notes',
+          totalRevenue: 1000,
+          insuranceValue: 9000,
+          insuranceValueDate: '2024-01-01',
           ownershipHistory: [
             {
               ownerPrivate: 'secret',
@@ -273,8 +277,13 @@ describe('artwork page verification checklist', () => {
         context: {},
       })
 
-      expect(sanitized.askingPrice).toBeUndefined()
-      expect(sanitized.salesRecord).toBeUndefined()
+      // Keys must be absent — `undefined` values still serialize as `$undefined` in RSC flight.
+      expect(sanitized).not.toHaveProperty('askingPrice')
+      expect(sanitized).not.toHaveProperty('salesRecord')
+      expect(sanitized).not.toHaveProperty('consignmentDetails')
+      expect(sanitized).not.toHaveProperty('totalRevenue')
+      expect(sanitized).not.toHaveProperty('insuranceValue')
+      expect(sanitized).not.toHaveProperty('insuranceValueDate')
       expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('secret')
       expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('private note')
       expect(JSON.stringify(sanitized.provenanceConfidenceLayer)).toContain('Public claim text')

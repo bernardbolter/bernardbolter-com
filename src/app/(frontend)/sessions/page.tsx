@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getPayload } from 'payload'
+import { cache } from 'react'
 import config from '@payload-config'
 
 import CorpusLadder from '@/components/corpus/CorpusLadder'
@@ -10,6 +11,7 @@ import {
   buildSessionIndexQueryString,
   SESSION_INDEX_TYPE_OPTIONS,
   parseSessionIndexFilters,
+  resolveSessionsIndexCanonical,
   sessionFilterYearDisplay,
   sessionIndexHasActiveFilters,
   type SessionIndexFilters,
@@ -18,13 +20,6 @@ import { fetchCorpusSeries } from '@/lib/corpus/fetchCorpusData'
 import type { Artwork, Series, Session } from '@/payload-types'
 
 export const revalidate = 3600
-
-export const metadata: Metadata = {
-  title: 'Sessions',
-  description:
-    'Completed Art/Official sessions — human-readable crumbs; full transcripts via the corpus Tier 5 API.',
-  alternates: { canonical: '/sessions' },
-}
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>
@@ -82,8 +77,9 @@ function filterSessionRows(rows: SessionRow[], filters: SessionIndexFilters): Se
   })
 }
 
-export default async function SessionsIndexPage({ searchParams }: PageProps) {
-  const raw = await searchParams
+function parseFiltersFromSearchParams(
+  raw: Record<string, string | string[] | undefined>,
+): SessionIndexFilters {
   const params = new URLSearchParams()
   for (const key of [
     'artwork',
@@ -98,7 +94,11 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
     const single = Array.isArray(value) ? value[0] : value
     if (single) params.set(key, single)
   }
-  const filters = parseSessionIndexFilters(params)
+  return parseSessionIndexFilters(params)
+}
+
+const loadSessionsIndex = cache(async (raw: Record<string, string | string[] | undefined>) => {
+  const filters = parseFiltersFromSearchParams(raw)
   const hasFilters = sessionIndexHasActiveFilters(filters)
 
   const payload = await getPayload({ config })
@@ -109,6 +109,7 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
       limit: 200,
       depth: 2,
       sort: '-completedAt',
+      overrideAccess: true,
       select: {
         sessionId: true,
         sessionType: true,
@@ -120,6 +121,7 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
         linchpinFlag: true,
         revisitOf: true,
         fieldsCoveredThisSession: true,
+        fieldUpdateTimeline: true,
         priorFieldConflicts: true,
         sessionStruggleFlag: true,
       },
@@ -138,33 +140,61 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
     chronologicalPass.set(session.id, next)
   }
 
-  const rows = filterSessionRows(
-    result.docs
-      .filter((session) => Boolean(session.sessionId))
-      .map((session) => {
-        const primary =
-          readArtwork(session.primaryArtwork) ?? readArtwork(session.artworkRecord)
-        const mentioned = (session.mentionedArtworks ?? [])
-          .map((entry) => readArtwork(entry))
-          .filter((artwork): artwork is Artwork => artwork !== null)
-        const passNumber = chronologicalPass.get(session.id) ?? 1
-        const typed = session as Session
-        return {
-          id: session.id,
-          session: typed,
-          sessionId: session.sessionId as string,
-          sessionType: session.sessionType,
-          completedAt: session.completedAt,
-          isLinchpin: session.linchpinFlag?.isLinchpin === true,
-          hasStruggle: session.sessionStruggleFlag?.hasStruggle === true,
-          primary,
-          mentioned,
-          passNumber,
-        }
-      }),
-    filters,
-  )
+  const allRows: SessionRow[] = result.docs
+    .filter((session) => Boolean(session.sessionId))
+    .map((session) => {
+      const primary =
+        readArtwork(session.primaryArtwork) ?? readArtwork(session.artworkRecord)
+      const mentioned = (session.mentionedArtworks ?? [])
+        .map((entry) => readArtwork(entry))
+        .filter((artwork): artwork is Artwork => artwork !== null)
+      const passNumber = chronologicalPass.get(session.id) ?? 1
+      const typed = session as Session
+      return {
+        id: session.id,
+        session: typed,
+        sessionId: session.sessionId as string,
+        sessionType: session.sessionType,
+        completedAt: session.completedAt,
+        isLinchpin: session.linchpinFlag?.isLinchpin === true,
+        hasStruggle: session.sessionStruggleFlag?.hasStruggle === true,
+        primary,
+        mentioned,
+        passNumber,
+      }
+    })
 
+  const rows = filterSessionRows(allRows, filters)
+
+  return {
+    filters,
+    hasFilters,
+    rows,
+    unfilteredCount: allRows.length,
+    seriesList,
+  }
+})
+
+export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+  const raw = await searchParams
+  const { filters, rows, unfilteredCount } = await loadSessionsIndex(raw)
+  const canonical = resolveSessionsIndexCanonical({
+    filters,
+    filteredCount: rows.length,
+    unfilteredCount,
+  })
+
+  return {
+    title: 'Sessions',
+    description:
+      'Completed Art/Official sessions — human-readable crumbs; full transcripts via the corpus Tier 5 API.',
+    alternates: { canonical },
+  }
+}
+
+export default async function SessionsIndexPage({ searchParams }: PageProps) {
+  const raw = await searchParams
+  const { filters, hasFilters, rows, seriesList } = await loadSessionsIndex(raw)
   const ladderSlug = filters.artwork ?? null
 
   return (

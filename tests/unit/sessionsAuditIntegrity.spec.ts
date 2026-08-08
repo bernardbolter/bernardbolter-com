@@ -12,6 +12,7 @@ import {
   validateSelectFieldValue,
 } from '@/lib/artOfficial/enumFieldValidation'
 import { buildSessionGloss } from '@/lib/corpus/sessionGloss'
+import { resolveSessionsIndexCanonical } from '@/lib/corpus/sessionIndexFilters'
 
 describe('automatic field conflicts', () => {
   it('only checks image-analysis / knowledge-base sources', () => {
@@ -105,5 +106,57 @@ describe('session gloss', () => {
         },
       }),
     ).toContain('commit error flagged')
+  })
+
+  it('falls back to fieldUpdateTimeline when fieldsCoveredThisSession is empty', () => {
+    expect(
+      buildSessionGloss({
+        sessionType: 'artwork-cataloguing',
+        fieldsCoveredThisSession: [],
+        fieldUpdateTimeline: [
+          { field: 'title' },
+          { field: 'title' },
+          { field: 'intent' },
+        ],
+      }),
+    ).toBe('Cataloguing pass — 2 fields confirmed')
+  })
+})
+
+describe('resolveSessionsIndexCanonical', () => {
+  it('self-canonicalizes when filters change a non-empty result set', () => {
+    expect(
+      resolveSessionsIndexCanonical({
+        filters: { artwork: 'color-theory' },
+        filteredCount: 2,
+        unfilteredCount: 58,
+      }),
+    ).toBe('/sessions?artwork=color-theory')
+  })
+
+  it('defers to bare /sessions for empty filters, empty results, or identical sets', () => {
+    expect(
+      resolveSessionsIndexCanonical({
+        filters: {},
+        filteredCount: 58,
+        unfilteredCount: 58,
+      }),
+    ).toBe('/sessions')
+
+    expect(
+      resolveSessionsIndexCanonical({
+        filters: { artwork: 'missing-slug' },
+        filteredCount: 0,
+        unfilteredCount: 58,
+      }),
+    ).toBe('/sessions')
+
+    expect(
+      resolveSessionsIndexCanonical({
+        filters: { sessionType: 'artwork-cataloguing' },
+        filteredCount: 58,
+        unfilteredCount: 58,
+      }),
+    ).toBe('/sessions')
   })
 })

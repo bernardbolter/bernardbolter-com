@@ -83,6 +83,23 @@ export function sessionIndexHasActiveFilters(filters: SessionIndexFilters): bool
   )
 }
 
+/**
+ * Self-canonicalize filtered /sessions views that change the result set.
+ * Empty filters, empty results, or filters that leave the full list unchanged
+ * still defer to bare `/sessions`.
+ */
+export function resolveSessionsIndexCanonical(options: {
+  filters: SessionIndexFilters
+  filteredCount: number
+  unfilteredCount: number
+}): string {
+  const { filters, filteredCount, unfilteredCount } = options
+  if (!sessionIndexHasActiveFilters(filters)) return '/sessions'
+  if (filteredCount === 0) return '/sessions'
+  if (filteredCount === unfilteredCount) return '/sessions'
+  return `/sessions${buildSessionIndexQueryString(filters)}`
+}
+
 export function buildSessionIndexQueryString(filters: SessionIndexFilters): string {
   const params = new URLSearchParams()
   if (filters.artwork) params.set('artwork', filters.artwork)

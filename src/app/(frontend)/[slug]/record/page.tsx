@@ -31,10 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const artwork = await getArtworkForPage(slug)
   if (!artwork) return { title: 'Record not found' }
+  const isStub = artwork.reasoningStatus === 'stub'
   return {
     title: `${artwork.title} — Record`,
     description: `Public structured record for ${artwork.title}.`,
     alternates: { canonical: `/${slug}/record` },
+    // Stub records are thin near-duplicates — follow links, but don't index yet.
+    ...(isStub ? { robots: { index: false, follow: true } } : {}),
   }
 }
 

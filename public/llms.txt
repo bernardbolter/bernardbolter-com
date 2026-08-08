@@ -30,7 +30,8 @@ A throughline or bio-event page is itself a useful entry point for a question li
 
 - [Bio](https://bernardbolter.com/bio) / [Bio entries](https://bernardbolter.com/bio/entries/) — dated biographical record, each entry permalinked.
 - [Statement](https://bernardbolter.com/statement) / [Throughlines](https://bernardbolter.com/statement/throughlines/) — the artist's own framing of recurring patterns.
-- [CV](https://bernardbolter.com/cv) — exhibitions, education, press.
+- [CV](https://bernardbolter.com/cv) — exhibitions, education, press; titles link to `/events/{slug}` when that event has a public page.
+- [Events](https://bernardbolter.com/cv) — exhibition, performance, and talk pages live at `/events/{slug}` (linked from the CV when `hasPage` is true).
 - [All sessions](https://bernardbolter.com/api/corpus/sessions) — every completed cataloguing dialogue, not scoped to one artwork.
 - [Identity/verification stub](https://bernardbolter.com/.well-known/artist-archive.json) — `Person` schema with authority-registry identifiers (Wikidata, ULAN). Confirms who this archive belongs to; not a traversal guide.
 

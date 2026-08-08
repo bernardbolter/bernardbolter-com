@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Artwork } from '@/payload-types'
 
+import { omitPrivateArtworkCommerceFields } from '@/hooks/artworkAfterRead'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const defaultLocale = 'en' as const
@@ -98,7 +99,12 @@ function stripCreatorLinkedArtworkDocs(artwork: Artwork): Artwork {
 }
 
 function prepareArtworkForPage(artwork: Artwork): Artwork {
-  return stripCreatorLinkedArtworkDocs(stripEmbeddings(artwork))
+  // Defense in depth: afterRead already omits these for anonymous reads, but
+  // page props go into RSC flight — never leave commerce keys (even as undefined).
+  const withoutCommerce = omitPrivateArtworkCommerceFields(
+    artwork as unknown as Record<string, unknown>,
+  ) as unknown as Artwork
+  return stripCreatorLinkedArtworkDocs(stripEmbeddings(withoutCommerce))
 }
 
 export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {

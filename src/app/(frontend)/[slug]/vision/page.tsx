@@ -4,7 +4,10 @@ import { notFound } from 'next/navigation'
 import VisionPage from '@/components/artwork/VisionPage'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
-import { getDirectR2ImageUrl } from '@/lib/artwork/visionPage'
+import {
+  getDirectR2ImageUrl,
+  resolveVisionAnalyses,
+} from '@/lib/artwork/visionPage'
 import { buildVisionPageJsonLd } from '@/lib/jsonld/visionPage'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtworkForPage, getPublishedArtworkSlugs } from '@/lib/payload/artworkPage'
@@ -36,11 +39,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const base = getSiteBaseUrl()
   const title = artwork.title?.trim() || 'Artwork'
   const directImageUrl = getDirectR2ImageUrl(artwork)
+  const hasVisionAnalyses = resolveVisionAnalyses(artwork).length > 0
 
   return {
     title: `${title} — Vision`,
     description: `Visual embeddings and vision analyses for ${title}.`,
     alternates: { canonical: `${base}/${slug}/vision` },
+    // Empty vision pages are near-duplicate boilerplate — keep crawlable links, skip indexing.
+    ...(!hasVisionAnalyses ? { robots: { index: false, follow: true } } : {}),
     ...(directImageUrl
       ? {
           icons: {
