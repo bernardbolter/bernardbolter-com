@@ -145,6 +145,74 @@ async function addIndexIfMissing(pool: PgPool, indexName: string, sql: string): 
   console.log(`Added index ${indexName}`)
 }
 
+async function tableExists(pool: PgPool, tableName: string): Promise<boolean> {
+  const { rows } = await pool.query(
+    `SELECT 1
+     FROM information_schema.tables
+     WHERE table_schema = 'public'
+       AND table_name = $1`,
+    [tableName],
+  )
+  return rows.length > 0
+}
+
+/** Payload array field `beatTracks` → `episodes_beat_tracks` (upload + optional label). */
+async function ensureEpisodesBeatTracksTable(pool: PgPool): Promise<void> {
+  const table = 'episodes_beat_tracks'
+  if (await tableExists(pool, table)) {
+    console.log(`Table ${table} already exists.`)
+    return
+  }
+
+  await pool.query(`
+    CREATE TABLE "public"."${table}" (
+      "_order" integer NOT NULL,
+      "_parent_id" integer NOT NULL,
+      "id" character varying NOT NULL,
+      "track_id" integer NOT NULL,
+      "label" character varying,
+      CONSTRAINT "${table}_pkey" PRIMARY KEY ("id")
+    )
+  `)
+  console.log(`Created table ${table}`)
+
+  await pool.query(`
+    ALTER TABLE "public"."${table}"
+    ADD CONSTRAINT "${table}_parent_id_fk"
+    FOREIGN KEY ("_parent_id")
+    REFERENCES "public"."episodes"("id")
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION
+  `)
+  console.log(`Added FK ${table}_parent_id_fk`)
+
+  await pool.query(`
+    ALTER TABLE "public"."${table}"
+    ADD CONSTRAINT "${table}_track_id_media_id_fk"
+    FOREIGN KEY ("track_id")
+    REFERENCES "public"."media"("id")
+    ON DELETE SET NULL
+    ON UPDATE NO ACTION
+  `)
+  console.log(`Added FK ${table}_track_id_media_id_fk`)
+
+  await addIndexIfMissing(
+    pool,
+    `${table}_order_idx`,
+    `CREATE INDEX "${table}_order_idx" ON "public"."${table}" ("_order")`,
+  )
+  await addIndexIfMissing(
+    pool,
+    `${table}_parent_id_idx`,
+    `CREATE INDEX "${table}_parent_id_idx" ON "public"."${table}" ("_parent_id")`,
+  )
+  await addIndexIfMissing(
+    pool,
+    `${table}_track_idx`,
+    `CREATE INDEX "${table}_track_idx" ON "public"."${table}" ("track_id")`,
+  )
+}
+
 async function main() {
   const payload = await getPayload({ config })
   const pool = getPgPool(payload)
@@ -152,6 +220,7 @@ async function main() {
   await addEnumValueIfMissing(pool, FIELD_NOTES_SHOT_TYPE_ENUM, 'DEPART')
 
   await createEnumIfMissing(pool, FIELD_NOTES_CAMERA_ANGLE_ENUM, ['front', 'rear', 'single'])
+  await addEnumValueIfMissing(pool, FIELD_NOTES_CAMERA_ANGLE_ENUM, 'beat')
   await addColumnIfMissing(
     pool,
     FIELD_NOTES,
@@ -177,6 +246,8 @@ async function main() {
     'episodes_cover_photo_idx',
     `CREATE INDEX "episodes_cover_photo_idx" ON "public"."${EPISODES}" ("cover_photo_id")`,
   )
+
+  await ensureEpisodesBeatTracksTable(pool)
 
   console.log('Rap Critic episode schema migration complete.')
   process.exit(0)
