@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Episode, FieldNote, Media } from '@/payload-types'
 import { resolveMediaUrl } from '@/lib/studio/media'
 
+import { EpisodeBeatUpload } from './EpisodeBeatUpload'
 import { EpisodeChatPanel } from './EpisodeChatPanel'
 import { EpisodeClipUpload } from './EpisodeClipUpload'
 import { EpisodeEdlDownload } from './EpisodeEdlDownload'
@@ -88,7 +89,7 @@ export function EpisodeDetail({ episode, clips, rapCriticPresetId }: EpisodeDeta
         <section>
           <h3>Beat tracks ({beats.length}/3)</h3>
           {beats.length === 0 ? (
-            <p className="studio-muted">No beats yet — upload with a freestyle take, or in admin.</p>
+            <p className="studio-muted">No beats yet — upload below, or with a freestyle take.</p>
           ) : (
             <ul>
               {beats.map((beat) => (
@@ -100,6 +101,7 @@ export function EpisodeDetail({ episode, clips, rapCriticPresetId }: EpisodeDeta
               ))}
             </ul>
           )}
+          <EpisodeBeatUpload episodeId={episode.id} beatTrackCount={episode.beatTracks?.length ?? 0} />
         </section>
       ) : null}
 

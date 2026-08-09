@@ -2,7 +2,10 @@ import type { CollectionConfig } from 'payload'
 
 import { isArtistOrAdmin } from '@/access/isArtistOrAdmin'
 import { mediaAfterChange } from '@/hooks/mediaAfterChange'
-import { normalizeVideoMimeType } from '@/lib/artOfficial/mediaMime'
+import {
+  normalizeAudioMimeType,
+  normalizeVideoMimeType,
+} from '@/lib/artOfficial/mediaMime'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -38,17 +41,27 @@ export const Media: CollectionConfig = {
       'audio/*',
       'audio/mpeg',
       'audio/mp4',
+      'audio/x-m4a',
+      'audio/m4a',
       'audio/wav',
+      'audio/x-wav',
+      'audio/wave',
       'audio/aac',
       'audio/ogg',
       'audio/flac',
+      'audio/aiff',
+      'audio/x-aiff',
+      'audio/x-caf',
     ],
   },
   hooks: {
     beforeChange: [
       ({ data }) => {
-        if (typeof data?.mimeType === 'string' && data.mimeType.startsWith('video/')) {
+        if (typeof data?.mimeType !== 'string') return data
+        if (data.mimeType.startsWith('video/')) {
           data.mimeType = normalizeVideoMimeType(data.mimeType)
+        } else if (data.mimeType.startsWith('audio/')) {
+          data.mimeType = normalizeAudioMimeType(data.mimeType)
         }
         return data
       },

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { rapCriticShotTypes } from '@/lib/studio/fieldNoteSchema'
+import { resolveMediaMimeType } from '@/lib/artOfficial/mediaMime'
 
 const SHOT_LABELS: Record<(typeof rapCriticShotTypes)[number], string> = {
   ARRIVE: 'Arrive (roll-in)',
@@ -100,7 +101,7 @@ async function uploadStudioFile(
   file: File,
   onProgress?: (progress: UploadProgress) => void,
 ): Promise<{ id: number; converting: boolean }> {
-  const contentType = file.type || 'application/octet-stream'
+  const contentType = resolveMediaMimeType(file)
   const initRes = await fetch('/api/studio/upload-session', {
     method: 'POST',
     credentials: 'include',
@@ -508,18 +509,18 @@ export function EpisodeClipUpload({
               ref={beatRef}
               id={`episode-clip-beat-${episodeId}`}
               type="file"
-              accept="audio/*"
+              accept="audio/*,.m4a,.mp3,.wav,.aiff,.aif,.caf"
               disabled={submitting || !canAddBeat}
               onChange={(e) => setBeatFile(e.target.files?.[0] ?? null)}
             />
             {beatFile ? (
               <p className="studio-muted">
-                {beatFile.name} · {formatBytes(beatFile.size)}
+                {beatFile.name} · {formatBytes(beatFile.size)} · {resolveMediaMimeType(beatFile)}
               </p>
             ) : null}
             <p className="studio-muted">
               {canAddBeat
-                ? 'Adds one instrumental to this episode (max 3). Not sent to Whisper.'
+                ? 'GarageBand: Share → Song (.m4a/.wav), not Project. Or use Beat tracks section above.'
                 : 'This episode already has 3 beats. Remove one in admin to add another.'}
             </p>
           </div>
