@@ -5,6 +5,7 @@ import { resolveMediaUrl } from '@/lib/studio/media'
 
 import { EpisodeChatPanel } from './EpisodeChatPanel'
 import { EpisodeClipUpload } from './EpisodeClipUpload'
+import { EpisodeEdlDownload } from './EpisodeEdlDownload'
 import { FieldNoteCard } from './FieldNoteCard'
 
 type EpisodeDetailProps = {
@@ -169,6 +170,14 @@ export function EpisodeDetail({ episode, clips, rapCriticPresetId }: EpisodeDeta
         ) : (
           <p className="studio-muted">No assembly map yet.</p>
         )}
+        <EpisodeEdlDownload
+          episodeId={episode.id}
+          hasAssemblyClips={Boolean(
+            episode.assembly?.some(
+              (row) => typeof row.clipFieldNoteId === 'number' && row.clipFieldNoteId > 0,
+            ),
+          )}
+        />
         <EpisodeChatPanel episodeId={episode.id} sessionType="episode-assembly" />
       </section>
     </article>
