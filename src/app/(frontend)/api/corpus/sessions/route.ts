@@ -98,8 +98,8 @@ export async function GET(request: Request) {
       url: artworkSlug
         ? `${baseUrl}/api/corpus/sessions?artwork=${encodeURIComponent(artworkSlug)}`
         : `${baseUrl}/api/corpus/sessions`,
-      'artism:tier': 5,
-      'artism:totalSessions': sessions.length,
+      'art-official:tier': 5,
+      'art-official:totalSessions': sessions.length,
       dataFeedElement: sessions,
     },
     { headers },

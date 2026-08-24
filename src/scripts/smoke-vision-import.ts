@@ -87,9 +87,9 @@ async function main() {
   })
 
   const jsonLd = buildArtworkJsonLd(after, null, { baseUrl: getSiteBaseUrl() })
-  const analyses = jsonLd['artism:visionAnalyses'] as Array<Record<string, unknown>> | undefined
+  const analyses = jsonLd['art-official:visionAnalyses'] as Array<Record<string, unknown>> | undefined
   console.log(`visionAnalyses after: ${Array.isArray(after.visionAnalyses) ? after.visionAnalyses.length : 0}`)
-  console.log(`JSON-LD artism:visionAnalyses entries: ${analyses?.length ?? 0}`)
+  console.log(`JSON-LD art-official:visionAnalyses entries: ${analyses?.length ?? 0}`)
   if (analyses?.length) {
     const last = analyses[analyses.length - 1]
     console.log(`JSON-LD latest text preview: ${String(last?.text ?? '').slice(0, 80)}…`)

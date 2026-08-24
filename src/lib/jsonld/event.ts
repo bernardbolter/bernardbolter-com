@@ -1,6 +1,7 @@
 import type { Artist, Artwork, Event, Media } from '@/payload-types'
 
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { countryNameToIsoCode } from '@/utilities/countryNameToIsoCode'
 import { personToJsonLd, resolvePopulatedPerson } from '@/utilities/personToJsonLd'
@@ -160,7 +161,7 @@ export function buildEventJsonLd(
     : undefined
 
   const doc: Record<string, unknown> = {
-    '@context': 'https://schema.org',
+    '@context': CORPUS_CONTEXT,
     '@type': schemaOrgEventType(event.eventType),
     '@id': url,
     name: event.title,

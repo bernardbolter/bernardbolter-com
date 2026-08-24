@@ -6,22 +6,22 @@ export const CORPUS_ARTWORK_DEPTH = 3
 export const TIER1_GIST_MAX_CHARS = 200
 
 /**
- * The artism vocabulary namespace.
- * artism.org/schema/ currently returns 404. bernardbolter.com/schema/ resolves (308 → served doc).
- * DECISION GATE — September 1, 2026:
- *   If artism.org/schema/ is live and serving the vocabulary → leave as artism.org.
- *   If not → change this one line to 'https://bernardbolter.com/schema/'.
- * Whichever loses MUST permanently redirect to the winner. A dead namespace URI is
- * worse than one that moved.
+ * Resolvable JSON-LD namespace URI (content-negotiated at this path).
+ * Compact prefix in emitted documents is `art-official:`.
  */
-export const ARTISM_NS = 'https://artism.org/schema/'
+export const ART_OFFICIAL_NS = 'https://art-official.org/ns/'
+
+/**
+ * @deprecated Phase 4 alias — same IRI as ART_OFFICIAL_NS. Do not emit `artism:`.
+ */
+export const ARTISM_NS = ART_OFFICIAL_NS
 
 export const CORPUS_BASE = 'https://bernardbolter.com'
 
-export const CORPUS_CONTEXT = {
-  '@vocab': 'https://schema.org/',
-  artism: ARTISM_NS,
-} as const
+/**
+ * Page and corpus `@context`: schema.org types plus the resolving Art/Official namespace.
+ */
+export const CORPUS_CONTEXT = ['https://schema.org', ART_OFFICIAL_NS] as const
 
 /** Default page sizes per list endpoint. */
 export const CORPUS_INDEX_PER_PAGE = 50

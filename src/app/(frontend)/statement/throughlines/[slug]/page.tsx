@@ -10,6 +10,7 @@ import ThroughlinePage, {
 import { attachPublicSessionRefs } from '@/lib/artist/attachPublicSessionRefs'
 import { resolveSessionNumericId } from '@/lib/artist/accumulatingEntries'
 import { linkedArtworksToCards } from '@/lib/artist/linkedArtworksToCards'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getStatementPageArtist } from '@/lib/payload/statementPage'
 import type { Session } from '@/payload-types'
@@ -45,15 +46,12 @@ function buildThroughlineJsonLd(options: {
     .map((s) => `${baseUrl}/sessions/${s.sessionId}`)
 
   return {
-    '@context': {
-      '@vocab': 'https://schema.org/',
-      artism: 'https://artism.org/schema/',
-    },
+    '@context': CORPUS_CONTEXT,
     '@type': 'CreativeWork',
     '@id': `${baseUrl}/statement/throughlines/${slug}`,
     name: text.slice(0, 120),
     url: `${baseUrl}/statement/throughlines/${slug}`,
-    ...(dateRecognized ? { 'artism:dateRecognized': dateRecognized } : {}),
+    ...(dateRecognized ? { 'art-official:dateRecognized': dateRecognized } : {}),
     ...(basedOn.length === 1
       ? { isBasedOn: basedOn[0] }
       : basedOn.length > 1

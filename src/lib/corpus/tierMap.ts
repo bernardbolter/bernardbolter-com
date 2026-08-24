@@ -11,7 +11,7 @@ export type BuildTierMapOptions = {
 /**
  * Self-description block on every corpus response.
  * Tier 3 addresses the HTML vision page — there is no separate JSON vision endpoint;
- * analyses also ship on Tier 4 as `artism:visionAnalyses`.
+ * analyses also ship on Tier 4 as `art-official:visionAnalyses`.
  */
 export function buildTierMap(
   baseUrl: string = CORPUS_BASE,

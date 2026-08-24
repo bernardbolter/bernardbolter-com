@@ -81,12 +81,12 @@ export function buildPaginationEnvelope(options: {
     })}`
 
   return {
-    'artism:page': options.page,
-    'artism:perPage': options.perPage,
-    'artism:totalPages': totalPages,
-    'artism:totalMatched': options.totalMatched,
-    'artism:nextPage':
+    'art-official:page': options.page,
+    'art-official:perPage': options.perPage,
+    'art-official:totalPages': totalPages,
+    'art-official:totalMatched': options.totalMatched,
+    'art-official:nextPage':
       totalPages > 0 && options.page < totalPages ? pageUrl(options.page + 1) : null,
-    'artism:prevPage': options.page > 1 && totalPages > 0 ? pageUrl(options.page - 1) : null,
+    'art-official:prevPage': options.page > 1 && totalPages > 0 ? pageUrl(options.page - 1) : null,
   }
 }

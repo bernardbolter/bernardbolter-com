@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { buildEventJsonLd } from '@/lib/jsonld/event'
 import { schemaOrgEventType } from '@/lib/jsonld/eventSchemaType'
 import type { Artwork, Artist, Event, Person } from '@/payload-types'
@@ -75,6 +76,7 @@ describe('buildEventJsonLd', () => {
       { baseUrl },
     )
 
+    expect(jsonLd['@context']).toEqual(CORPUS_CONTEXT)
     expect(jsonLd['@type']).toBe('ExhibitionEvent')
     expect(jsonLd['@id']).toBe(`${baseUrl}/events/megacities-2020`)
     expect(jsonLd.startDate).toBe('2020-11-26')

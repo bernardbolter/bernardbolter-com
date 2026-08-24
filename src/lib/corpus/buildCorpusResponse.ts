@@ -139,19 +139,19 @@ export function buildCorpusIndexResponse(options: BuildCorpusListOptions): Recor
       : 'Bernard Bolter — Artist Archive Index',
     url,
     dateModified: corpusDateModified(matched),
-    'artism:corpusVersion': CORPUS_VERSION,
-    'artism:totalArtworks': options.totalArtworks,
-    'artism:totalPublished': options.totalArtworks,
+    'art-official:corpusVersion': CORPUS_VERSION,
+    'art-official:totalArtworks': options.totalArtworks,
+    'art-official:totalPublished': options.totalArtworks,
     ...buildScopeDepthEnvelope(isSurvey ? 'survey' : 'index', {
       hasActiveFilters: corpusIndexHasActiveFilters(filters),
     }),
-    'artism:tierMap': buildTierMap(baseUrl),
-    'artism:coverage': coverage,
+    'art-official:tierMap': buildTierMap(baseUrl),
+    'art-official:coverage': coverage,
     ...pagination,
-    'artism:surveyUrl': `${baseUrl}/api/corpus/index?depth=survey`,
+    'art-official:surveyUrl': `${baseUrl}/api/corpus/index?depth=survey`,
     ...(isSurvey
       ? {}
-      : { 'artism:urlTemplates': buildUrlTemplates(baseUrl) }),
+      : { 'art-official:urlTemplates': buildUrlTemplates(baseUrl) }),
     ...(options.seriesList?.length
       ? {
           about: options.seriesList.map((series) =>
@@ -200,13 +200,13 @@ export function buildCorpusJsonLdResponse(options: BuildCorpusListOptions): Reco
     name: 'Bernard Bolter — Artist Archive Corpus',
     url,
     dateModified: corpusDateModified(matched),
-    'artism:corpusVersion': CORPUS_VERSION,
-    'artism:totalArtworks': options.totalArtworks,
-    'artism:totalPublished': options.totalArtworks,
-    // Bulk export occupies corpus×record — not a ladder rung; omit artism:tier.
+    'art-official:corpusVersion': CORPUS_VERSION,
+    'art-official:totalArtworks': options.totalArtworks,
+    'art-official:totalPublished': options.totalArtworks,
+    // Bulk export occupies corpus×record — not a ladder rung; omit art-official:tier.
     ...buildScopeDepthEnvelope('root'),
-    'artism:tierMap': buildTierMap(baseUrl),
-    'artism:coverage': coverage,
+    'art-official:tierMap': buildTierMap(baseUrl),
+    'art-official:coverage': coverage,
     ...pagination,
     author: buildAuthorBlock(artist, baseUrl),
     about: seriesList.map((series) =>

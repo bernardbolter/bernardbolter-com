@@ -58,27 +58,27 @@ describe('buildCorpusIndexResponse', () => {
     })
 
     expect(response['@type']).toBe('DataFeed')
-    expect(response['artism:totalArtworks']).toBe(1)
-    expect(response['artism:totalMatched']).toBe(1)
-    expect(response['artism:scope']).toBe('corpus')
-    expect(response['artism:depth']).toBe('gist')
-    expect(response['artism:tier']).toBe(1)
-    expect(response).not.toHaveProperty('artism:feedRole')
-    expect(response['artism:urlTemplates']).toEqual({
+    expect(response['art-official:totalArtworks']).toBe(1)
+    expect(response['art-official:totalMatched']).toBe(1)
+    expect(response['art-official:scope']).toBe('corpus')
+    expect(response['art-official:depth']).toBe('gist')
+    expect(response['art-official:tier']).toBe(1)
+    expect(response).not.toHaveProperty('art-official:feedRole')
+    expect(response['art-official:urlTemplates']).toEqual({
       page: `${baseUrl}/{slug}`,
       record: `${baseUrl}/api/corpus/{slug}`,
       visionPage: `${baseUrl}/{slug}/vision`,
       sessions: `${baseUrl}/api/corpus/{slug}/sessions`,
       sessionsPage: `${baseUrl}/sessions?artwork={slug}`,
     })
-    expect(response['artism:tierMap']).toHaveProperty('1')
-    expect(response['artism:tierMap']).toHaveProperty('3')
-    expect((response['artism:tierMap'] as Record<string, unknown>)['3']).toMatchObject({
+    expect(response['art-official:tierMap']).toHaveProperty('1')
+    expect(response['art-official:tierMap']).toHaveProperty('3')
+    expect((response['art-official:tierMap'] as Record<string, unknown>)['3']).toMatchObject({
       urlTemplate: `${baseUrl}/{slug}/vision`,
       scope: 'work',
       depth: 'vision',
     })
-    expect(response['artism:coverage']).toMatchObject({ matched: 1 })
+    expect(response['art-official:coverage']).toMatchObject({ matched: 1 })
 
     const about = response.about as Array<Record<string, unknown>>
     expect(about[0]).toMatchObject({
@@ -93,15 +93,15 @@ describe('buildCorpusIndexResponse', () => {
       '@id': `${baseUrl}/basel-switzerland`,
       name: 'Basel Switzerland',
       dateCreated: '2007',
-      'artism:slug': 'basel-switzerland',
-      'artism:reasoningStatus': 'complete',
+      'art-official:slug': 'basel-switzerland',
+      'art-official:reasoningStatus': 'complete',
       isPartOf: { '@id': `${baseUrl}/series/digital-city-series#series` },
     })
     expect(entry).toHaveProperty('identifier')
-    expect(entry).toHaveProperty('artism:availableTiers')
-    expect(entry['artism:recordUrl']).toBe(`${baseUrl}/api/corpus/basel-switzerland`)
-    expect(entry['artism:visionPageUrl']).toBe(`${baseUrl}/basel-switzerland/vision`)
-    expect(entry).not.toHaveProperty('artism:sessionsUrl')
+    expect(entry).toHaveProperty('art-official:availableTiers')
+    expect(entry['art-official:recordUrl']).toBe(`${baseUrl}/api/corpus/basel-switzerland`)
+    expect(entry['art-official:visionPageUrl']).toBe(`${baseUrl}/basel-switzerland/vision`)
+    expect(entry).not.toHaveProperty('art-official:sessionsUrl')
     expect(entry).not.toHaveProperty('title')
     expect(entry).not.toHaveProperty('slug')
     expect(entry).not.toHaveProperty('hasEditions')
@@ -110,7 +110,7 @@ describe('buildCorpusIndexResponse', () => {
     expect(entry).not.toHaveProperty('sessionsUrl')
     expect(entry).not.toHaveProperty('descriptionShort')
     expect(entry).not.toHaveProperty('intentLine')
-    expect(response['artism:surveyUrl']).toBe(`${baseUrl}/api/corpus/index?depth=survey`)
+    expect(response['art-official:surveyUrl']).toBe(`${baseUrl}/api/corpus/index?depth=survey`)
   })
 
   it('emits sessionsUrl on index records only when Tier 5 is available', () => {
@@ -122,7 +122,7 @@ describe('buildCorpusIndexResponse', () => {
     })
 
     const entry = (response.dataFeedElement as Array<Record<string, unknown>>)[0]!
-    expect(entry['artism:sessionsUrl']).toBe(
+    expect(entry['art-official:sessionsUrl']).toBe(
       `${baseUrl}/api/corpus/basel-switzerland/sessions`,
     )
   })
@@ -136,11 +136,11 @@ describe('buildCorpusIndexResponse', () => {
     })
 
     expect(response.url).toBe(`${baseUrl}/api/corpus/index?series=digital-city-series`)
-    expect(response['artism:totalArtworks']).toBe(10)
-    expect(response['artism:totalMatched']).toBe(1)
-    expect(response['artism:scope']).toBe('subset')
-    expect(response['artism:depth']).toBe('gist')
-    expect(response['artism:tier']).toBe(1)
+    expect(response['art-official:totalArtworks']).toBe(10)
+    expect(response['art-official:totalMatched']).toBe(1)
+    expect(response['art-official:scope']).toBe('subset')
+    expect(response['art-official:depth']).toBe('gist')
+    expect(response['art-official:tier']).toBe(1)
   })
 
   it('emits survey depth fields without truncating intentLine', () => {
@@ -160,19 +160,19 @@ describe('buildCorpusIndexResponse', () => {
       depth: 'survey',
     })
 
-    expect(response['artism:tier']).toBe(2)
-    expect(response['artism:scope']).toBe('subset')
-    expect(response['artism:depth']).toBe('survey')
-    expect(response).not.toHaveProperty('artism:urlTemplates')
+    expect(response['art-official:tier']).toBe(2)
+    expect(response['art-official:scope']).toBe('subset')
+    expect(response['art-official:depth']).toBe('survey')
+    expect(response).not.toHaveProperty('art-official:urlTemplates')
     const entry = (response.dataFeedElement as Array<Record<string, unknown>>)[0]!
     expect(entry.description).toBe('Short artist description.')
-    expect(entry['artism:intentLine']).toBe(longIntent)
-    expect(String(entry['artism:intentLine'])).not.toMatch(/…$/)
-    expect(entry['artism:dominantColors']).toEqual(['#87CEDC', '#2B2B2B'])
+    expect(entry['art-official:intentLine']).toBe(longIntent)
+    expect(String(entry['art-official:intentLine'])).not.toMatch(/…$/)
+    expect(entry['art-official:dominantColors']).toEqual(['#87CEDC', '#2B2B2B'])
     expect(entry.keywords).toBe('city, memory')
-    expect(entry['artism:recordUrl']).toBe(`${baseUrl}/api/corpus/basel-switzerland`)
-    expect(entry['artism:visionPageUrl']).toBe(`${baseUrl}/basel-switzerland/vision`)
-    expect(entry).not.toHaveProperty('artism:sessionsUrl')
+    expect(entry['art-official:recordUrl']).toBe(`${baseUrl}/api/corpus/basel-switzerland`)
+    expect(entry['art-official:visionPageUrl']).toBe(`${baseUrl}/basel-switzerland/vision`)
+    expect(entry).not.toHaveProperty('art-official:sessionsUrl')
   })
 
   it('emits sessionsUrl on survey records when Tier 5 is available', () => {
@@ -184,7 +184,7 @@ describe('buildCorpusIndexResponse', () => {
       sessionCountBySlug: new Map([['basel-switzerland', 1]]),
     })
     const entry = (response.dataFeedElement as Array<Record<string, unknown>>)[0]!
-    expect(entry['artism:sessionsUrl']).toBe(
+    expect(entry['art-official:sessionsUrl']).toBe(
       `${baseUrl}/api/corpus/basel-switzerland/sessions`,
     )
   })
@@ -198,10 +198,10 @@ describe('buildCorpusIndexResponse', () => {
       perPage: 50,
     })
 
-    expect(response['artism:page']).toBe(99)
-    expect(response['artism:totalMatched']).toBe(2)
+    expect(response['art-official:page']).toBe(99)
+    expect(response['art-official:totalMatched']).toBe(2)
     expect(response.dataFeedElement).toEqual([])
-    expect(response['artism:nextPage']).toBeNull()
+    expect(response['art-official:nextPage']).toBeNull()
   })
 })
 
@@ -246,14 +246,14 @@ describe('buildCorpusJsonLdResponse', () => {
 
     expect(response['@type']).toBe('DataFeed')
     expect(response.url).toBe(`${baseUrl}/api/corpus`)
-    expect(response['artism:corpusVersion']).toBe('1.0')
-    expect(response['artism:scope']).toBe('corpus')
-    expect(response['artism:depth']).toBe('record')
-    expect(response['artism:feedRole']).toBe('bulk-export')
-    expect(response).not.toHaveProperty('artism:tier')
-    expect(response['artism:tierMap']).toHaveProperty('4')
-    expect(response['artism:page']).toBe(1)
-    expect(response['artism:perPage']).toBe(25)
+    expect(response['art-official:corpusVersion']).toBe('1.0')
+    expect(response['art-official:scope']).toBe('corpus')
+    expect(response['art-official:depth']).toBe('record')
+    expect(response['art-official:feedRole']).toBe('bulk-export')
+    expect(response).not.toHaveProperty('art-official:tier')
+    expect(response['art-official:tierMap']).toHaveProperty('4')
+    expect(response['art-official:page']).toBe(1)
+    expect(response['art-official:perPage']).toBe(25)
     expect(response.author).toMatchObject({
       '@type': 'Person',
       name: 'Bernard Bolter',
@@ -265,12 +265,12 @@ describe('buildCorpusJsonLdResponse', () => {
     expect(entries[0]?.['@type']).toBe('VisualArtwork')
     expect(entries[0]?.name).toBe('Basel Switzerland')
     // Envelope fields must not leak onto embedded records
-    expect(entries[0]).not.toHaveProperty('artism:scope')
-    expect(entries[0]).not.toHaveProperty('artism:depth')
-    expect(entries[0]).not.toHaveProperty('artism:tier')
-    expect(entries[0]).not.toHaveProperty('artism:feedRole')
-    expect(entries[0]).not.toHaveProperty('artism:tierMap')
-    expect(entries[0]).toHaveProperty('artism:availableTiers')
+    expect(entries[0]).not.toHaveProperty('art-official:scope')
+    expect(entries[0]).not.toHaveProperty('art-official:depth')
+    expect(entries[0]).not.toHaveProperty('art-official:tier')
+    expect(entries[0]).not.toHaveProperty('art-official:feedRole')
+    expect(entries[0]).not.toHaveProperty('art-official:tierMap')
+    expect(entries[0]).toHaveProperty('art-official:availableTiers')
     expect(entries[0]?.isPartOf).toMatchObject({
       '@type': 'CreativeWorkSeries',
       '@id': `${baseUrl}/series/digital-city-series#series`,

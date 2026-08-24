@@ -50,7 +50,7 @@ describe('buildVisionPageJsonLd', () => {
       { clip_embedding: embedding },
     )
 
-    expect(jsonLd?.['@type']).toBe('artism:VisionPage')
+    expect(jsonLd?.['@type']).toBe('art-official:VisionPage')
     expect(jsonLd?.isPartOf).toEqual({
       '@type': 'VisualArtwork',
       name: 'Test Work',
@@ -58,15 +58,15 @@ describe('buildVisionPageJsonLd', () => {
       image: 'https://cdn.example.com/original.jpg',
     })
 
-    const embeddings = jsonLd?.['artism:embeddings'] as Array<Record<string, unknown>>
+    const embeddings = jsonLd?.['art-official:embeddings'] as Array<Record<string, unknown>>
     expect(embeddings).toHaveLength(1)
-    expect(embeddings[0]?.['artism:model']).toBe('clip-vit-large-patch14')
-    expect(embeddings[0]?.['artism:vector']).toHaveLength(CLIP_EMBEDDING_DIMENSIONS)
+    expect(embeddings[0]?.['art-official:model']).toBe('clip-vit-large-patch14')
+    expect(embeddings[0]?.['art-official:vector']).toHaveLength(CLIP_EMBEDDING_DIMENSIONS)
     expect(embeddings[0]?.dateCreated).toBe('2024-06-01')
 
-    const analyses = jsonLd?.['artism:visionAnalyses'] as Array<Record<string, unknown>>
+    const analyses = jsonLd?.['art-official:visionAnalyses'] as Array<Record<string, unknown>>
     expect(analyses).toHaveLength(1)
-    expect(analyses[0]?.['artism:model']).toBe('claude-sonnet-4-6')
+    expect(analyses[0]?.['art-official:model']).toBe('claude-sonnet-4-6')
     expect(analyses[0]?.dateCreated).toBe('2026-07-08')
   })
 

@@ -110,7 +110,7 @@ function projectKeywords(
 
 /**
  * Project a completed session into the Tier 5 machine-readable shape:
- * `artistRecord` (reasoning trail) and `artism:DialogueSelfAudit` (process integrity)
+ * `artistRecord` (reasoning trail) and `art-official:DialogueSelfAudit` (process integrity)
  * as clearly separated, distinctly-namespaced nodes.
  */
 export function projectTier5Session(session: Tier5SessionSource) {
@@ -144,7 +144,7 @@ export function projectTier5Session(session: Tier5SessionSource) {
         ? session.fieldUpdateTimeline
         : session.fieldUpdateTimeline ?? null,
     },
-    'artism:DialogueSelfAudit': {
+    'art-official:DialogueSelfAudit': {
       agentModel: session.agentModel ?? null,
       sessionNotes: session.sessionNotes ?? null,
       weakPhases: session.weakPhases ?? null,
@@ -177,11 +177,11 @@ export function buildTier5SessionsResponse(options: {
     '@context': CORPUS_CONTEXT,
     '@type': 'DataFeed',
     ...buildScopeDepthEnvelope('sessions'),
-    'artism:tierMap': buildTierMap(baseUrl),
-    'artism:artworkSlug': artworkSlug,
-    'artism:artworkUrl': `${baseUrl}/${artworkSlug}`,
-    'artism:recordUrl': `${baseUrl}/api/corpus/${artworkSlug}`,
-    'artism:coverage': { sessionCount: projected.length },
+    'art-official:tierMap': buildTierMap(baseUrl),
+    'art-official:artworkSlug': artworkSlug,
+    'art-official:artworkUrl': `${baseUrl}/${artworkSlug}`,
+    'art-official:recordUrl': `${baseUrl}/api/corpus/${artworkSlug}`,
+    'art-official:coverage': { sessionCount: projected.length },
     sessions: projected,
   }
 }
@@ -203,11 +203,11 @@ export function buildTier5EventSessionsResponse(options: {
     '@context': CORPUS_CONTEXT,
     '@type': 'DataFeed',
     ...buildScopeDepthEnvelope('sessions'),
-    'artism:tierMap': buildTierMap(baseUrl),
-    'artism:eventSlug': eventSlug,
-    'artism:eventUrl': `${baseUrl}/events/${eventSlug}`,
-    'artism:recordUrl': `${baseUrl}/api/corpus/${eventSlug}?type=event`,
-    'artism:coverage': { sessionCount: projected.length },
+    'art-official:tierMap': buildTierMap(baseUrl),
+    'art-official:eventSlug': eventSlug,
+    'art-official:eventUrl': `${baseUrl}/events/${eventSlug}`,
+    'art-official:recordUrl': `${baseUrl}/api/corpus/${eventSlug}?type=event`,
+    'art-official:coverage': { sessionCount: projected.length },
     sessions: projected,
   }
 }
@@ -259,8 +259,8 @@ export function buildTier5SessionByIdResponse(options: {
   if (!projected) return null
 
   return {
-    '@type': 'artism:Session',
-    'artism:tier': 5,
+    '@type': 'art-official:Session',
+    'art-official:tier': 5,
     url: `${baseUrl}${sessionTier5ApiPath(projected.sessionId)}`,
     sessionId: projected.sessionId,
     sessionType: projected.sessionType,
@@ -270,7 +270,7 @@ export function buildTier5SessionByIdResponse(options: {
     mentionedArtworks: projected.mentionedArtworks,
     eventRecord: projected.eventRecord,
     artistRecord: projected.artistRecord,
-    'artism:DialogueSelfAudit': projected['artism:DialogueSelfAudit'],
+    'art-official:DialogueSelfAudit': projected['art-official:DialogueSelfAudit'],
     sameAs: `${baseUrl}/sessions/${projected.sessionId}`,
   }
 }
@@ -291,8 +291,8 @@ export function buildSessionJsonLd(
     : null
 
   return {
-    '@context': 'https://schema.org',
-    '@type': 'artism:Session',
+    '@context': CORPUS_CONTEXT,
+    '@type': 'art-official:Session',
     '@id': `${baseUrl}/sessions/${projected.sessionId}`,
     sessionType: projected.sessionType,
     completedAt: projected.completedAt,
@@ -302,7 +302,7 @@ export function buildSessionJsonLd(
       ? `${baseUrl}/events/${projected.eventRecord}`
       : null,
     artistRecord: projected.artistRecord,
-    'artism:DialogueSelfAudit': projected['artism:DialogueSelfAudit'],
+    'art-official:DialogueSelfAudit': projected['art-official:DialogueSelfAudit'],
     sameAs: `${baseUrl}${sessionTier5ApiPath(projected.sessionId)}`,
   }
 }

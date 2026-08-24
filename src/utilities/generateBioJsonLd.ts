@@ -1,13 +1,9 @@
 import { getPopulatedSocialChannels } from '@/lib/contact/socialChannels'
 import { getBioCurrentCities } from '@/lib/bio/bioHeader'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { normalizeBioPhotos } from '@/helpers/bioPhotos'
 import type { Artist, Session } from '@/payload-types'
-
-const ARTISM_CONTEXT = {
-  '@vocab': 'https://schema.org/',
-  artism: 'https://artism.org/schema/',
-} as const
 
 export type GenerateBioJsonLdOptions = {
   baseUrl?: string
@@ -100,9 +96,9 @@ function buildBiographicalNotes(
       const slug = entry.slug?.trim()
       return {
         '@type': 'PropertyValue',
-        propertyID: 'artism:biographicalNote',
+        propertyID: 'art-official:biographicalNote',
         value: entry.text.trim(),
-        ...(entry.eventDate?.trim() ? { 'artism:eventDate': entry.eventDate.trim() } : {}),
+        ...(entry.eventDate?.trim() ? { 'art-official:eventDate': entry.eventDate.trim() } : {}),
         ...(slug ? { url: `${baseUrl}/bio/entries/${slug}` } : {}),
         ...(basedOn ? { isBasedOn: basedOn } : {}),
       }
@@ -151,7 +147,7 @@ export function generateBioJsonLd(
   if (additionalProperty.length) person.additionalProperty = additionalProperty
 
   return {
-    '@context': ARTISM_CONTEXT,
+    '@context': CORPUS_CONTEXT,
     '@type': 'ProfilePage',
     url: `${base}/bio`,
     mainEntity: person,

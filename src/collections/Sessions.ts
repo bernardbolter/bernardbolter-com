@@ -418,7 +418,7 @@ export const Sessions: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          'Model string captured at session start (e.g. claude-sonnet-4-6). Required on public artism:DialogueSelfAudit nodes.',
+          'Model string captured at session start (e.g. claude-sonnet-4-6). Required on public art-official:DialogueSelfAudit nodes.',
       },
     },
     { name: 'sessionNotes', type: 'textarea' },

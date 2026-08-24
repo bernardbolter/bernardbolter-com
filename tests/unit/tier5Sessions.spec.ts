@@ -10,6 +10,7 @@ import {
   sessionMatchesEventSlug,
   type Tier5SessionSource,
 } from '@/lib/corpus/buildTier5SessionsResponse'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import {
   parseSessionIndexFilters,
   buildSessionIndexQueryString,
@@ -105,10 +106,10 @@ describe('buildTier5EventSessionsResponse', () => {
       sessions: [s],
       baseUrl: 'https://example.com',
     })
-    expect(body['artism:eventSlug']).toBe('pecha-kucha-amsterdam-vol-9-mediamatic-2009')
+    expect(body['art-official:eventSlug']).toBe('pecha-kucha-amsterdam-vol-9-mediamatic-2009')
     expect(body.sessions).toHaveLength(1)
     expect(body.sessions[0].eventRecord).toBe('pecha-kucha-amsterdam-vol-9-mediamatic-2009')
-    expect(body.sessions[0]['artism:DialogueSelfAudit']).toBeDefined()
+    expect(body.sessions[0]['art-official:DialogueSelfAudit']).toBeDefined()
     expect(body.sessions[0].artistRecord).toBeDefined()
   })
 })
@@ -133,7 +134,7 @@ describe('sessionMatchesArtworkSlug', () => {
 })
 
 describe('projectTier5Session', () => {
-  it('keeps artistRecord and artism:DialogueSelfAudit as separate nodes', () => {
+  it('keeps artistRecord and art-official:DialogueSelfAudit as separate nodes', () => {
     const projected = projectTier5Session(session())
     expect(projected).not.toBeNull()
     expect(projected!.artistRecord).toEqual({
@@ -153,7 +154,7 @@ describe('projectTier5Session', () => {
         },
       ],
     })
-    expect(projected!['artism:DialogueSelfAudit']).toEqual({
+    expect(projected!['art-official:DialogueSelfAudit']).toEqual({
       agentModel: 'claude-sonnet-4-6',
       sessionNotes: 'agent paced toward closure prematurely',
       weakPhases: ['confirmation'],
@@ -176,7 +177,7 @@ describe('projectTier5Session', () => {
 
   it('always includes agentModel on DialogueSelfAudit even when unset', () => {
     const projected = projectTier5Session(session({ agentModel: null }))
-    expect(projected!['artism:DialogueSelfAudit']).toHaveProperty('agentModel', null)
+    expect(projected!['art-official:DialogueSelfAudit']).toHaveProperty('agentModel', null)
   })
 })
 
@@ -189,31 +190,31 @@ describe('buildTier5SessionsResponse', () => {
       sessions,
       baseUrl: 'https://bernardbolter.com',
     })
-    expect(veniceResponse['artism:tier']).toBe(5)
-    expect(veniceResponse['artism:scope']).toBe('work')
-    expect(veniceResponse['artism:depth']).toBe('sessions')
-    expect(veniceResponse['artism:artworkSlug']).toBe('venice-biennale-2007')
-    expect(veniceResponse['artism:artworkUrl']).toBe(
+    expect(veniceResponse['art-official:tier']).toBe(5)
+    expect(veniceResponse['art-official:scope']).toBe('work')
+    expect(veniceResponse['art-official:depth']).toBe('sessions')
+    expect(veniceResponse['art-official:artworkSlug']).toBe('venice-biennale-2007')
+    expect(veniceResponse['art-official:artworkUrl']).toBe(
       'https://bernardbolter.com/venice-biennale-2007',
     )
-    expect(veniceResponse['artism:recordUrl']).toBe(
+    expect(veniceResponse['art-official:recordUrl']).toBe(
       'https://bernardbolter.com/api/corpus/venice-biennale-2007',
     )
-    expect(veniceResponse['artism:coverage']).toEqual({ sessionCount: 1 })
-    expect(veniceResponse['artism:tierMap']).toHaveProperty('5')
-    expect(veniceResponse['artism:tierMap']).toHaveProperty('3')
+    expect(veniceResponse['art-official:coverage']).toEqual({ sessionCount: 1 })
+    expect(veniceResponse['art-official:tierMap']).toHaveProperty('5')
+    expect(veniceResponse['art-official:tierMap']).toHaveProperty('3')
     expect(veniceResponse.sessions[0]?.mentionedArtworks).toEqual([
       'skulptur-projekte-m-nster-2007',
     ])
     expect(veniceResponse).not.toHaveProperty('artworkSlug')
-    expect(veniceResponse).not.toHaveProperty('artism:totalSessions')
+    expect(veniceResponse).not.toHaveProperty('art-official:totalSessions')
 
     const munsterResponse = buildTier5SessionsResponse({
       artworkSlug: 'skulptur-projekte-m-nster-2007',
       sessions,
       baseUrl: 'https://bernardbolter.com',
     })
-    expect(munsterResponse['artism:coverage']).toEqual({ sessionCount: 1 })
+    expect(munsterResponse['art-official:coverage']).toEqual({ sessionCount: 1 })
     expect(munsterResponse.sessions[0]?.sessionId).toBe('venice-session-1')
     expect(munsterResponse.sessions[0]?.primaryArtwork).toBe('venice-biennale-2007')
   })
@@ -223,8 +224,8 @@ describe('buildSessionJsonLd', () => {
   it('embeds Tier 5 streams with absolute artwork URLs and sameAs', () => {
     const jsonLd = buildSessionJsonLd(session(), 'https://bernardbolter.com')
     expect(jsonLd).toMatchObject({
-      '@context': 'https://schema.org',
-      '@type': 'artism:Session',
+      '@context': CORPUS_CONTEXT,
+      '@type': 'art-official:Session',
       '@id': 'https://bernardbolter.com/sessions/venice-session-1',
       primaryArtwork: 'https://bernardbolter.com/venice-biennale-2007',
       mentionedArtworks: [
@@ -234,7 +235,7 @@ describe('buildSessionJsonLd', () => {
         'https://bernardbolter.com/api/corpus/sessions/venice-session-1?tier=5',
     })
     expect(jsonLd).toHaveProperty('artistRecord')
-    expect(jsonLd).toHaveProperty('artism:DialogueSelfAudit')
+    expect(jsonLd).toHaveProperty('art-official:DialogueSelfAudit')
     expect((jsonLd!.artistRecord as { messages: unknown[] }).messages).toHaveLength(2)
   })
 })
@@ -252,14 +253,14 @@ describe('buildTier5SessionByIdResponse', () => {
       baseUrl: 'https://bernardbolter.com',
     })
     expect(body).toMatchObject({
-      '@type': 'artism:Session',
-      'artism:tier': 5,
+      '@type': 'art-official:Session',
+      'art-official:tier': 5,
       sessionId: 'statement-session-1',
       primaryArtwork: null,
       url: 'https://bernardbolter.com/api/corpus/sessions/statement-session-1?tier=5',
     })
     expect(body).toHaveProperty('artistRecord')
-    expect(body).toHaveProperty('artism:DialogueSelfAudit')
+    expect(body).toHaveProperty('art-official:DialogueSelfAudit')
   })
 })
 

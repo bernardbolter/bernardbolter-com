@@ -1,11 +1,7 @@
 import type { Artist } from '@/payload-types'
 
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
-
-const ARTISM_CONTEXT = {
-  '@vocab': 'https://schema.org/',
-  artism: 'https://artism.org/schema/',
-} as const
 
 const BIO_PERSON_ID = '/bio#person'
 
@@ -24,7 +20,7 @@ export function buildHomeJsonLd(
     'The complete archive of Bernard Bolter\'s work — transfer paintings, satellite image collages, and thirty years of practice across Berlin and San Francisco.'
 
   return {
-    '@context': ARTISM_CONTEXT,
+    '@context': CORPUS_CONTEXT,
     '@type': ['WebSite', 'CollectionPage'],
     '@id': baseUrl,
     name: `${artistName} — Artist Archive`,
@@ -47,7 +43,7 @@ export function buildHomeJsonLd(
       { '@type': 'WebPage', name: 'Statement', url: `${baseUrl}/statement` },
       { '@type': 'WebPage', name: 'Contact', url: `${baseUrl}/contact` },
     ],
-    'artism:archiveVersion': '1.0',
-    'artism:corpusEndpoint': `${baseUrl}/api/corpus/index`,
+    'art-official:archiveVersion': '1.0',
+    'art-official:corpusEndpoint': `${baseUrl}/api/corpus/index`,
   }
 }

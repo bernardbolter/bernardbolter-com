@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import type { Artist, Series } from '@/payload-types'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { generateSeriesJsonLd } from '@/utilities/generateSeriesJsonLd'
 
 function minimalArtist(overrides: Partial<Artist> = {}): Artist {
@@ -53,10 +54,7 @@ describe('generateSeriesJsonLd', () => {
     )
 
     expect(jsonLd).toMatchObject({
-      '@context': {
-        '@vocab': 'https://schema.org/',
-        artism: 'https://artism.org/schema/',
-      },
+      '@context': CORPUS_CONTEXT,
       '@type': 'CollectionPage',
       name: 'Megacities',
       url: 'https://bernardbolter.com/series/megacities',

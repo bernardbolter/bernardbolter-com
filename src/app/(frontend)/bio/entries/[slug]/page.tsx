@@ -8,6 +8,7 @@ import { collectSessionSiblingLinks } from '@/components/shared/SessionSiblingLi
 import { attachPublicSessionRefs } from '@/lib/artist/attachPublicSessionRefs'
 import { resolveSessionNumericId } from '@/lib/artist/accumulatingEntries'
 import { linkedArtworksToCards } from '@/lib/artist/linkedArtworksToCards'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getBioPageArtist } from '@/lib/payload/bioPage'
 import type { Session } from '@/payload-types'
@@ -29,15 +30,12 @@ function buildEntryJsonLd(options: {
       ? `${baseUrl}/sessions/${session.sessionId}`
       : undefined
   return {
-    '@context': {
-      '@vocab': 'https://schema.org/',
-      artism: 'https://artism.org/schema/',
-    },
+    '@context': CORPUS_CONTEXT,
     '@type': 'CreativeWork',
     '@id': `${baseUrl}/bio/entries/${slug}`,
     name: text.slice(0, 120),
     url: `${baseUrl}/bio/entries/${slug}`,
-    ...(eventDate ? { 'artism:eventDate': eventDate } : {}),
+    ...(eventDate ? { 'art-official:eventDate': eventDate } : {}),
     ...(basedOn ? { isBasedOn: basedOn } : {}),
   }
 }

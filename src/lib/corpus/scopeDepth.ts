@@ -7,11 +7,11 @@
  * subset     (filt.)  Tier 2     —           —
  * work       (T3*)    —          Tier 4      Tier 5
  *
- * *Deferred reading endpoint — not built. Absent artism:tier on root means
+ * *Deferred reading endpoint — not built. Absent art-official:tier on root means
  * the bulk feed is not a ladder rung.
  *
- * `artism:depth` values match the query vocabulary: gist | survey | record | sessions.
- * `?depth=survey` and `"artism:depth": "survey"` are the same word.
+ * `art-official:depth` values match the query vocabulary: gist | survey | record | sessions.
+ * `?depth=survey` and `"art-official:depth": "survey"` are the same word.
  */
 
 export type CorpusScope = 'corpus' | 'subset' | 'work'
@@ -24,7 +24,7 @@ export type CorpusEndpointKind =
   | 'record'
   | 'sessions'
 
-/** Envelope fields for a corpus endpoint. Omits artism:tier when not a ladder rung. */
+/** Envelope fields for a corpus endpoint. Omits art-official:tier when not a ladder rung. */
 export function buildScopeDepthEnvelope(
   kind: CorpusEndpointKind,
   options: { hasActiveFilters?: boolean } = {},
@@ -33,35 +33,35 @@ export function buildScopeDepthEnvelope(
     case 'index': {
       const scope: CorpusScope = options.hasActiveFilters ? 'subset' : 'corpus'
       return {
-        'artism:scope': scope,
-        'artism:depth': 'gist',
-        'artism:tier': 1,
+        'art-official:scope': scope,
+        'art-official:depth': 'gist',
+        'art-official:tier': 1,
       }
     }
     case 'survey':
       return {
-        'artism:scope': 'subset',
-        'artism:depth': 'survey',
-        'artism:tier': 2,
+        'art-official:scope': 'subset',
+        'art-official:depth': 'survey',
+        'art-official:tier': 2,
       }
     case 'root':
-      // No artism:tier — bulk export is the fourth matrix cell, not a rung.
+      // No art-official:tier — bulk export is the fourth matrix cell, not a rung.
       return {
-        'artism:scope': 'corpus',
-        'artism:depth': 'record',
-        'artism:feedRole': 'bulk-export',
+        'art-official:scope': 'corpus',
+        'art-official:depth': 'record',
+        'art-official:feedRole': 'bulk-export',
       }
     case 'record':
       return {
-        'artism:scope': 'work',
-        'artism:depth': 'record',
-        'artism:tier': 4,
+        'art-official:scope': 'work',
+        'art-official:depth': 'record',
+        'art-official:tier': 4,
       }
     case 'sessions':
       return {
-        'artism:scope': 'work',
-        'artism:depth': 'sessions',
-        'artism:tier': 5,
+        'art-official:scope': 'work',
+        'art-official:depth': 'sessions',
+        'art-official:tier': 5,
       }
   }
 }

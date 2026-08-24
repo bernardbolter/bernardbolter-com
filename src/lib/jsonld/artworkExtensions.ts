@@ -137,48 +137,48 @@ export function applyArtworkJsonLdExtensions(
   if (artwork.hasEditions && artwork.hasEditions !== 'none') {
     if (artwork.hasEditions === 'open') {
       const note = artwork.untrackedEditionsNote?.trim()
-      if (note) doc['artism:untrackedEditionsNote'] = note
+      if (note) doc['art-official:untrackedEditionsNote'] = note
     } else {
       const editionTierSpec = buildJsonLdEditionTierSpecs(artwork)
       if (editionTierSpec?.length) {
-        doc['artism:editionTierSpec'] = editionTierSpec
+        doc['art-official:editionTierSpec'] = editionTierSpec
       }
 
       const editionClaimSummary = buildJsonLdEditionClaimSummary(artwork)
       if (editionClaimSummary?.length) {
-        doc['artism:editionClaimSummary'] = editionClaimSummary
+        doc['art-official:editionClaimSummary'] = editionClaimSummary
       }
 
       const originalEdition = buildJsonLdOriginalEditionFields(artwork)
       if (originalEdition) {
-        doc['artism:originalEditionSize'] = originalEdition.originalEditionSize
-        doc['artism:originalEditionApCount'] = originalEdition.originalEditionApCount
+        doc['art-official:originalEditionSize'] = originalEdition.originalEditionSize
+        doc['art-official:originalEditionApCount'] = originalEdition.originalEditionApCount
       }
     }
   }
 
   const provenanceConfidenceLevel = deriveJsonLdProvenanceConfidenceLevel(artwork)
   if (provenanceConfidenceLevel) {
-    doc['artism:provenanceConfidenceLevel'] = provenanceConfidenceLevel
+    doc['art-official:provenanceConfidenceLevel'] = provenanceConfidenceLevel
   }
 
   const provenanceClaims = getJsonLdProvenanceClaims(artwork)
   if (provenanceClaims?.length) {
-    doc['artism:provenanceClaims'] = provenanceClaims
+    doc['art-official:provenanceClaims'] = provenanceClaims
   }
 
   const relatedWork = buildJsonLdRelatedWorks(artwork, baseUrl)
   if (relatedWork?.length) {
-    doc['artism:relatedWork'] = relatedWork
+    doc['art-official:relatedWork'] = relatedWork
   }
 
   const embeddingMetadata = resolveEmbeddingMetadataList(artwork)
   if (embeddingMetadata.length > 0) {
-    doc['artism:embeddings'] = embeddingMetadata.map(buildCorpusEmbeddingMetadata)
+    doc['art-official:embeddings'] = embeddingMetadata.map(buildCorpusEmbeddingMetadata)
   }
 
   const visionAnalyses = buildCorpusVisionAnalyses(artwork)
   if (visionAnalyses?.length) {
-    doc['artism:visionAnalyses'] = visionAnalyses
+    doc['art-official:visionAnalyses'] = visionAnalyses
   }
 }

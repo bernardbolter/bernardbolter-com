@@ -6,6 +6,7 @@ import {
   formatBioLivesAndWorksLine,
   getBioCurrentCities,
 } from '@/lib/bio/bioHeader'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { generateBioJsonLd } from '@/utilities/generateBioJsonLd'
 
 function minimalArtist(overrides: Partial<Artist> = {}): Artist {
@@ -64,10 +65,7 @@ describe('generateBioJsonLd', () => {
     )
 
     expect(jsonLd).toMatchObject({
-      '@context': {
-        '@vocab': 'https://schema.org/',
-        artism: 'https://artism.org/schema/',
-      },
+      '@context': CORPUS_CONTEXT,
       '@type': 'ProfilePage',
       url: 'https://bernardbolter.com/bio',
       mainEntity: {

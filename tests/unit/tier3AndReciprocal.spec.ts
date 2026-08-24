@@ -48,13 +48,13 @@ describe('Tier 3 availability', () => {
       baseUrl,
       includeTraversalLinks: true,
     })
-    expect(withMap['artism:tierMap']).toHaveProperty('3')
+    expect(withMap['art-official:tierMap']).toHaveProperty('3')
 
     const withoutMap = buildArtworkJsonLd(without, null, {
       baseUrl,
       includeTraversalLinks: true,
     })
-    expect(withoutMap['artism:tierMap']).not.toHaveProperty('3')
+    expect(withoutMap['art-official:tierMap']).not.toHaveProperty('3')
   })
 
   it('corpus-level tierMap advertises Tier 3 HTML urlTemplate by default', () => {
@@ -73,12 +73,12 @@ describe('Tier 4 reciprocal links', () => {
       includeTraversalLinks: true,
       artist,
     })
-    expect(doc['artism:relatedByThroughline']).toEqual([
+    expect(doc['art-official:relatedByThroughline']).toEqual([
       {
         name: 'Invented antiquity across the archive.',
         url: `${baseUrl}/statement/throughlines/invented-antiquity`,
       },
     ])
-    expect(doc).not.toHaveProperty('artism:relatedByBioEvent')
+    expect(doc).not.toHaveProperty('art-official:relatedByBioEvent')
   })
 })

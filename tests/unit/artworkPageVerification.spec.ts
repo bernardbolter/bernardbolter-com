@@ -176,20 +176,20 @@ describe('artwork page verification checklist', () => {
 
       const additionalProperty = jsonLd.additionalProperty as Array<Record<string, unknown>>
       const clipEndpoint = additionalProperty.find(
-        (row) => row.propertyID === 'artism:clipEmbeddingEndpoint',
+        (row) => row.propertyID === 'art-official:clipEmbeddingEndpoint',
       )
       expect(clipEndpoint).toBeUndefined()
-      expect(jsonLd).not.toHaveProperty('artism:visionPageUrl')
+      expect(jsonLd).not.toHaveProperty('art-official:visionPageUrl')
     })
 
     it('includes non-empty artism intent fields from fixture in additionalProperty', () => {
       const additionalProperty = jsonLd.additionalProperty as Array<Record<string, unknown>>
       const formal = additionalProperty.find(
-        (row) => row.propertyID === 'artism:formalContributionAssessment',
+        (row) => row.propertyID === 'art-official:formalContributionAssessment',
       )
-      const intent = additionalProperty.find((row) => row.propertyID === 'artism:intent')
+      const intent = additionalProperty.find((row) => row.propertyID === 'art-official:intent')
       const reasoning = additionalProperty.find(
-        (row) => row.propertyID === 'artism:reasoningStatus',
+        (row) => row.propertyID === 'art-official:reasoningStatus',
       )
 
       expect(String(formal?.value)).toContain('conditional legibility')

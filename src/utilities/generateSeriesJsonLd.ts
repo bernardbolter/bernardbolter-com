@@ -1,12 +1,7 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
-import { ARTISM_NS, CORPUS_BASE } from '@/lib/corpus/constants'
+import { CORPUS_BASE, CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { seriesIdUrl, seriesPageUrl } from '@/lib/corpus/seriesIdentity'
 import type { Artist, Series } from '@/payload-types'
-
-const ARTISM_CONTEXT = {
-  '@vocab': 'https://schema.org/',
-  artism: ARTISM_NS,
-} as const
 
 const DESCRIPTION_MAX_LENGTH = 500
 
@@ -73,7 +68,7 @@ export function generateSeriesJsonLd(
   if (typeof series.yearEnd === 'number') seriesNode.endDate = String(series.yearEnd)
 
   return {
-    '@context': ARTISM_CONTEXT,
+    '@context': CORPUS_CONTEXT,
     '@type': 'CollectionPage',
     name: series.name,
     url: seriesPageUrl(slug, base),

@@ -1,5 +1,6 @@
 import type { Artwork } from '@/payload-types'
 
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import {
   getDirectR2ImageUrl,
   resolveEmbeddingMetadataList,
@@ -9,39 +10,34 @@ import {
   type VisionAnalysisEntry,
 } from '@/lib/artwork/visionPage'
 
-const ARTISM_CONTEXT = {
-  '@vocab': 'https://schema.org/',
-  artism: 'https://artism.org/schema/',
-} as const
-
 export type VisionPageJsonLdEmbedding = {
-  '@type': 'artism:Embedding'
-  'artism:model': string
-  'artism:dimensions': number
-  'artism:vector': number[]
-  'artism:specUrl'?: string
-  'artism:shortDescription'?: string
+  '@type': 'art-official:Embedding'
+  'art-official:model': string
+  'art-official:dimensions': number
+  'art-official:vector': number[]
+  'art-official:specUrl'?: string
+  'art-official:shortDescription'?: string
   dateCreated?: string
 }
 
 export type VisionPageJsonLdAnalysis = {
-  '@type': 'artism:VisionAnalysis'
+  '@type': 'art-official:VisionAnalysis'
   text: string
-  'artism:model': string
+  'art-official:model': string
   dateCreated: string
 }
 
 export type VisionPageJsonLd = {
-  '@context': typeof ARTISM_CONTEXT
-  '@type': 'artism:VisionPage'
+  '@context': typeof CORPUS_CONTEXT
+  '@type': 'art-official:VisionPage'
   isPartOf: {
     '@type': 'VisualArtwork'
     name: string
     url: string
     image?: string
   }
-  'artism:embeddings': VisionPageJsonLdEmbedding[]
-  'artism:visionAnalyses'?: VisionPageJsonLdAnalysis[]
+  'art-official:embeddings': VisionPageJsonLdEmbedding[]
+  'art-official:visionAnalyses'?: VisionPageJsonLdAnalysis[]
 }
 
 function buildEmbeddingJsonLd(
@@ -49,18 +45,18 @@ function buildEmbeddingJsonLd(
   vector: number[],
 ): VisionPageJsonLdEmbedding {
   const entry: VisionPageJsonLdEmbedding = {
-    '@type': 'artism:Embedding',
-    'artism:model': metadata.model,
-    'artism:dimensions': metadata.dimensions,
-    'artism:vector': vector,
+    '@type': 'art-official:Embedding',
+    'art-official:model': metadata.model,
+    'art-official:dimensions': metadata.dimensions,
+    'art-official:vector': vector,
   }
 
   if (metadata.specUrl?.trim()) {
-    entry['artism:specUrl'] = metadata.specUrl.trim()
+    entry['art-official:specUrl'] = metadata.specUrl.trim()
   }
 
   if (metadata.shortDescription?.trim()) {
-    entry['artism:shortDescription'] = metadata.shortDescription.trim()
+    entry['art-official:shortDescription'] = metadata.shortDescription.trim()
   }
 
   const dateCreated = toIsoDateOnly(metadata.generatedDate)
@@ -71,9 +67,9 @@ function buildEmbeddingJsonLd(
 
 function buildAnalysisJsonLd(analysis: VisionAnalysisEntry): VisionPageJsonLdAnalysis {
   return {
-    '@type': 'artism:VisionAnalysis',
+    '@type': 'art-official:VisionAnalysis',
     text: analysis.text,
-    'artism:model': analysis.model,
+    'art-official:model': analysis.model,
     dateCreated: toIsoDateOnly(analysis.date) ?? analysis.date,
   }
 }
@@ -97,19 +93,19 @@ export function buildVisionPageJsonLd(
   const analyses = resolveVisionAnalyses(artwork)
 
   const jsonLd: VisionPageJsonLd = {
-    '@context': ARTISM_CONTEXT,
-    '@type': 'artism:VisionPage',
+    '@context': CORPUS_CONTEXT,
+    '@type': 'art-official:VisionPage',
     isPartOf: {
       '@type': 'VisualArtwork',
       name: title,
       url: artworkUrl,
       ...(directImageUrl ? { image: directImageUrl } : {}),
     },
-    'artism:embeddings': embeddings,
+    'art-official:embeddings': embeddings,
   }
 
   if (analyses.length > 0) {
-    jsonLd['artism:visionAnalyses'] = analyses.map(buildAnalysisJsonLd)
+    jsonLd['art-official:visionAnalyses'] = analyses.map(buildAnalysisJsonLd)
   }
 
   return jsonLd
@@ -119,17 +115,17 @@ export function buildCorpusEmbeddingMetadata(
   metadata: EmbeddingMetadata,
 ): Record<string, unknown> {
   const entry: Record<string, unknown> = {
-    '@type': 'artism:Embedding',
-    'artism:model': metadata.model,
-    'artism:dimensions': metadata.dimensions,
+    '@type': 'art-official:Embedding',
+    'art-official:model': metadata.model,
+    'art-official:dimensions': metadata.dimensions,
   }
 
   if (metadata.specUrl?.trim()) {
-    entry['artism:specUrl'] = metadata.specUrl.trim()
+    entry['art-official:specUrl'] = metadata.specUrl.trim()
   }
 
   if (metadata.shortDescription?.trim()) {
-    entry['artism:shortDescription'] = metadata.shortDescription.trim()
+    entry['art-official:shortDescription'] = metadata.shortDescription.trim()
   }
 
   const dateCreated = toIsoDateOnly(metadata.generatedDate)
@@ -145,9 +141,9 @@ export function buildCorpusVisionAnalyses(
   if (analyses.length === 0) return undefined
 
   return analyses.map((analysis) => ({
-    '@type': 'artism:VisionAnalysis',
+    '@type': 'art-official:VisionAnalysis',
     text: analysis.text,
-    'artism:model': analysis.model,
+    'art-official:model': analysis.model,
     dateCreated: toIsoDateOnly(analysis.date) ?? analysis.date,
   }))
 }

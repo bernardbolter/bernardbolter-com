@@ -5,39 +5,39 @@ import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
 describe('buildScopeDepthEnvelope', () => {
   it('maps ladder endpoints to scope × depth with tier shorthand', () => {
     expect(buildScopeDepthEnvelope('index')).toEqual({
-      'artism:scope': 'corpus',
-      'artism:depth': 'gist',
-      'artism:tier': 1,
+      'art-official:scope': 'corpus',
+      'art-official:depth': 'gist',
+      'art-official:tier': 1,
     })
     expect(buildScopeDepthEnvelope('index', { hasActiveFilters: true })).toEqual({
-      'artism:scope': 'subset',
-      'artism:depth': 'gist',
-      'artism:tier': 1,
+      'art-official:scope': 'subset',
+      'art-official:depth': 'gist',
+      'art-official:tier': 1,
     })
     expect(buildScopeDepthEnvelope('survey')).toEqual({
-      'artism:scope': 'subset',
-      'artism:depth': 'survey',
-      'artism:tier': 2,
+      'art-official:scope': 'subset',
+      'art-official:depth': 'survey',
+      'art-official:tier': 2,
     })
     expect(buildScopeDepthEnvelope('record')).toEqual({
-      'artism:scope': 'work',
-      'artism:depth': 'record',
-      'artism:tier': 4,
+      'art-official:scope': 'work',
+      'art-official:depth': 'record',
+      'art-official:tier': 4,
     })
     expect(buildScopeDepthEnvelope('sessions')).toEqual({
-      'artism:scope': 'work',
-      'artism:depth': 'sessions',
-      'artism:tier': 5,
+      'art-official:scope': 'work',
+      'art-official:depth': 'sessions',
+      'art-official:tier': 5,
     })
   })
 
-  it('omits artism:tier on the root bulk-export feed', () => {
+  it('omits art-official:tier on the root bulk-export feed', () => {
     const envelope = buildScopeDepthEnvelope('root')
     expect(envelope).toEqual({
-      'artism:scope': 'corpus',
-      'artism:depth': 'record',
-      'artism:feedRole': 'bulk-export',
+      'art-official:scope': 'corpus',
+      'art-official:depth': 'record',
+      'art-official:feedRole': 'bulk-export',
     })
-    expect(envelope).not.toHaveProperty('artism:tier')
+    expect(envelope).not.toHaveProperty('art-official:tier')
   })
 })

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { buildHomeJsonLd } from '@/utilities/buildHomeJsonLd'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { editionJsonLdHasPrivateFields } from '@/lib/jsonld/artworkExtensions'
 import type { Artwork, Artist } from '@/payload-types'
 
@@ -37,12 +38,12 @@ describe('buildHomeJsonLd', () => {
       '@type': 'Person',
       '@id': 'https://bernardbolter.com/bio#person',
     })
-    expect(jsonLd['artism:corpusEndpoint']).toBe('https://bernardbolter.com/api/corpus/index')
+    expect(jsonLd['art-official:corpusEndpoint']).toBe('https://bernardbolter.com/api/corpus/index')
   })
 })
 
 describe('buildArtworkJsonLd', () => {
-  it('includes artism context and vision page URL when embeddings exist', () => {
+  it('includes art-official context and vision page URL when embeddings exist', () => {
     const jsonLd = buildArtworkJsonLd(
       minimalArtwork({
         clipEmbedding: [0.1, 0.2, 0.3],
@@ -51,22 +52,19 @@ describe('buildArtworkJsonLd', () => {
       { baseUrl: 'https://bernardbolter.com' },
     )
 
-    expect(jsonLd['@context']).toMatchObject({
-      '@vocab': 'https://schema.org/',
-      artism: 'https://artism.org/schema/',
-    })
+    expect(jsonLd['@context']).toEqual(CORPUS_CONTEXT)
     expect(jsonLd['@id']).toBe('https://bernardbolter.com/gates-iii')
     expect(jsonLd.creator).toEqual({
       '@type': 'Person',
       '@id': 'https://bernardbolter.com/bio#person',
       name: 'Artist',
     })
-    expect(jsonLd['artism:recordUrl']).toBe('https://bernardbolter.com/api/corpus/gates-iii')
-    expect(jsonLd['artism:visionPageUrl']).toBe('https://bernardbolter.com/gates-iii/vision')
+    expect(jsonLd['art-official:recordUrl']).toBe('https://bernardbolter.com/api/corpus/gates-iii')
+    expect(jsonLd['art-official:visionPageUrl']).toBe('https://bernardbolter.com/gates-iii/vision')
 
     const additionalProperty = (jsonLd.additionalProperty ?? []) as Array<Record<string, unknown>>
     const clipEndpoint = additionalProperty.find(
-      (row) => row.propertyID === 'artism:clipEmbeddingEndpoint',
+      (row) => row.propertyID === 'art-official:clipEmbeddingEndpoint',
     )
     expect(clipEndpoint).toBeUndefined()
   })
@@ -80,7 +78,7 @@ describe('buildArtworkJsonLd', () => {
 
     const additionalProperty = (jsonLd.additionalProperty ?? []) as Array<Record<string, unknown>>
     const reasoning = additionalProperty.find(
-      (row) => row.propertyID === 'artism:reasoningStatus',
+      (row) => row.propertyID === 'art-official:reasoningStatus',
     )
     expect(reasoning).toBeUndefined()
   })
@@ -110,11 +108,11 @@ describe('buildArtworkJsonLd', () => {
       { baseUrl: 'https://bernardbolter.com' },
     )
 
-    const embeddings = jsonLd['artism:embeddings'] as Array<Record<string, unknown>>
+    const embeddings = jsonLd['art-official:embeddings'] as Array<Record<string, unknown>>
     expect(embeddings).toHaveLength(1)
-    expect(embeddings[0]).not.toHaveProperty('artism:vector')
+    expect(embeddings[0]).not.toHaveProperty('art-official:vector')
 
-    const analyses = jsonLd['artism:visionAnalyses'] as Array<Record<string, unknown>>
+    const analyses = jsonLd['art-official:visionAnalyses'] as Array<Record<string, unknown>>
     expect(analyses).toHaveLength(1)
     expect(analyses[0]?.text).toBe('Strong diagonal from lower-left.')
   })
@@ -130,7 +128,7 @@ describe('buildArtworkJsonLd', () => {
     expect(additionalProperty).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          propertyID: 'artism:catalogueNumber',
+          propertyID: 'art-official:catalogueNumber',
           value: 'BB-ACH-2019-003',
         }),
       ]),
@@ -200,8 +198,8 @@ describe('buildArtworkJsonLd', () => {
     )
 
     const props = jsonLd.additionalProperty as Array<Record<string, unknown>>
-    const hinge = props.find((row) => row.propertyID === 'artism:seriesHingeMarker')
-    const related = props.find((row) => row.propertyID === 'artism:relatedWorksAtMaking')
+    const hinge = props.find((row) => row.propertyID === 'art-official:seriesHingeMarker')
+    const related = props.find((row) => row.propertyID === 'art-official:relatedWorksAtMaking')
     expect(hinge?.value).toContain('series-end')
     expect(related?.value).toContain('paired')
     expect(related?.value).toContain('skulptur-projekte-munster-2007')
@@ -363,7 +361,7 @@ describe('buildArtworkJsonLd', () => {
       { baseUrl: 'https://bernardbolter.com' },
     )
 
-    const editionTierSpec = jsonLd['artism:editionTierSpec'] as Array<Record<string, unknown>>
+    const editionTierSpec = jsonLd['art-official:editionTierSpec'] as Array<Record<string, unknown>>
     expect(editionTierSpec).toHaveLength(3)
     expect(editionTierSpec[0]).toMatchObject({
       tierName: 'Monumental',
@@ -377,23 +375,23 @@ describe('buildArtworkJsonLd', () => {
     })
     expect(editionJsonLdHasPrivateFields(editionTierSpec)).toBe(false)
 
-    expect(jsonLd['artism:editionClaimSummary']).toEqual([
+    expect(jsonLd['art-official:editionClaimSummary']).toEqual([
       'Monumental: 1 of 3 claimed',
       'Collectors print: 0 of 9 claimed',
       'Small print: 0 of 200 claimed',
     ])
-    expect(jsonLd['artism:originalEditionSize']).toBe(3)
-    expect(jsonLd['artism:originalEditionApCount']).toBe(1)
-    expect(jsonLd['artism:provenanceConfidenceLevel']).toBe('fully-documented')
+    expect(jsonLd['art-official:originalEditionSize']).toBe(3)
+    expect(jsonLd['art-official:originalEditionApCount']).toBe(1)
+    expect(jsonLd['art-official:provenanceConfidenceLevel']).toBe('fully-documented')
 
-    const provenanceClaims = jsonLd['artism:provenanceClaims'] as Array<Record<string, unknown>>
+    const provenanceClaims = jsonLd['art-official:provenanceClaims'] as Array<Record<string, unknown>>
     expect(provenanceClaims).toHaveLength(2)
     expect(provenanceClaims.every((row) => row.confidenceLevel !== 'institutional-assertion')).toBe(
       true,
     )
     expect(JSON.stringify(provenanceClaims)).not.toContain('evidenceBasis')
 
-    expect(jsonLd['artism:relatedWork']).toEqual([
+    expect(jsonLd['art-official:relatedWork']).toEqual([
       {
         relationshipType: 'derivative-oil-painting',
         description:
@@ -412,11 +410,11 @@ describe('buildArtworkJsonLd', () => {
       { baseUrl: 'https://bernardbolter.com' },
     )
 
-    expect(jsonLd['artism:untrackedEditionsNote']).toBe(
+    expect(jsonLd['art-official:untrackedEditionsNote']).toBe(
       'Informal A3 prints sold at graduation show.',
     )
-    expect(jsonLd).not.toHaveProperty('artism:editionTierSpec')
-    expect(jsonLd).not.toHaveProperty('artism:editionClaimSummary')
+    expect(jsonLd).not.toHaveProperty('art-official:editionTierSpec')
+    expect(jsonLd).not.toHaveProperty('art-official:editionClaimSummary')
   })
 
   it('omits edition JSON-LD when hasEditions is none', () => {
@@ -435,8 +433,8 @@ describe('buildArtworkJsonLd', () => {
       { baseUrl: 'https://bernardbolter.com' },
     )
 
-    expect(jsonLd).not.toHaveProperty('artism:editionTierSpec')
-    expect(jsonLd).not.toHaveProperty('artism:editionClaimSummary')
+    expect(jsonLd).not.toHaveProperty('art-official:editionTierSpec')
+    expect(jsonLd).not.toHaveProperty('art-official:editionClaimSummary')
   })
 
   it('types time-based video works as VisualArtwork + VideoObject with ISO duration', () => {

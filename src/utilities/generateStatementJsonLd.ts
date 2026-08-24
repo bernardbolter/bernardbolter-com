@@ -1,14 +1,10 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { throughlineMentionArtworks } from '@/lib/artist/accumulatingEntries'
+import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import { buildArtworkMentionStub } from '@/lib/jsonld/artworkMention'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import type { Artist, Artwork, Event, Session } from '@/payload-types'
-
-const ARTISM_CONTEXT = {
-  '@vocab': 'https://schema.org/',
-  artism: 'https://artism.org/schema/',
-} as const
 
 export type GenerateStatementJsonLdOptions = {
   baseUrl?: string
@@ -85,10 +81,10 @@ function buildThroughlineProperties(
       const slug = entry.slug?.trim()
       return {
         '@type': 'PropertyValue',
-        propertyID: 'artism:statementThroughline',
+        propertyID: 'art-official:statementThroughline',
         value: entry.text.trim(),
         ...(entry.dateRecognized
-          ? { 'artism:dateRecognized': entry.dateRecognized }
+          ? { 'art-official:dateRecognized': entry.dateRecognized }
           : {}),
         ...(slug ? { url: `${baseUrl}/statement/throughlines/${slug}` } : {}),
         ...(basedOn ? { isBasedOn: basedOn } : {}),
@@ -134,7 +130,7 @@ export function generateStatementJsonLd(
   const additionalProperty = buildThroughlineProperties(artist, base)
 
   const doc: Record<string, unknown> = {
-    '@context': ARTISM_CONTEXT,
+    '@context': CORPUS_CONTEXT,
     '@type': 'CreativeWork',
     '@id': `${base}/statement#statement`,
     name: `Artist statement — ${artist.name}`,

@@ -5,7 +5,7 @@ import type { Artwork } from '@/payload-types'
  * Human-facing cataloguing label on artwork pages.
  *
  * Decoupled from `reasoningStatus` (which tracks Art/Official session depth for
- * the unreasoned queue and `artism:coverage.reasoningComplete`). A record with
+ * the unreasoned queue and `art-official:coverage.reasoningComplete`). A record with
  * real descriptive prose is never labeled "not yet fully catalogued", even when
  * `reasoningStatus` is still `stub` because no session was saved.
  */

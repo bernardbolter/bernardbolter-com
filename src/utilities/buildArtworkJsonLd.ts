@@ -8,7 +8,7 @@ import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { buildArtMediumJsonLdValue } from '@/lib/artwork/mediumVocabulary'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { artworkHasVisionTier, computeAvailableTiers } from '@/lib/corpus/availableTiers'
-import { ARTISM_NS, CORPUS_BASE } from '@/lib/corpus/constants'
+import { CORPUS_BASE, CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
 import { buildSeriesNode } from '@/lib/corpus/seriesIdentity'
 import { buildTierMap } from '@/lib/corpus/tierMap'
@@ -22,11 +22,6 @@ import {
   visionPageUrl,
 } from '@/lib/artwork/visionPage'
 import { countryNameToIsoCode } from '@/utilities/countryNameToIsoCode'
-
-const ARTISM_CONTEXT = {
-  '@vocab': 'https://schema.org/',
-  artism: ARTISM_NS,
-} as const
 
 const BIO_PERSON_ID = '/bio#person'
 
@@ -106,31 +101,31 @@ function buildAdditionalProperty(artwork: Artwork, baseUrl: string): Record<stri
     })
   }
 
-  addProp('artism:intent', 'Intent', artwork.intent)
+  addProp('art-official:intent', 'Intent', artwork.intent)
   addProp(
-    'artism:formalContributionAssessment',
+    'art-official:formalContributionAssessment',
     'Formal Contribution Assessment',
     artwork.formalContributionAssessment,
   )
-  addProp('artism:consciousRejections', 'Conscious Rejections', artwork.consciousRejections)
-  addProp('artism:encounterNote', 'Encounter Note', artwork.encounterNote)
-  addProp('artism:intentVsOutcome', 'Intent vs Outcome', artwork.intentVsOutcome)
-  addProp('artism:makingNote', 'Making Note', artwork.makingNote)
-  addProp('artism:directInspiration', 'Direct Inspiration', artwork.directInspiration)
-  addProp('artism:workContext', 'Work Context', artwork.workContext)
-  addProp('artism:seriesContext', 'Series Context', artwork.seriesContext)
+  addProp('art-official:consciousRejections', 'Conscious Rejections', artwork.consciousRejections)
+  addProp('art-official:encounterNote', 'Encounter Note', artwork.encounterNote)
+  addProp('art-official:intentVsOutcome', 'Intent vs Outcome', artwork.intentVsOutcome)
+  addProp('art-official:makingNote', 'Making Note', artwork.makingNote)
+  addProp('art-official:directInspiration', 'Direct Inspiration', artwork.directInspiration)
+  addProp('art-official:workContext', 'Work Context', artwork.workContext)
+  addProp('art-official:seriesContext', 'Series Context', artwork.seriesContext)
   addProp(
-    'artism:artHistoricalContext',
+    'art-official:artHistoricalContext',
     'Art Historical Context',
     artwork.artHistoricalContext,
   )
-  addProp('artism:compositionalNotes', 'Compositional Notes', artwork.compositionalNotes)
-  addProp('artism:sizeTier', 'Size Tier', artwork.sizeTier)
-  addProp('artism:orientation', 'Orientation', artwork.orientation)
-  addProp('artism:catalogueNumber', 'Catalogue Number', artwork.catalogueNumber)
+  addProp('art-official:compositionalNotes', 'Compositional Notes', artwork.compositionalNotes)
+  addProp('art-official:sizeTier', 'Size Tier', artwork.sizeTier)
+  addProp('art-official:orientation', 'Orientation', artwork.orientation)
+  addProp('art-official:catalogueNumber', 'Catalogue Number', artwork.catalogueNumber)
 
   if (artwork.seriesHingeMarker?.isHinge) {
-    addProp('artism:seriesHingeMarker', 'Series Hinge Marker', {
+    addProp('art-official:seriesHingeMarker', 'Series Hinge Marker', {
       hingeType: artwork.seriesHingeMarker.hingeType ?? null,
       note: artwork.seriesHingeMarker.note?.trim() || null,
     })
@@ -157,18 +152,18 @@ function buildAdditionalProperty(artwork: Artwork, baseUrl: string): Record<stri
     })
     .filter(Boolean)
   if (relatedAtMaking.length) {
-    addProp('artism:relatedWorksAtMaking', 'Related Works at Making', relatedAtMaking)
+    addProp('art-official:relatedWorksAtMaking', 'Related Works at Making', relatedAtMaking)
   }
 
   const reasoningStatus = trimString(artwork.reasoningStatus)
   if (reasoningStatus && reasoningStatus !== 'stub') {
-    addProp('artism:reasoningStatus', 'Reasoning Status', reasoningStatus)
+    addProp('art-official:reasoningStatus', 'Reasoning Status', reasoningStatus)
   }
 
   const dominantColors =
     artwork.dominantColors?.map((row) => trimString(row.hex)).filter(Boolean) ?? []
   if (dominantColors.length) {
-    addProp('artism:dominantColors', 'Dominant Colors', dominantColors.join(', '))
+    addProp('art-official:dominantColors', 'Dominant Colors', dominantColors.join(', '))
   }
 
   return additionalProperty
@@ -220,7 +215,7 @@ export function buildArtworkJsonLd(
   const videoWork = isVideoArtwork(artwork)
 
   const doc: Record<string, unknown> = {
-    '@context': ARTISM_CONTEXT,
+    '@context': CORPUS_CONTEXT,
     '@type': videoWork ? ['VisualArtwork', 'VideoObject'] : 'VisualArtwork',
     '@id': url,
     name: artwork.title,
@@ -299,34 +294,34 @@ export function buildArtworkJsonLd(
   if (additionalProperty.length) doc.additionalProperty = additionalProperty
 
   if (slug) {
-    doc['artism:recordUrl'] = `${baseUrl}/api/corpus/${slug}`
+    doc['art-official:recordUrl'] = `${baseUrl}/api/corpus/${slug}`
   }
 
   if (artworkHasEmbeddingMetadata(artwork) && slug) {
-    doc['artism:visionPageUrl'] = visionPageUrl(baseUrl, slug)
+    doc['art-official:visionPageUrl'] = visionPageUrl(baseUrl, slug)
   }
 
   if (includeTraversal && slug) {
-    doc['artism:indexUrl'] = `${baseUrl}/api/corpus/index`
-    doc['artism:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
-    doc['artism:sessionsPageUrl'] = `${baseUrl}/sessions?artwork=${encodeURIComponent(slug)}`
+    doc['art-official:indexUrl'] = `${baseUrl}/api/corpus/index`
+    doc['art-official:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
+    doc['art-official:sessionsPageUrl'] = `${baseUrl}/sessions?artwork=${encodeURIComponent(slug)}`
     Object.assign(doc, buildScopeDepthEnvelope('record'))
-    doc['artism:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
-    doc['artism:tierMap'] = buildTierMap(baseUrl, {
+    doc['art-official:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
+    doc['art-official:tierMap'] = buildTierMap(baseUrl, {
       includeVisionTier: artworkHasVisionTier(artwork),
     })
 
     const relatedByThroughline = findRelatedThroughlines(artistRow, artwork, baseUrl)
     if (relatedByThroughline.length) {
-      doc['artism:relatedByThroughline'] = relatedByThroughline
+      doc['art-official:relatedByThroughline'] = relatedByThroughline
     }
     const relatedByBioEvent = findRelatedBioEvents(artistRow, artwork, baseUrl)
     if (relatedByBioEvent.length) {
-      doc['artism:relatedByBioEvent'] = relatedByBioEvent
+      doc['art-official:relatedByBioEvent'] = relatedByBioEvent
     }
   } else if (embedded && slug) {
     // List context: work property only — envelope fields stay on the DataFeed.
-    doc['artism:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
+    doc['art-official:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
   }
 
   applyArtworkJsonLdExtensions(doc, artwork, baseUrl)

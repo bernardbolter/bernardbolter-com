@@ -4298,7 +4298,7 @@ export interface Session {
     | null;
   agentDraftFormalContributionAssessment?: string | null;
   /**
-   * Model string captured at session start (e.g. claude-sonnet-4-6). Required on public artism:DialogueSelfAudit nodes.
+   * Model string captured at session start (e.g. claude-sonnet-4-6). Required on public art-official:DialogueSelfAudit nodes.
    */
   agentModel?: string | null;
   sessionNotes?: string | null;

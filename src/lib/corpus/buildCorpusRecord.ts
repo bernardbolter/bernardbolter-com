@@ -63,23 +63,23 @@ export function buildCorpusRecord(
       ? {
           identifier: {
             '@type': 'PropertyValue',
-            propertyID: 'artism:catalogueNumber',
+            propertyID: 'art-official:catalogueNumber',
             value: artwork.catalogueNumber,
           },
         }
       : {}),
     ...(series?.slug ? { isPartOf: buildSeriesRef(series, baseUrl) } : {}),
-    'artism:slug': slug,
+    'art-official:slug': slug,
     ...(artwork.reasoningStatus
-      ? { 'artism:reasoningStatus': artwork.reasoningStatus }
+      ? { 'art-official:reasoningStatus': artwork.reasoningStatus }
       : {}),
     ...(gist.text != null
       ? {
-          'artism:gist': gist.text,
-          'artism:gistSource': gist.source,
+          'art-official:gist': gist.text,
+          'art-official:gistSource': gist.source,
         }
       : {}),
-    'artism:availableTiers': availableTiers,
+    'art-official:availableTiers': availableTiers,
   }
 
   // Drop undefined dateCreated if year missing
@@ -90,25 +90,25 @@ export function buildCorpusRecord(
     if (descriptionShort) record.description = descriptionShort
 
     const intentLine = artwork.intent?.trim()
-    if (intentLine) record['artism:intentLine'] = intentLine
+    if (intentLine) record['art-official:intentLine'] = intentLine
 
     const colors = dominantColorHexes(artwork)
-    if (colors.length) record['artism:dominantColors'] = colors
+    if (colors.length) record['art-official:dominantColors'] = colors
 
     const keywords = keywordsString(artwork)
     if (keywords) record.keywords = keywords
   }
 
   // Literal per-record URLs — required for agents that refuse template-constructed fetches.
-  record['artism:recordUrl'] = `${baseUrl}/api/corpus/${slug}`
-  record['artism:visionPageUrl'] = `${baseUrl}/${slug}/vision`
+  record['art-official:recordUrl'] = `${baseUrl}/api/corpus/${slug}`
+  record['art-official:visionPageUrl'] = `${baseUrl}/${slug}/vision`
   if (availableTiers['5']) {
-    record['artism:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
+    record['art-official:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
   }
 
   // Tier 1 signal only — full reciprocal detail stays on Tier 4.
   if (ctx.artist && artworkHasThroughlineConnections(ctx.artist, artwork)) {
-    record['artism:hasThroughlineConnections'] = true
+    record['art-official:hasThroughlineConnections'] = true
   }
 
   return record
