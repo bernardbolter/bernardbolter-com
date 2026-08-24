@@ -19,6 +19,17 @@ export const PRIVATE_ARTWORK_COMMERCE_FIELDS = [
   'provenanceNotes',
 ] as const
 
+/**
+ * Provenance arrays. Payload field-level `access.read: false` omits scalars
+ * but leaves array fields as `[]` after skipping the join. REST/anonymous
+ * responses must delete these keys to match `askingPrice`.
+ */
+export const PRIVATE_ARTWORK_PROVENANCE_FIELDS = [
+  'ownershipHistory',
+  'loanHistory',
+  'provenanceConfidenceLayer',
+] as const
+
 function asRows(value: unknown): JsonRow[] {
   return Array.isArray(value) ? (value as JsonRow[]) : []
 }
@@ -104,11 +115,24 @@ export function omitPrivateArtworkCommerceFields<T extends Record<string, unknow
   return out as T
 }
 
+export function omitPrivateArtworkProvenanceFields<T extends Record<string, unknown>>(doc: T): T {
+  const out = { ...doc } as Record<string, unknown>
+  for (const key of PRIVATE_ARTWORK_PROVENANCE_FIELDS) {
+    delete out[key]
+  }
+  return out as T
+}
+
 /** Strip private commerce and provenance detail from public artwork reads. */
-export const artworkAfterRead: CollectionAfterReadHook = async ({ doc, req }) => {
+export const artworkAfterRead: CollectionAfterReadHook = async ({ doc, req, overrideAccess }) => {
   if (isArtistOrAdmin(req.user)) return doc
 
-  const base = omitPrivateArtworkCommerceFields(doc as Record<string, unknown>)
+  let base = omitPrivateArtworkCommerceFields(doc as Record<string, unknown>)
+  // SSR page fetch uses overrideAccess: true so the public projector can still
+  // read provenance rows. Anonymous REST must omit the keys entirely.
+  if (!overrideAccess) {
+    base = omitPrivateArtworkProvenanceFields(base)
+  }
   const dcs = base.dcs as JsonRow | null | undefined
   const megacities = base.megacities as JsonRow | null | undefined
   const megacitiesPrint = megacities?.print as JsonRow | null | undefined

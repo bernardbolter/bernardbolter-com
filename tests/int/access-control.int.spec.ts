@@ -49,5 +49,8 @@ describe.skipIf(!hasDb)('Payload access control (anonymous)', () => {
     const doc = res.docs[0]
     if (!doc) return
     expect(doc.askingPrice).toBeUndefined()
+    expect(doc).not.toHaveProperty('ownershipHistory')
+    expect(doc).not.toHaveProperty('loanHistory')
+    expect(doc).not.toHaveProperty('provenanceConfidenceLayer')
   })
 })

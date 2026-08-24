@@ -258,7 +258,7 @@ describe('artwork page verification checklist', () => {
   })
 
   describe('public artwork read sanitization', () => {
-    it('strips private commerce for anonymous reads; provenance is field-access, not afterRead', async () => {
+    it('strips private commerce and provenance keys for anonymous REST reads', async () => {
       const sanitized = await artworkAfterRead({
         doc: {
           id: 1,
@@ -277,6 +277,7 @@ describe('artwork page verification checklist', () => {
               notes: 'private note',
             },
           ],
+          loanHistory: [{ institution: 'Kunsthalle Basel' }],
           provenanceConfidenceLayer: [
             {
               claim: 'Public claim text',
@@ -292,6 +293,7 @@ describe('artwork page verification checklist', () => {
         req: { user: null } as never,
         collection: { slug: 'artworks' } as never,
         context: {},
+        overrideAccess: false,
       })
 
       // Keys must be absent — `undefined` values still serialize as `$undefined` in RSC flight.
@@ -301,7 +303,33 @@ describe('artwork page verification checklist', () => {
       expect(sanitized).not.toHaveProperty('totalRevenue')
       expect(sanitized).not.toHaveProperty('insuranceValue')
       expect(sanitized).not.toHaveProperty('insuranceValueDate')
+      expect(sanitized).not.toHaveProperty('ownershipHistory')
+      expect(sanitized).not.toHaveProperty('loanHistory')
+      expect(sanitized).not.toHaveProperty('provenanceConfidenceLayer')
       expect(sanitized.currentLocation).toEqual({ category: 'private-collection' })
+    })
+
+    it('keeps provenance arrays when overrideAccess is true (SSR page fetch)', async () => {
+      const sanitized = await artworkAfterRead({
+        doc: {
+          id: 1,
+          title: 'Test',
+          askingPrice: 5000,
+          ownershipHistory: [{ displayName: 'Chris Bolter', collectorVisible: true }],
+          loanHistory: [],
+          provenanceConfidenceLayer: [{ claim: 'gift', confidenceLevel: 'documented-fact' }],
+        },
+        req: { user: null } as never,
+        collection: { slug: 'artworks' } as never,
+        context: {},
+        overrideAccess: true,
+      })
+
+      expect(sanitized).not.toHaveProperty('askingPrice')
+      expect(sanitized.ownershipHistory).toEqual([
+        { displayName: 'Chris Bolter', collectorVisible: true },
+      ])
+      expect(sanitized.provenanceConfidenceLayer).toHaveLength(1)
     })
   })
 })

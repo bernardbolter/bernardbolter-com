@@ -7,6 +7,7 @@ import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkAfterChangeImageResize } from '@/hooks/artworkAfterChangeImageResize'
 import { artworkAfterRead } from '@/hooks/artworkAfterRead'
 import { artworkBeforeChange } from '@/hooks/artworkBeforeChange'
+import { artworkBeforeOperation } from '@/hooks/artworkBeforeOperation'
 import { artworkSeriesEditionTiersBeforeChange } from '@/hooks/artworkSeriesEditionTiersBeforeChange'
 import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
 
@@ -59,6 +60,7 @@ export const Artworks: CollectionConfig = {
   },
   hooks: {
     beforeValidate: [artworkAchValidateAr, artworkAchValidateHero],
+    beforeOperation: [artworkBeforeOperation],
     beforeChange: [artworkBeforeChange, artworkSeriesEditionTiersBeforeChange, artworkAchBeforeChange],
     afterChange: [artworkAfterChange, artworkAfterChangeImageResize, artworkAfterChangeAr],
     afterRead: [artworkAfterRead],

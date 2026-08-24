@@ -8,7 +8,6 @@
  * Usage (after git pull, on a DB backup):
  *   npx tsx src/scripts/migrate-schema-reconciliation-provenance.ts
  */
-import { randomUUID } from 'crypto'
 import dotenv from 'dotenv'
 
 dotenv.config({ path: '.env', override: true })
@@ -86,15 +85,37 @@ function asRows(value: unknown): Record<string, unknown>[] {
   return []
 }
 
-function mapClaimStatus(raw: unknown): 'unclaimed' | 'claimed-pending' | 'claimed-confirmed' {
-  if (raw === 'claimed-pending') return 'claimed-pending'
-  if (raw === 'claimed' || raw === 'claimed-confirmed') return 'claimed-confirmed'
-  return 'unclaimed'
+function mapOwnerPrivate(
+  entry: Record<string, unknown>,
+  displayName: string,
+): string | null {
+  if (typeof entry.ownerPrivate === 'string') {
+    const trimmed = entry.ownerPrivate.trim()
+    return trimmed || null
+  }
+  // Pre-array JSON stored a checkbox, not a name. `true` means we know the
+  // internal holder — copy displayName when it is an actual name.
+  if (entry.ownerPrivate === true) {
+    const name = displayName.trim()
+    if (name && name.toLowerCase() !== 'private collection') return name
+  }
+  return null
+}
+
+function stableRowId(prefix: string, parentId: number, index: number, existing: unknown): string {
+  if (typeof existing === 'string' && existing) return existing
+  return `${prefix}-${parentId}-${index + 1}`
 }
 
 function mapEventType(raw: unknown): 'acquisition' | 'transfer' | 'consignment' {
   if (raw === 'transfer' || raw === 'consignment') return raw
   return 'acquisition'
+}
+
+function mapClaimStatus(raw: unknown): 'unclaimed' | 'claimed-pending' | 'claimed-confirmed' {
+  if (raw === 'claimed-pending') return 'claimed-pending'
+  if (raw === 'claimed' || raw === 'claimed-confirmed') return 'claimed-confirmed'
+  return 'unclaimed'
 }
 
 async function createOwnershipTable(pool: PgPool): Promise<void> {
@@ -270,6 +291,8 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
           : entry.place && typeof entry.place === 'object'
             ? String((entry.place as { city?: unknown }).city ?? '')
             : ''
+      const displayName =
+        typeof entry.displayName === 'string' ? entry.displayName : 'Private collection'
       await pool.query(
         `INSERT INTO "${OWNERSHIP_TABLE}" (
            "_order", "_parent_id", "id", "event_type", "owner_private", "display_name",
@@ -280,10 +303,10 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
         [
           index + 1,
           parentId,
-          typeof entry.id === 'string' && entry.id ? entry.id : randomUUID(),
+          stableRowId('ow', parentId, index, entry.id),
           mapEventType(entry.eventType),
-          typeof entry.ownerPrivate === 'string' ? entry.ownerPrivate : null,
-          typeof entry.displayName === 'string' ? entry.displayName : 'Private collection',
+          mapOwnerPrivate(entry, displayName),
+          displayName,
           entry.collectorVisible === true,
           typeof entry.dateAcquired === 'string' ? entry.dateAcquired : null,
           typeof entry.dateRelinquished === 'string' ? entry.dateRelinquished : null,
@@ -313,7 +336,7 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
         [
           index + 1,
           parentId,
-          typeof entry.id === 'string' && entry.id ? entry.id : randomUUID(),
+          stableRowId('loan', parentId, index, entry.id),
           institution,
           typeof entry.dateOut === 'string' ? entry.dateOut : null,
           typeof entry.dateReturned === 'string' ? entry.dateReturned : null,
@@ -337,7 +360,7 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
         [
           index + 1,
           parentId,
-          typeof entry.id === 'string' && entry.id ? entry.id : randomUUID(),
+          stableRowId('pc', parentId, index, entry.id),
           claim,
           typeof entry.evidenceBasis === 'string' ? entry.evidenceBasis : null,
           level,
