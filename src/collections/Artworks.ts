@@ -1,7 +1,7 @@
 import type { CollectionConfig, Where } from 'payload'
 
 import { adminOnlyFieldAccess, privateFieldAccess, publicReadStaffWriteAccess, isArtistOrAdmin } from '@/access/isArtistOrAdmin'
-import { artworkAchBeforeChange, artworkAchValidateAr } from '@/hooks/artworkAch'
+import { artworkAchBeforeChange, artworkAchValidateAr, artworkAchValidateHero } from '@/hooks/artworkAch'
 import { artworkAfterChange } from '@/hooks/artworkAfterChange'
 import { artworkAfterChangeAr } from '@/hooks/artworkAfterChangeAr'
 import { artworkAfterChangeImageResize } from '@/hooks/artworkAfterChangeImageResize'
@@ -11,6 +11,11 @@ import { artworkSeriesEditionTiersBeforeChange } from '@/hooks/artworkSeriesEdit
 import { validateArtworkMedium } from '@/lib/artOfficial/artworkMediumOptions'
 
 import { artworkPrimaryMediaFields } from './artworks/artworkPrimaryMediaFields'
+import {
+  loanHistoryField,
+  ownershipHistoryField,
+  provenanceConfidenceLayerField,
+} from './artworks/provenanceFields'
 import { editionTierIsOriginalTierField } from './artworks/editionTierOwnershipFields'
 import {
   editionTierDimensionFields,
@@ -53,7 +58,7 @@ export const Artworks: CollectionConfig = {
     delete: ({ req: { user } }) => isArtistOrAdmin(user),
   },
   hooks: {
-    beforeValidate: [artworkAchValidateAr],
+    beforeValidate: [artworkAchValidateAr, artworkAchValidateHero],
     beforeChange: [artworkBeforeChange, artworkSeriesEditionTiersBeforeChange, artworkAchBeforeChange],
     afterChange: [artworkAfterChange, artworkAfterChangeImageResize, artworkAfterChangeAr],
     afterRead: [artworkAfterRead],
@@ -648,18 +653,8 @@ export const Artworks: CollectionConfig = {
               name: 'duration',
               type: 'text',
               admin: {
-                description: 'e.g. HH:MM:SS or prose for open-ended works.',
-                condition: (_, data) =>
-                  Array.isArray(data?.measurementType) &&
-                  data.measurementType.includes('time-based'),
-              },
-            },
-            {
-              name: 'durationSeconds',
-              type: 'number',
-              admin: {
-                readOnly: true,
-                description: 'Computed from duration (Step 7).',
+                description:
+                  'ISO-8601 duration (PT1H2M3S). Clock times like 01:02:03 are converted on save. Use prose only for open-ended works.',
                 condition: (_, data) =>
                   Array.isArray(data?.measurementType) &&
                   data.measurementType.includes('time-based'),
@@ -1565,15 +1560,7 @@ export const Artworks: CollectionConfig = {
                 },
               ],
             },
-            {
-              name: 'ownershipHistory',
-              type: 'json',
-              access: publicReadStaffWriteAccess,
-              admin: {
-                description:
-                  'JSON array: { transactionId, ownerPrivate, displayName, city, dateAcquired, dateRelinquished, claimStatus, collectorVisible, notes }. Link sales via transactionId.',
-              },
-            },
+            ownershipHistoryField,
             {
               name: 'provenanceOriginKnown',
               type: 'checkbox',
@@ -1584,24 +1571,8 @@ export const Artworks: CollectionConfig = {
                   'Uncheck when the studio-to-first-owner chain is not traceable.',
               },
             },
-            {
-              name: 'loanHistory',
-              type: 'json',
-              access: publicReadStaffWriteAccess,
-              admin: {
-                description:
-                  'JSON array: { institution, dateOut, dateReturned, eventId (numeric id → events), notes }.',
-              },
-            },
-            {
-              name: 'provenanceConfidenceLayer',
-              type: 'json',
-              access: publicReadStaffWriteAccess,
-              admin: {
-                description:
-                  'JSON array: { claim, evidenceBasis, confidenceLevel: documented-fact | credible-inference | institutional-assertion | speculation }.',
-              },
-            },
+            loanHistoryField,
+            provenanceConfidenceLayerField,
             {
               name: 'relatedWorks',
               type: 'array',
@@ -1848,16 +1819,16 @@ export const Artworks: CollectionConfig = {
 
         // ── TAB 8: Exhibition history (Events) ───────────────────
         {
-          label: 'Exhibition history',
+          label: 'Exhibition notes',
           admin: {
             description:
-              'Canonical CV/show history: add this work on each **Event** (Event → Artworks); reverse join appears under Classification → Events.',
+              'Authority for which works were in a show is Event → Artworks (Classification → Events join). This array is an annotation layer only: per-work notes and workIncluded. Do not use it as a second membership list.',
           },
           fields: [
             {
               name: 'exhibitionHistory',
               type: 'array',
-              labels: { singular: 'Showing', plural: 'Exhibition history (Events)' },
+              labels: { singular: 'Exhibition note', plural: 'Exhibition notes' },
               fields: [
                 {
                   name: 'event',
@@ -1873,7 +1844,8 @@ export const Artworks: CollectionConfig = {
                 { name: 'notes', type: 'text' },
               ],
               admin: {
-                description: 'Optional manual cross-links; prefer assigning works on the Event document.',
+                description:
+                  'Optional notes on how this work appeared in an Event already linked via Event → Artworks.',
               },
             },
           ],
@@ -1968,7 +1940,7 @@ export const Artworks: CollectionConfig = {
               access: privateFieldAccess,
               admin: {
                 description:
-                  'JSON array of sales: transactionId (UUID), saleDate, salePrice, saleCurrency, exchangeRateToEur, buyerPrivate, buyerCity, channel, galleryName, auctionHouse, invoiceReference, commissionRate, netToArtist, vatApplicable, vatRate, editionNumber, notes.',
+                  'Legacy financial ledger (edition/channel sales that are not unique-work title transfers). Unique-work sales belong on ownershipHistory[].sale. No transactionId linkage.',
               },
             },
             {
@@ -2166,12 +2138,12 @@ export const Artworks: CollectionConfig = {
           ],
         },
 
-        // ── TAB 11: Schema.org (§1.10 — Step 12 stubs for Step 13 JSON-LD) ──
+        // ── TAB 11: Schema.org ──
         {
           label: 'Schema.org',
           admin: {
             description:
-              'Rights + external IDs for structured data. jsonldPreview is filled by the generator hook in Step 13.',
+              'Rights + external IDs. JSON-LD is generated at render time — not stored on the document.',
           },
           fields: [
             {
@@ -2203,38 +2175,6 @@ export const Artworks: CollectionConfig = {
               fields: [{ name: 'url', type: 'text', required: true }],
               admin: {
                 description: 'Wikidata, institution, catalogue URLs for schema.org sameAs array.',
-              },
-            },
-            {
-              name: 'jsonldPreview',
-              type: 'json',
-              admin: {
-                readOnly: true,
-                description: 'Last generated VisualArtwork JSON-LD (Step 13).',
-              },
-            },
-            {
-              name: 'jsonldWidthPreview',
-              type: 'json',
-              admin: {
-                readOnly: true,
-                description: 'Stub: QuantitativeValue width — optional sub-preview for debugging.',
-              },
-            },
-            {
-              name: 'jsonldHeightPreview',
-              type: 'json',
-              admin: {
-                readOnly: true,
-                description: 'Stub: QuantitativeValue height.',
-              },
-            },
-            {
-              name: 'jsonldCreatorPreview',
-              type: 'json',
-              admin: {
-                readOnly: true,
-                description: 'Stub: schema.org Person + identifier[] (ULAN, Wikidata).',
               },
             },
           ],
@@ -2715,6 +2655,26 @@ export const Artworks: CollectionConfig = {
                       },
                     },
                     {
+                      name: 'olderStory',
+                      type: 'richText',
+                      localized: true,
+                      label: 'Older story',
+                      admin: {
+                        description:
+                          "Left column on the acolorfulhistory.com artwork page. Older layer — source photograph, place history, technology, photographer, loss of record. Bernard's voice. Never drafted by the agent.",
+                      },
+                    },
+                    {
+                      name: 'newerStory',
+                      type: 'richText',
+                      localized: true,
+                      label: 'Newer story',
+                      admin: {
+                        description:
+                          'Right column on the acolorfulhistory.com artwork page. Newer layer — Bernard painting it, when, why, process. Always the response to the left. Never drafted by the agent.',
+                      },
+                    },
+                    {
                       name: 'conceptCopy',
                       type: 'richText',
                       localized: true,
@@ -2769,6 +2729,45 @@ export const Artworks: CollectionConfig = {
                         condition: (_, sibling) => Boolean(sibling?.transferImage),
                         description:
                           'Direction of the reveal slider. Bernard chooses per painting based on painted field positions.',
+                      },
+                    },
+                  ],
+                },
+
+                // ── Homepage hero animation ───────────────────
+                {
+                  name: 'hero',
+                  type: 'group',
+                  label: 'Homepage hero animation',
+                  admin: {
+                    description:
+                      'Self-painting homepage hero sequence (acolorfulhistory.com). Square paintings only — see brief-hero-list-system.md.',
+                  },
+                  fields: [
+                    {
+                      name: 'heroEligible',
+                      type: 'checkbox',
+                      defaultValue: false,
+                      admin: {
+                        description:
+                          'Include in the random homepage hero draw. Requires completed heroFields extraction and heroPhoto upload.',
+                      },
+                    },
+                    {
+                      name: 'heroFields',
+                      type: 'json',
+                      admin: {
+                        description:
+                          'Output of extract_hero_fields.py — paste verbatim. Contains photoRect and fields[] with normalized polygons.',
+                      },
+                    },
+                    {
+                      name: 'heroPhoto',
+                      type: 'upload',
+                      relationTo: 'media',
+                      admin: {
+                        description:
+                          'Square B&W source photograph for the hero opening frame (phase A). Distinct from sourcePhotograph.sourceImage — curated square export for the animation.',
                       },
                     },
                   ],

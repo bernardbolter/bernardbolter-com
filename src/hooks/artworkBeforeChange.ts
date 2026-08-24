@@ -10,32 +10,14 @@ import {
   syncArtworkMediumAatUri,
 } from '@/hooks/assignArtworkCatalogueIdentity'
 import { isYoutubeVideoUrl } from '@/lib/artwork/artworkGalleryImages'
+import { normalizeDurationToIso8601 } from '@/lib/artwork/durationIso'
+import { normalizeProvenanceConfidenceLayer } from '@/lib/artwork/provenanceConfidence'
+
+export { parseDurationToSeconds } from '@/lib/artwork/durationIso'
 
 function hasPhysicalMeasurement(data: Record<string, unknown>): boolean {
   const mt = data.measurementType
   return Array.isArray(mt) && mt.includes('physical')
-}
-
-function hasTimeBasedMeasurement(data: Record<string, unknown>): boolean {
-  const mt = data.measurementType
-  return Array.isArray(mt) && mt.includes('time-based')
-}
-
-/** HH:MM:SS, MM:SS, or plain seconds. Prose / letters → null. */
-export function parseDurationToSeconds(duration: string | null | undefined): number | null {
-  if (duration == null) return null
-  const s = duration.trim()
-  if (!s) return null
-  const withoutColons = s.replace(/:/g, '')
-  if (/[a-zA-Z]/.test(withoutColons)) return null
-
-  const parts = s.split(':').map((p) => parseInt(p, 10))
-  if (parts.some((p) => Number.isNaN(p))) return null
-
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-  if (parts.length === 2) return parts[0] * 60 + parts[1]
-  if (parts.length === 1) return parts[0]
-  return null
 }
 
 export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
@@ -141,10 +123,20 @@ export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
     }
   }
 
-  if (hasTimeBasedMeasurement(d)) {
-    d.durationSeconds = parseDurationToSeconds(d.duration as string | null)
-  } else {
-    d.durationSeconds = null
+  if (Array.isArray(d.measurementType)) {
+    if (d.measurementType.includes('time-based')) {
+      if (typeof d.duration === 'string') {
+        d.duration = normalizeDurationToIso8601(d.duration)
+      }
+    } else {
+      d.duration = null
+    }
+  } else if (typeof d.duration === 'string') {
+    d.duration = normalizeDurationToIso8601(d.duration)
+  }
+
+  if (d.provenanceConfidenceLayer != null) {
+    d.provenanceConfidenceLayer = normalizeProvenanceConfidenceLayer(d.provenanceConfidenceLayer)
   }
 
   // §1.5: uploaded video wins over external URL, but keep YouTube as an access link
@@ -156,39 +148,60 @@ export const artworkBeforeChange: CollectionBeforeChangeHook = async ({
     d.documentationVideoUrl = null
   }
 
-  d.totalRevenue = computeTotalRevenueFromSalesRecord(d.salesRecord)
+  d.totalRevenue = computeTotalRevenue(d.salesRecord, d.ownershipHistory)
 
   return data
 }
 
-function computeTotalRevenueFromSalesRecord(raw: unknown): number | null {
-  if (raw == null) return null
-  let rows: unknown[] = []
+function netEurFromSaleRow(row: Record<string, unknown>): number | null {
+  const rate = Number(row.exchangeRateToEur ?? 1)
+  const safeRate = Number.isNaN(rate) ? 1 : rate
+  const net = Number(row.netToArtist)
+  if (!Number.isNaN(net)) return net * safeRate
+  const price = Number(row.salePrice)
+  if (!Number.isNaN(price)) return price * safeRate
+  return null
+}
+
+function asSaleRows(raw: unknown): Record<string, unknown>[] {
+  if (raw == null) return []
   if (Array.isArray(raw)) {
-    rows = raw
-  } else if (typeof raw === 'string') {
+    return raw.filter((row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object')
+  }
+  if (typeof raw === 'string') {
     try {
       const parsed = JSON.parse(raw) as unknown
-      if (Array.isArray(parsed)) rows = parsed
-      else return null
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (row): row is Record<string, unknown> => Boolean(row) && typeof row === 'object',
+        )
+      }
     } catch {
-      return null
+      return []
     }
-  } else {
-    return null
   }
+  return []
+}
 
+function computeTotalRevenue(salesRecord: unknown, ownershipHistory: unknown): number | null {
   let sum = 0
   let found = false
-  for (const row of rows) {
-    if (!row || typeof row !== 'object') continue
-    const r = row as Record<string, unknown>
-    const net = Number(r.netToArtist)
-    const rate = Number(r.exchangeRateToEur ?? 1)
-    if (!Number.isNaN(net)) {
-      found = true
-      sum += net * (Number.isNaN(rate) ? 1 : rate)
-    }
+
+  for (const row of asSaleRows(salesRecord)) {
+    const eur = netEurFromSaleRow(row)
+    if (eur == null) continue
+    found = true
+    sum += eur
   }
+
+  for (const row of asSaleRows(ownershipHistory)) {
+    const sale = row.sale
+    if (!sale || typeof sale !== 'object') continue
+    const eur = netEurFromSaleRow(sale as Record<string, unknown>)
+    if (eur == null) continue
+    found = true
+    sum += eur
+  }
+
   return found ? Math.round(sum * 100) / 100 : null
 }

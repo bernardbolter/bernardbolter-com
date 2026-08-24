@@ -71,4 +71,11 @@ describe('personToJsonLd', () => {
       jobTitle: 'painter',
     })
   })
+
+  it('emits Organization when role includes institution', () => {
+    expect(personToJsonLd(basePerson({ role: ['institution'] }))).toEqual({
+      '@type': 'Organization',
+      name: 'Jürgen Blümlein',
+    })
+  })
 })

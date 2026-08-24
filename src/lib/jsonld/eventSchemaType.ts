@@ -4,8 +4,14 @@ export function schemaOrgEventType(eventType: Event['eventType']): string {
   switch (eventType) {
     case 'solo-exhibition':
     case 'group-exhibition':
-    case 'art-fair':
       return 'ExhibitionEvent'
+    case 'art-fair':
+      return 'Event'
+    case 'publication':
+    case 'bibliography':
+      return 'PublicationEvent'
+    case 'screening':
+      return 'ScreeningEvent'
     case 'performance':
       return 'PerformanceEvent'
     case 'education':

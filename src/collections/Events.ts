@@ -613,12 +613,23 @@ export const Events: CollectionConfig = {
             {
               name: 'collaborators',
               type: 'array',
-              admin: { condition: (_, sibling) => sibling?.eventType === 'performance' },
+              admin: {
+                description:
+                  'Performance collaborators as People records. Create the person first if they are not already in People.',
+                condition: (_, sibling) => sibling?.eventType === 'performance',
+              },
               fields: [
-                { name: 'name', type: 'text', required: true },
-                { name: 'role', type: 'text', required: true },
-                { name: 'ulanUri', type: 'text' },
-                { name: 'wikidataUri', type: 'text' },
+                {
+                  name: 'person',
+                  type: 'relationship',
+                  relationTo: 'people',
+                  required: true,
+                },
+                {
+                  name: 'role',
+                  type: 'text',
+                  admin: { description: 'Optional — e.g. dancer, composer, lighting.' },
+                },
               ],
             },
             {
@@ -639,12 +650,17 @@ export const Events: CollectionConfig = {
             {
               name: 'coSpeakers',
               type: 'array',
-              admin: { condition: (_, sibling) => sibling?.eventType === 'talk-panel' },
+              admin: {
+                description: 'Fellow speakers as People records (talk / panel).',
+                condition: (_, sibling) => sibling?.eventType === 'talk-panel',
+              },
               fields: [
-                { name: 'name', type: 'text' },
+                {
+                  name: 'person',
+                  type: 'relationship',
+                  relationTo: 'people',
+                },
                 { name: 'role', type: 'text' },
-                { name: 'ulanUri', type: 'text' },
-                { name: 'wikidataUri', type: 'text' },
               ],
             },
             {
@@ -711,11 +727,6 @@ export const Events: CollectionConfig = {
                 description:
                   'Machine-generated confidence and source tracking per field. Updated on Art/Official commit.',
               },
-            },
-            {
-              name: 'jsonldPreview',
-              type: 'json',
-              admin: { readOnly: true, description: 'Computed event JSON-LD preview.' },
             },
           ],
         },

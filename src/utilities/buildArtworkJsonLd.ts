@@ -12,7 +12,10 @@ import { ARTISM_NS, CORPUS_BASE } from '@/lib/corpus/constants'
 import { buildScopeDepthEnvelope } from '@/lib/corpus/scopeDepth'
 import { buildSeriesNode } from '@/lib/corpus/seriesIdentity'
 import { buildTierMap } from '@/lib/corpus/tierMap'
+import { isIso8601Duration, normalizeDurationToIso8601 } from '@/lib/artwork/durationIso'
 import { applyArtworkJsonLdExtensions } from '@/lib/jsonld/artworkExtensions'
+import { isVideoArtwork } from '@/lib/jsonld/artworkMention'
+import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import {
   artworkHasEmbeddingMetadata,
   resolveEmbeddingMetadataList,
@@ -191,7 +194,7 @@ function resolveSeries(artwork: Artwork): Series | null {
  */
 export function buildArtworkJsonLd(
   artwork: Artwork,
-  _artist?: unknown,
+  artist?: Artist | null,
   options: BuildArtworkJsonLdOptions = {},
 ): Record<string, unknown> {
   const baseUrl = options.baseUrl ?? CORPUS_BASE
@@ -209,15 +212,21 @@ export function buildArtworkJsonLd(
   const sessionCount = options.sessionCount ?? 0
   const includeTraversal = options.includeTraversalLinks === true
   const embedded = options.embedded === true
+  const artistRow = options.artist ?? artist ?? null
+  const creator = {
+    ...artistAsSchemaPerson(artistRow),
+    '@id': `${baseUrl}${BIO_PERSON_ID}`,
+  }
+  const videoWork = isVideoArtwork(artwork)
 
   const doc: Record<string, unknown> = {
     '@context': ARTISM_CONTEXT,
-    '@type': 'VisualArtwork',
+    '@type': videoWork ? ['VisualArtwork', 'VideoObject'] : 'VisualArtwork',
     '@id': url,
     name: artwork.title,
     url,
     dateCreated: String(artwork.yearCreated),
-    creator: { '@id': `${baseUrl}${BIO_PERSON_ID}` },
+    creator,
   }
 
   const altTitle = trimString(artwork.altTitle)
@@ -275,6 +284,18 @@ export function buildArtworkJsonLd(
   const creditText = trimString(artwork.creditText)
   if (creditText) doc.creditText = creditText
 
+  if (videoWork) {
+    const duration = normalizeDurationToIso8601(artwork.duration)
+    if (duration && isIso8601Duration(duration)) doc.duration = duration
+    const contentUrl = mediaUrl(artwork.videoFile) ?? (trimString(artwork.videoUrl) || undefined)
+    if (contentUrl) doc.contentUrl = contentUrl
+    const encodingFormat =
+      artwork.videoFile && typeof artwork.videoFile === 'object'
+        ? trimString(artwork.videoFile.mimeType)
+        : ''
+    if (encodingFormat) doc.encodingFormat = encodingFormat
+  }
+
   if (additionalProperty.length) doc.additionalProperty = additionalProperty
 
   if (slug) {
@@ -295,12 +316,11 @@ export function buildArtworkJsonLd(
       includeVisionTier: artworkHasVisionTier(artwork),
     })
 
-    const artist = options.artist ?? null
-    const relatedByThroughline = findRelatedThroughlines(artist, artwork, baseUrl)
+    const relatedByThroughline = findRelatedThroughlines(artistRow, artwork, baseUrl)
     if (relatedByThroughline.length) {
       doc['artism:relatedByThroughline'] = relatedByThroughline
     }
-    const relatedByBioEvent = findRelatedBioEvents(artist, artwork, baseUrl)
+    const relatedByBioEvent = findRelatedBioEvents(artistRow, artwork, baseUrl)
     if (relatedByBioEvent.length) {
       doc['artism:relatedByBioEvent'] = relatedByBioEvent
     }

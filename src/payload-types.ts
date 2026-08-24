@@ -1196,24 +1196,29 @@ export interface Event {
   commissionBudget?: number | null;
   performanceType?: ('live' | 'durational' | 'participatory' | 'lecture-performance' | 'sound' | 'other') | null;
   duration?: string | null;
+  /**
+   * Performance collaborators as People records. Create the person first if they are not already in People.
+   */
   collaborators?:
     | {
-        name: string;
-        role: string;
-        ulanUri?: string | null;
-        wikidataUri?: string | null;
+        person: number | Person;
+        /**
+         * Optional — e.g. dancer, composer, lighting.
+         */
+        role?: string | null;
         id?: string | null;
       }[]
     | null;
   programmeContext?: string | null;
   eventFormatType?: string | null;
   slidesUrl?: string | null;
+  /**
+   * Fellow speakers as People records (talk / panel).
+   */
   coSpeakers?:
     | {
-        name?: string | null;
+        person?: (number | null) | Person;
         role?: string | null;
-        ulanUri?: string | null;
-        wikidataUri?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -1254,18 +1259,6 @@ export interface Event {
    * Machine-generated confidence and source tracking per field. Updated on Art/Official commit.
    */
   fieldConfidenceMap?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Computed event JSON-LD preview.
-   */
-  jsonldPreview?:
     | {
         [k: string]: unknown;
       }
@@ -1453,13 +1446,9 @@ export interface Artwork {
   fileSize?: number | null;
   colorSpace?: ('sRGB' | 'Adobe RGB' | 'P3' | 'CMYK' | 'other') | null;
   /**
-   * e.g. HH:MM:SS or prose for open-ended works.
+   * ISO-8601 duration (PT1H2M3S). Clock times like 01:02:03 are converted on save. Use prose only for open-ended works.
    */
   duration?: string | null;
-  /**
-   * Computed from duration (Step 7).
-   */
-  durationSeconds?: number | null;
   looped?: boolean | null;
   soundDesign?: ('sound' | 'silent' | 'ambient' | 'variable') | null;
   condition?: ('excellent' | 'good' | 'fair' | 'poor') | null;
@@ -1961,44 +1950,99 @@ export interface Artwork {
     locationDetail?: string | null;
   };
   /**
-   * JSON array: { transactionId, ownerPrivate, displayName, city, dateAcquired, dateRelinquished, claimStatus, collectorVisible, notes }. Link sales via transactionId.
+   * Sequence of acquisition / transfer / consignment events (Linked Art-style). Optional sale group on the same row is the financial act of that transfer — not a separate salesRecord id.
    */
   ownershipHistory?:
     | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
+        eventType: 'acquisition' | 'transfer' | 'consignment';
+        /**
+         * Known owner as a People record. Leave empty and use ownerPrivate / displayName when the holder is undisclosed.
+         */
+        actor?: (number | null) | Person;
+        /**
+         * Internal owner name — never public.
+         */
+        ownerPrivate?: string | null;
+        /**
+         * Public label when collectorVisible is true. Defaults to Private collection.
+         */
+        displayName?: string | null;
+        collectorVisible?: boolean | null;
+        /**
+         * Freeform when exact ISO dates are unknown (e.g. 2022, c. 2012).
+         */
+        dateAcquired?: string | null;
+        dateRelinquished?: string | null;
+        /**
+         * Where the transfer took place (city/country — no Venue collection yet).
+         */
+        place?: {
+          city?: string | null;
+          country?: string | null;
+        };
+        claimStatus?: ('unclaimed' | 'claimed-pending' | 'claimed-confirmed') | null;
+        /**
+         * Staff-only notes on this event.
+         */
+        notes?: string | null;
+        /**
+         * If this event was a sale, record price here. This is the ownership-changing act — do not invent a transactionId linking a separate sales log.
+         */
+        sale?: {
+          saleDate?: string | null;
+          salePrice?: number | null;
+          saleCurrency?: ('EUR' | 'USD' | 'GBP' | 'CHF' | 'other') | null;
+          exchangeRateToEur?: number | null;
+          buyerPrivate?: string | null;
+          buyerCity?: string | null;
+          channel?: string | null;
+          galleryName?: string | null;
+          auctionHouse?: string | null;
+          invoiceReference?: string | null;
+          commissionRate?: number | null;
+          netToArtist?: number | null;
+          vatApplicable?: boolean | null;
+          vatRate?: number | null;
+          editionNumber?: string | null;
+          notes?: string | null;
+        };
+        id?: string | null;
+      }[]
     | null;
   /**
    * Uncheck when the studio-to-first-owner chain is not traceable.
    */
   provenanceOriginKnown?: boolean | null;
   /**
-   * JSON array: { institution, dateOut, dateReturned, eventId (numeric id → events), notes }.
+   * Institutional loans. Link the related Event when the showing is catalogued.
    */
   loanHistory?:
     | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
+        institution: string;
+        dateOut?: string | null;
+        dateReturned?: string | null;
+        /**
+         * Optional Event this loan was for (exhibition, screening, etc.).
+         */
+        event?: (number | null) | Event;
+        notes?: string | null;
+        id?: string | null;
+      }[]
     | null;
   /**
-   * JSON array: { claim, evidenceBasis, confidenceLevel: documented-fact | credible-inference | institutional-assertion | speculation }.
+   * art-official extension: evidence-weighted claims. Attach to an ownership-history row via relatedOwnershipId when the claim is about a specific event in the chain.
    */
   provenanceConfidenceLayer?:
     | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
+        claim: string;
+        evidenceBasis?: string | null;
+        confidenceLevel: 'documented-fact' | 'credible-inference' | 'institutional-assertion' | 'speculation';
+        /**
+         * Optional: id of the ownershipHistory row this claim describes. Leave empty for work-level claims (e.g. origin undocumented).
+         */
+        relatedOwnershipId?: string | null;
+        id?: string | null;
+      }[]
     | null;
   /**
    * Links to other distinct artworks (or note-only entries). Does not merge ownership or provenance across records.
@@ -2115,7 +2159,7 @@ export interface Artwork {
    */
   componentCount?: number | null;
   /**
-   * Optional manual cross-links; prefer assigning works on the Event document.
+   * Optional notes on how this work appeared in an Event already linked via Event → Artworks.
    */
   exhibitionHistory?:
     | {
@@ -2148,7 +2192,7 @@ export interface Artwork {
    */
   galleryText?: string | null;
   /**
-   * JSON array of sales: transactionId (UUID), saleDate, salePrice, saleCurrency, exchangeRateToEur, buyerPrivate, buyerCity, channel, galleryName, auctionHouse, invoiceReference, commissionRate, netToArtist, vatApplicable, vatRate, editionNumber, notes.
+   * Legacy financial ledger (edition/channel sales that are not unique-work title transfers). Unique-work sales belong on ownershipHistory[].sale. No transactionId linkage.
    */
   salesRecord?:
     | {
@@ -2250,54 +2294,6 @@ export interface Artwork {
         url: string;
         id?: string | null;
       }[]
-    | null;
-  /**
-   * Last generated VisualArtwork JSON-LD (Step 13).
-   */
-  jsonldPreview?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Stub: QuantitativeValue width — optional sub-preview for debugging.
-   */
-  jsonldWidthPreview?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Stub: QuantitativeValue height.
-   */
-  jsonldHeightPreview?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
-   * Stub: schema.org Person + identifier[] (ULAN, Wikidata).
-   */
-  jsonldCreatorPreview?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
     | null;
   /**
    * Source photograph: technology, origin, historical context.
@@ -2571,6 +2567,42 @@ export interface Artwork {
           }[]
         | null;
       /**
+       * Left column on the acolorfulhistory.com artwork page. Older layer — source photograph, place history, technology, photographer, loss of record. Bernard's voice. Never drafted by the agent.
+       */
+      olderStory?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
+        [k: string]: unknown;
+      } | null;
+      /**
+       * Right column on the acolorfulhistory.com artwork page. Newer layer — Bernard painting it, when, why, process. Always the response to the left. Never drafted by the agent.
+       */
+      newerStory?: {
+        root: {
+          type: string;
+          children: {
+            type: any;
+            version: number;
+            [k: string]: unknown;
+          }[];
+          direction: ('ltr' | 'rtl') | null;
+          format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+          indent: number;
+          version: number;
+        };
+        [k: string]: unknown;
+      } | null;
+      /**
        * Bernard contextual text. For standalone works: what drove this painting. For MoP panels: image-capture context. Never drafted by agent.
        */
       conceptCopy?: {
@@ -2606,6 +2638,31 @@ export interface Artwork {
        * Direction of the reveal slider. Bernard chooses per painting based on painted field positions.
        */
       sliderAxis?: ('horizontal' | 'vertical') | null;
+    };
+    /**
+     * Self-painting homepage hero sequence (acolorfulhistory.com). Square paintings only — see brief-hero-list-system.md.
+     */
+    hero?: {
+      /**
+       * Include in the random homepage hero draw. Requires completed heroFields extraction and heroPhoto upload.
+       */
+      heroEligible?: boolean | null;
+      /**
+       * Output of extract_hero_fields.py — paste verbatim. Contains photoRect and fields[] with normalized polygons.
+       */
+      heroFields?:
+        | {
+            [k: string]: unknown;
+          }
+        | unknown[]
+        | string
+        | number
+        | boolean
+        | null;
+      /**
+       * Square B&W source photograph for the hero opening frame (phase A). Distinct from sourcePhotograph.sourceImage — curated square export for the animation.
+       */
+      heroPhoto?: (number | null) | Media;
     };
     /**
      * Mind.js image-target AR experience. Schema-only at launch — Art/Official does not prompt for these fields yet.
@@ -3546,9 +3603,11 @@ export interface FieldNote {
    */
   episode?: string | null;
   /**
-   * Parsed from spoken slate — closed vocabulary.
+   * Closed vocabulary — slate-parsed or set at upload. Rap Critic: ARRIVE / HOOK / VERSE / DEPART.
    */
-  shotType?: ('HOOK' | 'VERSE' | 'ARRIVE' | 'DEPART' | 'DETAIL' | 'WIDE' | 'WALK' | 'CROWD' | 'TALK' | 'AMBIENT' | 'BTS') | null;
+  shotType?:
+    | ('HOOK' | 'VERSE' | 'ARRIVE' | 'DEPART' | 'DETAIL' | 'WIDE' | 'WALK' | 'CROWD' | 'TALK' | 'AMBIENT' | 'BTS')
+    | null;
   /**
    * Parsed from slate ("take two" → 2). Blank if not stated.
    */
@@ -3556,7 +3615,7 @@ export interface FieldNote {
   /**
    * Rap Critic VERSE: front (performer) / rear (artwork) / beat (instrumental). Pair via relatedEpisode + VERSE + take.
    */
-  cameraAngle?: ('front' | 'rear' | 'single' | 'beat') | null;
+  cameraAngle?: ('single' | 'front' | 'rear' | 'beat') | null;
   /**
    * Parsed from clip tail. Blank if not yet spoken.
    */
@@ -3906,6 +3965,78 @@ export interface CapturePreset {
    * Seconds between extracted keyframes (default 10).
    */
   keyframeIntervalSec: number;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Curators, organisers, gallerists, co-exhibitors, collaborators, and other people connected to events or artworks. One record per person — reuse across events rather than creating duplicates.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "people".
+ */
+export interface Person {
+  id: number;
+  name: string;
+  /**
+   * Full legal name if different from display name. Used for JSON-LD.
+   */
+  nameLegal?: string | null;
+  /**
+   * One person can hold multiple roles across different contexts. Select all that apply.
+   */
+  role?:
+    | (
+        | 'curator'
+        | 'gallerist'
+        | 'organiser'
+        | 'artist'
+        | 'collector'
+        | 'critic'
+        | 'collaborator'
+        | 'publisher'
+        | 'educator'
+        | 'institution'
+        | 'other'
+      )[]
+    | null;
+  /**
+   * If role includes "Other", describe it here. Also use for context-specific role clarification.
+   */
+  roleNote?: string | null;
+  /**
+   * Primary website URL.
+   */
+  website?: string | null;
+  /**
+   * Handle only, e.g. @juergenbluemlein — no full URL.
+   */
+  instagram?: string | null;
+  /**
+   * e.g. https://www.wikidata.org/entity/Q12345
+   */
+  wikidataUri?: string | null;
+  /**
+   * Getty ULAN URI — primarily for artists.
+   */
+  ulanUri?: string | null;
+  /**
+   * Any additional authority identifiers not covered above.
+   */
+  externalIdentifiers?:
+    | {
+        type?: ('isni' | 'orcid' | 'viaf' | 'loc' | 'other') | null;
+        value?: string | null;
+        /**
+         * Full URI for this identifier.
+         */
+        uri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Internal context note — who this person is, how they connect to the practice. Never exposed publicly or in JSON-LD.
+   */
+  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -4450,78 +4581,6 @@ export interface DcsCapturePhoto {
   arReconstructionAfter?: (number | null) | Media;
   arReconstructionVideoUrl?: string | null;
   arReconstructionStatus?: ('pending' | 'in-progress' | 'complete') | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * Curators, organisers, gallerists, co-exhibitors, collaborators, and other people connected to events or artworks. One record per person — reuse across events rather than creating duplicates.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "people".
- */
-export interface Person {
-  id: number;
-  name: string;
-  /**
-   * Full legal name if different from display name. Used for JSON-LD.
-   */
-  nameLegal?: string | null;
-  /**
-   * One person can hold multiple roles across different contexts. Select all that apply.
-   */
-  role?:
-    | (
-        | 'curator'
-        | 'gallerist'
-        | 'organiser'
-        | 'artist'
-        | 'collector'
-        | 'critic'
-        | 'collaborator'
-        | 'publisher'
-        | 'educator'
-        | 'institution'
-        | 'other'
-      )[]
-    | null;
-  /**
-   * If role includes "Other", describe it here. Also use for context-specific role clarification.
-   */
-  roleNote?: string | null;
-  /**
-   * Primary website URL.
-   */
-  website?: string | null;
-  /**
-   * Handle only, e.g. @juergenbluemlein — no full URL.
-   */
-  instagram?: string | null;
-  /**
-   * e.g. https://www.wikidata.org/entity/Q12345
-   */
-  wikidataUri?: string | null;
-  /**
-   * Getty ULAN URI — primarily for artists.
-   */
-  ulanUri?: string | null;
-  /**
-   * Any additional authority identifiers not covered above.
-   */
-  externalIdentifiers?:
-    | {
-        type?: ('isni' | 'orcid' | 'viaf' | 'loc' | 'other') | null;
-        value?: string | null;
-        /**
-         * Full URI for this identifier.
-         */
-        uri?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  /**
-   * Internal context note — who this person is, how they connect to the practice. Never exposed publicly or in JSON-LD.
-   */
-  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -5759,10 +5818,8 @@ export interface EventsSelect<T extends boolean = true> {
   collaborators?:
     | T
     | {
-        name?: T;
+        person?: T;
         role?: T;
-        ulanUri?: T;
-        wikidataUri?: T;
         id?: T;
       };
   programmeContext?: T;
@@ -5771,10 +5828,8 @@ export interface EventsSelect<T extends boolean = true> {
   coSpeakers?:
     | T
     | {
-        name?: T;
+        person?: T;
         role?: T;
-        ulanUri?: T;
-        wikidataUri?: T;
         id?: T;
       };
   festivalProgramme?: T;
@@ -5792,7 +5847,6 @@ export interface EventsSelect<T extends boolean = true> {
         id?: T;
       };
   fieldConfidenceMap?: T;
-  jsonldPreview?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -5872,7 +5926,6 @@ export interface ArtworksSelect<T extends boolean = true> {
   fileSize?: T;
   colorSpace?: T;
   duration?: T;
-  durationSeconds?: T;
   looped?: T;
   soundDesign?: T;
   condition?: T;
@@ -6065,10 +6118,66 @@ export interface ArtworksSelect<T extends boolean = true> {
         category?: T;
         locationDetail?: T;
       };
-  ownershipHistory?: T;
+  ownershipHistory?:
+    | T
+    | {
+        eventType?: T;
+        actor?: T;
+        ownerPrivate?: T;
+        displayName?: T;
+        collectorVisible?: T;
+        dateAcquired?: T;
+        dateRelinquished?: T;
+        place?:
+          | T
+          | {
+              city?: T;
+              country?: T;
+            };
+        claimStatus?: T;
+        notes?: T;
+        sale?:
+          | T
+          | {
+              saleDate?: T;
+              salePrice?: T;
+              saleCurrency?: T;
+              exchangeRateToEur?: T;
+              buyerPrivate?: T;
+              buyerCity?: T;
+              channel?: T;
+              galleryName?: T;
+              auctionHouse?: T;
+              invoiceReference?: T;
+              commissionRate?: T;
+              netToArtist?: T;
+              vatApplicable?: T;
+              vatRate?: T;
+              editionNumber?: T;
+              notes?: T;
+            };
+        id?: T;
+      };
   provenanceOriginKnown?: T;
-  loanHistory?: T;
-  provenanceConfidenceLayer?: T;
+  loanHistory?:
+    | T
+    | {
+        institution?: T;
+        dateOut?: T;
+        dateReturned?: T;
+        event?: T;
+        notes?: T;
+        id?: T;
+      };
+  provenanceConfidenceLayer?:
+    | T
+    | {
+        claim?: T;
+        evidenceBasis?: T;
+        confidenceLevel?: T;
+        relatedOwnershipId?: T;
+        id?: T;
+      };
   relatedWorks?:
     | T
     | {
@@ -6203,10 +6312,6 @@ export interface ArtworksSelect<T extends boolean = true> {
         url?: T;
         id?: T;
       };
-  jsonldPreview?: T;
-  jsonldWidthPreview?: T;
-  jsonldHeightPreview?: T;
-  jsonldCreatorPreview?: T;
   mop_sourcePhotographDetails?: T;
   mop_imageCaptureType?: T;
   mop_historicalContext?: T;
@@ -6296,6 +6401,8 @@ export interface ArtworksSelect<T extends boolean = true> {
                     wikiLink?: T;
                     id?: T;
                   };
+              olderStory?: T;
+              newerStory?: T;
               conceptCopy?: T;
               fieldRecordingUrl?: T;
               fieldRecordingCredit?: T;
@@ -6305,6 +6412,13 @@ export interface ArtworksSelect<T extends boolean = true> {
           | {
               transferImage?: T;
               sliderAxis?: T;
+            };
+        hero?:
+          | T
+          | {
+              heroEligible?: T;
+              heroFields?: T;
+              heroPhoto?: T;
             };
         ar?:
           | T

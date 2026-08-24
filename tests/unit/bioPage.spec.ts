@@ -72,6 +72,7 @@ describe('generateBioJsonLd', () => {
       url: 'https://bernardbolter.com/bio',
       mainEntity: {
         '@type': 'Person',
+        '@id': 'https://bernardbolter.com/bio#person',
         name: 'Bernard Bolter',
         birthDate: '1974',
         birthPlace: { '@type': 'Place', name: 'San Francisco' },

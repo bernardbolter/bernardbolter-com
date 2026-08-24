@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   artworkAchBeforeChange,
   artworkAchValidateAr,
+  artworkAchValidateHero,
   buildSourceCredit,
   parseApproximateDateYear,
 } from '@/hooks/artworkAch'
@@ -157,6 +158,64 @@ describe('artworkAchValidateAr', () => {
     expect(() =>
       artworkAchValidateAr({
         data: { ach: { ar: { arEnabled: false } } },
+        operation: 'create',
+        collection: {} as any,
+        context: {} as any,
+        req: {} as any,
+      } as any),
+    ).not.toThrow()
+  })
+})
+
+describe('artworkAchValidateHero', () => {
+  it('throws when heroEligible is true without heroFields and heroPhoto', () => {
+    expect(() =>
+      artworkAchValidateHero({
+        data: { ach: { hero: { heroEligible: true } } },
+        operation: 'create',
+        collection: {} as any,
+        context: {} as any,
+        req: {} as any,
+      } as any),
+    ).toThrow(/heroFields and heroPhoto/)
+  })
+
+  it('throws when heroEligible is true with only heroPhoto', () => {
+    expect(() =>
+      artworkAchValidateHero({
+        data: { ach: { hero: { heroEligible: true, heroPhoto: 42 } } },
+        operation: 'create',
+        collection: {} as any,
+        context: {} as any,
+        req: {} as any,
+      } as any),
+    ).toThrow(/heroFields and heroPhoto/)
+  })
+
+  it('allows heroEligible true when both heroFields and heroPhoto are present', () => {
+    expect(() =>
+      artworkAchValidateHero({
+        data: {
+          ach: {
+            hero: {
+              heroEligible: true,
+              heroFields: { photoRect: {}, fields: [] },
+              heroPhoto: 42,
+            },
+          },
+        },
+        operation: 'create',
+        collection: {} as any,
+        context: {} as any,
+        req: {} as any,
+      } as any),
+    ).not.toThrow()
+  })
+
+  it('allows heroEligible false regardless of hero data', () => {
+    expect(() =>
+      artworkAchValidateHero({
+        data: { ach: { hero: { heroEligible: false } } },
         operation: 'create',
         collection: {} as any,
         context: {} as any,

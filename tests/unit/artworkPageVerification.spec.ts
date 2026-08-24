@@ -137,8 +137,24 @@ describe('artwork page verification checklist', () => {
       baseUrl: 'https://bernardbolter.com',
     })
 
-    it('references creator by bio person id', () => {
-      expect(jsonLd.creator).toEqual({ '@id': 'https://bernardbolter.com/bio#person' })
+    it('emits full Person creator with ULAN and Wikidata identifiers', () => {
+      expect(jsonLd.creator).toEqual({
+        '@type': 'Person',
+        '@id': 'https://bernardbolter.com/bio#person',
+        name: 'Bernard Bolter',
+        identifier: [
+          {
+            '@type': 'PropertyValue',
+            propertyID: 'ULAN',
+            value: artist.ulanUri,
+          },
+          {
+            '@type': 'PropertyValue',
+            propertyID: 'Wikidata',
+            value: artist.wikidataUri,
+          },
+        ],
+      })
     })
 
     it('emits QuantitativeValue width and height', () => {
@@ -214,21 +230,22 @@ describe('artwork page verification checklist', () => {
   })
 
   describe('loan history public shape', () => {
-    it('maps institution and dates without private sale data', () => {
+    it('maps institution and dates and populated Event relations', () => {
       const loans = getPublicLoanHistory({
         loanHistory: [
           {
             institution: 'Galerie Nord',
             dateOut: '2022-09-10',
             dateReturned: '2022-11-20',
-            eventId: 2,
+            event: { id: 2, title: 'Signals & Noise', slug: 'signals-noise', hasPage: true },
           },
         ],
       } as Artwork)
 
       expect(loans).toHaveLength(1)
       expect(loans[0]?.institution).toBe('Galerie Nord')
-      expect(loans[0]?.eventId).toBe(2)
+      expect(loans[0]?.event?.slug).toBe('signals-noise')
+      expect(loans[0]).not.toHaveProperty('eventId')
     })
   })
 
@@ -241,7 +258,7 @@ describe('artwork page verification checklist', () => {
   })
 
   describe('public artwork read sanitization', () => {
-    it('strips private commerce and ownership detail for anonymous reads', async () => {
+    it('strips private commerce for anonymous reads; provenance is field-access, not afterRead', async () => {
       const sanitized = await artworkAfterRead({
         doc: {
           id: 1,
@@ -284,10 +301,6 @@ describe('artwork page verification checklist', () => {
       expect(sanitized).not.toHaveProperty('totalRevenue')
       expect(sanitized).not.toHaveProperty('insuranceValue')
       expect(sanitized).not.toHaveProperty('insuranceValueDate')
-      expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('secret')
-      expect(JSON.stringify(sanitized.ownershipHistory)).not.toContain('private note')
-      expect(JSON.stringify(sanitized.provenanceConfidenceLayer)).toContain('Public claim text')
-      expect(JSON.stringify(sanitized.provenanceConfidenceLayer)).not.toContain('secret evidence')
       expect(sanitized.currentLocation).toEqual({ category: 'private-collection' })
     })
   })

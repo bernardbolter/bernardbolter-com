@@ -126,6 +126,7 @@ export function generateBioJsonLd(
 
   const person: Record<string, unknown> = {
     '@type': 'Person',
+    '@id': `${base}/bio#person`,
     name: artist.name,
     jobTitle: 'Visual Artist',
     memberOf: {

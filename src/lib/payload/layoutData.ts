@@ -27,6 +27,7 @@ export type LayoutProviderData = {
 
 /** Lightweight root-layout payload — no catalogue rows for RSC. */
 export type RootChromeData = {
+  person: Artist | null
   artistInfo: ArtistInfoData
   seriesSlugByArtworkSlug: Record<string, string>
   archiveMedianAreaMm2: number
@@ -50,6 +51,7 @@ export const EMPTY_LAYOUT_PROVIDER_DATA: LayoutProviderData = {
 }
 
 export const EMPTY_ROOT_CHROME_DATA: RootChromeData = {
+  person: null,
   artistInfo: EMPTY_LAYOUT_PROVIDER_DATA.artistInfo,
   seriesSlugByArtworkSlug: {},
   archiveMedianAreaMm2: TIER_FALLBACK_AREA_MM2.md,
@@ -186,6 +188,7 @@ export const getLayoutProviderData = cache(async (): Promise<LayoutProviderData>
 export const getRootChromeData = cache(async (): Promise<RootChromeData> => {
   const data = await getLayoutProviderData()
   return {
+    person: data.person,
     artistInfo: data.artistInfo,
     seriesSlugByArtworkSlug: data.seriesSlugByArtworkSlug,
     archiveMedianAreaMm2: data.archiveMedianAreaMm2,

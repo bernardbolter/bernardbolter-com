@@ -44,6 +44,13 @@ describe('schemaOrgEventType', () => {
     expect(schemaOrgEventType('solo-exhibition')).toBe('ExhibitionEvent')
     expect(schemaOrgEventType('group-exhibition')).toBe('ExhibitionEvent')
   })
+
+  it('maps art-fair, publication, bibliography, and screening per schema.org', () => {
+    expect(schemaOrgEventType('art-fair')).toBe('Event')
+    expect(schemaOrgEventType('publication')).toBe('PublicationEvent')
+    expect(schemaOrgEventType('bibliography')).toBe('PublicationEvent')
+    expect(schemaOrgEventType('screening')).toBe('ScreeningEvent')
+  })
 })
 
 describe('buildEventJsonLd', () => {

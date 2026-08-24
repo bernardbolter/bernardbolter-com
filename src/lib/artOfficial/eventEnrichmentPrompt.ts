@@ -16,7 +16,7 @@ Stage fields via update_field with targetCollection "events". Allowed fields inc
 - Type-specific: performanceType, duration, programmeContext, eventFormatType, slidesUrl, festivalProgramme, screeningFormat, premiereStatus
 - startDate, endDate, openingDate when the artist knows exact dates
 
-Do NOT stage: slug, status, enrichmentStatus, hasPage, eventId, jsonldPreview — these are system-managed.
+Do NOT stage: slug, status, enrichmentStatus, hasPage, eventId — these are system-managed.
 
 Ask about what happened at the event, who was involved, and authoritative external links (institutional pages, Wikidata, e-flux). Confirm sameAs URIs with the artist before staging.
 

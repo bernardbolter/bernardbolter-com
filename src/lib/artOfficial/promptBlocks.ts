@@ -104,6 +104,8 @@ currentLocation.category — one of (schema values only): artists-studio | priva
 currentLocation.locationDetail — free text (e.g. "Private collection, Berlin"); for unknown, optional note such as "last known: Amsterdam, mid-1990s"
 Use category unknown when whereabouts are confirmed unknown / unlocated — not the same as leaving the field blank, and not the same as provenanceOriginKnown (ownership-chain traceability). Speculative guesses still belong in provenanceConfidenceLayer (confidenceLevel: speculation), not forced into a false category.
 Ownership / provenance cluster (allowed for chat + envelope): ownershipHistory, provenanceOriginKnown, provenanceConfidenceLayer — gather in the where-has-this-lived beat and stage via update_field / envelope; financial fields (salesRecord, askingPrice, insurance*) stay admin-only.
+provenanceConfidenceLayer.confidenceLevel must be one of: documented-fact | credible-inference | institutional-assertion | speculation (never high/medium/low or confirmed/inferred — those session tags map to the four-level enum on save).
+When a claim is about a specific ownership event, set relatedOwnershipId to that row's id.
 Exhibition history — NEVER park shows in workContext or provenanceNotes. Use search_events / create_event_stub / link_artwork_to_event (see WHERE HAS THIS LIVED block).
 provenanceNotes — narrative provenance only (sale story, collector name if public) — not exhibition listings. Plain text — the server converts to rich text. Only ask if information is known.
 availabilityStatus — ask at wrap-up: available | not-for-sale | sold | on-loan | reserved | on-consignment (Payload values — use "available", not "for-sale")

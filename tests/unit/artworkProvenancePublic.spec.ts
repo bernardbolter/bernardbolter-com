@@ -7,6 +7,7 @@ import {
   buildOwnershipTimelineRows,
   getPublicProvenanceClaims,
   hasUnclaimedOwnershipAppeal,
+  projectArtworkProvenanceForPublicPage,
   shouldShowOwnershipSection,
 } from '@/lib/artwork/artworkProvenancePublic'
 import type { Artist, Artwork } from '@/payload-types'
@@ -15,7 +16,7 @@ const artist = {
   workCity1: 'Berlin',
 } as Artist
 
-function artwork(overrides: Partial<Artwork> = {}): Artwork {
+function artwork(overrides: Record<string, unknown> = {}): Artwork {
   return {
     id: 1,
     title: 'Deutsche Stadt',
@@ -45,6 +46,22 @@ describe('getPublicProvenanceClaims', () => {
     expect(result.hasCredibleInference).toBe(true)
     expect(result.prominent.map((row) => row.claim)).not.toContain('Hidden guess')
     expect(result.demoted[0]?.claim).toBe('Institution note')
+  })
+
+  it('maps session high/medium vocabulary onto the four-level enum', () => {
+    const result = getPublicProvenanceClaims(
+      artwork({
+        provenanceConfidenceLayer: [
+          { claim: 'Was high', confidenceLevel: 'high' },
+          { claim: 'Was medium', confidenceLevel: 'medium' },
+        ],
+      }),
+    )
+
+    expect(result.prominent).toEqual([
+      { claim: 'Was high', confidenceLevel: 'documented-fact' },
+      { claim: 'Was medium', confidenceLevel: 'credible-inference' },
+    ])
   })
 })
 
@@ -245,5 +262,57 @@ describe('ownership display', () => {
     expect(display.showUnclaimedAppeal).toBe(true)
     expect(display.claimContactHref).toContain('claim=deutsche-stadt')
     expect(display.claimContactHref).toContain('title=Deutsche')
+  })
+})
+
+describe('projectArtworkProvenanceForPublicPage', () => {
+  it('drops private owner notes, sale data, speculation, and evidence', () => {
+    const projected = projectArtworkProvenanceForPublicPage(
+      artwork({
+        ownershipHistory: [
+          {
+            id: 'own-1',
+            eventType: 'acquisition',
+            ownerPrivate: 'secret',
+            notes: 'private note',
+            displayName: 'Private collection',
+            collectorVisible: true,
+            sale: { salePrice: 9000, buyerPrivate: 'x' },
+          },
+        ],
+        loanHistory: [
+          {
+            institution: 'Kunsthalle',
+            notes: 'staff only',
+            event: { id: 3, title: 'Show', slug: 'show', hasPage: true },
+          },
+        ],
+        provenanceConfidenceLayer: [
+          {
+            claim: 'Public fact',
+            evidenceBasis: 'secret evidence',
+            confidenceLevel: 'documented-fact',
+            relatedOwnershipId: 'own-1',
+          },
+          { claim: 'Guess', confidenceLevel: 'speculation' },
+        ],
+      }),
+    )
+
+    expect(JSON.stringify(projected.ownershipHistory)).not.toContain('secret')
+    expect(JSON.stringify(projected.ownershipHistory)).not.toContain('private note')
+    expect(JSON.stringify(projected.ownershipHistory)).not.toContain('9000')
+    expect(JSON.stringify(projected.loanHistory)).not.toContain('staff only')
+    expect(projected.loanHistory?.[0]).toMatchObject({
+      institution: 'Kunsthalle',
+      event: { slug: 'show', hasPage: true },
+    })
+    expect(projected.provenanceConfidenceLayer).toEqual([
+      {
+        claim: 'Public fact',
+        confidenceLevel: 'documented-fact',
+        relatedOwnershipId: 'own-1',
+      },
+    ])
   })
 })

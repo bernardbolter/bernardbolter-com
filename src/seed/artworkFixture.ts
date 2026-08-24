@@ -242,7 +242,7 @@ async function seed() {
           institution: 'Galerie Nord',
           dateOut: '2022-09-10',
           dateReturned: '2022-11-20',
-          eventId,
+          event: eventId,
         },
       ],
     },

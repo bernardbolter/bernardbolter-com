@@ -1,13 +1,21 @@
-import type { Artist, Artwork } from '@/payload-types'
+import type { Artist, Artwork, Event, Person } from '@/payload-types'
+
+import { normalizeProvenanceConfidenceLevel } from '@/lib/artwork/provenanceConfidence'
 
 type ConfidenceRow = {
+  id?: string | null
   claim?: string | null
   evidenceBasis?: string | null
   confidenceLevel?: string | null
+  relatedOwnershipId?: string | null
 }
 type OwnershipRow = {
+  id?: string | null
+  eventType?: string | null
   displayName?: string | null
   city?: string | null
+  place?: { city?: string | null; country?: string | null } | null
+  actor?: (number | Person) | null
   dateAcquired?: string | null
   dateRelinquished?: string | null
   collectorVisible?: boolean | null
@@ -18,6 +26,7 @@ type LoanRow = {
   institution?: string | null
   dateOut?: string | null
   dateReturned?: string | null
+  event?: (number | Event) | null
   eventId?: number | null
 }
 
@@ -53,7 +62,9 @@ export function deriveProvenanceConfidenceSummary(
   const layers = asArray<ConfidenceRow>(artwork.provenanceConfidenceLayer)
   if (layers.length === 0) return null
 
-  const levels = layers.map((row) => row.confidenceLevel).filter(Boolean)
+  const levels = layers
+    .map((row) => normalizeProvenanceConfidenceLevel(row.confidenceLevel))
+    .filter(Boolean)
   if (levels.length === 0) return null
   if (levels.every((level) => level === 'documented-fact')) return 'documented'
   return 'partial'
@@ -96,7 +107,7 @@ export function deriveJsonLdProvenanceConfidenceLevel(
   if (layers.length === 0) return undefined
 
   const publicEntries = layers.filter((row) => {
-    const level = row.confidenceLevel?.trim()
+    const level = normalizeProvenanceConfidenceLevel(row.confidenceLevel)
     return (
       row.claim?.trim() &&
       (level === 'documented-fact' || level === 'credible-inference')
@@ -105,7 +116,9 @@ export function deriveJsonLdProvenanceConfidenceLevel(
 
   if (publicEntries.length === 0) return 'undocumented'
 
-  const levels = publicEntries.map((row) => row.confidenceLevel!.trim())
+  const levels = publicEntries.map(
+    (row) => normalizeProvenanceConfidenceLevel(row.confidenceLevel)!,
+  )
   if (levels.every((level) => level === 'documented-fact')) return 'fully-documented'
   return 'partially-documented'
 }
@@ -144,7 +157,7 @@ export function getPublicProvenanceClaims(
 
   for (const row of layers) {
     const claim = row.claim?.trim()
-    const confidenceLevel = row.confidenceLevel?.trim()
+    const confidenceLevel = normalizeProvenanceConfidenceLevel(row.confidenceLevel)
     if (!claim || !confidenceLevel || confidenceLevel === 'speculation') continue
     if (!PUBLIC_CONFIDENCE_LEVELS.has(confidenceLevel)) continue
 
@@ -182,6 +195,18 @@ export type OwnershipDisplay = {
   claimContactHref: string | null
 }
 
+function ownershipCity(row: OwnershipRow): string | null {
+  const nested = row.place?.city?.trim()
+  if (nested) return nested
+  return row.city?.trim() || null
+}
+
+function ownershipDisplayName(row: OwnershipRow): string {
+  const fromActor =
+    row.actor && typeof row.actor === 'object' ? row.actor.name?.trim() : ''
+  return row.displayName?.trim() || fromActor || 'Private collection'
+}
+
 function extractYear(value?: string | null): string | null {
   if (!value?.trim()) return null
   const match = value.trim().match(/\b(19|20)\d{2}\b/)
@@ -212,7 +237,8 @@ function isInArtistsStudio(artwork: Artwork): boolean {
 }
 
 export function shouldShowOwnershipSection(artwork: Artwork): boolean {
-  return Boolean(artwork.currentLocation?.category)
+  if (artwork.currentLocation?.category) return true
+  return getOwnershipRows(artwork).some((row) => row.collectorVisible === true)
 }
 
 export function buildCurrentHolderLine(artwork: Artwork, artist: Artist | null): string {
@@ -241,8 +267,8 @@ export function buildCurrentHolderLine(artwork: Artwork, artist: Artist | null):
     default: {
       const current = findCurrentOwnershipEntry(getOwnershipRows(artwork))
       if (current?.collectorVisible === true) {
-        const name = current.displayName?.trim() || 'Private collection'
-        const city = current.city?.trim()
+        const name = ownershipDisplayName(current)
+        const city = ownershipCity(current)
         return city ? `${name}, ${city}` : name
       }
       return 'Private collection'
@@ -257,8 +283,8 @@ export function buildOwnershipTimelineRows(artwork: Artwork): OwnershipTimelineR
   if (rows.length === 0) return []
 
   return rows.map((row) => {
-    const name = row.displayName?.trim() || 'Private collection'
-    const city = row.city?.trim()
+    const name = ownershipDisplayName(row)
+    const city = ownershipCity(row)
     const acquired = formatAcquisitionDate(row.dateAcquired)
     const parts = [name, city, acquired].filter(Boolean) as string[]
     return { text: parts.join(' · ') }
@@ -305,27 +331,84 @@ export function getPublicOwnershipTimeline(artwork: Artwork): Array<{
   return getOwnershipRows(artwork)
     .filter((row) => row.collectorVisible === true)
     .map((row) => ({
-      displayName: row.displayName?.trim() || 'Private collection',
-      city: row.city?.trim() || undefined,
+      displayName: ownershipDisplayName(row),
+      city: ownershipCity(row) || undefined,
       dateAcquired: row.dateAcquired?.trim() || undefined,
       dateRelinquished: row.dateRelinquished?.trim() || undefined,
     }))
 }
 
+export type PublicLoanEvent = { id?: number; title?: string | null; slug?: string | null; hasPage?: boolean | null }
+
 export type PublicLoanEntry = {
   institution: string
   dateOut?: string
   dateReturned?: string
-  eventId?: number
+  event?: PublicLoanEvent | null
 }
 
 export function getPublicLoanHistory(artwork: Artwork): PublicLoanEntry[] {
   return asArray<LoanRow>(artwork.loanHistory)
     .filter((row) => row.institution?.trim())
-    .map((row) => ({
-      institution: row.institution!.trim(),
-      dateOut: row.dateOut?.trim() || undefined,
-      dateReturned: row.dateReturned?.trim() || undefined,
-      eventId: typeof row.eventId === 'number' ? row.eventId : undefined,
+    .map((row) => {
+      const event =
+        row.event && typeof row.event === 'object'
+          ? {
+              id: row.event.id,
+              title: row.event.title,
+              slug: row.event.slug,
+              hasPage: row.event.hasPage,
+            }
+          : null
+      return {
+        institution: row.institution!.trim(),
+        dateOut: row.dateOut?.trim() || undefined,
+        dateReturned: row.dateReturned?.trim() || undefined,
+        event,
+      }
+    })
+}
+
+/**
+ * Strip private provenance keys before RSC. Server fetches with overrideAccess so
+ * field-level privateFieldAccess does not hide these from the page renderer.
+ */
+export function projectArtworkProvenanceForPublicPage<T extends Artwork>(artwork: T): T {
+  const ownershipHistory = getOwnershipRows(artwork).map((row) => ({
+    id: row.id,
+    eventType: row.eventType,
+    actor: row.actor && typeof row.actor === 'object' ? { name: row.actor.name } : undefined,
+    dateAcquired: row.dateAcquired,
+    dateRelinquished: row.dateRelinquished,
+    place: row.place ?? (row.city ? { city: row.city } : undefined),
+    collectorVisible: row.collectorVisible,
+    displayName: row.displayName,
+    claimStatus: row.claimStatus,
+  }))
+
+  const loanHistory = getPublicLoanHistory(artwork)
+
+  const provenanceConfidenceLayer = asArray<ConfidenceRow>(artwork.provenanceConfidenceLayer)
+    .map((claim) => ({
+      ...claim,
+      confidenceLevel: normalizeProvenanceConfidenceLevel(claim.confidenceLevel),
     }))
+    .filter(
+      (claim) =>
+        claim.claim?.trim() &&
+        claim.confidenceLevel &&
+        claim.confidenceLevel !== 'speculation',
+    )
+    .map((claim) => ({
+      claim: claim.claim,
+      confidenceLevel: claim.confidenceLevel,
+      relatedOwnershipId: claim.relatedOwnershipId,
+    }))
+
+  return {
+    ...artwork,
+    ownershipHistory,
+    loanHistory,
+    provenanceConfidenceLayer,
+  } as T
 }

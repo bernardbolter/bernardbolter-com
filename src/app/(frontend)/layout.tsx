@@ -6,6 +6,7 @@ import { JsonLdScript } from '@/components/seo/JsonLdScript'
 import { RouteStructuredData } from '@/components/seo/RouteStructuredData'
 import { SiteChrome } from '@/components/site/SiteChrome'
 import { ArtworkChromeProvider } from '@/providers/ArtworkChromeProvider'
+import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
 import { getRootChromeData } from '@/lib/payload/layoutData'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
@@ -83,7 +84,8 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { artistInfo, seriesSlugByArtworkSlug, archiveMedianAreaMm2 } = await getRootChromeData()
+  const { person, artistInfo, seriesSlugByArtworkSlug, archiveMedianAreaMm2 } = await getRootChromeData()
+  const personLd = artistAsSchemaPerson(person ?? ({ name: 'Bernard Bolter' } as never))
 
   return (
     <html lang="en">
@@ -91,13 +93,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <JsonLdScript
           data={{
             '@context': 'https://schema.org',
-            '@type': 'Person',
-            name: 'Bernard Bolter',
-            jobTitle: 'Mixed Media and Digital Artist',
+            ...personLd,
+            '@id': `${siteBaseUrl}/bio#person`,
             url: siteBaseUrl,
-            description: 'San Francisco born, Berlin based, mixed media and digital artist.',
-            image: `${siteBaseUrl}/bernard-bolter-portrait.jpeg`,
-            sameAs: ['https://instagram.com/bernardbolter'],
           }}
         />
         <RouteStructuredData />

@@ -181,6 +181,9 @@ export const ARTWORK_FIELD_CATALOG: CatalogField[] = [
   { field: 'ach.mapAndTour.lng', category: 'series-specific', layer: 'agent', tier: 'studio' },
   { field: 'ach.revealSlider.sliderAxis', category: 'series-specific', layer: 'agent', tier: 'studio' },
   { field: 'ach.revealSlider.transferImage', category: 'series-specific', layer: 'artist', tier: 'studio' },
+  { field: 'ach.hero.heroEligible', category: 'series-specific', layer: 'artist', tier: 'studio' },
+  { field: 'ach.hero.heroFields', category: 'series-specific', layer: 'artist', tier: 'studio' },
+  { field: 'ach.hero.heroPhoto', category: 'series-specific', layer: 'artist', tier: 'studio' },
 
   // ── series-specific: Digital City Series (dcs.*) ──────────
   { field: 'dcs.captureJourney.captureDistanceKm', category: 'series-specific', layer: 'artist', tier: 'studio' },

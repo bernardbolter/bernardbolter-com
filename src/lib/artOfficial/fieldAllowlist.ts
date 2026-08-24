@@ -130,7 +130,6 @@ const EVENT_FORBIDDEN = new Set([
   'enrichmentStatus',
   'hasPage',
   'eventId',
-  'jsonldPreview',
   'jsonldSameAs',
   'installationImages',
   'artworks',

@@ -23,33 +23,6 @@ function asRows(value: unknown): JsonRow[] {
   return Array.isArray(value) ? (value as JsonRow[]) : []
 }
 
-function sanitizeOwnershipHistory(rows: unknown): JsonRow[] {
-  return asRows(rows).map((row) => ({
-    displayName: row.displayName,
-    city: row.collectorVisible === true ? row.city : undefined,
-    dateAcquired: row.dateAcquired,
-    dateRelinquished: row.dateRelinquished,
-    claimStatus: row.claimStatus,
-    collectorVisible: row.collectorVisible,
-  }))
-}
-
-function sanitizeProvenanceConfidenceLayer(rows: unknown): JsonRow[] {
-  return asRows(rows).map((row) => ({
-    claim: row.claim,
-    confidenceLevel: row.confidenceLevel,
-  }))
-}
-
-function sanitizeLoanHistory(rows: unknown): JsonRow[] {
-  return asRows(rows).map((row) => ({
-    institution: row.institution,
-    dateOut: row.dateOut,
-    dateReturned: row.dateReturned,
-    eventId: row.eventId,
-  }))
-}
-
 function sanitizeEditionTierCopies(rows: unknown): JsonRow[] {
   return asRows(rows).map((copy) => ({
     copyNumber: copy.copyNumber,
@@ -143,9 +116,6 @@ export const artworkAfterRead: CollectionAfterReadHook = async ({ doc, req }) =>
   return {
     ...base,
     currentLocation: sanitizeCurrentLocation(base.currentLocation),
-    ownershipHistory: sanitizeOwnershipHistory(base.ownershipHistory),
-    provenanceConfidenceLayer: sanitizeProvenanceConfidenceLayer(base.provenanceConfidenceLayer),
-    loanHistory: sanitizeLoanHistory(base.loanHistory),
     ownershipRegistry: sanitizeOwnershipRegistry(base.ownershipRegistry),
     dcs: dcs
       ? {

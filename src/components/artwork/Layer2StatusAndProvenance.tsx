@@ -399,8 +399,18 @@ export default function Layer2StatusAndProvenance({
                       · {formatDateRange(loan.dateOut, loan.dateReturned)}
                     </span>
                   ) : null}
-                  {loan.eventId ? (
-                    <span className="text-secondary"> · linked to event #{loan.eventId}</span>
+                  {loan.event && typeof loan.event === 'object' && loan.event.title ? (
+                    <span className="text-secondary">
+                      {' '}
+                      ·{' '}
+                      {loan.event.hasPage && loan.event.slug ? (
+                        <Link href={`/events/${loan.event.slug}`} className="text-dark underline">
+                          {loan.event.title} ↗
+                        </Link>
+                      ) : (
+                        loan.event.title
+                      )}
+                    </span>
                   ) : null}
                 </li>
               ))}

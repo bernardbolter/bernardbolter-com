@@ -3,6 +3,7 @@ import config from '@payload-config'
 import type { Artwork } from '@/payload-types'
 
 import { omitPrivateArtworkCommerceFields } from '@/hooks/artworkAfterRead'
+import { projectArtworkProvenanceForPublicPage } from '@/lib/artwork/artworkProvenancePublic'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const defaultLocale = 'en' as const
@@ -104,7 +105,11 @@ function prepareArtworkForPage(artwork: Artwork): Artwork {
   const withoutCommerce = omitPrivateArtworkCommerceFields(
     artwork as unknown as Record<string, unknown>,
   ) as unknown as Artwork
-  return stripCreatorLinkedArtworkDocs(stripEmbeddings(withoutCommerce))
+  // Provenance is privateFieldAccess (absent from anonymous REST). Public pages
+  // fetch with overrideAccess then project a public-safe subset for SSR.
+  return stripCreatorLinkedArtworkDocs(
+    stripEmbeddings(projectArtworkProvenanceForPublicPage(withoutCommerce)),
+  )
 }
 
 export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
@@ -118,7 +123,7 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
       },
       limit: 1,
       depth: ARTWORK_PAGE_DEPTH,
-      overrideAccess: false,
+      overrideAccess: true,
     })
     const doc = result.docs[0]
     return doc ? prepareArtworkForPage(doc) : null

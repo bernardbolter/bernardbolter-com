@@ -233,12 +233,13 @@ export function buildArtworkFixtureData(
     ],
     ownershipHistory: [
       {
+        eventType: 'acquisition',
         ownerPrivate: 'fixture-redacted',
         displayName: 'Private collection',
-        city: 'Berlin',
+        place: { city: 'Berlin' },
         dateAcquired: '2020-06',
         collectorVisible: true,
-        claimStatus: 'claimed',
+        claimStatus: 'claimed-confirmed',
       },
     ],
     sameAsUrls: [

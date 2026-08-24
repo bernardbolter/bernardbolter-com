@@ -159,3 +159,19 @@ export const artworkAchValidateAr: CollectionBeforeValidateHook = ({ data }) => 
   }
   return data
 }
+
+/**
+ * Validate hook that prevents marking a painting hero-eligible without extraction
+ * data and the curated square B&W photo, per brief-11-hero-animation-fields.md.
+ */
+export const artworkAchValidateHero: CollectionBeforeValidateHook = ({ data }) => {
+  if (!data) return data
+  const ach = (data.ach as Record<string, unknown> | undefined) ?? {}
+  const hero = (ach.hero as Record<string, unknown> | undefined) ?? {}
+  if (hero.heroEligible === true && (!hero.heroFields || !hero.heroPhoto)) {
+    throw new Error(
+      'ACH Homepage hero: heroEligible cannot be true without both heroFields and heroPhoto.',
+    )
+  }
+  return data
+}

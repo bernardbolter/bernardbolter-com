@@ -2,7 +2,7 @@ import type { Person } from '@/payload-types'
 
 type PersonLike = Pick<
   Person,
-  'name' | 'nameLegal' | 'website' | 'instagram' | 'wikidataUri' | 'ulanUri' | 'externalIdentifiers'
+  'name' | 'nameLegal' | 'website' | 'instagram' | 'wikidataUri' | 'ulanUri' | 'externalIdentifiers' | 'role'
 >
 
 export type PersonJsonLdOptions = {
@@ -17,8 +17,10 @@ export function personToJsonLd(
 ): Record<string, unknown> | null {
   if (!person?.name?.trim()) return null
 
+  const isOrganization = person.role?.includes('institution') === true
+
   const obj: Record<string, unknown> = {
-    '@type': 'Person',
+    '@type': isOrganization ? 'Organization' : 'Person',
     name: person.nameLegal?.trim() || person.name.trim(),
   }
 
@@ -45,7 +47,7 @@ export function personToJsonLd(
   if (website) obj.url = website
 
   const eventRole = options.eventRole?.trim()
-  if (eventRole) obj.jobTitle = eventRole
+  if (eventRole && !isOrganization) obj.jobTitle = eventRole
 
   return obj
 }

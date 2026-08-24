@@ -113,11 +113,10 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
-  const body = buildArtworkJsonLd(artwork, null, {
+  const body = buildArtworkJsonLd(artwork, artist, {
     baseUrl: CORPUS_BASE,
     sessionCount: sessionCountBySlug.get(slug) ?? 0,
     includeTraversalLinks: true,
-    artist,
   })
 
   return NextResponse.json(body, { headers })

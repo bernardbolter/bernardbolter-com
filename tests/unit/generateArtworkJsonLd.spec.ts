@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { buildHomeJsonLd } from '@/utilities/buildHomeJsonLd'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 import { editionJsonLdHasPrivateFields } from '@/lib/jsonld/artworkExtensions'
-import type { Artwork } from '@/payload-types'
+import type { Artwork, Artist } from '@/payload-types'
 
 function minimalArtwork(overrides: Partial<Artwork> = {}): Artwork {
   return {
@@ -56,7 +56,11 @@ describe('buildArtworkJsonLd', () => {
       artism: 'https://artism.org/schema/',
     })
     expect(jsonLd['@id']).toBe('https://bernardbolter.com/gates-iii')
-    expect(jsonLd.creator).toEqual({ '@id': 'https://bernardbolter.com/bio#person' })
+    expect(jsonLd.creator).toEqual({
+      '@type': 'Person',
+      '@id': 'https://bernardbolter.com/bio#person',
+      name: 'Artist',
+    })
     expect(jsonLd['artism:recordUrl']).toBe('https://bernardbolter.com/api/corpus/gates-iii')
     expect(jsonLd['artism:visionPageUrl']).toBe('https://bernardbolter.com/gates-iii/vision')
 
@@ -433,5 +437,43 @@ describe('buildArtworkJsonLd', () => {
 
     expect(jsonLd).not.toHaveProperty('artism:editionTierSpec')
     expect(jsonLd).not.toHaveProperty('artism:editionClaimSummary')
+  })
+
+  it('types time-based video works as VisualArtwork + VideoObject with ISO duration', () => {
+    const jsonLd = buildArtworkJsonLd(
+      minimalArtwork({
+        medium: 'video',
+        measurementType: ['time-based'],
+        duration: '01:02:03',
+        videoUrl: 'https://example.com/gates.mp4',
+      }),
+      {
+        name: 'Bernard Bolter',
+        ulanUri: 'http://vocab.getty.edu/ulan/500000000',
+        wikidataUri: 'https://www.wikidata.org/entity/Q123',
+      } as Artist,
+      { baseUrl: 'https://bernardbolter.com' },
+    )
+
+    expect(jsonLd['@type']).toEqual(['VisualArtwork', 'VideoObject'])
+    expect(jsonLd.duration).toBe('PT1H2M3S')
+    expect(jsonLd.contentUrl).toBe('https://example.com/gates.mp4')
+    expect(jsonLd.creator).toMatchObject({
+      '@type': 'Person',
+      '@id': 'https://bernardbolter.com/bio#person',
+      name: 'Bernard Bolter',
+      identifier: [
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'ULAN',
+          value: 'http://vocab.getty.edu/ulan/500000000',
+        },
+        {
+          '@type': 'PropertyValue',
+          propertyID: 'Wikidata',
+          value: 'https://www.wikidata.org/entity/Q123',
+        },
+      ],
+    })
   })
 })

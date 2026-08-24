@@ -370,9 +370,10 @@ async function seed() {
     // Confirmed visible owner → unclaimed appeal does NOT show
     ownershipHistory: [
       {
+        eventType: 'acquisition',
         ownerPrivate: 'fixture-redacted',
         displayName: 'Private collection, Zurich',
-        city: 'Zurich',
+        place: { city: 'Zurich' },
         dateAcquired: '2012-03',
         collectorVisible: true,
         claimStatus: 'claimed-confirmed',
@@ -385,7 +386,6 @@ async function seed() {
         institution: 'Kunsthalle Basel',
         dateOut: '2015-04-01',
         dateReturned: '2015-07-15',
-        eventId: null,
       },
     ],
 

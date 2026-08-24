@@ -97,6 +97,7 @@ import { estimateTimelineDateForWork } from './sequencing/estimateTimelineDate'
 import { findArtworkBySlug, resolveTargetArtworkSlug } from './sequencing/resolveArtwork'
 import { requiresArtwork } from './routing'
 import { rankEventSearchCandidates } from './searchEvents'
+import { normalizeProvenanceConfidenceLayer } from '@/lib/artwork/provenanceConfidence'
 
 function sessionArtworkId(session: Session): number | null {
   if (typeof session.primaryArtwork === 'number') return session.primaryArtwork
@@ -290,6 +291,9 @@ export async function applyAgentTool(ctx: ApplyAgentToolCtx): Promise<string> {
             )
             if (!catCheck.ok) return failTool(tool.name, catCheck.error)
           }
+        }
+        if (args.targetCollection === 'artworks' && args.field === 'provenanceConfidenceLayer') {
+          args.value = normalizeProvenanceConfidenceLayer(args.value)
         }
         if (args.targetCollection === 'artworks' && args.field === 'series') {
           try {
