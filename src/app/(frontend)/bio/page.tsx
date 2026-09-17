@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import Bio from '@/components/bio/Bio'
+import { JsonLdScript } from '@/components/seo/JsonLdScript'
 import { normalizeBioPhotos } from '@/helpers/bioPhotos'
 import {
   historicalBioLinks,
@@ -11,6 +12,7 @@ import { formatBioBirthLine, formatBioLivesAndWorksLine } from '@/lib/bio/bioHea
 import { getBioPageArtist } from '@/lib/payload/bioPage'
 import { getPublishedSeriesMentions } from '@/lib/payload/series'
 import { buildPageMetadata } from '@/lib/seo/pageMetadata'
+import { generateBioJsonLd } from '@/utilities/generateBioJsonLd'
 
 export const revalidate = 3600
 
@@ -28,8 +30,11 @@ export default async function BioPage() {
   ])
   const artist = rawArtist ? await attachPublicSessionRefs(rawArtist) : null
 
+  const jsonLd = artist ? generateBioJsonLd(artist) : null
+
   return (
     <div className="bio-page__container">
+      {jsonLd ? <JsonLdScript data={jsonLd} /> : null}
       {artist ? (
         <Bio
           name={artist.name}

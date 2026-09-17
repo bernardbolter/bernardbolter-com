@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { Barlow, Barlow_Condensed, Staatliches } from 'next/font/google'
 
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
-import { RouteStructuredData } from '@/components/seo/RouteStructuredData'
 import { SiteChrome } from '@/components/site/SiteChrome'
 import { ArtworkChromeProvider } from '@/providers/ArtworkChromeProvider'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
@@ -81,7 +80,10 @@ export const metadata: Metadata = {
   },
 }
 
-export const dynamic = 'force-dynamic'
+// On-demand ISR: no generateStaticParams, no build-time DB. First request
+// renders and caches. Do not restore force-dynamic — it emits no-store and
+// makes every public HTML route uncacheable at origin and CDN.
+export const revalidate = 3600
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const { person, artistInfo, seriesSlugByArtworkSlug, archiveMedianAreaMm2 } = await getRootChromeData()
@@ -98,7 +100,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             url: siteBaseUrl,
           }}
         />
-        <RouteStructuredData />
       </head>
       <body
         className={`
