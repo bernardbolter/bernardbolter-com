@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import HomePage from '@/components/home/HomePage'
 import { CorpusDiscoveryLink } from '@/components/seo/CorpusDiscoveryLink'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
-import { getCollectionLayoutData } from '@/lib/payload/layoutData'
 import { CollectionArtworksProvider } from '@/providers/ArtworkProvider'
 import { corpusAlternateTypes, corpusIndexUrl } from '@/lib/seo/corpusDiscovery'
 
@@ -38,15 +37,9 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function Page() {
-  const { artworks, filterSeries, timelineMarkers } = await getCollectionLayoutData()
-
+export default function Page() {
   return (
-    <CollectionArtworksProvider
-      artworks={artworks}
-      filterSeries={filterSeries}
-      timelineMarkers={timelineMarkers}
-    >
+    <CollectionArtworksProvider artworks={[]} filterSeries={[]} deferCatalogue>
       {/* Crawler-only entry — optically hidden, zero layout impact */}
       <CorpusDiscoveryLink />
       <HomePage />

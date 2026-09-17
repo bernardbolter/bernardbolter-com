@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  applyTriptychPrintSalesFromLines,
   decrementTriptychPrintAvailableCount,
   findTriptychByVendurePrintProductId,
 } from '@/lib/commerce/decrementTriptychPrintCount'
@@ -49,5 +50,46 @@ describe('findTriptychByVendurePrintProductId', () => {
       { id: 2, printSets: [{ vendureProductId: 'b' }] },
     ]
     expect(findTriptychByVendurePrintProductId(docs, 'b')?.id).toBe(2)
+  })
+})
+
+describe('applyTriptychPrintSalesFromLines', () => {
+  it('decrements multiple lines, including two rows on the same triptych', () => {
+    const docs = [
+      {
+        id: 1,
+        printSets: [
+          { size: 'large' as const, edition: 15, vendureProductId: 'vp-large', printAvailableCount: 10 },
+          { size: 'small' as const, edition: 30, vendureProductId: 'vp-small', printAvailableCount: 30 },
+        ],
+      },
+      {
+        id: 2,
+        printSets: [
+          { size: 'large' as const, edition: 15, vendureProductId: 'vp-other', printAvailableCount: 5 },
+        ],
+      },
+    ]
+
+    const result = applyTriptychPrintSalesFromLines(docs, [
+      { vendureProductId: 'vp-large', quantitySold: 2 },
+      { vendureProductId: 'vp-small', quantitySold: 1 },
+      { vendureProductId: 'unknown-selection-product', quantitySold: 1 },
+    ])
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.updates).toHaveLength(1)
+    const printSets = result.updates[0]?.printSets ?? []
+    expect(printSets[0]?.printAvailableCount).toBe(8)
+    expect(printSets[1]?.printAvailableCount).toBe(29)
+  })
+
+  it('skips unknown products without failing the order', () => {
+    const result = applyTriptychPrintSalesFromLines(
+      [{ id: 1, printSets: [{ vendureProductId: 'vp-large', printAvailableCount: 10 }] }],
+      [{ vendureProductId: 'selection-only', quantitySold: 1 }],
+    )
+    expect(result).toEqual({ ok: true, updates: [] })
   })
 })

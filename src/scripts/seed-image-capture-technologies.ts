@@ -3,12 +3,34 @@
  * `pnpm tsx src/scripts/seed-image-capture-technologies.ts`).
  *
  * Seeds the starter vocabulary from handoff-ach-schema-extension.md Part 1.2.
- * Stubs `name` + `slug` only; richer description / Wikidata can be added by
- * Art/Official or in the admin.
+ * Stubs `name` + `slug` (and draft descriptions for the two MoW vocab rows).
+ * Richer description / Wikidata can be added by Art/Official or in the admin.
  */
 import { getPayload } from 'payload'
 
 import config from '@payload-config'
+
+function lexicalParagraph(text: string) {
+  return {
+    root: {
+      type: 'root',
+      children: [
+        {
+          type: 'paragraph',
+          children: [{ type: 'text', text, version: 1 }],
+          direction: 'ltr' as const,
+          format: '' as const,
+          indent: 0,
+          version: 1,
+        },
+      ],
+      direction: 'ltr' as const,
+      format: '' as const,
+      indent: 0,
+      version: 1,
+    },
+  }
+}
 
 const ROWS: Array<{
   slug: string
@@ -17,6 +39,7 @@ const ROWS: Array<{
   approximatePeriodStart?: number
   approximatePeriodEnd?: number | null
   wikidataUri?: string
+  descriptionEn?: string
 }> = [
   {
     slug: 'daguerreotype',
@@ -105,6 +128,28 @@ const ROWS: Array<{
     approximatePeriodEnd: null,
     wikidataUri: 'https://www.wikidata.org/entity/Q199663',
   },
+  {
+    slug: 'color-photograph',
+    nameEn: 'Color photograph',
+    nameDe: 'Farbfotografie',
+    approximatePeriodStart: 1935,
+    approximatePeriodEnd: null,
+    wikidataUri: 'https://www.wikidata.org/entity/Q182167',
+    descriptionEn:
+      '[DRAFT — Bernard to confirm] Color still photography as a mass medium, dated from Kodachrome (1935). Placeholder for WWII-era color source images in Mediums of War panel II — not a finished technology note.',
+  },
+  {
+    // Vietnam-era moving-image sources mixed 16mm news film and television video;
+    // this slug names both rather than guessing which one Bernard intends.
+    slug: 'video-16mm-film',
+    nameEn: 'Video / 16mm film',
+    nameDe: 'Video / 16-mm-Film',
+    approximatePeriodStart: 1965,
+    approximatePeriodEnd: null,
+    wikidataUri: 'https://www.wikidata.org/entity/Q151342',
+    descriptionEn:
+      '[DRAFT — Bernard to confirm] Moving-image capture of the Vietnam War era: 16mm film and contemporaneous video/television. Placeholder for Mediums of War panel III — not a finished technology note.',
+  },
 ]
 
 async function main() {
@@ -129,6 +174,7 @@ async function main() {
         approximatePeriodStart: row.approximatePeriodStart ?? null,
         approximatePeriodEnd: row.approximatePeriodEnd ?? null,
         wikidataUri: row.wikidataUri ?? null,
+        ...(row.descriptionEn ? { description: lexicalParagraph(row.descriptionEn) } : {}),
       },
       overrideAccess: true,
     })

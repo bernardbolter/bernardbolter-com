@@ -56,4 +56,24 @@ describe('artworkR2Images', () => {
       fallback: 'https://cdn.example.com/basel-switzerland-composite.jpg',
     })
   })
+
+  it('uses slug derivatives when primaryImage is an unpopulated id', () => {
+    vi.stubEnv('NEXT_PUBLIC_IMAGE_DOMAIN', 'https://cdn.example.com')
+    expect(
+      getArtworkImageSources(
+        { slug: 'basel-switzerland', primaryImage: 42, posterImage: null },
+        'timeline',
+      ),
+    ).toEqual({
+      src: 'https://cdn.example.com/basel-switzerland-800w.jpg',
+      fallback: 'https://cdn.example.com/basel-switzerland-800w.jpg',
+    })
+  })
+
+  it('hides works with a slug but no image ref', () => {
+    vi.stubEnv('NEXT_PUBLIC_IMAGE_DOMAIN', 'https://cdn.example.com')
+    expect(
+      getArtworkImageSources({ slug: 'basel-switzerland', primaryImage: null, posterImage: null }, 'grid'),
+    ).toBeNull()
+  })
 })

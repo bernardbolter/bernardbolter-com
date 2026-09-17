@@ -22,8 +22,6 @@ const CATALOGUE_ARTWORK_SELECT = {
   primaryImage: true,
   posterImage: true,
   videoFile: true,
-  videoUrl: true,
-  videos: true,
   availabilityStatus: true,
   yearCreated: true,
   city: true,
@@ -44,10 +42,21 @@ const CATALOGUE_ARTWORK_SELECT = {
 
 export type LayoutProviderArtworks = Artwork[]
 
+const CHROME_ARTWORK_SELECT = {
+  slug: true,
+  seriesSlug: true,
+  widthMm: true,
+  heightMm: true,
+  sizeTier: true,
+} as const
+
 /** Catalogue consumers only need url/width/height (alt uses artwork.title). */
 type CatalogueMediaSlim = Pick<Media, 'url' | 'width' | 'height'>
 
-function slimCatalogueMedia(value: Artwork['primaryImage']): CatalogueMediaSlim | null {
+function slimCatalogueMedia(
+  value: Artwork['primaryImage'],
+): CatalogueMediaSlim | number | null {
+  if (typeof value === 'number') return value
   if (!value || typeof value !== 'object') return null
   return {
     url: value.url ?? null,
@@ -87,13 +96,33 @@ export async function fetchCatalogueArtworksWithPayload(
     collection: 'artworks',
     where,
     sort: '-yearCreated',
-    depth: 1,
+    // Depth 0: primaryImage stays an id. Depth 1 pulls full Media rows
+    // (embeddings included) over SSH and stalls the homepage for ~60s.
+    depth: 0,
+    joins: false,
     limit: 500,
     select: CATALOGUE_ARTWORK_SELECT,
     overrideAccess: false,
   })
 
   return result.docs.map((doc) => shapeCatalogueArtwork(doc as Artwork))
+}
+
+/** Depth-0 slug/size rows for menu colour + grid scale — not the image catalogue. */
+export async function fetchChromeArtworkSummaryWithPayload(
+  payload: Payload,
+): Promise<LayoutProviderArtworks> {
+  const result = await payload.find({
+    collection: 'artworks',
+    where: { status: { equals: 'published' } },
+    sort: '-yearCreated',
+    depth: 0,
+    limit: 500,
+    select: CHROME_ARTWORK_SELECT,
+    overrideAccess: false,
+  })
+
+  return result.docs as Artwork[]
 }
 
 async function fetchCatalogueArtworks(seriesSlug?: string): Promise<Artwork[]> {

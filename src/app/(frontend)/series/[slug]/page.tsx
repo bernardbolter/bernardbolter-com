@@ -62,7 +62,6 @@ export default async function SeriesPage({ params }: Props) {
     <CollectionArtworksProvider
       artworks={seriesArtworks}
       filterSeries={collection.filterSeries}
-      timelineMarkers={collection.timelineMarkers}
       initialFiltersArray={[series.slug]}
     >
       <main className="relative min-h-screen w-full overflow-hidden bg-surface-page text-dark">

@@ -109,8 +109,10 @@ export function ArtworkChromeProvider({
     setChrome((prev) => ({
       ...prev,
       artistData: artist ?? DEFAULT_ARTIST_INFO,
-      seriesSlugByArtworkSlug,
-      archiveMedianAreaMm2,
+      // Empty layout maps must not wipe values filled from the catalogue.
+      ...(Object.keys(seriesSlugByArtworkSlug).length > 0
+        ? { seriesSlugByArtworkSlug, archiveMedianAreaMm2 }
+        : {}),
     }))
   }, [artist, seriesSlugByArtworkSlug, archiveMedianAreaMm2])
 

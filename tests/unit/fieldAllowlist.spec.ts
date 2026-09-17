@@ -61,4 +61,9 @@ describe('isFieldAllowedForAgent', () => {
     expect(isFieldAllowedForAgent('small-prints', 'artwork')).toBe(false)
     expect(isFieldAllowedForAgent('small-prints', 'available')).toBe(false)
   })
+
+  it('blocks webhook-events fields', () => {
+    expect(isFieldAllowedForAgent('webhook-events', 'orderCode')).toBe(false)
+    expect(isFieldAllowedForAgent('webhook-events', 'rawPayload')).toBe(false)
+  })
 })

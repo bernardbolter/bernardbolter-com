@@ -2,8 +2,14 @@
  * Schema reconciliation: json → array tables for ownership/loans/confidence,
  * plus People FKs on events collaborators / co-speakers.
  *
- * Do NOT use Payload Drizzle push on Netcup for this — it prompts to delete
- * unrelated legacy columns.
+ * One-off data copy, not a Payload `payload_migrations` entry (Drizzle push
+ * would prompt to drop unrelated live columns). Idempotent: a second run
+ * skips the jsonb copy if the completion marker exists or dest tables
+ * already have rows. Inserts use UNIQUE (_parent_id, _order) so a race
+ * cannot duplicate. Do not rely on ON CONFLICT (id) — source JSON had no
+ * stable ids, so the first version minted a new UUID every run.
+ *
+ * Do NOT use Payload Drizzle push on Netcup for this.
  *
  * Usage (after git pull, on a DB backup):
  *   npx tsx src/scripts/migrate-schema-reconciliation-provenance.ts
@@ -17,9 +23,18 @@ import { getPayload } from 'payload'
 import config from '@/payload.config'
 
 import { normalizeProvenanceConfidenceLevel } from '@/lib/artwork/provenanceConfidence'
+import {
+  jsonCopySkipReason,
+  parentOrderUniqueIndexName,
+  PROVENANCE_COPY_MARKER_ID,
+  PROVENANCE_COPY_MARKER_TABLE,
+} from '@/scripts/provenanceJsonCopyGuard'
 
 type PgPool = {
-  query: (text: string, values?: unknown[]) => Promise<{ rows: Array<Record<string, unknown>> }>
+  query: (
+    text: string,
+    values?: unknown[],
+  ) => Promise<{ rows: Array<Record<string, unknown>>; rowCount?: number | null }>
 }
 
 const OWNERSHIP_TABLE = 'artworks_ownership_history'
@@ -58,6 +73,54 @@ async function columnExists(pool: PgPool, tableName: string, columnName: string)
 async function enumExists(pool: PgPool, enumName: string): Promise<boolean> {
   const { rows } = await pool.query(`SELECT 1 FROM pg_type WHERE typname = $1`, [enumName])
   return rows.length > 0
+}
+
+async function tableRowCount(pool: PgPool, tableName: string): Promise<number> {
+  if (!(await tableExists(pool, tableName))) return 0
+  const { rows } = await pool.query(`SELECT COUNT(*)::int AS n FROM "${tableName}"`)
+  return Number(rows[0]?.n ?? 0)
+}
+
+async function ensureCopyMarkerTable(pool: PgPool): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS "${PROVENANCE_COPY_MARKER_TABLE}" (
+      "id" character varying PRIMARY KEY,
+      "completed_at" timestamp(3) with time zone NOT NULL DEFAULT now()
+    )
+  `)
+}
+
+async function copyMarkerExists(pool: PgPool): Promise<boolean> {
+  if (!(await tableExists(pool, PROVENANCE_COPY_MARKER_TABLE))) return false
+  const { rows } = await pool.query(
+    `SELECT 1 FROM "${PROVENANCE_COPY_MARKER_TABLE}" WHERE "id" = $1`,
+    [PROVENANCE_COPY_MARKER_ID],
+  )
+  return rows.length > 0
+}
+
+async function writeCopyMarker(pool: PgPool): Promise<void> {
+  await ensureCopyMarkerTable(pool)
+  await pool.query(
+    `INSERT INTO "${PROVENANCE_COPY_MARKER_TABLE}" ("id") VALUES ($1) ON CONFLICT ("id") DO NOTHING`,
+    [PROVENANCE_COPY_MARKER_ID],
+  )
+}
+
+/** Keep one row per (_parent_id, _order) then unique-index so re-inserts no-op. */
+async function ensureUniqueParentOrder(pool: PgPool, tableName: string): Promise<void> {
+  if (!(await tableExists(pool, tableName))) return
+  await pool.query(`
+    DELETE FROM "${tableName}" a
+    USING "${tableName}" b
+    WHERE a._parent_id = b._parent_id
+      AND a._order = b._order
+      AND a.id > b.id
+  `)
+  const indexName = parentOrderUniqueIndexName(tableName)
+  await pool.query(
+    `CREATE UNIQUE INDEX IF NOT EXISTS "${indexName}" ON "${tableName}" ("_parent_id", "_order")`,
+  )
 }
 
 async function ensureEnum(pool: PgPool, enumName: string, values: readonly string[]): Promise<void> {
@@ -266,8 +329,30 @@ async function addPersonIdColumn(pool: PgPool, tableName: string): Promise<void>
 }
 
 async function migrateJsonRows(pool: PgPool): Promise<void> {
+  await ensureCopyMarkerTable(pool)
+  const skip = jsonCopySkipReason({
+    markerExists: await copyMarkerExists(pool),
+    ownershipRows: await tableRowCount(pool, OWNERSHIP_TABLE),
+    loanRows: await tableRowCount(pool, LOAN_TABLE),
+    confidenceRows: await tableRowCount(pool, CONFIDENCE_TABLE),
+  })
+  if (skip === 'marker') {
+    console.log(
+      `Json copy already completed (marker ${PROVENANCE_COPY_MARKER_ID}) — skip jsonb → arrays.`,
+    )
+    return
+  }
+  if (skip === 'existing-rows') {
+    console.log(
+      'Destination array tables already have rows — skip jsonb → arrays (refusing a second copy).',
+    )
+    await writeCopyMarker(pool)
+    return
+  }
+
   if (!(await columnExists(pool, 'artworks', 'ownership_history'))) {
     console.log('artworks.ownership_history jsonb already gone — skip json copy.')
+    await writeCopyMarker(pool)
     return
   }
 
@@ -299,7 +384,7 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
            "collector_visible", "date_acquired", "date_relinquished", "place_city",
            "claim_status", "notes"
          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-         ON CONFLICT ("id") DO NOTHING`,
+         ON CONFLICT ("_parent_id", "_order") DO NOTHING`,
         [
           index + 1,
           parentId,
@@ -332,7 +417,7 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
         `INSERT INTO "${LOAN_TABLE}" (
            "_order", "_parent_id", "id", "institution", "date_out", "date_returned", "event_id", "notes"
          ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-         ON CONFLICT ("id") DO NOTHING`,
+         ON CONFLICT ("_parent_id", "_order") DO NOTHING`,
         [
           index + 1,
           parentId,
@@ -356,7 +441,7 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
         `INSERT INTO "${CONFIDENCE_TABLE}" (
            "_order", "_parent_id", "id", "claim", "evidence_basis", "confidence_level", "related_ownership_id"
          ) VALUES ($1,$2,$3,$4,$5,$6,$7)
-         ON CONFLICT ("id") DO NOTHING`,
+         ON CONFLICT ("_parent_id", "_order") DO NOTHING`,
         [
           index + 1,
           parentId,
@@ -374,6 +459,7 @@ async function migrateJsonRows(pool: PgPool): Promise<void> {
   console.log(
     `Copied jsonb → arrays: ownership ${ownershipCount}, loans ${loanCount}, confidence ${claimCount}`,
   )
+  await writeCopyMarker(pool)
 }
 
 async function main() {
@@ -383,6 +469,9 @@ async function main() {
   await createOwnershipTable(pool)
   await createLoanTable(pool)
   await createConfidenceTable(pool)
+  await ensureUniqueParentOrder(pool, OWNERSHIP_TABLE)
+  await ensureUniqueParentOrder(pool, LOAN_TABLE)
+  await ensureUniqueParentOrder(pool, CONFIDENCE_TABLE)
   await migrateJsonRows(pool)
   await addPersonIdColumn(pool, 'events_collaborators')
   await addPersonIdColumn(pool, 'events_co_speakers')

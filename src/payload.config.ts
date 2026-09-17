@@ -38,9 +38,11 @@ import { Events } from './collections/Events'
 import { People } from './collections/People'
 import { ImageCaptureTechnologies } from './collections/ImageCaptureTechnologies'
 import { Artworks } from './collections/Artworks'
+import { AchNeighborhoodSources } from './collections/AchNeighborhoodSources'
 import { DCSCapturePhotos } from './collections/DCSCapturePhotos'
 import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
+import { WebhookEvents } from './collections/WebhookEvents'
 import { Sessions } from './collections/Sessions'
 import { Campaigns } from './collections/Campaigns'
 import { Themes } from './collections/Themes'
@@ -52,6 +54,7 @@ import { Segments } from './collections/Segments'
 import { Shots } from './collections/Shots'
 import { Takes } from './collections/Takes'
 import { ArtOfficialSettings } from './globals/ArtOfficialSettings'
+import { NeighborhoodCommissions } from './globals/NeighborhoodCommissions'
 import { PrintSetConfig } from './globals/PrintSetConfig'
 
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -149,12 +152,14 @@ export default buildConfig({
     Events,
     ImageCaptureTechnologies,
     Artworks,
+    AchNeighborhoodSources,
     DCSCapturePhotos,
     Triptychs,
     SmallPrints,
+    WebhookEvents,
     Sessions,
   ],
-  globals: [PrintSetConfig, ArtOfficialSettings],
+  globals: [PrintSetConfig, ArtOfficialSettings, NeighborhoodCommissions],
   // Public catalogue reads for external sites (e.g. A Colorful History).
   // Access control still limits anonymous clients to published artist-catalogued works.
   cors: corsOrigins.length > 0 ? corsOrigins : undefined,

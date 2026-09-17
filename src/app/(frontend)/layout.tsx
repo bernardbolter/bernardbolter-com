@@ -7,7 +7,8 @@ import { RouteStructuredData } from '@/components/seo/RouteStructuredData'
 import { SiteChrome } from '@/components/site/SiteChrome'
 import { ArtworkChromeProvider } from '@/providers/ArtworkChromeProvider'
 import { artistAsSchemaPerson } from '@/lib/jsonld/artistPerson'
-import { getRootChromeData } from '@/lib/payload/layoutData'
+import { mapArtistToInfoData } from '@/helpers/mapArtistInfo'
+import { TIER_FALLBACK_AREA_MM2 } from '@/lib/artwork/gridRealSize'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 
 import AnimationWrapper from './AnimationWrapper'
@@ -84,8 +85,10 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic'
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { person, artistInfo, seriesSlugByArtworkSlug, archiveMedianAreaMm2 } = await getRootChromeData()
-  const personLd = artistAsSchemaPerson(person ?? ({ name: 'Bernard Bolter' } as never))
+  const artistInfo = mapArtistToInfoData(null)
+  const personLd = artistAsSchemaPerson({ name: 'Bernard Bolter' } as never)
+  const seriesSlugByArtworkSlug: Record<string, string> = {}
+  const archiveMedianAreaMm2 = TIER_FALLBACK_AREA_MM2.md
 
   return (
     <html lang="en">

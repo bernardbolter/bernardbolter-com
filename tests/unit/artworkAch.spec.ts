@@ -77,6 +77,20 @@ describe('artworkAchBeforeChange', () => {
     expect((data.ach as any).mapAndTour.cityPlaceholderColor).toBe('#F4F2EE')
   })
 
+  it('falls back to the same hex when city is empty or missing', () => {
+    for (const city of [null, undefined, '', '   ']) {
+      const data: Record<string, unknown> = { city, ach: {} }
+      artworkAchBeforeChange({
+        data,
+        operation: 'create',
+        collection: {} as any,
+        context: {} as any,
+        req: {} as any,
+      } as any)
+      expect((data.ach as any).mapAndTour.cityPlaceholderColor).toBe('#F4F2EE')
+    }
+  })
+
   it('computes approximateDateYear and sourceCredit from structured source fields', () => {
     const data: Record<string, unknown> = {
       city: 'San Francisco',

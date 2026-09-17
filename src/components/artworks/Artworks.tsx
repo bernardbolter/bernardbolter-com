@@ -25,10 +25,13 @@ export default function Artworks() {
     state.filtered.length > 0 &&
     !state.formattedArtworks
 
-  if (isTimelineLoading) {
+  if (state.catalogueLoading || isTimelineLoading) {
     return (
       <section className="relative z-artwork min-h-screen w-full">
-        <Loading />
+        <Loading
+          title="Loading artworks…"
+          subtitle={state.catalogueLoading ? 'The catalogue is coming in from the database.' : undefined}
+        />
       </section>
     )
   }

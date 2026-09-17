@@ -35,6 +35,17 @@ const CONTEXT_SUFFIX: Record<ArtworkImageContext, ArtworkDerivativeSuffix> = {
   'vision-page': '1200w',
 }
 
+function isImageRef(value: unknown): boolean {
+  if (typeof value === 'number') return Number.isFinite(value) && value > 0
+  return Boolean(value && typeof value === 'object')
+}
+
+function hasArtworkImageRef(
+  artwork: Pick<Artwork, 'primaryImage' | 'posterImage'>,
+): boolean {
+  return isImageRef(artwork.primaryImage) || isImageRef(artwork.posterImage)
+}
+
 function readPrimaryMedia(
   artwork: Pick<Artwork, 'primaryImage' | 'posterImage'>,
 ): Media | null {
@@ -76,15 +87,16 @@ export function getArtworkImageSources(
   context: ArtworkImageContext,
 ): ArtworkImageSources | null {
   const fallback = getArtworkOriginalImageUrl(artwork)
-  if (!fallback) return null
-
   const slug = artwork.slug?.trim()
-  if (!slug) {
+
+  if (slug && (hasArtworkImageRef(artwork) || fallback)) {
+    const src = getArtworkImageUrl(slug, context)
+    return { src, fallback: fallback ?? src }
+  }
+
+  if (fallback) {
     return { src: fallback, fallback }
   }
 
-  return {
-    src: getArtworkImageUrl(slug, context),
-    fallback,
-  }
+  return null
 }

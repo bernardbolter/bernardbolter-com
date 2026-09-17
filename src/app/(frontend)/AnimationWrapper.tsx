@@ -3,7 +3,7 @@
 
 import { AnimatePresence, motion, Variants } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useRef } from 'react';
 
 import { isArtworkDetailPath } from '@/lib/routes/isArtworkDetailPath';
 
@@ -34,9 +34,16 @@ export default function AnimationWrapper({
 }) {
   const pathname = usePathname();
   const isArtworkPage = isArtworkDetailPath(pathname);
+  const isFirstPaint = useRef(true);
+
+  useEffect(() => {
+    isFirstPaint.current = false;
+  }, []);
 
   const handleAnimationStart = () => {
-    if (!isArtworkPage) {
+    // First paint must stay visible — opacity 0 + overflow lock is why the
+    // homepage looks frozen on the artist name while the catalogue loads.
+    if (!isArtworkPage && !isFirstPaint.current) {
       document.body.style.overflow = 'hidden';
     }
   };
@@ -61,7 +68,7 @@ export default function AnimationWrapper({
       <motion.div 
         key={pathname}
         variants={subtleFadeVariants}
-        initial="initial"
+        initial={isFirstPaint.current ? false : "initial"}
         animate="animate"
         exit="exit"
         onAnimationStart={handleAnimationStart}
@@ -73,7 +80,7 @@ export default function AnimationWrapper({
           top: 0,
           left: 0,
           backgroundColor: 'var(--page-background-color, #FDFEFF)',
-          overflow: isArtworkPage ? 'visible' : 'hidden',
+          overflow: 'visible',
         }}
       >
         {children}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type SyntheticEvent } from 'react'
 
 import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
 import { useArtworkDimensions } from '@/hooks/useArtworkDimensions'
@@ -13,6 +13,7 @@ import {
 import { getSeriesColor } from '@/helpers/seriesColor'
 import type { ArtworkImageContext } from '@/lib/media/artworkR2Images'
 import type { Artwork } from '@/payload-types'
+import { normalizeOrientation } from '@/utilities/artworkSizeDisplay'
 
 interface ArtworkImageProps {
   artwork: Artwork
@@ -35,7 +36,9 @@ export default function ArtworkImage({
   onLoad,
 }: ArtworkImageProps) {
   const imagePair = getArtworkImagePair(artwork, imageContext)
-  const { width, height } = getPrimaryMediaDimensions(artwork)
+  const inferred = getPrimaryMediaDimensions(artwork)
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
+  const { width, height } = naturalSize ?? inferred
   const sizeTier = getSizeTier(artwork)
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
   const seriesColor = getSeriesColor(seriesSlug)
@@ -48,7 +51,21 @@ export default function ArtworkImage({
     imageWidth: width,
     imageHeight: height,
     useImageFactors,
+    orientation: normalizeOrientation(artwork.orientation),
   })
+
+  const handleLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      setNaturalSize((prev) => {
+        if (prev && prev.width === img.naturalWidth && prev.height === img.naturalHeight) {
+          return prev
+        }
+        return { width: img.naturalWidth, height: img.naturalHeight }
+      })
+    }
+    onLoad?.()
+  }
 
   if (!imagePair) {
     return (
@@ -85,7 +102,7 @@ export default function ArtworkImage({
         loading={priority ? 'eager' : 'lazy'}
         decoding="async"
         fetchPriority={priority ? 'high' : 'auto'}
-        onLoad={onLoad}
+        onLoad={handleLoad}
         onError={() => setFailed(true)}
         style={{ opacity: failed ? 0 : 1 }}
       />

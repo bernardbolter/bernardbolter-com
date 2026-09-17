@@ -93,9 +93,11 @@ export interface Config {
     events: Event;
     'image-capture-technologies': ImageCaptureTechnology;
     artworks: Artwork;
+    'ach-neighborhood-sources': AchNeighborhoodSource;
     'dcs-capture-photos': DcsCapturePhoto;
     triptychs: Triptych;
     'small-prints': SmallPrint;
+    'webhook-events': WebhookEvent;
     sessions: Session;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -136,9 +138,11 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     'image-capture-technologies': ImageCaptureTechnologiesSelect<false> | ImageCaptureTechnologiesSelect<true>;
     artworks: ArtworksSelect<false> | ArtworksSelect<true>;
+    'ach-neighborhood-sources': AchNeighborhoodSourcesSelect<false> | AchNeighborhoodSourcesSelect<true>;
     'dcs-capture-photos': DcsCapturePhotosSelect<false> | DcsCapturePhotosSelect<true>;
     triptychs: TriptychsSelect<false> | TriptychsSelect<true>;
     'small-prints': SmallPrintsSelect<false> | SmallPrintsSelect<true>;
+    'webhook-events': WebhookEventsSelect<false> | WebhookEventsSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -152,10 +156,12 @@ export interface Config {
   globals: {
     'print-set-config': PrintSetConfig;
     'art-official-settings': ArtOfficialSetting;
+    'neighborhood-commissions': NeighborhoodCommission;
   };
   globalsSelect: {
     'print-set-config': PrintSetConfigSelect<false> | PrintSetConfigSelect<true>;
     'art-official-settings': ArtOfficialSettingsSelect<false> | ArtOfficialSettingsSelect<true>;
+    'neighborhood-commissions': NeighborhoodCommissionsSelect<false> | NeighborhoodCommissionsSelect<true>;
   };
   locale: 'en' | 'de';
   widgets: {
@@ -2629,6 +2635,35 @@ export interface Artwork {
        */
       fieldRecordingCredit?: string | null;
     };
+    /**
+     * Tier 2 flags for acolorfulhistory.com/neighborhood — revisited subjects and proof roles. Spec: docs/ach/neighborhood-commissions-payload-schema.md
+     */
+    neighborhoodCommission?: {
+      /**
+       * Include this work in the Neighborhood Commissions Tier 2 (revisited subjects) list.
+       */
+      revisitedSubjectAvailable?: boolean | null;
+      /**
+       * City slug for future /neighborhood/[city] filtering.
+       */
+      city?: 'san-francisco' | null;
+      /**
+       * Trust/proof roles this work carries on the commissions page.
+       */
+      proofRoles?: ('designer-home' | 'artspan-juried' | 'auction-resale' | 'follow-on-commission')[] | null;
+      /**
+       * e.g. designer commission line when no install photo is available.
+       */
+      proofNote?: string | null;
+      /**
+       * Earlier painting of the same historical subject, if catalogued.
+       */
+      priorSubjectArtwork?: (number | null) | Artwork;
+      /**
+       * Source inventory row if this subject was listed in Tier 1 first.
+       */
+      neighborhoodSource?: (number | null) | AchNeighborhoodSource;
+    };
     revealSlider?: {
       /**
        * Canvas after photo transfer, before painted fields. Must match the crop and framing of primaryImage exactly.
@@ -2746,7 +2781,7 @@ export interface Artwork {
       } | null;
     };
     /**
-     * Visible only when the artwork is in the Mediums of Perception or Mediums of War series.
+     * Visible when the artwork is in Mediums of Perception (including nested Mediums of War panels) or still tagged to the legacy Mediums of War series.
      */
     mop?: {
       /**
@@ -4349,6 +4384,10 @@ export interface Triptych {
   series: number | Series;
   status: 'draft' | 'published' | 'archived';
   /**
+   * False for Mediums of War — not in primary nav, reached via Mediums of Perception only. True for city triptychs (Berlin, Munich, etc.).
+   */
+  discoverable?: boolean | null;
+  /**
    * Four-digit year the triptych was begun.
    */
   yearStart?: number | null;
@@ -4525,6 +4564,101 @@ export interface ImageCaptureTechnology {
    * Wikipedia article URL. Localized — EN and DE link to their respective language editions.
    */
   wikipediaUrl?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Unpainted historical neighborhood photos for the Neighborhood Commissions Tier 1 browse grid (ACH).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ach-neighborhood-sources".
+ */
+export interface AchNeighborhoodSource {
+  id: number;
+  /**
+   * When on, visible to ACH / public API.
+   */
+  published?: boolean | null;
+  /**
+   * Inventory workflow: available → held → commissioned → painted.
+   */
+  status: 'available' | 'held' | 'commissioned' | 'painted';
+  /**
+   * Lower numbers appear first in the Tier 1 grid.
+   */
+  sortOrder?: number | null;
+  /**
+   * City slug for future /neighborhood/[city] filtering.
+   */
+  city: 'san-francisco';
+  /**
+   * District or neighbourhood label (e.g. Sunset, Mission).
+   */
+  neighborhood: string;
+  /**
+   * The historical photograph offered as commission source material.
+   */
+  sourceImage: number | Media;
+  /**
+   * Alt text for the source photograph.
+   */
+  sourceImageAltText?: string | null;
+  /**
+   * Title as known in the archive or catalogue.
+   */
+  sourceTitle?: string | null;
+  /**
+   * Photographer or institution if individual creator unknown.
+   */
+  sourceCreator?: string | null;
+  /**
+   * Wikidata entity for the photographer or institution.
+   */
+  sourceCreatorWikidataUri?: string | null;
+  /**
+   * Human-readable date. e.g. c. 1861 or 1895–1900.
+   */
+  approximateDate?: string | null;
+  /**
+   * The technology used to make this source photograph.
+   */
+  imageCaptureType?: (number | null) | ImageCaptureTechnology;
+  /**
+   * Wikidata entity for this specific photograph, if one exists.
+   */
+  sourceWikidataUri?: string | null;
+  /**
+   * Full Wikimedia Commons file-page URL.
+   */
+  sourceWikimediaCommonsUrl?: string | null;
+  /**
+   * Archive, museum, or library holding the original.
+   */
+  sourceInstitution?: string | null;
+  /**
+   * Wikidata entity for the holding institution.
+   */
+  sourceInstitutionWikidataUri?: string | null;
+  /**
+   * Direct URL to the institution catalogue record, if one exists.
+   */
+  sourceInstitutionUrl?: string | null;
+  /**
+   * License under which the source photograph is used.
+   */
+  sourceLicense?: ('cc0' | 'cc-by' | 'cc-by-sa' | 'public-domain' | 'other') | null;
+  /**
+   * URL to the specific license.
+   */
+  sourceLicenseUrl?: string | null;
+  /**
+   * Attribution string for display (creator, title, date, institution, license).
+   */
+  sourceCredit?: string | null;
+  /**
+   * Set when a commission from this source is completed and catalogued.
+   */
+  resultingArtwork?: (number | null) | Artwork;
   updatedAt: string;
   createdAt: string;
 }
@@ -4770,6 +4904,65 @@ export interface SmallPrint {
   createdAt: string;
 }
 /**
+ * Inbound Vendure sale webhooks. Unique on orderCode so retries never double-apply counts.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "webhook-events".
+ */
+export interface WebhookEvent {
+  id: number;
+  /**
+   * Vendure order code — idempotency key.
+   */
+  orderCode: string;
+  orderId: string;
+  channel?: string | null;
+  occurredAt?: string | null;
+  receivedAt: string;
+  /**
+   * Full webhook JSON as received, for audit and later backfill.
+   */
+  rawPayload:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Per-line selectionIds from the webhook (null on lines with no selection).
+   */
+  selectionIds?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Per-line selectionSnapshot from the webhook. SmallPrints counting is not applied yet.
+   */
+  selectionSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * False until selection-based SmallPrints counts can be applied. Print available counts are applied on insert regardless.
+   */
+  processed?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -4898,6 +5091,10 @@ export interface PayloadLockedDocument {
         value: number | Artwork;
       } | null)
     | ({
+        relationTo: 'ach-neighborhood-sources';
+        value: number | AchNeighborhoodSource;
+      } | null)
+    | ({
         relationTo: 'dcs-capture-photos';
         value: number | DcsCapturePhoto;
       } | null)
@@ -4908,6 +5105,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'small-prints';
         value: number | SmallPrint;
+      } | null)
+    | ({
+        relationTo: 'webhook-events';
+        value: number | WebhookEvent;
       } | null)
     | ({
         relationTo: 'sessions';
@@ -6407,6 +6608,16 @@ export interface ArtworksSelect<T extends boolean = true> {
               fieldRecordingUrl?: T;
               fieldRecordingCredit?: T;
             };
+        neighborhoodCommission?:
+          | T
+          | {
+              revisitedSubjectAvailable?: T;
+              city?: T;
+              proofRoles?: T;
+              proofNote?: T;
+              priorSubjectArtwork?: T;
+              neighborhoodSource?: T;
+            };
         revealSlider?:
           | T
           | {
@@ -6829,6 +7040,35 @@ export interface ArtworksSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ach-neighborhood-sources_select".
+ */
+export interface AchNeighborhoodSourcesSelect<T extends boolean = true> {
+  published?: T;
+  status?: T;
+  sortOrder?: T;
+  city?: T;
+  neighborhood?: T;
+  sourceImage?: T;
+  sourceImageAltText?: T;
+  sourceTitle?: T;
+  sourceCreator?: T;
+  sourceCreatorWikidataUri?: T;
+  approximateDate?: T;
+  imageCaptureType?: T;
+  sourceWikidataUri?: T;
+  sourceWikimediaCommonsUrl?: T;
+  sourceInstitution?: T;
+  sourceInstitutionWikidataUri?: T;
+  sourceInstitutionUrl?: T;
+  sourceLicense?: T;
+  sourceLicenseUrl?: T;
+  sourceCredit?: T;
+  resultingArtwork?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "dcs-capture-photos_select".
  */
 export interface DcsCapturePhotosSelect<T extends boolean = true> {
@@ -6859,6 +7099,7 @@ export interface TriptychsSelect<T extends boolean = true> {
   slug?: T;
   series?: T;
   status?: T;
+  discoverable?: T;
   yearStart?: T;
   yearCompleted?: T;
   city?: T;
@@ -6908,6 +7149,23 @@ export interface TriptychsSelect<T extends boolean = true> {
 export interface SmallPrintsSelect<T extends boolean = true> {
   artwork?: T;
   available?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "webhook-events_select".
+ */
+export interface WebhookEventsSelect<T extends boolean = true> {
+  orderCode?: T;
+  orderId?: T;
+  channel?: T;
+  occurredAt?: T;
+  receivedAt?: T;
+  rawPayload?: T;
+  selectionIds?: T;
+  selectionSnapshot?: T;
+  processed?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -7152,6 +7410,102 @@ export interface ArtOfficialSetting {
   createdAt?: string | null;
 }
 /**
+ * Page pitch, founding-batch pricing, and proof links for acolorfulhistory.com/neighborhood.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "neighborhood-commissions".
+ */
+export interface NeighborhoodCommission {
+  id: number;
+  /**
+   * When off, ACH should hide or soft-close the offering.
+   */
+  active?: boolean | null;
+  /**
+   * Primary city for this offering. Filter key for future multi-city pages.
+   */
+  city: 'san-francisco';
+  /**
+   * Total founding commissions.
+   */
+  foundingBatchSize: number;
+  /**
+   * Direct / newsletter founding price (USD).
+   */
+  foundingBatchPriceUsd: number;
+  /**
+   * Display size label.
+   */
+  foundingBatchSizeLabel: string;
+  /**
+   * Artist-maintained remaining founding slots.
+   */
+  foundingSlotsRemaining: number;
+  /**
+   * Public framing — e.g. “Founding collectors — first five commissions of the series, priced to start it.”
+   */
+  foundingBatchFraming?: string | null;
+  /**
+   * Nav label / page title.
+   */
+  pageTitle?: string | null;
+  /**
+   * Series framing above the title.
+   */
+  eyebrow?: string | null;
+  /**
+   * Core pitch — native SF, Berlin-based, shed studio, hand delivery, Artism archive.
+   */
+  pitch?: string | null;
+  /**
+   * Honest differentiator — Berlin experimental work; SF is home / staying connected.
+   */
+  berlinFrame?: string | null;
+  /**
+   * Trust copy — long practice finally showing its work via the structured archive.
+   */
+  archiveCredibility?: string | null;
+  /**
+   * Intro for browse unpainted historical photos.
+   */
+  tier1Intro?: string | null;
+  /**
+   * Intro for revisited subjects — photo has history, each new painting is unique.
+   */
+  tier2Intro?: string | null;
+  /**
+   * Intro for fully custom research tier.
+   */
+  tier3Intro?: string | null;
+  /**
+   * Piece A without install photo — e.g. commissioned via an SF interior designer.
+   */
+  designerCommissionNote?: string | null;
+  /**
+   * ArtSpan Selections 2017 / Heron Arts — Piece B proof deep link (do not re-narrate on ACH).
+   */
+  artspanEvent?: (number | null) | Event;
+  /**
+   * Staff only — designer/agent rates and post-founding expectations. Not shown on ACH.
+   */
+  privatePricingNotes?: {
+    /**
+     * e.g. $2,500–$3,000+ for designer/agent-referred commissions.
+     */
+    designerAgentPriceRange?: string | null;
+    /**
+     * e.g. expected $2,500–$4,000+ direct after founding batch.
+     */
+    postFoundingDirectRange?: string | null;
+    /**
+     * Internal reasoning — do not publish apologetic or hedging language.
+     */
+    internalNote?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "print-set-config_select".
  */
@@ -7191,6 +7545,39 @@ export interface ArtOfficialSettingsSelect<T extends boolean = true> {
         value?: T;
         label?: T;
         id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "neighborhood-commissions_select".
+ */
+export interface NeighborhoodCommissionsSelect<T extends boolean = true> {
+  active?: T;
+  city?: T;
+  foundingBatchSize?: T;
+  foundingBatchPriceUsd?: T;
+  foundingBatchSizeLabel?: T;
+  foundingSlotsRemaining?: T;
+  foundingBatchFraming?: T;
+  pageTitle?: T;
+  eyebrow?: T;
+  pitch?: T;
+  berlinFrame?: T;
+  archiveCredibility?: T;
+  tier1Intro?: T;
+  tier2Intro?: T;
+  tier3Intro?: T;
+  designerCommissionNote?: T;
+  artspanEvent?: T;
+  privatePricingNotes?:
+    | T
+    | {
+        designerAgentPriceRange?: T;
+        postFoundingDirectRange?: T;
+        internalNote?: T;
       };
   updatedAt?: T;
   createdAt?: T;

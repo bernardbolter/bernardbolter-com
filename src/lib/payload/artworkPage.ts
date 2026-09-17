@@ -17,6 +17,10 @@ const defaultLocale = 'en' as const
 export const ARTWORK_PAGE_DEPTH = 2
 
 export async function getPublishedArtworkSlugs(): Promise<string[]> {
+  // Dev: compiling `/[slug]` otherwise pages every published slug over SSH
+  // and starves the homepage pool (60s connect timeout × retries).
+  if (process.env.NODE_ENV === 'development') return []
+
   const payload = await getPayload({ config })
   const slugs: string[] = []
   let page = 1

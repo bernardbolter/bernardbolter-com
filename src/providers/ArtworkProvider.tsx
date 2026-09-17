@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
   createContext,
   useContext,
   type Dispatch,
@@ -13,14 +14,14 @@ import {
 
 import { artworkHasDisplayImage, resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { generateTimeline, getArtworkSortKey } from '@/helpers/timeline'
+import { computeArchiveMedianAreaMm2 } from '@/lib/artwork/archiveMedianArea'
+import { buildSeriesSlugByArtworkSlug } from '@/lib/artwork/seriesSlugMap'
 import { useArtworkChrome, type ArtworkChromeState } from '@/providers/ArtworkChromeProvider'
 import {
-  EMPTY_TIMELINE_MARKERS,
   type ArtworksContextType,
   type ArtworksState,
   type CatalogueArtwork,
   type FilterCategory,
-  type TimelineMarkersData,
 } from '@/types/frontend'
 
 type CollectionSlice = {
@@ -29,9 +30,9 @@ type CollectionSlice = {
   filtered: CatalogueArtwork[]
   formattedArtworks: ArtworksState['formattedArtworks']
   searchMatches: Record<string, string[]>
-  timelineMarkers: TimelineMarkersData
   totalCount: number
   withImagesCount: number
+  catalogueLoading: boolean
 }
 
 const EMPTY_COLLECTION: CollectionSlice = {
@@ -40,9 +41,9 @@ const EMPTY_COLLECTION: CollectionSlice = {
   filtered: [],
   formattedArtworks: null,
   searchMatches: {},
-  timelineMarkers: EMPTY_TIMELINE_MARKERS,
   totalCount: 0,
   withImagesCount: 0,
+  catalogueLoading: false,
 }
 
 const CollectionContext = createContext<CollectionSlice>(EMPTY_COLLECTION)
@@ -83,9 +84,9 @@ function mergeState(chrome: ArtworkChromeState, collection: CollectionSlice): Ar
     filtered: collection.filtered,
     formattedArtworks: collection.formattedArtworks,
     searchMatches: collection.searchMatches,
-    timelineMarkers: collection.timelineMarkers,
     totalCount: collection.totalCount,
     withImagesCount: collection.withImagesCount,
+    catalogueLoading: collection.catalogueLoading,
     cvData: [],
     bioData: null,
     statementData: null,
@@ -113,10 +114,11 @@ function pickChromeUpdates(
 interface CollectionArtworksProviderProps {
   children: ReactNode
   artworks: CatalogueArtwork[]
-  timelineMarkers: TimelineMarkersData
   filterSeries: FilterCategory[]
   /** Series pages pass `[slug]` so SSR filter chips match the scoped catalogue. */
   initialFiltersArray?: string[]
+  /** Skip blocking RSC and load `/api/catalogue` in the browser (local SSH). */
+  deferCatalogue?: boolean
 }
 
 /**
@@ -126,12 +128,58 @@ interface CollectionArtworksProviderProps {
 export function CollectionArtworksProvider({
   children,
   artworks,
-  timelineMarkers,
   filterSeries,
   initialFiltersArray,
+  deferCatalogue = false,
 }: CollectionArtworksProviderProps) {
   const { chrome, setChrome } = useArtworkChrome()
   const didInitFilters = useRef(false)
+  const [fetched, setFetched] = useState<{
+    artworks: CatalogueArtwork[]
+    filterSeries: FilterCategory[]
+  } | null>(null)
+  const [catalogueLoading, setCatalogueLoading] = useState(deferCatalogue)
+
+  useEffect(() => {
+    if (!deferCatalogue) {
+      setCatalogueLoading(false)
+      return
+    }
+
+    let cancelled = false
+    const controller = new AbortController()
+    const abortTimer = window.setTimeout(() => controller.abort(), 20_000)
+    setCatalogueLoading(true)
+
+    fetch('/api/catalogue', { signal: controller.signal, cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`catalogue ${response.status}`)
+        }
+        return response.json() as Promise<{
+          artworks: CatalogueArtwork[]
+          filterSeries: FilterCategory[]
+        }>
+      })
+      .then((data) => {
+        if (cancelled) return
+        setFetched(data)
+        setCatalogueLoading(false)
+      })
+      .catch((err) => {
+        console.error('[catalogue] client fetch failed', err)
+        if (!cancelled) setCatalogueLoading(false)
+      })
+      .finally(() => {
+        window.clearTimeout(abortTimer)
+      })
+
+    return () => {
+      cancelled = true
+      controller.abort()
+      window.clearTimeout(abortTimer)
+    }
+  }, [deferCatalogue])
 
   useEffect(() => {
     if (!initialFiltersArray || didInitFilters.current) return
@@ -145,11 +193,30 @@ export function CollectionArtworksProvider({
     }))
   }, [initialFiltersArray, setChrome])
 
-  const catalogue = artworks ?? []
+  const catalogue = (deferCatalogue ? fetched?.artworks : artworks) ?? []
+  const resolvedFilterSeries = (deferCatalogue ? fetched?.filterSeries : filterSeries) ?? []
   const artworksWithImages = useMemo(
     () => catalogue.filter((artwork) => artworkHasDisplayImage(artwork)),
     [catalogue],
   )
+
+  const seriesSlugByArtworkSlug = useMemo(
+    () => buildSeriesSlugByArtworkSlug(catalogue),
+    [catalogue],
+  )
+  const archiveMedianAreaMm2 = useMemo(
+    () => computeArchiveMedianAreaMm2(catalogue),
+    [catalogue],
+  )
+
+  useEffect(() => {
+    if (catalogue.length === 0) return
+    setChrome((prev) => ({
+      ...prev,
+      seriesSlugByArtworkSlug,
+      archiveMedianAreaMm2,
+    }))
+  }, [archiveMedianAreaMm2, catalogue.length, seriesSlugByArtworkSlug, setChrome])
 
   const filteredAndSorted = useMemo(() => {
     let result = artworksWithImages
@@ -282,22 +349,22 @@ export function CollectionArtworksProvider({
 
   const collection = useMemo<CollectionSlice>(
     () => ({
-      filterSeries,
+      filterSeries: resolvedFilterSeries,
       original: artworksWithImages,
       filtered: filteredAndSorted.filtered,
       formattedArtworks,
       searchMatches: filteredAndSorted.searchMatches,
-      timelineMarkers: timelineMarkers ?? EMPTY_TIMELINE_MARKERS,
       totalCount: catalogue.length,
       withImagesCount: artworksWithImages.length,
+      catalogueLoading,
     }),
     [
-      filterSeries,
+      resolvedFilterSeries,
       artworksWithImages,
       filteredAndSorted,
       formattedArtworks,
-      timelineMarkers,
       catalogue.length,
+      catalogueLoading,
     ],
   )
 

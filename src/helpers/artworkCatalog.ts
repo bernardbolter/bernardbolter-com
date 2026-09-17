@@ -6,6 +6,7 @@ import {
   type ArtworkImageContext,
 } from '@/lib/media/artworkR2Images'
 import type { ArtworkSizeTier } from '@/types/frontend'
+import { normalizeOrientation } from '@/utilities/artworkSizeDisplay'
 
 const DEFAULT_SIZE_TIER: ArtworkSizeTier = 'lg'
 
@@ -53,7 +54,17 @@ export function getSizeTier(artwork: Pick<Artwork, 'sizeTier'>): ArtworkSizeTier
 }
 
 export function getPrimaryMediaDimensions(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'widthPx' | 'heightPx'>,
+  artwork: Pick<
+    Artwork,
+    | 'primaryImage'
+    | 'posterImage'
+    | 'widthPx'
+    | 'heightPx'
+    | 'widthMm'
+    | 'heightMm'
+    | 'aspectRatio'
+    | 'orientation'
+  >,
 ): { width: number; height: number } {
   const fromMedia = readMediaDimensions(artwork.primaryImage) ?? readMediaDimensions(artwork.posterImage)
   if (fromMedia) return fromMedia
@@ -63,6 +74,21 @@ export function getPrimaryMediaDimensions(
   if (widthPx > 0 && heightPx > 0) {
     return { width: widthPx, height: heightPx }
   }
+
+  const widthMm = artwork.widthMm ?? 0
+  const heightMm = artwork.heightMm ?? 0
+  if (widthMm > 0 && heightMm > 0) {
+    return { width: widthMm, height: heightMm }
+  }
+
+  const ratio = artwork.aspectRatio
+  if (typeof ratio === 'number' && Number.isFinite(ratio) && ratio > 0) {
+    return { width: Math.max(Math.round(ratio * 1000), 1), height: 1000 }
+  }
+
+  const orientation = normalizeOrientation(artwork.orientation)
+  if (orientation === 'landscape') return { width: 4, height: 3 }
+  if (orientation === 'portrait') return { width: 3, height: 4 }
 
   return { width: 1, height: 1 }
 }

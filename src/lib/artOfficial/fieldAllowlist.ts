@@ -158,7 +158,7 @@ export function isFieldAllowedForAgent(collection: string, field: string): boole
     return isPracticeKnowledgeSlug(field)
   }
 
-  if (collection === 'small-prints') {
+  if (collection === 'small-prints' || collection === 'webhook-events') {
     return false
   }
 
