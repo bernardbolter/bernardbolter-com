@@ -333,6 +333,22 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 11 — Frontend `force-dynamic` made public HTML uncacheable (2026-09-17)
+
+**What it was.** `src/app/(frontend)/layout.tsx` set `export const dynamic = 'force-dynamic'`. Next emits `Cache-Control: private, no-cache, no-store` for every route under that layout: `/`, `/{slug}`, `/{slug}/record`, `/{slug}/vision`, `/series/*`. Cloudflare cannot cache `no-store`. Origin re-rendered every hit.
+
+**When it was introduced.** 2026-07-11, commit `39a3c240` (“Allow Vercel builds when Neon is unavailable.”). The layout still called `getLayoutProviderData()` at that time; `force-dynamic` skipped those build-time DB calls in CI. The layout later stopped querying Payload (null artist / empty chrome). The directive stayed.
+
+**What it broke.** Audit item 3.1 (steady-state TTFB 4–6s via CF, 3–4s at origin, all five hits slow) is this, not cold ISR. **The July/August page-weight pass (`page-weight-reduction-spec.md`, measured on `608bddf`) and the homepage-gateway measurement passes were both taken against an uncacheable origin.** Byte counts from those passes remain valid; TTFB / cacheability numbers from the same period do not describe ISR behaviour.
+
+**Fix (Deploy 1, 2026-09-17).** Remove layout `force-dynamic`, restore `revalidate = 3600`, no `generateStaticParams` (on-demand ISR, zero artwork prerender at build). `RouteStructuredData` called `headers()` and would have kept the tree dynamic; JSON-LD moved onto `/`, `/bio`, and `/{slug}`. Studio (`studio/(app)/layout.tsx`) and Payload admin keep their own `force-dynamic`. `/api/corpus/*` untouched.
+
+**Not this deploy.** Extending the Cloudflare Cache Rule (currently `/api/corpus` only) to HTML; origin render time on `/{slug}` (Deploy 2).
+
+**Known gap, not fixed here.** Artwork `afterChange` embeds CLIP on write when `CLIP_EMBEDDING_URL` is set. DINOv2 is backfill-only (`DINOV2_EMBEDDING_URL` exists; no write-path hook). DINOv2 coverage will drift silently the same way CLIP did when the sidecar was down.
+
+---
+
 ## What Cursor should check against this file
 
 1. **Field name/type parity** — for every field in Part 1, confirm the exact name and type match live Payload schema. Flag mismatches, don't silently rename.

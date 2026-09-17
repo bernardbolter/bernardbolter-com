@@ -8,7 +8,6 @@ import { getArtworks } from '@/lib/payload/artworks'
 import { getCollectionLayoutData } from '@/lib/payload/layoutData'
 import { getPerson } from '@/lib/payload/person'
 import { getSeriesBySlug } from '@/lib/payload/seriesPage'
-import { getPublishedSeriesSlugs } from '@/lib/payload/staticParams'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { corpusAlternateTypes, corpusIndexUrl } from '@/lib/seo/corpusDiscovery'
 import { CollectionArtworksProvider } from '@/providers/ArtworkProvider'
@@ -17,15 +16,6 @@ import { generateSeriesJsonLd } from '@/utilities/generateSeriesJsonLd'
 export const revalidate = 3600
 
 type Props = { params: Promise<{ slug: string }> }
-
-export async function generateStaticParams(): Promise<Array<{ slug: string }>> {
-  try {
-    const slugs = await getPublishedSeriesSlugs()
-    return slugs.map((slug) => ({ slug }))
-  } catch {
-    return []
-  }
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
