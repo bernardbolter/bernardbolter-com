@@ -60,13 +60,13 @@ export default {
         'series-ach': '#9DC3C2',
         'series-col': '#99C2A2',
         'series-dcs': '#F6BD60',
-        'series-meg': '#FC7753',
+        'series-meg': '#E8453C',
         'series-war': '#6D2E46',
         'series-van': '#7B8CDE',
         'series-og': '#395B0E',
         'series-ins': '#A27E8E',
         'series-pho': '#2D4654',
-        'series-vid': '#996a3e',
+        'series-vid': '#8B5A2B',
         'series-sold': '#d4af37',
 
         // Legacy series keys (art-*)
@@ -74,14 +74,14 @@ export default {
           sold: '#d4af37',
           war: '#6D2E46',
           ach: '#9DC3C2',
-          meg: '#FC7753',
+          meg: '#E8453C',
           dcs: '#F6BD60',
           col: '#99C2A2',
           van: '#7B8CDE',
           og: '#395B0E',
           ins: '#A27E8E',
           pho: '#2D4654',
-          vid: '#996a3e',
+          vid: '#8B5A2B',
         },
 
         nav: {

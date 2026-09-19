@@ -6,6 +6,7 @@ import {
   SortSvg,
 } from '@/components/icons'
 import { sortValues } from '@/data/sortValues'
+import { AVAILABLE_STATUS_COLOR } from '@/helpers/seriesColor'
 import { getFilterDrawerTop } from '@/helpers/navLayout'
 import useWindowSize from '@/hooks/useWindowSize'
 import { useArtworks } from '@/providers/ArtworkProvider'
@@ -90,7 +91,7 @@ export default function FilterNav() {
           <div
             className="filter-nav__box"
             style={{
-              backgroundColor: '#d4af37',
+              backgroundColor: AVAILABLE_STATUS_COLOR,
               borderRadius: state.isAvailableFilter ? '50%' : '',
             }}
           />

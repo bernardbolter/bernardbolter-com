@@ -32,6 +32,7 @@ type CollectionSlice = {
   timelineMarkers: TimelineMarkersData
   totalCount: number
   withImagesCount: number
+  cataloguedCount: number
 }
 
 const EMPTY_COLLECTION: CollectionSlice = {
@@ -43,6 +44,7 @@ const EMPTY_COLLECTION: CollectionSlice = {
   timelineMarkers: EMPTY_TIMELINE_MARKERS,
   totalCount: 0,
   withImagesCount: 0,
+  cataloguedCount: 0,
 }
 
 const CollectionContext = createContext<CollectionSlice>(EMPTY_COLLECTION)
@@ -86,6 +88,7 @@ function mergeState(chrome: ArtworkChromeState, collection: CollectionSlice): Ar
     timelineMarkers: collection.timelineMarkers,
     totalCount: collection.totalCount,
     withImagesCount: collection.withImagesCount,
+    cataloguedCount: collection.cataloguedCount,
     cvData: [],
     bioData: null,
     statementData: null,
@@ -117,6 +120,8 @@ interface CollectionArtworksProviderProps {
   filterSeries: FilterCategory[]
   /** Series pages pass `[slug]` so SSR filter chips match the scoped catalogue. */
   initialFiltersArray?: string[]
+  /** Homepage coverage line. Omit on series pages. */
+  cataloguedCount?: number
 }
 
 /**
@@ -129,6 +134,7 @@ export function CollectionArtworksProvider({
   timelineMarkers,
   filterSeries,
   initialFiltersArray,
+  cataloguedCount = 0,
 }: CollectionArtworksProviderProps) {
   const { chrome, setChrome } = useArtworkChrome()
   const didInitFilters = useRef(false)
@@ -290,6 +296,7 @@ export function CollectionArtworksProvider({
       timelineMarkers: timelineMarkers ?? EMPTY_TIMELINE_MARKERS,
       totalCount: catalogue.length,
       withImagesCount: artworksWithImages.length,
+      cataloguedCount,
     }),
     [
       filterSeries,
@@ -298,6 +305,7 @@ export function CollectionArtworksProvider({
       formattedArtworks,
       timelineMarkers,
       catalogue.length,
+      cataloguedCount,
     ],
   )
 

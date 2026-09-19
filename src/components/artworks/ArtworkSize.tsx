@@ -1,44 +1,9 @@
 'use client'
 
-import type { Artwork } from '@/payload-types'
 import { convertSizeForDisplay } from '@/helpers/convertUnits'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
-function formatImperialDimension(whole?: number | null, fraction?: string | null): string {
-  if (whole == null) return '0'
-  const trimmedFraction = fraction?.trim()
-  return trimmedFraction ? `${whole} ${trimmedFraction}` : String(whole)
-}
-
-export function getArtworkSizeInput(artwork: Artwork): { width: string; height: string; units: string } | null {
-  if (artwork.measurementType?.includes('digital') && artwork.widthPx && artwork.heightPx) {
-    return {
-      width: String(artwork.widthPx),
-      height: String(artwork.heightPx),
-      units: 'pixels',
-    }
-  }
-
-  if (!artwork.measurementType?.includes('physical')) return null
-
-  if (artwork.dimensionUnit === 'in' && artwork.widthWhole != null && artwork.heightWhole != null) {
-    return {
-      width: formatImperialDimension(artwork.widthWhole, artwork.widthFraction),
-      height: formatImperialDimension(artwork.heightWhole, artwork.heightFraction),
-      units: 'imperial',
-    }
-  }
-
-  if (artwork.widthMm && artwork.heightMm) {
-    return {
-      width: String(artwork.widthMm / 10),
-      height: String(artwork.heightMm / 10),
-      units: 'metric',
-    }
-  }
-
-  return null
-}
+export { getArtworkSizeInput } from '@/lib/artwork/catalogueIdentity'
 
 function FractionInches({
   whole,

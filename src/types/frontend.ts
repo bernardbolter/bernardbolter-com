@@ -119,6 +119,8 @@ export interface ArtworksState {
   savedTimelineFiltersHash: string
   totalCount: number
   withImagesCount: number
+  /** Published works with reasoningStatus complete. Homepage coverage line. */
+  cataloguedCount: number
   /** Practice-wide grid scale anchor (mm²). */
   archiveMedianAreaMm2: number
 }
@@ -194,6 +196,7 @@ export function createInitialArtworksState(
     savedTimelineFiltersHash: '',
     totalCount: artworks.length,
     withImagesCount: artworks.length,
+    cataloguedCount: 0,
     archiveMedianAreaMm2: options.archiveMedianAreaMm2 ?? 0,
   }
 }

@@ -13,18 +13,16 @@ import { buildHomeJsonLd } from '@/utilities/buildHomeJsonLd'
 
 const baseUrl = getSiteBaseUrl().replace(/\/$/, '')
 
+const homeTitle = 'Bernard Bolter — artist archive'
 const homeDescription =
-  "Explore Bernard Bolter's cityscape artworks: a timeline of paintings, drawings, and mixed media from 1992 to present. Original art for sale and exhibitions."
-const homeOgDescription = 'Timeline of cityscape artworks by Bernard Bolter.'
-const homeTwitterDescription = 'Explore abstract artworks from 1980 to present.'
-const homeOgTitle = "Bernard Bolter's Art Portfolio"
+  'The artist archive of Bernard Bolter: a catalogue of paintings, drawings, and mixed media from 1992 to present, with identity, series, and coverage for every work.'
 
 export const revalidate = 3600
 
-/** Homepage keeps distinct document title vs OG title — do not collapse via buildPageMetadata. */
+/** Homepage title and description are archive framing — not a portfolio or shop. */
 export const metadata: Metadata = {
   title: {
-    absolute: "Bernard Bolter's Web Portal",
+    absolute: homeTitle,
   },
   description: homeDescription,
   alternates: {
@@ -32,20 +30,20 @@ export const metadata: Metadata = {
     ...corpusAlternateTypes(corpusIndexUrl()),
   },
   openGraph: {
-    title: homeOgTitle,
-    description: homeOgDescription,
+    title: homeTitle,
+    description: homeDescription,
     url: baseUrl,
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: homeOgTitle,
-    description: homeTwitterDescription,
+    title: homeTitle,
+    description: homeDescription,
   },
 }
 
 export default async function Page() {
-  const [{ artworks, filterSeries, timelineMarkers }, artist] = await Promise.all([
+  const [{ artworks, filterSeries, timelineMarkers, cataloguedCount }, artist] = await Promise.all([
     getCollectionLayoutData(),
     withDbUnavailableFallback(() => getPerson(), null),
   ])
@@ -56,6 +54,7 @@ export default async function Page() {
       artworks={artworks}
       filterSeries={filterSeries}
       timelineMarkers={timelineMarkers}
+      cataloguedCount={cataloguedCount}
     >
       <JsonLdScript data={jsonLd} />
       {/* Crawler-only entry — optically hidden, zero layout impact */}

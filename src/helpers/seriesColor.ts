@@ -1,17 +1,23 @@
 /** Series slug → hex (design-system.md §2). Prefer `getSeriesColor()` in components. */
 export const SERIES_COLOR_MAP: Record<string, string> = {
-  'a-colorful-history': '#9DC3C2',      // ach
-  'art-collision': '#99C2A2',           // col
-  'digital-city-series': '#F6BD60',     // dcs
-  'megacities': '#FC7753',              // meg
-  'breaking-down-art': '#6D2E46',       // bda — analytical / deconstruction
-  'vanishing-landscapes': '#7B8CDE',    // van
-  'og-oil-paintings': '#395B0E',        // og
-  'installations': '#A27E8E',           // ins
-  'photography': '#2D4654',             // pho
-  'videos': '#996a3e',                  // vid
-  'sold': '#d4af37',                    // sold (if needed)
-};
+  'a-colorful-history': '#9DC3C2', // ach
+  'art-collision': '#99C2A2', // col
+  'digital-city-series': '#F6BD60', // dcs
+  'megacities': '#E8453C', // meg — clear red, away from DCS orange
+  'breaking-down-art': '#6D2E46', // bda
+  'vanishing-landscapes': '#7B8CDE', // van
+  'og-oil-paintings': '#395B0E', // og
+  'installations': '#A27E8E', // ins
+  'photography': '#2D4654', // pho
+  'videos': '#8B5A2B', // vid — deepened, apart from performances terracotta
+  drawings: '#8A93A0', // graphite blue-grey
+  performances: '#C0714E', // terracotta
+  watercolors: '#9FC5D8', // washed blue
+  sold: '#d4af37', // available-status gold (not a series)
+}
+
+/** Availability filter swatch — status, not a series. Live gold, not the screenshot hex. */
+export const AVAILABLE_STATUS_COLOR = SERIES_COLOR_MAP.sold
 
 /**
  * Returns the color associated with a series slug

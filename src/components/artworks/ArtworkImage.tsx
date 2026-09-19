@@ -10,6 +10,7 @@ import {
   getSizeTier,
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
+import { resolveCatalogueImageAlt } from '@/lib/artwork/catalogueIdentity'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import type { ArtworkImageContext } from '@/lib/media/artworkR2Images'
 import type { Artwork } from '@/payload-types'
@@ -23,6 +24,8 @@ interface ArtworkImageProps {
   /** R2 derivative — grid/similar 400w, timeline/slideshow/artwork page 800w, vision 1200w. */
   imageContext?: ArtworkImageContext
   onLoad?: () => void
+  /** Overrides title-only alt. Catalogue homepage passes the identity label line. */
+  alt?: string
 }
 
 export default function ArtworkImage({
@@ -33,6 +36,7 @@ export default function ArtworkImage({
   priority = false,
   imageContext = 'artwork-page',
   onLoad,
+  alt,
 }: ArtworkImageProps) {
   const imagePair = getArtworkImagePair(artwork, imageContext)
   const { width, height } = getPrimaryMediaDimensions(artwork)
@@ -40,6 +44,7 @@ export default function ArtworkImage({
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
   const seriesColor = getSeriesColor(seriesSlug)
   const [failed, setFailed] = useState(false)
+  const imageAlt = alt ?? resolveCatalogueImageAlt(artwork)
 
   const { displayWidth, displayHeight } = useArtworkDimensions({
     artworkContainerWidth,
@@ -79,7 +84,7 @@ export default function ArtworkImage({
       <ArtworkR2Image
         src={imagePair.src}
         fallbackSrc={imagePair.fallback}
-        alt={artwork.title ?? 'Artwork'}
+        alt={imageAlt}
         draggable={false}
         className="h-full w-full object-contain"
         loading={priority ? 'eager' : 'lazy'}

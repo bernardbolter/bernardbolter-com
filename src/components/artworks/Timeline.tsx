@@ -14,6 +14,7 @@ import {
 } from 'react'
 
 import { LeftArrowSvg, RightArrowSvg } from '@/components/icons'
+import { useHomepageFlip } from '@/components/artworks/homepageFlip'
 import { useArtworks } from '@/providers/ArtworkProvider'
 
 import TimelineArtworkSlot from './TimelineArtworkSlot'
@@ -66,6 +67,7 @@ function buildArtworkAnchorMap(args: {
 export default function Timeline() {
   const router = useRouter()
   const [state, setState] = useArtworks()
+  const { setFlippedSlug } = useHomepageFlip()
   const timelineRef = useRef<HTMLDivElement>(null)
   const isProgramScroll = useRef(false)
   const pointerActive = useRef(false)
@@ -249,10 +251,17 @@ export default function Timeline() {
         document.removeEventListener('pointercancel', onEnd)
 
         if (!wasDrag) {
-          const link = (endEvent.target as HTMLElement).closest('a[data-timeline-artwork-link]')
-          const href = link?.getAttribute('href')
-          if (href) {
-            router.push(href)
+          const target = endEvent.target as HTMLElement
+          const flipSlug = target.closest('[data-timeline-artwork-flip]')?.getAttribute(
+            'data-timeline-artwork-flip',
+          )
+          if (flipSlug) {
+            setFlippedSlug((prev) => (prev === flipSlug ? null : flipSlug))
+          } else {
+            const href = target.closest('a[href]')?.getAttribute('href')
+            if (href) {
+              router.push(href)
+            }
           }
         }
 
@@ -265,12 +274,14 @@ export default function Timeline() {
       document.addEventListener('pointerup', onEnd)
       document.addEventListener('pointercancel', onEnd)
     },
-    [beginPointerTracking, endPointerTracking, movePointerTracking, router],
+    [beginPointerTracking, endPointerTracking, movePointerTracking, router, setFlippedSlug],
   )
 
-  const handleArtworkLinkClick = useCallback((event: MouseEvent<HTMLAnchorElement>) => {
-    // Navigation is handled on pointerup so drag vs tap is reliable.
-    event.preventDefault()
+  const handleCanvasClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
+    // Navigation and flip are handled on pointerup so drag vs tap is reliable.
+    if ((event.target as HTMLElement).closest('a[href]')) {
+      event.preventDefault()
+    }
   }, [])
 
   useEffect(() => {
@@ -348,40 +359,6 @@ export default function Timeline() {
       }),
     [isMobile, sideWidth, state.artworkContainerWidth, state.artworkContainerHeight, timeline.artworksArray],
   )
-
-  const bioMarkerLayout = useMemo(() => {
-    return timelineMarkers.bioEntries
-      .map((entry) => {
-        const linkedAnchor = entry.linkedArtworkIds
-          .map((artworkId) => artworkAnchors.get(artworkId))
-          .find(Boolean)
-        const yearDistance =
-          entry.year !== null && yearAnchorByYear.has(entry.year) ? yearAnchorByYear.get(entry.year)! : null
-
-        if (!linkedAnchor && yearDistance === null) return null
-
-        if (isMobile) {
-          const y = linkedAnchor?.y ?? halfHeight + (yearDistance ?? 0)
-          return {
-            id: entry.id,
-            href: entry.permalinkHref,
-            title: entry.text,
-            x: TIMELINE_AXIS_OFFSET + MOBILE_BIO_TRACK_OFFSET,
-            y,
-          }
-        }
-
-        const x = linkedAnchor?.x ?? sideWidth + (yearDistance ?? 0)
-        return {
-          id: entry.id,
-          href: entry.permalinkHref,
-          title: entry.text,
-          x,
-          y: TIMELINE_AXIS_OFFSET + BIO_TRACK_OFFSET,
-        }
-      })
-      .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
-  }, [artworkAnchors, halfHeight, isMobile, sideWidth, timelineMarkers.bioEntries, yearAnchorByYear])
 
   const historicalMarkerLayout = useMemo(() => {
     return timelineMarkers.historicalReadings
@@ -464,6 +441,7 @@ export default function Timeline() {
           paddingTop: isMobile ? (viewportHeight - state.artworkContainerHeight) / 2 : 0,
         }}
         onPointerDown={handleCanvasPointerDown}
+        onClick={handleCanvasClick}
       >
         <div
           className="artworks-timeline__artworks"
@@ -486,7 +464,6 @@ export default function Timeline() {
               marginBottom={artwork.marginBottom || 0}
               isLast={index === timeline.artworksArray.length - 1}
               isMobile={isMobile}
-              onLinkClick={handleArtworkLinkClick}
             />
           ))}
         </div>
@@ -515,28 +492,6 @@ export default function Timeline() {
               </g>
             ))}
           </svg>
-
-          {bioMarkerLayout.map((marker) =>
-            marker.href ? (
-              <Link
-                key={marker.id}
-                href={marker.href}
-                className="artworks-timeline__marker artworks-timeline__marker--bio"
-                style={{ left: `${marker.x}px`, top: `${marker.y}px` }}
-                aria-label={marker.title}
-                title={marker.title}
-              >
-                <span className="artwork-gateway-title">{marker.title}</span>
-              </Link>
-            ) : (
-              <span
-                key={marker.id}
-                className="artworks-timeline__marker artworks-timeline__marker--bio"
-                style={{ left: `${marker.x}px`, top: `${marker.y}px` }}
-                aria-hidden
-              />
-            ),
-          )}
 
           {historicalMarkerLayout.map((marker) => (
             <Link

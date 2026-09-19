@@ -37,11 +37,11 @@ const staatliches = Staatliches({
 
 export const metadata: Metadata = {
   title: {
-    default: "Bernard Bolter's Web Portal",
-    template: "%s | Bernard Bolter",
+    default: 'Bernard Bolter — artist archive',
+    template: '%s | Bernard Bolter',
   },
   description:
-    "Explore Bernard Bolter's cityscape artworks: a timeline of paintings, drawings, and mixed media from 1992 to present. Original art for sale and exhibitions.",
+    'The artist archive of Bernard Bolter: a catalogue of paintings, drawings, and mixed media from 1992 to present.',
   keywords: [
     'Bernard Bolter',
     'digital art',

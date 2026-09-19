@@ -23,6 +23,7 @@ export type LayoutProviderData = {
   filterSeries: FilterCategory[]
   seriesSlugByArtworkSlug: Record<string, string>
   archiveMedianAreaMm2: number
+  cataloguedCount: number
 }
 
 /** Lightweight root-layout payload — no catalogue rows for RSC. */
@@ -38,6 +39,7 @@ export type CollectionLayoutData = {
   artworks: LayoutProviderArtworks
   filterSeries: FilterCategory[]
   timelineMarkers: TimelineMarkersData
+  cataloguedCount: number
 }
 
 export const EMPTY_LAYOUT_PROVIDER_DATA: LayoutProviderData = {
@@ -48,6 +50,7 @@ export const EMPTY_LAYOUT_PROVIDER_DATA: LayoutProviderData = {
   filterSeries: [],
   seriesSlugByArtworkSlug: {},
   archiveMedianAreaMm2: TIER_FALLBACK_AREA_MM2.md,
+  cataloguedCount: 0,
 }
 
 export const EMPTY_ROOT_CHROME_DATA: RootChromeData = {
@@ -61,6 +64,7 @@ export const EMPTY_COLLECTION_LAYOUT_DATA: CollectionLayoutData = {
   artworks: [],
   filterSeries: [],
   timelineMarkers: EMPTY_LAYOUT_PROVIDER_DATA.timelineMarkers,
+  cataloguedCount: 0,
 }
 
 function relationId(value: unknown): number | null {
@@ -155,6 +159,13 @@ async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
       overrideAccess: false,
     })
     const filterSeries = await fetchFilterSeriesWithPayload(payload)
+    const catalogued = await payload.count({
+      collection: 'artworks',
+      where: {
+        and: [{ status: { equals: 'published' } }, { reasoningStatus: { equals: 'complete' } }],
+      },
+      overrideAccess: false,
+    })
 
     const person = artistResult.docs[0] ?? null
     const timelineMarkers = mapTimelineMarkers(person)
@@ -167,6 +178,7 @@ async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
       filterSeries,
       seriesSlugByArtworkSlug: buildSeriesSlugByArtworkSlug(artworks),
       archiveMedianAreaMm2: computeArchiveMedianAreaMm2(artworks),
+      cataloguedCount: catalogued.totalDocs,
     }
   })
 }
@@ -202,5 +214,6 @@ export const getCollectionLayoutData = cache(async (): Promise<CollectionLayoutD
     artworks: data.artworks,
     filterSeries: data.filterSeries,
     timelineMarkers: data.timelineMarkers,
+    cataloguedCount: data.cataloguedCount,
   }
 })

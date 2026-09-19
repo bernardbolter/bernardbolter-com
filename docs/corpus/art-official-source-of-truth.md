@@ -349,6 +349,34 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 12 — Homepage rebuild Phase A (2026-09-19)
+
+**Spec.** `docs/sept-revamp/homepage-rebuild-spec.md`, under `archive-model-revision-brief.md`. Phase A only (rendering). Phase B (select widen) and Phase C (grid grow/dim, ambient colour rules) not in this pass.
+
+**Decided, implemented.**
+- Identity fields (title, year, series name, medium, both-unit dimensions) live in each per-work block in the server-rendered HTML. Flip is a CSS state (`.is-flipped` / `rotateY`) over both faces from the first commit. `--verso-min-width: 320px` is the size-floor variable; slot width/height stay the physical container so timeline scroll geometry is unchanged.
+- Series name on Phase A comes from `filterSeries` (already on the client), not from widening `CATALOGUE_ARTWORK_SELECT`.
+- Alt text: `primaryImageAltText` → first vision sentence → identity label line (title, year, medium). Not title-only.
+- Homepage meta title/description recast as archive framing. Coverage line: `{n} artworks · {n} fully catalogued` (catalogued count is a `payload.count` on `reasoningStatus: complete`, not a per-row select widen).
+- Bio-entry paragraph-links removed from the homepage timeline marker layer. Throughline SVG connectors left in place — that removal is Phase 4 of the master brief, not homepage Phase A.
+- `drawings` / `performances` / `watercolors` added to `getSeriesColor`. Megacities `#E8453C`, videos `#8B5A2B`. Keep-row hexes are the live helper values, not the spec's screenshot estimates.
+
+**Deferred to Phase B (absence, not a sliced substitute).** Verso short description, throughline/bio-entry links, catalogue-status line (`Not yet catalogued` / `Catalogued …`). `descriptionShort`, `intent`, `primaryImageAltText`, and throughline attachment are not on the catalogue select.
+
+**Deferred to Phase C.** Grid tile grow-by-constant-factor + neighbour dim + fixed card. Grid tiles still link to `/{slug}`. Ambient: grid unfiltered stays whatever the plus-colour randomiser does today.
+
+**Spec vs live, flagged not rewritten.**
+- `docs/filters/right-nav-filter-fix-spec.md` still claims drawings/performances/watercolors already had `getSeriesColor` entries. They did not; they do now. That spec is stale.
+- `docs/designFiles/design-system.md` still lists megacities as `#FC7753`. Live helper is now `#E8453C`. Not propagated into the design-system doc in this pass.
+- Spec screenshot hexes for keep-rows (`#79C7C5` etc.) were eyeballed; live Sass/helper values were kept as the spec itself instructs.
+- `photography` is in the live helper and is not in the spec colour table. Left as `#2D4654`.
+- Available-status gold stays `#d4af37` (live), not the screenshot `#D9A521`. Filter panel already groups it above a divider; already closed on load.
+- `widthWhole` remains unselected on catalogue rows; homepage dimensions still fall through to mm as the spec noted.
+
+**Not this pass.** Phase B select widen. Phase C grid selection / ambient. `/record` recast. Session fold-in. Nightly corpus build.
+
+---
+
 ## What Cursor should check against this file
 
 1. **Field name/type parity** — for every field in Part 1, confirm the exact name and type match live Payload schema. Flag mismatches, don't silently rename.

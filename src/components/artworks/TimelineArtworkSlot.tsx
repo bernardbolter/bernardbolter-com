@@ -1,11 +1,14 @@
 'use client'
 
-import Link from 'next/link'
-import { useEffect, useRef, useState, type MouseEvent, type RefObject } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
+import ArtworkBlock from '@/components/artworks/ArtworkBlock'
 import ArtworkImage from '@/components/artworks/ArtworkImage'
+import { useHomepageFlip } from '@/components/artworks/homepageFlip'
 import { resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
+import { resolveCatalogueImageAlt } from '@/lib/artwork/catalogueIdentity'
+import { useArtworks } from '@/providers/ArtworkProvider'
 import type { TimelineArtwork } from '@/types/timlineTypes'
 
 /** Eager image load for the first row — matches max column count on xl screens. */
@@ -21,11 +24,10 @@ type TimelineArtworkSlotProps = {
   marginBottom: number
   isLast: boolean
   isMobile: boolean
-  onLinkClick: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
 /**
- * SSR / pre-hydration: always render real title + thumbnail (crawler identity).
+ * SSR / pre-hydration: always render real identity + thumbnail (crawler identity).
  * After hydration settles: IntersectionObserver may unmount off-screen images
  * to keep the live DOM lighter — without ever stubbing identity text.
  */
@@ -39,14 +41,16 @@ export default function TimelineArtworkSlot({
   marginBottom,
   isLast,
   isMobile,
-  onLinkClick,
 }: TimelineArtworkSlotProps) {
+  const [state] = useArtworks()
+  const { flippedSlug, setFlippedSlug } = useHomepageFlip()
   const slotRef = useRef<HTMLDivElement>(null)
   const [hasHydrated, setHasHydrated] = useState(false)
   /** Start true so SSR + hydration match (full content). */
   const [inView, setInView] = useState(true)
   const seriesColor = getSeriesColor(resolveSeriesSlug(artwork) ?? 'default')
-  const title = artwork.title?.trim() || artwork.slug
+  const slug = artwork.slug?.trim() || ''
+  const flipped = Boolean(slug && flippedSlug === slug)
 
   useEffect(() => {
     setHasHydrated(true)
@@ -82,40 +86,41 @@ export default function TimelineArtworkSlot({
       style={{
         marginRight: !isMobile && !isLast ? `${marginRight}px` : '0px',
         marginBottom: isMobile && !isLast ? `${marginBottom}px` : '0px',
+        width: `${artworkContainerWidth}px`,
+        height: `${artworkContainerHeight}px`,
         minWidth: `${artworkContainerWidth}px`,
         minHeight: `${artworkContainerHeight}px`,
       }}
     >
-      <Link
-        href={`/${artwork.slug}`}
-        data-timeline-artwork-link
-        className="relative flex h-full w-full cursor-pointer items-center justify-center"
-        draggable={false}
-        onDragStart={(event) => event.preventDefault()}
-        onClick={onLinkClick}
-      >
-        {/* Identity text for crawlers / no-JS — must not depend on image mount. */}
-        <span className="artwork-gateway-title">{title}</span>
-        {showImage ? (
-          <ArtworkImage
-            artwork={artwork}
-            artworkContainerWidth={artworkContainerWidth}
-            artworkContainerHeight={artworkContainerHeight}
-            imageContext="timeline"
-            priority={index < TIMELINE_INITIAL_LOAD_COUNT}
-          />
-        ) : (
-          <div
-            className="artwork-placeholder"
-            aria-hidden
-            style={{
-              width: artworkContainerWidth,
-              height: artworkContainerHeight,
-              backgroundColor: seriesColor,
-            }}
-          />
-        )}
-      </Link>
+      <ArtworkBlock
+        artwork={artwork}
+        filterSeries={state.filterSeries}
+        flipped={flipped}
+        onToggleFlip={() => setFlippedSlug(flipped ? null : slug)}
+        allowFootprintBreak={isMobile}
+        image={
+          showImage ? (
+            <ArtworkImage
+              artwork={artwork}
+              artworkContainerWidth={artworkContainerWidth}
+              artworkContainerHeight={artworkContainerHeight}
+              imageContext="timeline"
+              priority={index < TIMELINE_INITIAL_LOAD_COUNT}
+              alt={resolveCatalogueImageAlt(artwork)}
+            />
+          ) : (
+            <div
+              className="artwork-placeholder"
+              aria-hidden
+              style={{
+                width: artworkContainerWidth,
+                height: artworkContainerHeight,
+                backgroundColor: seriesColor,
+              }}
+            />
+          )
+        }
+      />
     </div>
   )
 }

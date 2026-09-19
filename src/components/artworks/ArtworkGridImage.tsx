@@ -11,8 +11,15 @@ import {
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
+import {
+  formatArtworkDimensionLines,
+  resolveCatalogueImageAlt,
+  resolveSeriesDisplay,
+} from '@/lib/artwork/catalogueIdentity'
+import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
 import { CELL_PAD, type GridItemLayout } from '@/lib/artwork/gridRealSize'
 import { getTranslateOffset } from '@/lib/artwork/gridTranslate'
+import { useArtworks } from '@/providers/ArtworkProvider'
 import type { CatalogueArtwork } from '@/types/frontend'
 
 interface ArtworkGridImageProps {
@@ -43,6 +50,7 @@ function isVideoArtwork(artwork: CatalogueArtwork): boolean {
 }
 
 export default function ArtworkGridImage({ layout, priority = false }: ArtworkGridImageProps) {
+  const [state] = useArtworks()
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [imageFailed, setImageFailed] = useState(false)
 
@@ -53,10 +61,16 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
   const { width: imageWidth, height: imageHeight } = getPrimaryMediaDimensions(artwork)
   const captionMaxWidth = columnWidth - (columnWidth - displayWidth) / 2
   const translate = getTranslateOffset(artwork.id)
+  const title = artwork.title?.trim() || artwork.slug
+  const recordHref = `/${artwork.slug}`
+  const year = artwork.yearCreated ? String(artwork.yearCreated) : ''
+  const medium = resolveMediumLabel(artwork)
+  const dimensions = formatArtworkDimensionLines(artwork)
+  const series = resolveSeriesDisplay(artwork, state.filterSeries)
+  const imageAlt = resolveCatalogueImageAlt(artwork)
 
   return (
-    <Link
-      href={`/${artwork.slug}`}
+    <article
       className="artwork-grid__image-container"
       style={{
         width: columnWidth,
@@ -76,12 +90,14 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
           } as React.CSSProperties
         }
       >
-        <div
+        <Link
+          href={recordHref}
           className="artwork-grid__image-frame"
           style={{
             position: 'relative',
             width: displayWidth,
             height: displayHeight,
+            display: 'block',
           }}
         >
           {isVideo ? <PlayButtonSvg /> : null}
@@ -104,7 +120,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
               className="artwork-grid__image"
               src={imagePair.src}
               fallbackSrc={imagePair.fallback}
-              alt={artwork.title ?? 'Artwork'}
+              alt={imageAlt}
               width={imageWidth}
               height={imageHeight}
               loading={priority ? 'eager' : 'lazy'}
@@ -135,16 +151,44 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
               <p>{isVideo ? 'video' : 'no image'}</p>
             </div>
           )}
-        </div>
+        </Link>
 
         <div className="artwork-grid__info">
-          <div
-            className="artwork-grid__info--series-box"
-            style={{ backgroundColor: getSeriesColor(seriesSlug) }}
-          />
-          <h3>{artwork.title}</h3>
+          {series ? (
+            <span
+              className="artwork-grid__info--series-box"
+              style={{ backgroundColor: series.color }}
+              aria-hidden
+            />
+          ) : (
+            <span
+              className="artwork-grid__info--series-box"
+              style={{ backgroundColor: getSeriesColor(seriesSlug) }}
+              aria-hidden
+            />
+          )}
+          <div className="artwork-grid__info-text">
+            <h3>
+              <Link href={recordHref}>{title}</Link>
+            </h3>
+            {year ? <p className="artwork-grid__year">{year}</p> : null}
+            {series ? (
+              <p className="artwork-grid__series">
+                <Link href={series.href}>{series.name}</Link>
+              </p>
+            ) : null}
+            {medium ? <p className="artwork-grid__medium">{medium}</p> : null}
+            {dimensions ? (
+              <p className="artwork-grid__dimensions">
+                {dimensions.primary}
+                {dimensions.secondary ? (
+                  <span className="artwork-grid__dimensions-converted"> {dimensions.secondary}</span>
+                ) : null}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
-    </Link>
+    </article>
   )
 }
