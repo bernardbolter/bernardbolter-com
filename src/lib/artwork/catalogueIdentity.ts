@@ -115,8 +115,10 @@ export function resolveSeriesDisplay(
   const slug = resolveSeriesSlug(artwork)
   if (!slug) return null
 
+  const fromRelation =
+    artwork.series && typeof artwork.series === 'object' ? artwork.series.name?.trim() : null
   const named = filterSeries.find((series) => series.slug === slug)?.name?.trim()
-  const name = named || slug.replaceAll('-', ' ')
+  const name = fromRelation || named || slug.replaceAll('-', ' ')
 
   return {
     slug,
@@ -124,6 +126,97 @@ export function resolveSeriesDisplay(
     href: `/series/${slug}`,
     color: getSeriesColor(slug),
   }
+}
+
+/** descriptionShort, else intent, else nothing. Never a sliced vision sentence. */
+export function resolveVersoDescription(
+  artwork: Pick<Artwork, 'descriptionShort' | 'intent'>,
+): string | null {
+  const short = artwork.descriptionShort?.replace(/\s+/g, ' ').trim()
+  if (short) return short
+  const intent = artwork.intent?.replace(/\s+/g, ' ').trim()
+  return intent || null
+}
+
+const SHORT_LABEL_MAX_WORDS = 6
+const SLUG_LABEL_MAX_CHARS = 48
+const SLUG_LABEL_MAX_TOKENS = 8
+
+function wordCount(value: string): number {
+  return value.split(/\s+/).filter(Boolean).length
+}
+
+function humanizeSlug(slug: string): string {
+  const trimmed = slug.trim()
+  if (!trimmed) return ''
+  const spaced = trimmed.replaceAll('-', ' ')
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
+}
+
+/**
+ * Card label for a throughline or bio entry.
+ * Short titles are not on the live schema yet (Phase 4 writing task).
+ * Use the full text only when it is already short; never slice a paragraph.
+ */
+export function resolveConnectorCardLabel(entry: {
+  text: string
+  slug?: string | null
+}): string | null {
+  const text = entry.text.replace(/\s+/g, ' ').trim()
+  if (text && wordCount(text) <= SHORT_LABEL_MAX_WORDS) return text
+
+  const slug = entry.slug?.trim()
+  if (
+    slug &&
+    slug.length <= SLUG_LABEL_MAX_CHARS &&
+    slug.split('-').filter(Boolean).length <= SLUG_LABEL_MAX_TOKENS
+  ) {
+    const label = humanizeSlug(slug)
+    return label || null
+  }
+
+  return null
+}
+
+export type VersoConnectorLink = {
+  href: string
+  label: string
+}
+
+export function resolveVersoConnectorLinks(
+  artworkId: number,
+  entries: Array<{
+    text: string
+    permalinkHref: string | null
+    linkedArtworkIds: number[]
+  }>,
+): VersoConnectorLink[] {
+  const links: VersoConnectorLink[] = []
+  for (const entry of entries) {
+    if (!entry.linkedArtworkIds.includes(artworkId)) continue
+    if (!entry.permalinkHref) continue
+    const slug = entry.permalinkHref.split('/').filter(Boolean).at(-1) ?? null
+    const label = resolveConnectorCardLabel({ text: entry.text, slug })
+    if (!label) continue
+    links.push({ href: entry.permalinkHref, label })
+  }
+  return links
+}
+
+function formatCataloguedMonthYear(date: Date): string {
+  return date.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
+}
+
+/** Public verso status from completed primary-artwork session dates. */
+export function formatCatalogueStatus(isoDates: string[]): string {
+  const dates = isoDates
+    .map((value) => new Date(value))
+    .filter((date) => !Number.isNaN(date.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime())
+
+  if (dates.length === 0) return 'Not yet catalogued'
+  if (dates.length === 1) return `Catalogued ${formatCataloguedMonthYear(dates[0]!)}`
+  return `Last catalogued ${formatCataloguedMonthYear(dates[dates.length - 1]!)}`
 }
 
 function firstVisionSentence(artwork: Pick<Artwork, 'visionAnalyses'>): string | null {

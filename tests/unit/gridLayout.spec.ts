@@ -8,6 +8,7 @@ import {
   getAvailableInteriorWidth,
   getDisplayDimensions,
   getGridItemContentHeight,
+  GRID_CAPTION_BLOCK_HEIGHT_PX,
   getMedianArea,
   getRealAreaMm2,
   getScaleFactor,
@@ -66,7 +67,7 @@ describe('gridRealSize', () => {
 
   it('includes cell padding in masonry content height', () => {
     const contentHeight = getGridItemContentHeight(100)
-    expect(contentHeight).toBe(100 + 2 * CELL_PAD + 26)
+    expect(contentHeight).toBe(100 + 2 * CELL_PAD + GRID_CAPTION_BLOCK_HEIGHT_PX)
   })
 
   it('renders landscape wider than portrait at identical real area', () => {

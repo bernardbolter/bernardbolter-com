@@ -9,6 +9,7 @@ const dirname = path.dirname(__filename)
 const nextConfig: NextConfig = {
   // Override for safe deploys: build to a staging dir, swap only on success (scripts/deploy-netcup.sh).
   distDir: process.env.NEXT_DIST_DIR?.trim() || '.next',
+  allowedDevOrigins: ['localhost', '127.0.0.1'],
   experimental: {
     // Studio field-note uploads are multipart POSTs (video clips can be large).
     middlewareClientMaxBodySize: '500mb',

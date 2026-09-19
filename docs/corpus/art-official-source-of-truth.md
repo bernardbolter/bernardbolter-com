@@ -354,14 +354,14 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 **Spec.** `docs/sept-revamp/homepage-rebuild-spec.md`, under `archive-model-revision-brief.md`. Phase A only (rendering). Phase B (select widen) and Phase C (grid grow/dim, ambient colour rules) not in this pass.
 
 **Decided, implemented.**
-- Identity fields (title, year, series name, medium, both-unit dimensions) live in each per-work block in the server-rendered HTML. Flip is a CSS state (`.is-flipped` / `rotateY`) over both faces from the first commit. `--verso-min-width: 320px` is the size-floor variable; slot width/height stay the physical container so timeline scroll geometry is unchanged.
+- Identity fields (title, year, series name, medium, both-unit dimensions) live in each per-work block in the server-rendered HTML. Flip is a CSS state (`.is-flipped`) over both faces from the first commit. `--verso-min-width: 320px` is the size-floor variable; slot width/height stay the physical container so timeline scroll geometry is unchanged. A `rotateY` / `preserve-3d` scene was the first implementation and leaked verso onto the painting in Firefox; see Part 14.
 - Series name on Phase A comes from `filterSeries` (already on the client), not from widening `CATALOGUE_ARTWORK_SELECT`.
 - Alt text: `primaryImageAltText` → first vision sentence → identity label line (title, year, medium). Not title-only.
 - Homepage meta title/description recast as archive framing. Coverage line: `{n} artworks · {n} fully catalogued` (catalogued count is a `payload.count` on `reasoningStatus: complete`, not a per-row select widen).
 - Bio-entry paragraph-links removed from the homepage timeline marker layer. Throughline SVG connectors left in place — that removal is Phase 4 of the master brief, not homepage Phase A.
 - `drawings` / `performances` / `watercolors` added to `getSeriesColor`. Megacities `#E8453C`, videos `#8B5A2B`. Keep-row hexes are the live helper values, not the spec's screenshot estimates.
 
-**Deferred to Phase B (absence, not a sliced substitute).** Verso short description, throughline/bio-entry links, catalogue-status line (`Not yet catalogued` / `Catalogued …`). `descriptionShort`, `intent`, `primaryImageAltText`, and throughline attachment are not on the catalogue select.
+**Deferred to Phase B.** Done — see Part 13.
 
 **Deferred to Phase C.** Grid tile grow-by-constant-factor + neighbour dim + fixed card. Grid tiles still link to `/{slug}`. Ambient: grid unfiltered stays whatever the plus-colour randomiser does today.
 
@@ -373,7 +373,39 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 - Available-status gold stays `#d4af37` (live), not the screenshot `#D9A521`. Filter panel already groups it above a divider; already closed on load.
 - `widthWhole` remains unselected on catalogue rows; homepage dimensions still fall through to mm as the spec noted.
 
-**Not this pass.** Phase B select widen. Phase C grid selection / ambient. `/record` recast. Session fold-in. Nightly corpus build.
+**Not this pass.** Phase C grid selection / ambient. `/record` recast. Session fold-in. Nightly corpus build.
+
+---
+
+## Part 13 — Homepage rebuild Phase B (2026-09-19)
+
+**Spec.** `homepage-rebuild-spec.md` Phase B: widen `CATALOGUE_ARTWORK_SELECT`; verso description, throughline/bio-entry links, catalogue-status line, `primaryImageAltText`.
+
+**Decided, implemented.**
+- Select allowlist adds `descriptionShort`, `intent`, `primaryImageAltText`, and `series` (name/slug slimmed post-fetch). No denylist. `visionAnalyses` not added — alt still falls through to the identity line when `primaryImageAltText` is empty.
+- Verso description: `descriptionShort`, else `intent`, else nothing. Never a sliced vision sentence.
+- Catalogue status from completed session `createdAt` on `primaryArtwork` / `artworkRecord`, fetched separately (dates only, no transcripts). Sessions are staff-read in Payload; this layout query uses Local API override so the public verso can state the month. Isolated so a sessions failure does not empty the catalogue.
+- Throughline/bio-entry links inverted from existing `timelineMarkers` (`linkedArtworkIds`). Short titles are not on the live throughline/bio schema (Phase 4 writing task). Card labels use the full text only when it is already ≤6 words; paragraph slugs are omitted (absence over fragment), not sliced.
+- SSR check on local `/`: 220 “Open the record”; **35** verso descriptions (matches populated `descriptionShort`/`intent`); 187 not yet catalogued / 31 catalogued / 2 last-catalogued. HTML ~851 KB (Phase A was ~768 KB).
+- Dev first-paint: root layout no longer waits on the catalogue; `AnimationWrapper` skips the enter fade on first paint so hydration cannot hide the works at `opacity: 0`.
+
+**Deferred to Phase C.** Grid grow/dim/card. Grid tiles still link to `/{slug}`.
+
+**Spec vs live.**
+- Spec says throughline links “by short title.” Live fields are `text` + `slug` only. Flagged; not invented.
+- `widthWhole` still unselected; dimensions still fall through to mm.
+
+---
+
+## Part 14 — Homepage flip: no 3D scene (2026-09-19)
+
+**What broke.** Phase A built the verso as a `preserve-3d` / `rotateY` / `backface-visibility` scene on every timeline slot. Firefox still painted the back face over the image (recto). Hiding unflipped verso with `visibility: hidden` stopped the leak and left wall labels hanging below the painting into the year axis, plus a collapsed `details` chip (`line-height: 0` inherited from the image button).
+
+**Decided, implemented.** Flip remains one block / two CSS faces / both in the HTML source. Unflipped verso is not a 3D layer: `.is-flipped` hides the painting and shows the verso card (`visibility` + `opacity`). Wall labels sit inside the physical slot (`bottom` of `.artwork-block`), not below it. Timeline slot width/height unchanged.
+
+**Dev hang (Firefox).** Stacked `GET /` of 90–120s was Fast Refresh wiping the module-level catalogue cache (and `gridRealSize` imports into `layoutData` made caption edits full-reload). Cache now lives on `globalThis` for 5 minutes and coalesces inflight fetches. Timeline SSR emits identity for all 220 works but only the first six thumbnails — 220 `<img>` tags were aborting in Firefox.
+
+**Spec vs live.** `homepage-rebuild-spec.md` §3 says “Flip is a CSS transform.” Live is a CSS class state, not `rotateY`, because the transform path failed in Firefox. Flagged; not treated as optional 3D. Spec file not rewritten this pass (`decided, not yet propagated`).
 
 ---
 

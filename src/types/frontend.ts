@@ -121,6 +121,8 @@ export interface ArtworksState {
   withImagesCount: number
   /** Published works with reasoningStatus complete. Homepage coverage line. */
   cataloguedCount: number
+  /** Completed primary-session timestamps keyed by artwork id. */
+  sessionDatesByArtworkId: Record<number, string[]>
   /** Practice-wide grid scale anchor (mm²). */
   archiveMedianAreaMm2: number
 }
@@ -197,6 +199,7 @@ export function createInitialArtworksState(
     totalCount: artworks.length,
     withImagesCount: artworks.length,
     cataloguedCount: 0,
+    sessionDatesByArtworkId: {},
     archiveMedianAreaMm2: options.archiveMedianAreaMm2 ?? 0,
   }
 }

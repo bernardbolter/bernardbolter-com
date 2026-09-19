@@ -1,6 +1,7 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
 import { Barlow, Barlow_Condensed, Staatliches } from 'next/font/google'
+import { Suspense } from 'react'
 
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
 import { SiteChrome } from '@/components/site/SiteChrome'
@@ -116,7 +117,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           >
             <SiteChrome />
             <AnimationWrapper>
-              {children}
+              <Suspense fallback={null}>{children}</Suspense>
             </AnimationWrapper>
           </ArtworkChromeProvider>
       </body>

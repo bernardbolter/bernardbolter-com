@@ -27,9 +27,9 @@ type TimelineArtworkSlotProps = {
 }
 
 /**
- * SSR / pre-hydration: always render real identity + thumbnail (crawler identity).
- * After hydration settles: IntersectionObserver may unmount off-screen images
- * to keep the live DOM lighter — without ever stubbing identity text.
+ * Identity text is always in the HTML. Thumbnails are not: SSR and first paint
+ * only include the first row, then IntersectionObserver loads the rest. Emitting
+ * 220 `<img>` tags made Firefox stall (connection pile-up, aborted JPEGs).
  */
 export default function TimelineArtworkSlot({
   artwork,
@@ -46,8 +46,7 @@ export default function TimelineArtworkSlot({
   const { flippedSlug, setFlippedSlug } = useHomepageFlip()
   const slotRef = useRef<HTMLDivElement>(null)
   const [hasHydrated, setHasHydrated] = useState(false)
-  /** Start true so SSR + hydration match (full content). */
-  const [inView, setInView] = useState(true)
+  const [inView, setInView] = useState(index < TIMELINE_INITIAL_LOAD_COUNT)
   const seriesColor = getSeriesColor(resolveSeriesSlug(artwork) ?? 'default')
   const slug = artwork.slug?.trim() || ''
   const flipped = Boolean(slug && flippedSlug === slug)
@@ -75,7 +74,7 @@ export default function TimelineArtworkSlot({
     return () => observer.disconnect()
   }, [hasHydrated, index, scrollRootRef])
 
-  const showImage = !hasHydrated || inView || index < TIMELINE_INITIAL_LOAD_COUNT
+  const showImage = index < TIMELINE_INITIAL_LOAD_COUNT || (hasHydrated && inView)
 
   return (
     <div
@@ -95,6 +94,8 @@ export default function TimelineArtworkSlot({
       <ArtworkBlock
         artwork={artwork}
         filterSeries={state.filterSeries}
+        timelineMarkers={state.timelineMarkers}
+        sessionDates={state.sessionDatesByArtworkId[artwork.id] ?? []}
         flipped={flipped}
         onToggleFlip={() => setFlippedSlug(flipped ? null : slug)}
         allowFootprintBreak={isMobile}

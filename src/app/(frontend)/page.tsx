@@ -43,7 +43,8 @@ export const metadata: Metadata = {
 }
 
 export default async function Page() {
-  const [{ artworks, filterSeries, timelineMarkers, cataloguedCount }, artist] = await Promise.all([
+  const [{ artworks, filterSeries, timelineMarkers, cataloguedCount, sessionDatesByArtworkId }, artist] =
+    await Promise.all([
     getCollectionLayoutData(),
     withDbUnavailableFallback(() => getPerson(), null),
   ])
@@ -55,6 +56,7 @@ export default async function Page() {
       filterSeries={filterSeries}
       timelineMarkers={timelineMarkers}
       cataloguedCount={cataloguedCount}
+      sessionDatesByArtworkId={sessionDatesByArtworkId}
     >
       <JsonLdScript data={jsonLd} />
       {/* Crawler-only entry — optically hidden, zero layout impact */}

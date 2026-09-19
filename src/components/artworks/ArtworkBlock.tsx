@@ -6,16 +6,21 @@ import type { ReactNode } from 'react'
 import {
   VERSO_MIN_WIDTH_PX,
   formatArtworkDimensionLines,
+  formatCatalogueStatus,
   resolveSeriesDisplay,
+  resolveVersoConnectorLinks,
+  resolveVersoDescription,
   type SeriesDisplay,
 } from '@/lib/artwork/catalogueIdentity'
 import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
 import type { Artwork } from '@/payload-types'
-import type { FilterCategory } from '@/types/frontend'
+import type { FilterCategory, TimelineMarkersData } from '@/types/frontend'
 
 type ArtworkBlockProps = {
   artwork: Artwork
   filterSeries: FilterCategory[]
+  timelineMarkers: TimelineMarkersData
+  sessionDates: string[]
   flipped: boolean
   onToggleFlip: () => void
   image: ReactNode
@@ -41,6 +46,8 @@ function SeriesLine({ series }: { series: SeriesDisplay }) {
 export default function ArtworkBlock({
   artwork,
   filterSeries,
+  timelineMarkers,
+  sessionDates,
   flipped,
   onToggleFlip,
   image,
@@ -52,6 +59,10 @@ export default function ArtworkBlock({
   const dimensions = formatArtworkDimensionLines(artwork)
   const series = resolveSeriesDisplay(artwork, filterSeries)
   const recordHref = `/${artwork.slug}`
+  const description = resolveVersoDescription(artwork)
+  const status = formatCatalogueStatus(sessionDates)
+  const throughlineLinks = resolveVersoConnectorLinks(artwork.id, timelineMarkers.throughlines)
+  const bioLinks = resolveVersoConnectorLinks(artwork.id, timelineMarkers.bioEntries)
 
   return (
     <article
@@ -80,31 +91,47 @@ export default function ArtworkBlock({
             {image}
             <span className="artwork-block__flip-affordance">details</span>
           </button>
-
-          <div className="artwork-block__label">
-            <p className="artwork-block__title">
-              <Link href={recordHref}>{title}</Link>
-            </p>
-            {year ? <p className="artwork-block__year">{year}</p> : null}
-            {medium ? <p className="artwork-block__medium">{medium}</p> : null}
-            {dimensions ? (
-              <p className="artwork-block__dimensions">
-                <span>{dimensions.primary}</span>
-                {dimensions.secondary ? (
-                  <span className="artwork-block__dimensions-converted">{dimensions.secondary}</span>
-                ) : null}
-              </p>
-            ) : null}
-            {series ? <SeriesLine series={series} /> : null}
-          </div>
         </div>
 
         <div className="artwork-block__face artwork-block__face--back">
           <h2 className="artwork-block__verso-title">{title}</h2>
+          {description ? <p className="artwork-block__verso-description">{description}</p> : null}
+          {throughlineLinks.length > 0 || bioLinks.length > 0 ? (
+            <ul className="artwork-block__verso-links">
+              {throughlineLinks.map((link) => (
+                <li key={`throughline-${link.href}`}>
+                  <Link href={link.href}>{link.label}</Link>
+                </li>
+              ))}
+              {bioLinks.map((link) => (
+                <li key={`bio-${link.href}`}>
+                  <Link href={link.href}>{link.label}</Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          <p className="artwork-block__verso-status">{status}</p>
           <Link href={recordHref} className="artwork-block__record-link">
             Open the record
           </Link>
         </div>
+      </div>
+
+      <div className="artwork-block__label">
+        <p className="artwork-block__title">
+          <Link href={recordHref}>{title}</Link>
+        </p>
+        {year ? <p className="artwork-block__year">{year}</p> : null}
+        {medium ? <p className="artwork-block__medium">{medium}</p> : null}
+        {dimensions ? (
+          <p className="artwork-block__dimensions">
+            <span>{dimensions.primary}</span>
+            {dimensions.secondary ? (
+              <span className="artwork-block__dimensions-converted">{dimensions.secondary}</span>
+            ) : null}
+          </p>
+        ) : null}
+        {series ? <SeriesLine series={series} /> : null}
       </div>
     </article>
   )

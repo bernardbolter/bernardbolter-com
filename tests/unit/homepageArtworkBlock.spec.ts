@@ -4,6 +4,7 @@ import {
   formatArtworkDimensionLines,
   resolveCatalogueImageAlt,
   resolveSeriesDisplay,
+  resolveVersoDescription,
 } from '@/lib/artwork/catalogueIdentity'
 import type { Artwork } from '@/payload-types'
 import type { FilterCategory } from '@/types/frontend'
@@ -51,5 +52,9 @@ describe('homepage artwork block fields', () => {
     expect(alt).not.toBe(work.title)
     expect(alt).toContain('The Thinker')
     expect(alt).toContain('1993')
+  })
+
+  it('keeps verso description empty when short and intent are absent', () => {
+    expect(resolveVersoDescription(work)).toBeNull()
   })
 })

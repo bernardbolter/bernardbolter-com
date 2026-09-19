@@ -2,7 +2,7 @@ import { getPayload, type Payload, type Where } from 'payload'
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 
-import type { Artwork, Media } from '@/payload-types'
+import type { Artwork, Media, Series } from '@/payload-types'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const getPayloadInstance = async () => getPayload({ config })
@@ -16,6 +16,7 @@ const CATALOGUE_ARTWORK_SELECT = {
   id: true,
   slug: true,
   title: true,
+  series: true,
   seriesSlug: true,
   sizeTier: true,
   orientation: true,
@@ -40,12 +41,16 @@ const CATALOGUE_ARTWORK_SELECT = {
   heightMm: true,
   aspectRatio: true,
   measurementType: true,
+  descriptionShort: true,
+  intent: true,
+  primaryImageAltText: true,
 } as const
 
 export type LayoutProviderArtworks = Artwork[]
 
-/** Catalogue consumers only need url/width/height (alt uses artwork.title). */
+/** Catalogue consumers only need url/width/height (alt uses primaryImageAltText). */
 type CatalogueMediaSlim = Pick<Media, 'url' | 'width' | 'height'>
+type CatalogueSeriesSlim = Pick<Series, 'id' | 'name' | 'slug'>
 
 function slimCatalogueMedia(value: Artwork['primaryImage']): CatalogueMediaSlim | null {
   if (!value || typeof value !== 'object') return null
@@ -54,6 +59,17 @@ function slimCatalogueMedia(value: Artwork['primaryImage']): CatalogueMediaSlim 
     width: value.width ?? null,
     height: value.height ?? null,
   }
+}
+
+function slimCatalogueSeries(value: Artwork['series']): Artwork['series'] {
+  if (value == null || typeof value !== 'object') return value
+  if (typeof value.id !== 'number') return value
+  const slim: CatalogueSeriesSlim = {
+    id: value.id,
+    name: value.name,
+    slug: value.slug,
+  }
+  return slim as Artwork['series']
 }
 
 /**
@@ -65,6 +81,7 @@ function slimCatalogueMedia(value: Artwork['primaryImage']): CatalogueMediaSlim 
 function shapeCatalogueArtwork(artwork: Artwork): Artwork {
   return {
     ...artwork,
+    series: slimCatalogueSeries(artwork.series),
     primaryImage: slimCatalogueMedia(artwork.primaryImage) as Artwork['primaryImage'],
     posterImage: slimCatalogueMedia(artwork.posterImage) as Artwork['posterImage'],
   }

@@ -28,8 +28,8 @@ export const TIER_FALLBACK_AREA_MM2: Record<ArtworkSizeTier, number> = {
   xl: 1_800_000,
 }
 
-/** space-3 caption padding (8px) + single-line title row (~18px). */
-export const GRID_CAPTION_BLOCK_HEIGHT_PX = 26
+/** Caption under each grid tile: title, year, series, medium, both-unit dimensions. */
+export const GRID_CAPTION_BLOCK_HEIGHT_PX = 80
 
 export type GridAreaResolution = {
   areaMm2: number

@@ -13,6 +13,8 @@ import {
 
 import { artworkHasDisplayImage, resolveSeriesSlug } from '@/helpers/artworkCatalog'
 import { generateTimeline, getArtworkSortKey } from '@/helpers/timeline'
+import { computeArchiveMedianAreaMm2 } from '@/lib/artwork/archiveMedianArea'
+import { buildSeriesSlugByArtworkSlug } from '@/lib/artwork/seriesSlugMap'
 import { useArtworkChrome, type ArtworkChromeState } from '@/providers/ArtworkChromeProvider'
 import {
   EMPTY_TIMELINE_MARKERS,
@@ -33,6 +35,7 @@ type CollectionSlice = {
   totalCount: number
   withImagesCount: number
   cataloguedCount: number
+  sessionDatesByArtworkId: Record<number, string[]>
 }
 
 const EMPTY_COLLECTION: CollectionSlice = {
@@ -45,6 +48,7 @@ const EMPTY_COLLECTION: CollectionSlice = {
   totalCount: 0,
   withImagesCount: 0,
   cataloguedCount: 0,
+  sessionDatesByArtworkId: {},
 }
 
 const CollectionContext = createContext<CollectionSlice>(EMPTY_COLLECTION)
@@ -89,6 +93,7 @@ function mergeState(chrome: ArtworkChromeState, collection: CollectionSlice): Ar
     totalCount: collection.totalCount,
     withImagesCount: collection.withImagesCount,
     cataloguedCount: collection.cataloguedCount,
+    sessionDatesByArtworkId: collection.sessionDatesByArtworkId,
     cvData: [],
     bioData: null,
     statementData: null,
@@ -122,6 +127,7 @@ interface CollectionArtworksProviderProps {
   initialFiltersArray?: string[]
   /** Homepage coverage line. Omit on series pages. */
   cataloguedCount?: number
+  sessionDatesByArtworkId?: Record<number, string[]>
 }
 
 /**
@@ -135,6 +141,7 @@ export function CollectionArtworksProvider({
   filterSeries,
   initialFiltersArray,
   cataloguedCount = 0,
+  sessionDatesByArtworkId = {},
 }: CollectionArtworksProviderProps) {
   const { chrome, setChrome } = useArtworkChrome()
   const didInitFilters = useRef(false)
@@ -152,6 +159,29 @@ export function CollectionArtworksProvider({
   }, [initialFiltersArray, setChrome])
 
   const catalogue = artworks ?? []
+
+  const seriesSlugByArtworkSlug = useMemo(
+    () => buildSeriesSlugByArtworkSlug(catalogue),
+    [catalogue],
+  )
+  const archiveMedianAreaMm2 = useMemo(
+    () => computeArchiveMedianAreaMm2(catalogue),
+    [catalogue],
+  )
+
+  useEffect(() => {
+    if (catalogue.length === 0) return
+    setChrome((prev) => {
+      if (
+        prev.archiveMedianAreaMm2 === archiveMedianAreaMm2 &&
+        prev.seriesSlugByArtworkSlug === seriesSlugByArtworkSlug
+      ) {
+        return prev
+      }
+      return { ...prev, seriesSlugByArtworkSlug, archiveMedianAreaMm2 }
+    })
+  }, [archiveMedianAreaMm2, catalogue.length, seriesSlugByArtworkSlug, setChrome])
+
   const artworksWithImages = useMemo(
     () => catalogue.filter((artwork) => artworkHasDisplayImage(artwork)),
     [catalogue],
@@ -297,6 +327,7 @@ export function CollectionArtworksProvider({
       totalCount: catalogue.length,
       withImagesCount: artworksWithImages.length,
       cataloguedCount,
+      sessionDatesByArtworkId,
     }),
     [
       filterSeries,
@@ -306,6 +337,7 @@ export function CollectionArtworksProvider({
       timelineMarkers,
       catalogue.length,
       cataloguedCount,
+      sessionDatesByArtworkId,
     ],
   )
 

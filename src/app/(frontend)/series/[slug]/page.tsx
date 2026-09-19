@@ -53,6 +53,7 @@ export default async function SeriesPage({ params }: Props) {
       artworks={seriesArtworks}
       filterSeries={collection.filterSeries}
       timelineMarkers={collection.timelineMarkers}
+      sessionDatesByArtworkId={collection.sessionDatesByArtworkId}
       initialFiltersArray={[series.slug]}
     >
       <main className="relative min-h-screen w-full overflow-hidden bg-surface-page text-dark">
