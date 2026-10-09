@@ -16,6 +16,8 @@ describe('getSeriesColor', () => {
     expect(getSeriesColor('drawings')).toBe('#8A93A0')
     expect(getSeriesColor('performances')).toBe('#C0714E')
     expect(getSeriesColor('watercolors')).toBe('#9FC5D8')
+    expect(getSeriesColor('mediums-of-perception')).toBe('#6B8F9E')
+    expect(getSeriesColor('gates-of-perception')).toBe('#B08968')
   })
 
   it('falls back to gray for unknown slugs', () => {

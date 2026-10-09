@@ -89,7 +89,7 @@ export default function ArtworkBlock({
             }}
           >
             {image}
-            <span className="artwork-block__flip-affordance">details</span>
+            <span className="artwork-block__flip-affordance">{`Details for ${title}`}</span>
           </button>
         </div>
 

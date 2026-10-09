@@ -29,11 +29,11 @@ function mapSeriesToFilterCategory(doc: SeriesNavDoc): FilterCategory {
 }
 
 export async function fetchFilterSeriesWithPayload(payload: Payload): Promise<FilterCategory[]> {
+  // All published series — including ACH sub-series (Mediums / Gates of Perception).
+  // Root-only filtering hid works whose series relation points at a child series.
   const result = await payload.find({
     collection: 'series',
-    where: {
-      and: [{ status: { equals: 'published' } }, { parentSeries: { exists: false } }],
-    },
+    where: { status: { equals: 'published' } },
     sort: 'name',
     depth: 0,
     limit: 100,
@@ -51,7 +51,7 @@ async function fetchFilterSeries(): Promise<FilterCategory[]> {
   })
 }
 
-/** Published root-level series for the filter drawer (excludes sub-series). */
+/** Published series for the filter drawer (includes sub-series). */
 export async function getFilterSeries(): Promise<FilterCategory[]> {
   return withDbUnavailableFallback(fetchFilterSeries, [])
 }

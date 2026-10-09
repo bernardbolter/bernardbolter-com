@@ -13,6 +13,10 @@ export const SERIES_COLOR_MAP: Record<string, string> = {
   drawings: '#8A93A0', // graphite blue-grey
   performances: '#C0714E', // terracotta
   watercolors: '#9FC5D8', // washed blue
+  /** ACH sub-series — deeper teal off parent #9DC3C2 */
+  'mediums-of-perception': '#6B8F9E',
+  /** ACH sub-series — warm gate-stone, off ACH teal and MoP */
+  'gates-of-perception': '#B08968',
   sold: '#d4af37', // available-status gold (not a series)
 }
 
