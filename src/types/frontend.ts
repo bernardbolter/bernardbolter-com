@@ -53,11 +53,6 @@ export type CatalogueClientRow = {
   heightPx?: number | null
   aspectRatio?: number | null
   measurementType?: Artwork['measurementType']
-  dimensionUnit?: Artwork['dimensionUnit']
-  widthWhole?: number | null
-  heightWhole?: number | null
-  widthFraction?: string | null
-  heightFraction?: string | null
   primaryImage?: (number | CatalogueClientMedia) | null
   posterImage?: (number | CatalogueClientMedia) | null
   videoFile?: (number | CatalogueClientMedia) | null
