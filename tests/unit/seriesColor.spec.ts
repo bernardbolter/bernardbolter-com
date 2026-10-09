@@ -18,6 +18,7 @@ describe('getSeriesColor', () => {
     expect(getSeriesColor('watercolors')).toBe('#9FC5D8')
     expect(getSeriesColor('mediums-of-perception')).toBe('#6B8F9E')
     expect(getSeriesColor('gates-of-perception')).toBe('#B08968')
+    expect(getSeriesColor('mediums-of-war')).toBe('#7A6B4F')
   })
 
   it('falls back to gray for unknown slugs', () => {

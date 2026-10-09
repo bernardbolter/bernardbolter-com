@@ -17,6 +17,8 @@ export const SERIES_COLOR_MAP: Record<string, string> = {
   'mediums-of-perception': '#6B8F9E',
   /** ACH sub-series — warm gate-stone, off ACH teal and MoP */
   'gates-of-perception': '#B08968',
+  /** MoP nested triptych series — iron/olive, off MoP teal */
+  'mediums-of-war': '#7A6B4F',
   sold: '#d4af37', // available-status gold (not a series)
 }
 
