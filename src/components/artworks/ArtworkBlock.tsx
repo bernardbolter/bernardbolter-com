@@ -13,11 +13,10 @@ import {
   type SeriesDisplay,
 } from '@/lib/artwork/catalogueIdentity'
 import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
-import type { Artwork } from '@/payload-types'
-import type { FilterCategory, TimelineMarkersData } from '@/types/frontend'
+import type { CatalogueClientRow, FilterCategory, TimelineMarkersData } from '@/types/frontend'
 
 type ArtworkBlockProps = {
-  artwork: Artwork
+  artwork: CatalogueClientRow
   filterSeries: FilterCategory[]
   timelineMarkers: TimelineMarkersData
   sessionDates: string[]

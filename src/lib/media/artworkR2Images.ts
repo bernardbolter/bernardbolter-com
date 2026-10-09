@@ -1,9 +1,20 @@
-import type { Artwork, Media } from '@/payload-types'
-
 import {
   publicUrlForObjectKey,
   stripMediaUrlVersion,
 } from '@/lib/media/r2Object'
+
+/** Minimal media shape for derivative URL resolution (full Media or catalogue slim). */
+type ImageMediaLike = {
+  url?: string | null
+  width?: number | null
+  height?: number | null
+}
+
+type ArtworkImageSource = {
+  primaryImage?: (number | ImageMediaLike) | null
+  posterImage?: (number | ImageMediaLike) | null
+  slug?: string | null
+}
 
 export type ArtworkImageContext =
   | 'grid'
@@ -35,9 +46,7 @@ const CONTEXT_SUFFIX: Record<ArtworkImageContext, ArtworkDerivativeSuffix> = {
   'vision-page': '1200w',
 }
 
-function readPrimaryMedia(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage'>,
-): Media | null {
+function readPrimaryMedia(artwork: ArtworkImageSource): ImageMediaLike | null {
   const primary = artwork.primaryImage
   if (primary && typeof primary === 'object') return primary
 
@@ -48,9 +57,7 @@ function readPrimaryMedia(
 }
 
 /** Direct R2 original URL — spec `imageUrl` field equivalent (from `primaryImage.url`). */
-export function getArtworkOriginalImageUrl(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage'>,
-): string | null {
+export function getArtworkOriginalImageUrl(artwork: ArtworkImageSource): string | null {
   const media = readPrimaryMedia(artwork)
   if (!media?.url?.trim()) return null
   return stripMediaUrlVersion(media.url.trim())
@@ -72,7 +79,7 @@ export function getArtworkImageUrl(
 }
 
 export function getArtworkImageSources(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
+  artwork: ArtworkImageSource,
   context: ArtworkImageContext,
 ): ArtworkImageSources | null {
   const fallback = getArtworkOriginalImageUrl(artwork)

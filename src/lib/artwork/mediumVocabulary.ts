@@ -8,7 +8,10 @@ export const BUILTIN_MEDIUM_AAT: Record<string, string> = {
   // Example: 'acrylic-on-canvas': 'http://vocab.getty.edu/aat/300014666',
 }
 
-export function resolveMediumLabel(artwork: Artwork): string {
+export function resolveMediumLabel(artwork: {
+  medium?: Artwork['medium'] | null
+  mediumOther?: string | null
+}): string {
   if (artwork.medium === 'other' && artwork.mediumOther?.trim()) {
     return artwork.mediumOther.trim()
   }

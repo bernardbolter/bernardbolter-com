@@ -5,18 +5,18 @@ import ReactPlayer from 'react-player'
 
 import ArtworkImage from './ArtworkImage'
 import { useArtworks } from '@/providers/ArtworkProvider'
-import type { Artwork, Media } from '@/payload-types'
+import type { CatalogueClientMedia, CatalogueClientRow } from '@/types/frontend'
 
 interface ArtworksSlideshowProps {
   autoPlayInterval?: number
 }
 
-function readMediaUrl(media: number | Media | null | undefined): string | null {
+function readMediaUrl(media: number | CatalogueClientMedia | null | undefined): string | null {
   if (!media || typeof media !== 'object') return null
   return media.url ?? null
 }
 
-function getPrimaryVideoSource(artwork: Artwork): string | null {
+function getPrimaryVideoSource(artwork: CatalogueClientRow): string | null {
   const directFile = readMediaUrl(artwork.videoFile)
   if (directFile) return directFile
   if (artwork.videoUrl) return artwork.videoUrl

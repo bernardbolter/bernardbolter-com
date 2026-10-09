@@ -1,4 +1,7 @@
-import type { Artwork, Media } from '@/payload-types'
+import type { Artwork } from '@/payload-types'
+import type { CatalogueClientMedia } from '@/types/frontend'
+
+type MediaLike = CatalogueClientMedia | { url?: string | null; width?: number | null; height?: number | null }
 import { SIZE_TIER_VALUES } from '@/lib/artOfficial/inferSizeTier'
 import {
   getArtworkImageSources,
@@ -9,36 +12,41 @@ import type { ArtworkSizeTier } from '@/types/frontend'
 
 const DEFAULT_SIZE_TIER: ArtworkSizeTier = 'lg'
 
-export function resolveSeriesSlug(artwork: Pick<Artwork, 'seriesSlug' | 'series'>): string | null {
+export function resolveSeriesSlug(artwork: {
+  seriesSlug?: string | null
+  series?: { slug?: string | null } | number | null
+}): string | null {
   if (artwork.seriesSlug?.trim()) return artwork.seriesSlug.trim()
   const series = artwork.series
-  if (series && typeof series === 'object' && 'slug' in series && typeof series.slug === 'string') {
+  if (series && typeof series === 'object' && typeof series.slug === 'string') {
     return series.slug
   }
   return null
 }
 
-export function artworkHasDisplayImage(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
-): boolean {
+type ArtworkImageFields = {
+  primaryImage?: (number | MediaLike) | null
+  posterImage?: (number | MediaLike) | null
+  slug?: string | null
+}
+
+export function artworkHasDisplayImage(artwork: ArtworkImageFields): boolean {
   return Boolean(getDisplayImageUrl(artwork))
 }
 
 export function getDisplayImageUrl(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
+  artwork: ArtworkImageFields,
   context: ArtworkImageContext = 'grid',
 ): string | null {
   return getArtworkImageSources(artwork, context)?.src ?? null
 }
 
-export function getArtworkImageFallbackUrl(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
-): string | null {
+export function getArtworkImageFallbackUrl(artwork: ArtworkImageFields): string | null {
   return getArtworkOriginalImageUrl(artwork)
 }
 
 export function getArtworkImagePair(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'slug'>,
+  artwork: ArtworkImageFields,
   context: ArtworkImageContext,
 ): { src: string; fallback: string } | null {
   return getArtworkImageSources(artwork, context)
@@ -53,7 +61,7 @@ export function getSizeTier(artwork: Pick<Artwork, 'sizeTier'>): ArtworkSizeTier
 }
 
 export function getPrimaryMediaDimensions(
-  artwork: Pick<Artwork, 'primaryImage' | 'posterImage' | 'widthPx' | 'heightPx'>,
+  artwork: ArtworkImageFields & Pick<Artwork, 'widthPx' | 'heightPx'>,
 ): { width: number; height: number } {
   const fromMedia = readMediaDimensions(artwork.primaryImage) ?? readMediaDimensions(artwork.posterImage)
   if (fromMedia) return fromMedia
@@ -67,7 +75,9 @@ export function getPrimaryMediaDimensions(
   return { width: 1, height: 1 }
 }
 
-function readMediaDimensions(media: number | Media | null | undefined): { width: number; height: number } | null {
+function readMediaDimensions(
+  media: number | MediaLike | null | undefined,
+): { width: number; height: number } | null {
   if (!media || typeof media !== 'object') return null
   const width = media.width ?? 0
   const height = media.height ?? 0

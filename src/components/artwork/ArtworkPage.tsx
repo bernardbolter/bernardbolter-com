@@ -16,6 +16,10 @@ import {
   getSimilarArtworksForPage,
 } from '@/lib/payload/similarArtworksPage'
 import { isVideoPrimaryArtwork } from '@/lib/artwork/artworkGalleryImages'
+import {
+  buildLayer0ImageHeroProps,
+  buildLayer0VideoHeroProps,
+} from '@/lib/artwork/layer0HeroProps'
 import { artworkShowsProseColumn } from '@/lib/artwork/layer3Prose'
 import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
 import type { Artist, Artwork } from '@/payload-types'
@@ -60,7 +64,11 @@ export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps)
     <article
       className={`artwork-page artwork-image__main-scroll-wrapper${hasProseColumn ? '' : ' artwork-page--single-column'}`}
     >
-      {showVideo ? <Layer0Video artwork={artwork} /> : <Layer0Image artwork={artwork} />}
+      {showVideo ? (
+        <Layer0Video {...buildLayer0VideoHeroProps(artwork)} />
+      ) : (
+        <Layer0Image {...buildLayer0ImageHeroProps(artwork)} />
+      )}
 
       <div className="artwork-image__info-container artwork-image__info-container--layers">
         <SeriesCard artwork={artwork} />

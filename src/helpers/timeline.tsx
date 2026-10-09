@@ -1,5 +1,4 @@
-import type { Artwork } from '@/payload-types'
-
+import type { CatalogueClientRow } from '@/types/frontend'
 import type {
   TimelineArtwork,
   TimelineTimepoint,
@@ -115,7 +114,7 @@ export function generateTimeline(config: TimelineConfig): TimelineResult {
   }))
 
   // Step 2: Sort based on sorting type
-  let sortedArtworks: (Artwork & { originalIndex: number })[]
+  let sortedArtworks: (CatalogueClientRow & { originalIndex: number })[]
 
   switch (sorting) {
     case 'latest':

@@ -44,6 +44,8 @@ export default async function PublicSessionPage({ params }: PageProps) {
     },
     limit: 1,
     depth: 1,
+    // Public HTML: transcript messages only. Private session streams
+    // (firstImpression, sessionNotes, agentDraft*, fieldUpdateTimeline) live on Tier 5 JSON.
     select: {
       sessionId: true,
       sessionType: true,
@@ -54,20 +56,6 @@ export default async function PublicSessionPage({ params }: PageProps) {
       artworkRecord: true,
       mentionedArtworks: true,
       messages: true,
-      firstImpression: true,
-      secondDescription: true,
-      fieldUpdateTimeline: true,
-      sessionNotes: true,
-      weakPhases: true,
-      blindDescriptionUseful: true,
-      formalContributionAccuracy: true,
-      dialogueRefinementFlag: true,
-      refinementNotes: true,
-      agentDraftDescriptionShort: true,
-      agentDraftDescriptionLong: true,
-      agentDraftConceptualKeywords: true,
-      agentDraftFormalContributionAssessment: true,
-      agentModel: true,
     },
   })
 

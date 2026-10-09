@@ -54,7 +54,15 @@ export default function Layer1ObjectRecord({ artwork }: Props) {
               <RecordRow label="Support">{resolveSupportLabel(artwork)}</RecordRow>
             ) : null}
             <RecordRow label="Dimensions">
-              <ArtworkDimensionsRow artwork={artwork} />
+              <ArtworkDimensionsRow
+                artwork={{
+                  widthMm: artwork.widthMm,
+                  heightMm: artwork.heightMm,
+                  widthPx: artwork.widthPx,
+                  heightPx: artwork.heightPx,
+                  measurementType: artwork.measurementType,
+                }}
+              />
             </RecordRow>
             <RecordRow label="Scale">{resolveScaleLabel(artwork)}</RecordRow>
             {showFraming && resolveFramingLabel(artwork.framing) ? (

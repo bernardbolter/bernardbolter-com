@@ -117,7 +117,8 @@ const loadSessionsIndex = cache(async (raw: Record<string, string | string[] | u
       collection: 'sessions',
       where: { status: { equals: 'completed' } },
       limit: 200,
-      depth: 2,
+      // depth 1: avoid artwork.creator → nested session docs in the index payload.
+      depth: 1,
       sort: '-completedAt',
       overrideAccess: true,
       select: {
@@ -163,7 +164,18 @@ const loadSessionsIndex = cache(async (raw: Record<string, string | string[] | u
         .map((entry) => readArtwork(entry))
         .filter((artwork): artwork is Artwork => artwork !== null)
       const passNumber = chronologicalPass.get(session.id) ?? 1
-      const typed = session as Session
+      // Gloss only needs field *names* for counts — drop values (studio addresses etc.).
+      const timeline = Array.isArray(session.fieldUpdateTimeline)
+        ? session.fieldUpdateTimeline.map((row) => {
+            if (!row || typeof row !== 'object') return row
+            const field = 'field' in row ? (row as { field?: string | null }).field : null
+            return { field: field ?? null }
+          })
+        : session.fieldUpdateTimeline
+      const typed = {
+        ...(session as Session),
+        fieldUpdateTimeline: timeline,
+      } as Session
       return {
         id: session.id,
         session: typed,

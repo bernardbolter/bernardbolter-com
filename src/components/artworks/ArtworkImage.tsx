@@ -13,10 +13,10 @@ import {
 import { resolveCatalogueImageAlt } from '@/lib/artwork/catalogueIdentity'
 import { getSeriesColor } from '@/helpers/seriesColor'
 import type { ArtworkImageContext } from '@/lib/media/artworkR2Images'
-import type { Artwork } from '@/payload-types'
+import type { CatalogueClientRow } from '@/types/frontend'
 
 interface ArtworkImageProps {
-  artwork: Artwork
+  artwork: CatalogueClientRow
   artworkContainerWidth: number
   artworkContainerHeight: number
   useImageFactors?: boolean

@@ -1,7 +1,7 @@
-import type { Artwork } from '@/payload-types'
 import { getArtworkDate } from '@/helpers/timeline'
+import type { CatalogueClientRow } from '@/types/frontend'
 
-interface ArtworkWithTimeMargin extends Artwork {
+interface ArtworkWithTimeMargin extends CatalogueClientRow {
   timeDifference: number
   timeMargin: number
 }
@@ -35,7 +35,7 @@ export const calculateTimeMargin = (
 }
 
 export const formatFilteredArtworkWithTimeMargin = (
-  artworks: Artwork[],
+  artworks: CatalogueClientRow[],
   availableWidth?: number,
 ): ArtworkWithTimeMargin[] => {
   if (artworks.length === 0) return []
@@ -88,7 +88,7 @@ export const getTotalTimeMargin = (artworks: ArtworkWithTimeMargin[]): number =>
   return artworks.reduce((total, artwork) => total + artwork.timeMargin, 0)
 }
 
-export const getTimeSpanInfo = (artworks: Artwork[]) => {
+export const getTimeSpanInfo = (artworks: CatalogueClientRow[]) => {
   if (artworks.length === 0) return null
 
   const sortedArtworks = [...artworks].sort(

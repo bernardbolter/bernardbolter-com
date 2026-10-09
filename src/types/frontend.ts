@@ -8,8 +8,69 @@ import type { SortingType, TimelineResult } from '@/types/timlineTypes'
 export type { Artwork, Artist, Event, Media }
 export type { SortingType } from '@/types/timlineTypes'
 
-/** Published catalogue artwork as returned by `getArtworks()` (depth 2). */
-export type CatalogueArtwork = Artwork
+/**
+ * Slim catalogue row for `/` and `/series/[slug]` client providers.
+ * Identity HTML is SSR'd from the same fields; flight must not carry full Artwork.
+ */
+export type CatalogueClientMedia = {
+  url?: string | null
+  width?: number | null
+  height?: number | null
+}
+
+export type CatalogueClientSeries = {
+  id: number
+  name: string
+  slug: string
+}
+
+export type CatalogueClientVideoClip = {
+  videoRole?: string | null
+  videoUrl?: string | null
+  videoFile?: CatalogueClientMedia | number | null
+}
+
+export type CatalogueClientRow = {
+  id: number
+  slug: string
+  title?: string | null
+  series?: (number | CatalogueClientSeries) | null
+  seriesSlug?: string | null
+  availabilityStatus?: Artwork['availabilityStatus']
+  city?: string | null
+  country?: string | null
+  medium?: Artwork['medium']
+  mediumOther?: string | null
+  yearCreated?: number | null
+  sortIndex?: number | null
+  timelineDate?: string | null
+  createdAt?: string
+  sizeTier?: Artwork['sizeTier']
+  orientation?: Artwork['orientation']
+  widthMm?: number | null
+  heightMm?: number | null
+  widthPx?: number | null
+  heightPx?: number | null
+  aspectRatio?: number | null
+  measurementType?: Artwork['measurementType']
+  dimensionUnit?: Artwork['dimensionUnit']
+  widthWhole?: number | null
+  heightWhole?: number | null
+  widthFraction?: string | null
+  heightFraction?: string | null
+  primaryImage?: (number | CatalogueClientMedia) | null
+  posterImage?: (number | CatalogueClientMedia) | null
+  videoFile?: (number | CatalogueClientMedia) | null
+  videoUrl?: string | null
+  videos?: CatalogueClientVideoClip[] | null
+  /** Verso prose — kept so flip SSR HTML stays identical. */
+  descriptionShort?: string | null
+  intent?: string | null
+  primaryImageAltText?: string | null
+}
+
+/** @deprecated Prefer CatalogueClientRow — alias kept for call-site churn. */
+export type CatalogueArtwork = CatalogueClientRow
 
 export type ArtworkSizeTier = NonNullable<Artwork['sizeTier']>
 

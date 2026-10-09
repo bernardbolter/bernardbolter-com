@@ -6,8 +6,7 @@ import {
   resolveSeriesDisplay,
   resolveVersoDescription,
 } from '@/lib/artwork/catalogueIdentity'
-import type { Artwork } from '@/payload-types'
-import type { FilterCategory } from '@/types/frontend'
+import type { CatalogueClientRow, FilterCategory } from '@/types/frontend'
 
 /**
  * Homepage acceptance (Phase A): identity fields that must appear in the
@@ -29,7 +28,7 @@ describe('homepage artwork block fields', () => {
     heightMm: 910,
     updatedAt: '2026-01-01T00:00:00.000Z',
     createdAt: '2026-01-01T00:00:00.000Z',
-  } as Artwork
+  } as unknown as CatalogueClientRow
 
   const series: FilterCategory[] = [
     { id: 'og', slug: 'og-oil-paintings', name: 'OG Oil Paintings', color: '#395B0E' },

@@ -74,29 +74,36 @@ function relationToId(value: unknown): number | null {
 }
 
 /**
- * Depth 2 still populates creator.bioTimelineEntries / statementThroughlines
- * → linkedArtworkSlugs as Artwork docs. Nothing on /[slug] renders those;
- * coerce to IDs so they never enter the RSC flight. No select involved.
+ * Depth 2 populates creator → bioTimelineEntries / statementThroughlines →
+ * sourceSessionRef as full Session docs (messages, firstImpression, sessionNotes,
+ * agentDraft*, fieldUpdateTimeline). The page never reads creator (artist is
+ * fetched separately). Drop it entirely so sessions cannot enter any client
+ * boundary. No select involved.
  */
-function stripCreatorLinkedArtworkDocs(artwork: Artwork): Artwork {
-  const creator = artwork.creator
-  if (!creator || typeof creator !== 'object') return artwork
-
-  const coerce = (entries: unknown) => {
-    if (!Array.isArray(entries)) return
-    for (const entry of entries) {
-      if (!entry || typeof entry !== 'object') continue
-      const row = entry as { linkedArtworkSlugs?: unknown }
-      if (!Array.isArray(row.linkedArtworkSlugs)) continue
-      row.linkedArtworkSlugs = row.linkedArtworkSlugs
-        .map(relationToId)
-        .filter((id): id is number => id !== null)
-    }
-  }
-
-  coerce((creator as { bioTimelineEntries?: unknown }).bioTimelineEntries)
-  coerce((creator as { statementThroughlines?: unknown }).statementThroughlines)
+function stripCreatorForPage(artwork: Artwork): Artwork {
+  const copy = artwork as unknown as Record<string, unknown>
+  delete copy.creator
   return artwork
+}
+
+/**
+ * Coerce every sourceSessionRef relation to a numeric id. Defense in depth for
+ * any depth-2 population that survives stripCreatorForPage (e.g. on events).
+ */
+function coerceSourceSessionRefs(value: unknown): void {
+  if (Array.isArray(value)) {
+    for (const item of value) coerceSourceSessionRefs(item)
+    return
+  }
+  if (!value || typeof value !== 'object') return
+  const row = value as Record<string, unknown>
+  if ('sourceSessionRef' in row) {
+    const id = relationToId(row.sourceSessionRef)
+    row.sourceSessionRef = id
+  }
+  for (const nested of Object.values(row)) {
+    if (nested && typeof nested === 'object') coerceSourceSessionRefs(nested)
+  }
 }
 
 function prepareArtworkForPage(artwork: Artwork): Artwork {
@@ -107,9 +114,11 @@ function prepareArtworkForPage(artwork: Artwork): Artwork {
   ) as unknown as Artwork
   // Provenance is privateFieldAccess (absent from anonymous REST). Public pages
   // fetch with overrideAccess then project a public-safe subset for SSR.
-  return stripCreatorLinkedArtworkDocs(
+  const prepared = stripCreatorForPage(
     stripEmbeddings(projectArtworkProvenanceForPublicPage(withoutCommerce)),
   )
+  coerceSourceSessionRefs(prepared)
+  return prepared
 }
 
 export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {

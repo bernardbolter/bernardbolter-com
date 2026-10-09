@@ -2,13 +2,19 @@ import { getPayload, type Payload, type Where } from 'payload'
 import config from '@payload-config'
 import { unstable_cache } from 'next/cache'
 
-import type { Artwork, Media, Series } from '@/payload-types'
+import type { Artwork, Media } from '@/payload-types'
+import type {
+  CatalogueClientMedia,
+  CatalogueClientRow,
+  CatalogueClientSeries,
+  CatalogueClientVideoClip,
+} from '@/types/frontend'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const getPayloadInstance = async () => getPayload({ config })
 
 /**
- * Fields required by the home grid, timeline, filters, and Info menu slug lookup.
+ * Fields required by the home grid, timeline, filters, verso, and Info menu.
  * Omits status / yearCompleted / dateDisplay (fetched for where/recompute only —
  * never read by catalogue UI). Media relations are slimmed post-fetch.
  */
@@ -33,7 +39,6 @@ const CATALOGUE_ARTWORK_SELECT = {
   mediumOther: true,
   sortIndex: true,
   timelineDate: true,
-  dateCreated: true,
   createdAt: true,
   widthPx: true,
   heightPx: true,
@@ -41,49 +46,90 @@ const CATALOGUE_ARTWORK_SELECT = {
   heightMm: true,
   aspectRatio: true,
   measurementType: true,
+  dimensionUnit: true,
+  widthWhole: true,
+  heightWhole: true,
+  widthFraction: true,
+  heightFraction: true,
   descriptionShort: true,
   intent: true,
   primaryImageAltText: true,
 } as const
 
-export type LayoutProviderArtworks = Artwork[]
+export type LayoutProviderArtworks = CatalogueClientRow[]
 
-/** Catalogue consumers only need url/width/height (alt uses primaryImageAltText). */
-type CatalogueMediaSlim = Pick<Media, 'url' | 'width' | 'height'>
-type CatalogueSeriesSlim = Pick<Series, 'id' | 'name' | 'slug'>
-
-function slimCatalogueMedia(value: Artwork['primaryImage']): CatalogueMediaSlim | null {
+function slimCatalogueMedia(value: unknown): CatalogueClientMedia | null {
   if (!value || typeof value !== 'object') return null
+  const media = value as Media
   return {
-    url: value.url ?? null,
-    width: value.width ?? null,
-    height: value.height ?? null,
+    url: media.url ?? null,
+    width: media.width ?? null,
+    height: media.height ?? null,
   }
 }
 
-function slimCatalogueSeries(value: Artwork['series']): Artwork['series'] {
-  if (value == null || typeof value !== 'object') return value
-  if (typeof value.id !== 'number') return value
-  const slim: CatalogueSeriesSlim = {
+function slimCatalogueSeries(value: Artwork['series']): CatalogueClientRow['series'] {
+  if (value == null) return value
+  if (typeof value === 'number') return value
+  if (typeof value !== 'object' || typeof value.id !== 'number') return null
+  const slim: CatalogueClientSeries = {
     id: value.id,
     name: value.name,
     slug: value.slug,
   }
-  return slim as Artwork['series']
+  return slim
+}
+
+function slimVideoClips(value: Artwork['videos']): CatalogueClientVideoClip[] | null {
+  if (!value?.length) return null
+  return value.map((clip) => ({
+    videoRole: clip.videoRole ?? null,
+    videoUrl: clip.videoUrl ?? null,
+    videoFile: slimCatalogueMedia(clip.videoFile) ?? (typeof clip.videoFile === 'number' ? clip.videoFile : null),
+  }))
 }
 
 /**
- * Drop Media metadata that is never read by grid/timeline/slideshow.
- * Post-fetch (not denylist select) — same pattern as stripEmbeddings /
- * stripCreatorLinkedArtworkDocs. Nested allowlist on uploads is unused
- * here so we keep the artwork-level select flat and safe.
+ * Map a Payload artwork doc to the slim client row.
+ * Post-fetch (not denylist select) — same pattern as stripEmbeddings.
  */
-function shapeCatalogueArtwork(artwork: Artwork): Artwork {
+export function toCatalogueClientRow(artwork: Artwork): CatalogueClientRow {
   return {
-    ...artwork,
+    id: artwork.id,
+    slug: artwork.slug,
+    title: artwork.title ?? null,
     series: slimCatalogueSeries(artwork.series),
-    primaryImage: slimCatalogueMedia(artwork.primaryImage) as Artwork['primaryImage'],
-    posterImage: slimCatalogueMedia(artwork.posterImage) as Artwork['posterImage'],
+    seriesSlug: artwork.seriesSlug ?? null,
+    availabilityStatus: artwork.availabilityStatus ?? null,
+    city: artwork.city ?? null,
+    country: artwork.country ?? null,
+    medium: artwork.medium ?? null,
+    mediumOther: artwork.mediumOther ?? null,
+    yearCreated: artwork.yearCreated ?? null,
+    sortIndex: artwork.sortIndex ?? null,
+    timelineDate: artwork.timelineDate ?? null,
+    createdAt: artwork.createdAt,
+    sizeTier: artwork.sizeTier ?? null,
+    orientation: artwork.orientation ?? null,
+    widthMm: artwork.widthMm ?? null,
+    heightMm: artwork.heightMm ?? null,
+    widthPx: artwork.widthPx ?? null,
+    heightPx: artwork.heightPx ?? null,
+    aspectRatio: artwork.aspectRatio ?? null,
+    measurementType: artwork.measurementType ?? null,
+    dimensionUnit: artwork.dimensionUnit ?? null,
+    widthWhole: artwork.widthWhole ?? null,
+    heightWhole: artwork.heightWhole ?? null,
+    widthFraction: artwork.widthFraction ?? null,
+    heightFraction: artwork.heightFraction ?? null,
+    primaryImage: slimCatalogueMedia(artwork.primaryImage),
+    posterImage: slimCatalogueMedia(artwork.posterImage),
+    videoFile: slimCatalogueMedia(artwork.videoFile),
+    videoUrl: artwork.videoUrl ?? null,
+    videos: slimVideoClips(artwork.videos),
+    descriptionShort: artwork.descriptionShort ?? null,
+    intent: artwork.intent ?? null,
+    primaryImageAltText: artwork.primaryImageAltText ?? null,
   }
 }
 
@@ -110,10 +156,10 @@ export async function fetchCatalogueArtworksWithPayload(
     overrideAccess: false,
   })
 
-  return result.docs.map((doc) => shapeCatalogueArtwork(doc as Artwork))
+  return result.docs.map((doc) => toCatalogueClientRow(doc as Artwork))
 }
 
-async function fetchCatalogueArtworks(seriesSlug?: string): Promise<Artwork[]> {
+async function fetchCatalogueArtworks(seriesSlug?: string): Promise<CatalogueClientRow[]> {
   return withDbRetry(async () => {
     const payload = await getPayloadInstance()
     return fetchCatalogueArtworksWithPayload(payload, seriesSlug)
@@ -130,7 +176,7 @@ const getCachedCatalogueArtworks = unstable_cache(
 )
 
 /** Published catalogue rows for layout provider (grid / timeline / filters). */
-export async function getArtworks(seriesSlug?: string): Promise<Artwork[]> {
+export async function getArtworks(seriesSlug?: string): Promise<CatalogueClientRow[]> {
   if (process.env.NODE_ENV === 'development') {
     return fetchCatalogueArtworks(seriesSlug)
   }

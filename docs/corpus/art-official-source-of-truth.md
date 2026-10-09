@@ -462,6 +462,18 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 18 — Venice RSC flight leak + client-boundary slim (2026-10-09)
+
+**What it was.** `/venice-in-the-middle` visible DOM ~36 KB, but the RSC flight carried the full depth-2 Artwork as props into `Layer0Image` (client). That included `creator` → bio/throughline `sourceSessionRef` populated as full Session docs: `messages`, `firstImpression`, `sessionNotes`, `agentDraft*` keys, `fieldUpdateTimeline` (including studio address prose such as “27th Ave studio, San Francisco”). Commerce keys (`askingPrice`, `salesRecord`, `insuranceValue`) and `ownerName` were absent. `ownershipHistory` was present as `[]`; artwork `currentLocation` was `{ category: "artists-studio" }` only. Homepage catalogue client props were still full allowlisted Artwork docs (with descriptionShort/intent for verso), double-shipping identity with SSR HTML.
+
+**Verdict.** Weight **and** privacy leak relative to the anonymous corpus API / privacy pass — sessions and agent-draft scaffolding are staff-side and must not enter the public flight.
+
+**Fix.** (1) `Layer0Image` / `Layer0Video` take slim hero props built on the server (`buildLayer0ImageHeroProps` / `buildLayer0VideoHeroProps`); prose layers stay server components. (2) `ArtworkDimensionsRow` receives only dimension fields, not the full artwork object. (3) `prepareArtworkForPage` deletes `creator` and coerces remaining `sourceSessionRef` to ids. (4) Homepage / series providers pass `CatalogueClientRow[]` (`toCatalogueClientRow`) — identity + verso fields only; SSR HTML unchanged by design.
+
+**Not this pass.** Deploy/measurement after build; Cloudflare purge. Vision page client boundaries left alone.
+
+---
+
 ## Standing process
 
 1. Any chat session that finds a spec/reality mismatch, or makes a flow-level decision (retiring a mechanism, resolving an edge case), logs it here **the same session** — not left in chat scrollback for someone to rediscover later.

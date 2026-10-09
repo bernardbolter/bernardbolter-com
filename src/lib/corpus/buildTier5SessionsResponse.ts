@@ -277,7 +277,9 @@ export function buildTier5SessionByIdResponse(options: {
 
 /**
  * Page-embedded JSON-LD for `/sessions/[sessionId]`.
- * Same streams as Tier 5; artwork refs are absolute URLs; `sameAs` points at the session API.
+ * Public HTML must NOT embed Tier 5 private streams (firstImpression, sessionNotes,
+ * agentDraft*, fieldUpdateTimeline). Those stay on `/api/corpus/.../sessions` only.
+ * `sameAs` points crawlers at the machine endpoint.
  */
 export function buildSessionJsonLd(
   session: Tier5SessionSource,
@@ -301,8 +303,6 @@ export function buildSessionJsonLd(
     eventRecord: projected.eventRecord
       ? `${baseUrl}/events/${projected.eventRecord}`
       : null,
-    artistRecord: projected.artistRecord,
-    'art-official:DialogueSelfAudit': projected['art-official:DialogueSelfAudit'],
     sameAs: `${baseUrl}${sessionTier5ApiPath(projected.sessionId)}`,
   }
 }

@@ -34,21 +34,22 @@ function formatImperialDisplay(whole: string | null, fraction: string): string {
   return fraction ? `${whole} ${fraction}"` : `${whole}"`
 }
 
+type SizeInputFields = {
+  measurementType?: Artwork['measurementType'] | null
+  widthPx?: number | null
+  heightPx?: number | null
+  dimensionUnit?: Artwork['dimensionUnit'] | null
+  widthWhole?: number | null
+  heightWhole?: number | null
+  widthFraction?: string | null
+  heightFraction?: string | null
+  widthMm?: number | null
+  heightMm?: number | null
+}
+
 /** Same input ArtworkSize uses — catalogue rows fall through to mm when inches are unselected. */
 export function getArtworkSizeInput(
-  artwork: Pick<
-    Artwork,
-    | 'measurementType'
-    | 'widthPx'
-    | 'heightPx'
-    | 'dimensionUnit'
-    | 'widthWhole'
-    | 'heightWhole'
-    | 'widthFraction'
-    | 'heightFraction'
-    | 'widthMm'
-    | 'heightMm'
-  >,
+  artwork: SizeInputFields,
 ): { width: string; height: string; units: string } | null {
   if (artwork.measurementType?.includes('digital') && artwork.widthPx && artwork.heightPx) {
     return {
@@ -81,7 +82,7 @@ export function getArtworkSizeInput(
 
 /** Both units as visible strings. Absence when the work has no measurable size. */
 export function formatArtworkDimensionLines(
-  artwork: Parameters<typeof getArtworkSizeInput>[0],
+  artwork: SizeInputFields,
 ): ArtworkDimensionLines | null {
   const input = getArtworkSizeInput(artwork)
   if (!input) return null
@@ -109,7 +110,10 @@ export function formatArtworkDimensionLines(
 }
 
 export function resolveSeriesDisplay(
-  artwork: Pick<Artwork, 'seriesSlug' | 'series'>,
+  artwork: {
+    seriesSlug?: string | null
+    series?: { slug?: string | null; name?: string | null } | number | null
+  },
   filterSeries: FilterCategory[],
 ): SeriesDisplay | null {
   const slug = resolveSeriesSlug(artwork)
@@ -226,12 +230,15 @@ function firstVisionSentence(artwork: Pick<Artwork, 'visionAnalyses'>): string |
   return (sentence ? sentence[0] : text).replace(/\s+/g, ' ').trim()
 }
 
-function identityLabelLine(
-  artwork: Pick<Artwork, 'title' | 'yearCreated' | 'medium' | 'mediumOther'>,
-): string {
+function identityLabelLine(artwork: {
+  title?: string | null
+  yearCreated?: number | null
+  medium?: Artwork['medium'] | null
+  mediumOther?: string | null
+}): string {
   const title = artwork.title?.trim() || 'Artwork'
   const year = artwork.yearCreated ? String(artwork.yearCreated) : ''
-  const medium = resolveMediumLabel(artwork as Artwork)
+  const medium = resolveMediumLabel(artwork)
   return [title, year, medium].filter(Boolean).join(', ')
 }
 
@@ -239,12 +246,14 @@ function identityLabelLine(
  * Alt describes the picture. Title-only is not a description.
  * Source order: primaryImageAltText → first vision sentence → identity label line.
  */
-export function resolveCatalogueImageAlt(
-  artwork: Pick<
-    Artwork,
-    'title' | 'yearCreated' | 'medium' | 'mediumOther' | 'primaryImageAltText' | 'visionAnalyses'
-  >,
-): string {
+export function resolveCatalogueImageAlt(artwork: {
+  title?: string | null
+  yearCreated?: number | null
+  medium?: Artwork['medium'] | null
+  mediumOther?: string | null
+  primaryImageAltText?: string | null
+  visionAnalyses?: Artwork['visionAnalyses']
+}): string {
   const explicit = artwork.primaryImageAltText?.trim()
   if (explicit) {
     return truncateAtBoundary(explicit, ALT_MAX_CHARS) ?? explicit.slice(0, ALT_MAX_CHARS)

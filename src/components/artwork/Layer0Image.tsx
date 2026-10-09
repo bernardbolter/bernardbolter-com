@@ -5,44 +5,42 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactPlayer from 'react-player'
 
 import MagnifyOverlay from '@/components/artwork/MagnifyOverlay'
-import ArtworkSize, { getArtworkSizeInput } from '@/components/artworks/ArtworkSize'
+import ArtworkSize from '@/components/artworks/ArtworkSize'
 import {
   ArtworkPauseSvg,
   ArtworkTimerSvg,
   LeftArrowSvg,
 } from '@/components/icons'
 import MagnifyAnimationSvg from '@/components/icons/MagnifyAnimationSvg'
-import { getSizeTier, resolveSeriesSlug } from '@/helpers/artworkCatalog'
-import { seriesColorBlurDataURLs } from '@/helpers/blurURLs'
-import { getSeriesColor } from '@/helpers/seriesColor'
 import useWindowSize from '@/hooks/useWindowSize'
-import {
-  artworkHasVideo,
-  collectArtworkGalleryImages,
-  getPrimaryVideoSource,
-} from '@/lib/artwork/artworkGalleryImages'
-import { formatArtworkYearRange, resolveWallLabelMedium } from '@/lib/artwork/artworkLabels'
+import type { Layer0ImageHeroProps } from '@/lib/artwork/layer0HeroProps'
 import { getInitialMagnifyDragPosition } from '@/lib/artwork/magnifyDisplay'
 import type { DragPosition } from '@/lib/artwork/magnifyDisplay'
 import {
   calculateArtworkDisplaySize,
   resolveArtworkOrientation,
 } from '@/utilities/artworkSizeDisplay'
-import type { Artwork } from '@/payload-types'
 
 const SLIDE_INTERVAL_MS = 4000
 const TIMER_TICK_MS = 50
 
-type Props = {
-  artwork: Artwork
-}
-
-export default function Layer0Image({ artwork }: Props) {
+export default function Layer0Image({
+  title,
+  yearLabel,
+  mediumLabel,
+  seriesColor,
+  blurDataURL,
+  sizeTier,
+  orientation,
+  sizeInput,
+  galleryImages,
+  videoSrc,
+  hasVideo,
+}: Layer0ImageHeroProps) {
   const size = useWindowSize()
   const viewportWidth = size.width || 1200
   const viewportHeight = size.height || 900
 
-  const galleryImages = useMemo(() => collectArtworkGalleryImages(artwork), [artwork])
   const gallerySignature = useMemo(
     () => galleryImages.map((image) => image.url).join('|'),
     [galleryImages],
@@ -75,13 +73,6 @@ export default function Layer0Image({ artwork }: Props) {
   const hasMultiple = galleryImages.length > 1
   const maxIndex = galleryImages.length - 1
   const activeImage = galleryImages[activeIndex] ?? galleryImages[0]
-  const videoSrc = getPrimaryVideoSource(artwork)
-  const hasVideo = artworkHasVideo(artwork)
-  const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
-  const seriesColor = getSeriesColor(seriesSlug)
-  const blurDataURL = seriesColorBlurDataURLs[seriesSlug] ?? seriesColorBlurDataURLs.default
-  const sizeTier = getSizeTier(artwork)
-  const sizeInput = getArtworkSizeInput(artwork)
 
   useEffect(() => {
     setImageLoadingStates(
@@ -102,9 +93,9 @@ export default function Layer0Image({ artwork }: Props) {
       containerHeight: viewportHeight,
       sizeTier,
       useImageFactors: true,
-      orientation: resolveArtworkOrientation(artwork, activeImage.width, activeImage.height),
+      orientation: resolveArtworkOrientation({ orientation }, activeImage.width, activeImage.height),
     })
-  }, [activeImage, artwork, sizeTier, viewportHeight, viewportWidth])
+  }, [activeImage, orientation, sizeTier, viewportHeight, viewportWidth])
 
   const { marginWidth, marginHeight } = useMemo(() => {
     return {
@@ -191,7 +182,7 @@ export default function Layer0Image({ artwork }: Props) {
   if (!galleryImages.length && !showVideoPlayer) {
     return (
       <div className="artwork-image__container">
-        <p className="artwork-image__title">{artwork.title}</p>
+        <p className="artwork-image__title">{title}</p>
       </div>
     )
   }
@@ -263,7 +254,7 @@ export default function Layer0Image({ artwork }: Props) {
                       className="artwork-image__image"
                       src={image.url}
                       fallbackSrc={image.fallbackUrl}
-                      alt={image.alt || artwork.title || 'Bernard Bolter Artwork'}
+                      alt={image.alt || title || 'Bernard Bolter Artwork'}
                       width={displaySize.displayWidth}
                       height={displaySize.displayHeight}
                       loading={index === activeIndex ? 'eager' : 'lazy'}
@@ -307,9 +298,9 @@ export default function Layer0Image({ artwork }: Props) {
             className="artwork-image__info--title-container"
             style={{ paddingRight: marginWidth }}
           >
-            <h1 className="artwork-image__title">{artwork.title}</h1>
-            <h2 className="artwork-image__year">{formatArtworkYearRange(artwork)}</h2>
-            <h3 className="artwork-image__medium">{resolveWallLabelMedium(artwork)}</h3>
+            <h1 className="artwork-image__title">{title}</h1>
+            <h2 className="artwork-image__year">{yearLabel}</h2>
+            <h3 className="artwork-image__medium">{mediumLabel}</h3>
             {sizeInput ? (
               <ArtworkSize
                 width={sizeInput.width}
@@ -386,7 +377,7 @@ export default function Layer0Image({ artwork }: Props) {
           }}
           seriesColor={seriesColor}
           blurDataURL={blurDataURL}
-          artworkTitle={artwork.title ?? 'Artwork'}
+          artworkTitle={title}
         />
       ) : null}
     </>

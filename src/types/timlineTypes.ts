@@ -1,8 +1,8 @@
-import type { Artwork } from '@/payload-types'
+import type { CatalogueClientRow } from '@/types/frontend'
 
 export type SortingType = 'latest' | 'oldest' | 'random'
 
-export interface TimelineArtwork extends Artwork {
+export interface TimelineArtwork extends CatalogueClientRow {
   originalIndex: number
   marginRight: number
   marginBottom: number
@@ -34,7 +34,7 @@ export interface TimelineResult {
 }
 
 export interface TimelineConfig {
-  artworks: Artwork[]
+  artworks: CatalogueClientRow[]
   sorting: SortingType
   artworkContainerWidth: number
   artworkContainerHeight: number

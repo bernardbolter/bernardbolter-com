@@ -221,7 +221,7 @@ describe('buildTier5SessionsResponse', () => {
 })
 
 describe('buildSessionJsonLd', () => {
-  it('embeds Tier 5 streams with absolute artwork URLs and sameAs', () => {
+  it('embeds public session crumb JSON-LD with absolute URLs and sameAs (no Tier 5 private streams)', () => {
     const jsonLd = buildSessionJsonLd(session(), 'https://bernardbolter.com')
     expect(jsonLd).toMatchObject({
       '@context': CORPUS_CONTEXT,
@@ -234,9 +234,13 @@ describe('buildSessionJsonLd', () => {
       sameAs:
         'https://bernardbolter.com/api/corpus/sessions/venice-session-1?tier=5',
     })
-    expect(jsonLd).toHaveProperty('artistRecord')
-    expect(jsonLd).toHaveProperty('art-official:DialogueSelfAudit')
-    expect((jsonLd!.artistRecord as { messages: unknown[] }).messages).toHaveLength(2)
+    // Public page JSON-LD must not embed Tier 5 private streams.
+    expect(jsonLd).not.toHaveProperty('artistRecord')
+    expect(jsonLd).not.toHaveProperty('art-official:DialogueSelfAudit')
+    expect(JSON.stringify(jsonLd)).not.toContain('firstImpression')
+    expect(JSON.stringify(jsonLd)).not.toContain('sessionNotes')
+    expect(JSON.stringify(jsonLd)).not.toContain('fieldUpdateTimeline')
+    expect(JSON.stringify(jsonLd)).not.toContain('agentDraft')
   })
 })
 
