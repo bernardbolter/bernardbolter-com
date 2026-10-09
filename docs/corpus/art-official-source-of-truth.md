@@ -363,7 +363,7 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 **Deferred to Phase B.** Done — see Part 13.
 
-**Deferred to Phase C.** Grid tile grow-by-constant-factor + neighbour dim + fixed card. Grid tiles still link to `/{slug}`. Ambient: grid unfiltered stays whatever the plus-colour randomiser does today.
+**Deferred to Phase C.** Grid tile grow-by-constant-factor + neighbour dim + fixed card. Ambient: grid unfiltered is neutral. See Part 15.
 
 **Spec vs live, flagged not rewritten.**
 - `docs/filters/right-nav-filter-fix-spec.md` still claims drawings/performances/watercolors already had `getSeriesColor` entries. They did not; they do now. That spec is stale.
@@ -389,7 +389,7 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 - SSR check on local `/`: 220 “Open the record”; **35** verso descriptions (matches populated `descriptionShort`/`intent`); 187 not yet catalogued / 31 catalogued / 2 last-catalogued. HTML ~851 KB (Phase A was ~768 KB).
 - Dev first-paint: root layout no longer waits on the catalogue; `AnimationWrapper` skips the enter fade on first paint so hydration cannot hide the works at `opacity: 0`.
 
-**Deferred to Phase C.** Grid grow/dim/card. Grid tiles still link to `/{slug}`.
+**Deferred to Phase C.** Grid grow/dim/card — see Part 15.
 
 **Spec vs live.**
 - Spec says throughline links “by short title.” Live fields are `text` + `slug` only. Flagged; not invented.
@@ -403,9 +403,34 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 **Decided, implemented.** Flip remains one block / two CSS faces / both in the HTML source. Unflipped verso is not a 3D layer: `.is-flipped` hides the painting and shows the verso card (`visibility` + `opacity`). Wall labels sit inside the physical slot (`bottom` of `.artwork-block`), not below it. Timeline slot width/height unchanged.
 
-**Dev hang (Firefox).** Stacked `GET /` of 90–120s was Fast Refresh wiping the module-level catalogue cache (and `gridRealSize` imports into `layoutData` made caption edits full-reload). Cache now lives on `globalThis` for 5 minutes and coalesces inflight fetches. Timeline SSR emits identity for all 220 works but only the first six thumbnails — 220 `<img>` tags were aborting in Firefox.
+**Dev hang (Firefox).** Stacked `GET /` of 90–120s was Fast Refresh wiping the module-level catalogue cache (and `gridRealSize` imports into `layoutData` made caption edits full-reload). See Part 16 for the disk snapshot that replaces re-querying Payload on every refresh.
 
 **Spec vs live.** `homepage-rebuild-spec.md` §3 says “Flip is a CSS transform.” Live is a CSS class state, not `rotateY`, because the transform path failed in Firefox. Flagged; not treated as optional 3D. Spec file not rewritten this pass (`decided, not yet propagated`).
+
+---
+
+## Part 15 — Homepage grid selection (2026-09-19)
+
+**Spec.** `homepage-rebuild-spec.md` §5 / Phase C grid: grow by a constant factor, dim neighbours, fixed verso card. No flip. Clicking another tile dismisses; it does not switch selection. Image is not a direct `/{slug}` link; that route is the verso “Open the record” plus the title on the label.
+
+**Decided, implemented.**
+- `GRID_SELECTION_SCALE = 1.35` — transform only, no reflow, physical footprint stays the layout size.
+- Verso is the same `ArtworkVerso` markup as the timeline back, CSS-positioned `fixed` top-right when selected (one block, two presentations). Series colour as a left-edge accent on the card.
+- Grid unfiltered plus-colour is neutral grey, not a random series. A single active series filter takes that series’ colour.
+
+**Not this pass.** Timeline visual pass. Anchored card positioning if the top-right card fails the bottom-left selection case. Throughline short titles (Phase 4). `/record` recast.
+
+---
+
+## Part 16 — Dev catalogue snapshot (2026-09-19)
+
+**What was wrong.** Local `GET /` was 1–4 minutes because each request rebuilt the homepage from live Payload through the SSH tunnel, even though the catalogue was not changing. An in-memory TTL did not survive Fast Refresh.
+
+**Decided, implemented.** In development, the last successful layout payload is written to gitignored `.cache/catalogue-layout.json` and reused. Production is unchanged (still live Payload). Images remain R2 URLs inside the snapshot.
+
+- Default: read the snapshot when the file exists.
+- `pnpm snapshot:catalogue` or `CATALOGUE_SNAPSHOT=refresh` — hit Payload and rewrite.
+- `CATALOGUE_SNAPSHOT=live` — always query Payload.
 
 ---
 
@@ -422,6 +447,18 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 - Do not rename a live schema field to match this doc without checking whether the doc is the one that's actually wrong.
 - Do not treat this file as authoritative over `art-official-dialogue-spec.md` or `artist-archive-schema-final.md` — bridge/index only.
 - Do not let a "decided" correction sit undecided-looking in its source spec file — propagate in the same sitting where possible, or mark clearly as "decided, not yet propagated" if not.
+
+---
+
+## Part 17 — Homepage ISR `stale-while-revalidate` was ~1 year (2026-10-09)
+
+**What it was.** Live `/` sent `Cache-Control: s-maxage=300, stale-while-revalidate=31535700`. That is **Next.js ISR**, not middleware, not a Cloudflare Cache Rule, not Caddy. Next’s default `expireTime` is `31536000` (one year); the emitted SWR is `expireTime − s-maxage`. Homepage `s-maxage=300` comes from the shortest data-cache revalidate in the render tree — `getPerson` / `unstable_cache(..., { revalidate: 300 })` in `src/lib/payload/person.ts` — not from `export const revalidate = 3600` on the page.
+
+**What it broke.** After Deploy 1 restored ISR, a CDN (or any cache that honors SWR) could keep serving pre–Phase A HTML for up to a year while traffic kept revalidating in the background. Live still showed Web Portal meta, title-only gateway slots, plain `220 artworks`, and bio-entry markers removed in `a294c84`.
+
+**Fix.** Set `expireTime: 3600` in `next.config.ts`. Homepage header becomes `s-maxage=300, stale-while-revalidate=3300`. Same knob caps SWR on other ISR HTML (`/bio`, `/statement`, `/cv`). Did **not** change `s-maxage` / person `revalidate: 300` in this pass.
+
+**Not this pass.** Putting `/{slug}`, record, vision on a Cloudflare Cache Rule (they still emit `private, no-cache, no-store`). Corpus HTML uses `searchParams` so it stays dynamic/`no-store` at origin.
 
 ---
 
