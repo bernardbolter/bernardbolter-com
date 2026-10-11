@@ -10,6 +10,7 @@ import { getPerson } from '@/lib/payload/person'
 import { getSeriesBySlug } from '@/lib/payload/seriesPage'
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import { corpusAlternateTypes, corpusIndexUrl } from '@/lib/seo/corpusDiscovery'
+import { truncateAtWordBoundary } from '@/lib/seo/truncateAtWordBoundary'
 import { CollectionArtworksProvider } from '@/providers/ArtworkProvider'
 import { generateSeriesJsonLd } from '@/utilities/generateSeriesJsonLd'
 
@@ -24,15 +25,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: 'Series not found' }
   }
 
-  const description = lexicalToPlain(series.description).replace(/\s+/g, ' ').trim()
+  const plain = lexicalToPlain(series.description).replace(/\s+/g, ' ').trim()
+  const description = truncateAtWordBoundary(
+    plain || `${series.name} — artworks by Bernard Bolter.`,
+    155,
+  )
+  const title = series.name
+  const canonical = `/series/${slug}`
 
   return {
-    title: series.name,
-    description: description || `${series.name} — artworks by Bernard Bolter.`,
+    title,
+    description,
     alternates: {
-      canonical: `/series/${slug}`,
+      canonical,
       ...corpusAlternateTypes(corpusIndexUrl()),
     },
+    openGraph: { title, description, url: canonical, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }
 

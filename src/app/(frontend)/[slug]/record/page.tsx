@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
+import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getArtworkForPage } from '@/lib/payload/artworkPage'
 import { getPerson } from '@/lib/payload/person'
@@ -18,11 +19,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!artwork) return { title: 'Record not found' }
   const isStub = artwork.reasoningStatus === 'stub'
   const base = getSiteBaseUrl()
+  const seo = resolveArtworkSeo(artwork)
+  const title = `${artwork.title} — Record`
+  const description =
+    seo.description || `Public structured record for ${artwork.title}.`
   return {
-    title: `${artwork.title} — Record`,
-    description: `Public structured record for ${artwork.title}.`,
+    title,
+    description,
     // Canonical is the artwork page — /record is a plain-text mirror.
     alternates: { canonical: `${base}/${slug}` },
+    openGraph: { title, description, url: `${base}/${slug}/record`, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
     ...(isStub ? { robots: { index: false, follow: true } } : {}),
   }
 }

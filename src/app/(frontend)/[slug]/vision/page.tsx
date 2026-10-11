@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import VisionPage from '@/components/artwork/VisionPage'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
+import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import {
   getDirectR2ImageUrl,
   resolveVisionAnalyses,
@@ -28,14 +29,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const base = getSiteBaseUrl()
-  const title = artwork.title?.trim() || 'Artwork'
+  const workTitle = artwork.title?.trim() || 'Artwork'
+  const title = `${workTitle} — Vision`
+  const seo = resolveArtworkSeo(artwork)
+  const description =
+    seo.description || `Visual embeddings and vision analyses for ${workTitle}.`
   const directImageUrl = getDirectR2ImageUrl(artwork)
   const hasVisionAnalyses = resolveVisionAnalyses(artwork).length > 0
 
   return {
-    title: `${title} — Vision`,
-    description: `Visual embeddings and vision analyses for ${title}.`,
+    title,
+    description,
     alternates: { canonical: `${base}/${slug}/vision` },
+    openGraph: { title, description, url: `${base}/${slug}/vision`, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
     // Empty vision pages are near-duplicate boilerplate — keep crawlable links, skip indexing.
     ...(!hasVisionAnalyses ? { robots: { index: false, follow: true } } : {}),
     ...(directImageUrl

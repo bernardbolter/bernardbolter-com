@@ -13,6 +13,7 @@ import {
   formatSessionCompletedLabel,
   formatSessionPageTitle,
 } from '@/lib/corpus/sessionPageTitle'
+import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { maybePermanentRedirect } from '@/lib/redirects/maybeRedirect'
 import type { Artwork } from '@/payload-types'
@@ -68,17 +69,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     artworkTitle: primary?.title,
     completedAt: session.completedAt,
   })
-  return {
-    title: { absolute: `${pageTitle} | Bernard Bolter` },
-    description: `Art/Official session record${
+  const artworkSeo = primary ? resolveArtworkSeo(primary) : null
+  const description =
+    artworkSeo?.description ||
+    `Art/Official session record${
       primary?.title ? ` for ${primary.title}` : ''
-    }. Full transcript on this page; machine JSON via the corpus Tier 5 API.`,
+    }. Full transcript on this page; machine JSON via the corpus Tier 5 API.`
+  const title = `${pageTitle} | Bernard Bolter`
+  return {
+    title: { absolute: title },
+    description,
     alternates: { canonical: `/sessions/${sessionId}` },
     openGraph: {
       title: pageTitle,
-      description: `Art/Official session${primary?.title ? ` — ${primary.title}` : ''}.`,
+      description,
       url: `/sessions/${sessionId}`,
       type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description,
     },
   }
 }

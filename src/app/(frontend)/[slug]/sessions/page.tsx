@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
+import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import {
   formatSessionCompletedLabel,
   formatSessionPageTitle,
@@ -21,11 +22,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (isReservedFrontendSlug(slug)) return { title: 'Not found' }
   const artwork = await getArtworkForPage(slug)
   if (!artwork) return { title: 'Sessions not found' }
-  const title = artwork.title?.trim() || 'Artwork'
+  const workTitle = artwork.title?.trim() || 'Artwork'
+  const title = `${workTitle} — Sessions`
+  const seo = resolveArtworkSeo(artwork)
+  const description = seo.description || `Art/Official sessions for ${workTitle}.`
+  const canonical = `${getSiteBaseUrl()}/${slug}/sessions`
   return {
-    title: `${title} — Sessions`,
-    description: `Art/Official sessions for ${title}.`,
-    alternates: { canonical: `${getSiteBaseUrl()}/${slug}/sessions` },
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: { title, description, url: canonical, type: 'website' },
+    twitter: { card: 'summary_large_image', title, description },
   }
 }
 
