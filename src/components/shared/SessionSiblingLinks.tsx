@@ -34,7 +34,7 @@ export function collectSessionSiblingLinks(options: {
     out.push({
       kind: 'bio',
       slug: entry.slug,
-      label: entry.text.trim().slice(0, 120),
+      label: entry.text.trim(),
       href: `/bio/entries/${entry.slug}`,
     })
   }
@@ -47,7 +47,7 @@ export function collectSessionSiblingLinks(options: {
     out.push({
       kind: 'throughline',
       slug: entry.slug,
-      label: entry.text.trim().slice(0, 120),
+      label: entry.text.trim(),
       href: `/statement/throughlines/${entry.slug}`,
     })
   }

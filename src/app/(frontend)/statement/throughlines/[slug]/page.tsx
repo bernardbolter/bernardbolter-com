@@ -52,7 +52,7 @@ function buildThroughlineJsonLd(options: {
     '@context': CORPUS_CONTEXT,
     '@type': 'CreativeWork',
     '@id': `${baseUrl}/statement/throughlines/${slug}`,
-    name: text.slice(0, 120),
+    name: text,
     url: `${baseUrl}/statement/throughlines/${slug}`,
     ...(dateRecognized ? { 'art-official:dateRecognized': dateRecognized } : {}),
     ...(basedOn.length === 1

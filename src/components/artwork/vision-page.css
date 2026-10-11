@@ -496,6 +496,15 @@
   margin: 0 0 0.45rem;
 }
 
+/* Full text is in the HTML; clip visually (not mid-word string truncation). */
+.artwork-reciprocal-links a {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
 .artwork-reciprocal-links li:last-child {
   margin-bottom: 0;
 }

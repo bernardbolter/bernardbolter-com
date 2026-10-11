@@ -27,7 +27,7 @@ const nextConfig: NextConfig = {
       { source: '/artworks/:slug', destination: '/:slug', permanent: true },
       { source: '/:slug/embedding', destination: '/:slug/vision', permanent: true },
       // Agents guess singular /session; canonical index is plural.
-      { source: '/:slug/session', destination: '/:slug/sessions', permanent: false },
+      { source: '/:slug/session', destination: '/:slug/sessions', permanent: true },
     ]
   },
   images: {

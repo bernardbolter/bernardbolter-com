@@ -1,35 +1,19 @@
 import type { CollectionBeforeChangeHook, PayloadRequest } from 'payload'
-import { randomBytes } from 'crypto'
 
+import {
+  ENTRY_SLUG_MAX_LENGTH,
+  slugifyEntryText,
+  uniqueEntrySlug,
+} from '@/lib/artist/entrySlug'
 import {
   mergeLocationRows,
   validateContactLocations,
 } from '@/lib/artist/validateContactLocations'
-import { slugifyArtworkTitle } from '@/lib/artOfficial/quickUploadDerived'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { bioEntryPublicPath, throughlinePublicPath } from '@/lib/redirects/paths'
 import { recordSlugRedirect } from '@/lib/redirects/recordSlugRedirect'
 
 type SlugRow = { slug?: string | null; text?: string | null; id?: string | null }
-
-function uniqueSlug(base: string, used: Set<string>): string {
-  let candidate = base || 'entry'
-  if (!used.has(candidate)) {
-    used.add(candidate)
-    return candidate
-  }
-  for (let i = 0; i < 8; i += 1) {
-    const suffix = randomBytes(2).toString('hex')
-    candidate = `${base}-${suffix}`
-    if (!used.has(candidate)) {
-      used.add(candidate)
-      return candidate
-    }
-  }
-  candidate = `${base}-${Date.now().toString(36)}`
-  used.add(candidate)
-  return candidate
-}
 
 function ensureEntrySlugs(
   rows: SlugRow[] | null | undefined,
@@ -46,12 +30,14 @@ function ensureEntrySlugs(
     if ((!row.slug || !row.slug.trim()) && row.id && byId.has(row.id)) {
       row.slug = byId.get(row.id)!
     }
-    if (typeof row.slug === 'string' && row.slug.trim()) {
-      used.add(row.slug.trim())
+    const current = typeof row.slug === 'string' ? row.slug.trim() : ''
+    // Sticky when present and within the 60-char cap; regenerate over-length.
+    if (current && current.length <= ENTRY_SLUG_MAX_LENGTH) {
+      used.add(current)
       continue
     }
-    const base = slugifyArtworkTitle(row.text?.trim() || row.id || 'entry')
-    row.slug = uniqueSlug(base, used)
+    const base = slugifyEntryText(row.text?.trim() || row.id || 'entry')
+    row.slug = uniqueEntrySlug(base, used)
   }
 }
 

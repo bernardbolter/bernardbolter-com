@@ -46,7 +46,8 @@ export function findRelatedThroughlines(
     if (!slug || !text) continue
     if (!entryLinksArtwork(entry.linkedArtworkSlugs, artwork)) continue
     out.push({
-      name: text.slice(0, 120),
+      // Full text in HTML; CSS clips visually if needed (never mid-word in the string).
+      name: text,
       url: `${origin}/statement/throughlines/${slug}`,
     })
   }
@@ -74,7 +75,7 @@ export function findRelatedBioEvents(
     if (!slug || !text) continue
     if (!entryLinksArtwork(entry.linkedArtworkSlugs, artwork)) continue
     out.push({
-      name: text.slice(0, 120),
+      name: text,
       url: `${origin}/bio/entries/${slug}`,
     })
   }
