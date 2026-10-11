@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
@@ -13,6 +15,7 @@ import { linkedArtworksToCards } from '@/lib/artist/linkedArtworksToCards'
 import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getStatementPageArtist } from '@/lib/payload/statementPage'
+import { maybePermanentRedirect } from '@/lib/redirects/maybeRedirect'
 import type { Session } from '@/payload-types'
 
 export const revalidate = 3600
@@ -73,12 +76,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function ThroughlinePermalinkPage({ params }: PageProps) {
   const { slug } = await params
   const rawArtist = await getStatementPageArtist()
-  if (!rawArtist) notFound()
+  if (!rawArtist) {
+    const payload = await getPayload({ config })
+    await maybePermanentRedirect(payload, `/statement/throughlines/${slug}`)
+    notFound()
+  }
   const artist = await attachPublicSessionRefs(rawArtist)
 
   const entry = (artist.statementThroughlines ?? []).find(
     (e) => e.slug === slug && (e.visibility ?? 'public') === 'public',
   )
+  if (!entry) {
+    const payload = await getPayload({ config })
+    await maybePermanentRedirect(payload, `/statement/throughlines/${slug}`)
+    notFound()
+  }
   if (!entry?.text?.trim()) notFound()
 
   const origin = readSession(entry.sourceSessionRef as number | Session | null)

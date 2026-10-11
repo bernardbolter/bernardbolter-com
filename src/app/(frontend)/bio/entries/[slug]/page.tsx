@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { getPayload } from 'payload'
+import config from '@payload-config'
 
 import BioEntryPage from '@/components/BioEntry/BioEntryPage'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
@@ -11,6 +13,7 @@ import { linkedArtworksToCards } from '@/lib/artist/linkedArtworksToCards'
 import { CORPUS_CONTEXT } from '@/lib/corpus/constants'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { getBioPageArtist } from '@/lib/payload/bioPage'
+import { maybePermanentRedirect } from '@/lib/redirects/maybeRedirect'
 import type { Session } from '@/payload-types'
 
 export const revalidate = 3600
@@ -53,13 +56,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function BioEntryPermalinkPage({ params }: PageProps) {
   const { slug } = await params
   const rawArtist = await getBioPageArtist()
-  if (!rawArtist) notFound()
+  if (!rawArtist) {
+    const payload = await getPayload({ config })
+    await maybePermanentRedirect(payload, `/bio/entries/${slug}`)
+    notFound()
+  }
   const artist = await attachPublicSessionRefs(rawArtist)
 
   const entry = (artist.bioTimelineEntries ?? []).find(
     (e) => e.slug === slug && (e.visibility ?? 'public') === 'public',
   )
-  if (!entry?.text?.trim()) notFound()
+  if (!entry?.text?.trim()) {
+    const payload = await getPayload({ config })
+    await maybePermanentRedirect(payload, `/bio/entries/${slug}`)
+    notFound()
+  }
 
   const sourceSession =
     entry.sourceSessionRef && typeof entry.sourceSessionRef === 'object'

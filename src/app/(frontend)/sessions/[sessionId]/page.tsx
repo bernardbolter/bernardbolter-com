@@ -14,6 +14,7 @@ import {
   formatSessionPageTitle,
 } from '@/lib/corpus/sessionPageTitle'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { maybePermanentRedirect } from '@/lib/redirects/maybeRedirect'
 import type { Artwork } from '@/payload-types'
 
 export const revalidate = 3600
@@ -84,8 +85,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PublicSessionPage({ params }: PageProps) {
   const { sessionId } = await params
+  const payload = await getPayload({ config })
   const session = await loadCompletedSession(sessionId)
-  if (!session) notFound()
+  if (!session) {
+    await maybePermanentRedirect(payload, `/sessions/${sessionId}`)
+    notFound()
+  }
 
   const primary =
     readArtwork(session.primaryArtwork) ?? readArtwork(session.artworkRecord)

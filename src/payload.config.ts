@@ -42,6 +42,7 @@ import { DCSCapturePhotos } from './collections/DCSCapturePhotos'
 import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
 import { Sessions } from './collections/Sessions'
+import { Redirects } from './collections/Redirects'
 import { Campaigns } from './collections/Campaigns'
 import { Themes } from './collections/Themes'
 import { QueueItems } from './collections/QueueItems'
@@ -153,6 +154,7 @@ export default buildConfig({
     Triptychs,
     SmallPrints,
     Sessions,
+    Redirects,
   ],
   globals: [PrintSetConfig, ArtOfficialSettings],
   // Public catalogue reads for external sites (e.g. A Colorful History).

@@ -97,6 +97,7 @@ export interface Config {
     triptychs: Triptych;
     'small-prints': SmallPrint;
     sessions: Session;
+    redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -140,6 +141,7 @@ export interface Config {
     triptychs: TriptychsSelect<false> | TriptychsSelect<true>;
     'small-prints': SmallPrintsSelect<false> | SmallPrintsSelect<true>;
     sessions: SessionsSelect<false> | SessionsSelect<true>;
+    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -286,8 +288,7 @@ export interface Artist {
    * Hidden on this site — artist, gallery, and collector are separate properties.
    */
   primaryActorType?:
-    | ('artist' | 'collector' | 'gallery' | 'artist-collector' | 'artist-gallery' | 'artist-collector-gallery')
-    | null;
+    ('artist' | 'collector' | 'gallery' | 'artist-collector' | 'artist-gallery' | 'artist-collector-gallery') | null;
   actorRoles?: ('artist' | 'collector' | 'gallery')[] | null;
   /**
    * Set automatically when the record is first created.
@@ -2138,8 +2139,7 @@ export interface Artwork {
               isArtistProof?: boolean | null;
               owner?: string | null;
               claimStatus?:
-                | ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary')
-                | null;
+                ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary') | null;
               collectorVisible?: boolean | null;
               dateAcquired?: string | null;
               claimedCopyNumberKnown?: boolean | null;
@@ -2950,8 +2950,7 @@ export interface Artwork {
                 isArtistProof?: boolean | null;
                 owner?: string | null;
                 claimStatus?:
-                  | ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary')
-                  | null;
+                  ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary') | null;
                 collectorVisible?: boolean | null;
                 dateAcquired?: string | null;
                 claimedCopyNumberKnown?: boolean | null;
@@ -3299,8 +3298,7 @@ export interface Artwork {
                   isArtistProof?: boolean | null;
                   owner?: string | null;
                   claimStatus?:
-                    | ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary')
-                    | null;
+                    ('unclaimed' | 'claimed-pending' | 'claimed-confirmed' | 'artist-held' | 'sold-secondary') | null;
                   collectorVisible?: boolean | null;
                   dateAcquired?: string | null;
                   claimedCopyNumberKnown?: boolean | null;
@@ -3315,8 +3313,7 @@ export interface Artwork {
           }[]
         | null;
       certificateOfAuthenticity?:
-        | ('physical' | 'digital_pdf' | 'blockchain' | 'physical_and_digital' | 'none' | 'tbd')
-        | null;
+        ('physical' | 'digital_pdf' | 'blockchain' | 'physical_and_digital' | 'none' | 'tbd') | null;
       fulfilmentPartner?: string | null;
       fulfilmentNotes?: string | null;
       printNotes?: string | null;
@@ -3553,13 +3550,7 @@ export interface ArtHistoricalReference {
 export interface FieldNote {
   id: number;
   mediaType:
-    | 'text'
-    | 'photo'
-    | 'video-broll'
-    | 'video-observation'
-    | 'video-performance'
-    | 'video-process'
-    | 'voice-memo';
+    'text' | 'photo' | 'video-broll' | 'video-observation' | 'video-performance' | 'video-process' | 'voice-memo';
   /**
    * Museum capture (photo + spoken note). Batch-reviewed per visit rather than individually.
    */
@@ -3606,8 +3597,7 @@ export interface FieldNote {
    * Closed vocabulary — slate-parsed or set at upload. Rap Critic: ARRIVE / HOOK / VERSE / DEPART.
    */
   shotType?:
-    | ('HOOK' | 'VERSE' | 'ARRIVE' | 'DEPART' | 'DETAIL' | 'WIDE' | 'WALK' | 'CROWD' | 'TALK' | 'AMBIENT' | 'BTS')
-    | null;
+    ('HOOK' | 'VERSE' | 'ARRIVE' | 'DEPART' | 'DETAIL' | 'WIDE' | 'WALK' | 'CROWD' | 'TALK' | 'AMBIENT' | 'BTS') | null;
   /**
    * Parsed from slate ("take two" → 2). Blank if not stated.
    */
@@ -3628,8 +3618,7 @@ export interface FieldNote {
   register?: ('exploratory' | 'resolved' | 'frustrated' | 'excited' | 'observational') | null;
   processStage?: ('early' | 'mid' | 'late' | 'completed') | null;
   conceptualThread?:
-    | ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle')
-    | null;
+    ('daguerreotype' | 'wet-plate' | 'aerial' | 'digital' | 'layering' | 'light-quality' | 'historical-angle') | null;
   lines?: (number | Line)[] | null;
   /**
    * Candidate Line connections from embedding jobs — confirm or dismiss in the studio Notes detail view.
@@ -3941,13 +3930,7 @@ export interface CapturePreset {
   id: number;
   name: string;
   mediaType:
-    | 'text'
-    | 'photo'
-    | 'video-broll'
-    | 'video-observation'
-    | 'video-performance'
-    | 'video-process'
-    | 'voice-memo';
+    'text' | 'photo' | 'video-broll' | 'video-observation' | 'video-performance' | 'video-process' | 'voice-memo';
   /**
    * Processing steps run by the overnight worker for clips using this preset.
    */
@@ -4279,11 +4262,7 @@ export interface Session {
     hasStruggle?: boolean | null;
     struggleTypes?:
       | (
-          | 'commit-error'
-          | 'description-upload-mismatch'
-          | 'blank-turn-density'
-          | 'unresolved-lookup-failure'
-          | 'other'
+          'commit-error' | 'description-upload-mismatch' | 'blank-turn-density' | 'unresolved-lookup-failure' | 'other'
         )[]
       | null;
     note?: string | null;
@@ -4770,6 +4749,26 @@ export interface SmallPrint {
   createdAt: string;
 }
 /**
+ * Old public paths that must keep resolving. Auto-recorded when sessionId or entry slugs change; do not delete rows that appear in Arweave / cited URLs.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects".
+ */
+export interface Redirect {
+  id: number;
+  /**
+   * Exact pathname that should redirect, e.g. /sessions/old-id
+   */
+  fromPath: string;
+  /**
+   * Current pathname target, e.g. /sessions/new-id
+   */
+  toPath: string;
+  source: 'session' | 'throughline' | 'bio-entry' | 'manual';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -4912,6 +4911,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'sessions';
         value: number | Session;
+      } | null)
+    | ({
+        relationTo: 'redirects';
+        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -7000,6 +7003,17 @@ export interface SessionsSelect<T extends boolean = true> {
   refinementNotes?: T;
   sequencingSeries?: T;
   legacyRecordId?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redirects_select".
+ */
+export interface RedirectsSelect<T extends boolean = true> {
+  fromPath?: T;
+  toPath?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }

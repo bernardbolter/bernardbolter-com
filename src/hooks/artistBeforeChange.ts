@@ -1,4 +1,4 @@
-import type { CollectionBeforeChangeHook } from 'payload'
+import type { CollectionBeforeChangeHook, PayloadRequest } from 'payload'
 import { randomBytes } from 'crypto'
 
 import {
@@ -7,6 +7,8 @@ import {
 } from '@/lib/artist/validateContactLocations'
 import { slugifyArtworkTitle } from '@/lib/artOfficial/quickUploadDerived'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
+import { bioEntryPublicPath, throughlinePublicPath } from '@/lib/redirects/paths'
+import { recordSlugRedirect } from '@/lib/redirects/recordSlugRedirect'
 
 type SlugRow = { slug?: string | null; text?: string | null; id?: string | null }
 
@@ -53,7 +55,38 @@ function ensureEntrySlugs(
   }
 }
 
-export const artistBeforeChange: CollectionBeforeChangeHook = ({ data, originalDoc, operation }) => {
+async function recordEntrySlugRedirects(
+  req: PayloadRequest | undefined,
+  rows: SlugRow[] | null | undefined,
+  originalRows: SlugRow[] | null | undefined,
+  kind: 'throughline' | 'bio-entry',
+): Promise<void> {
+  if (!req?.payload || !Array.isArray(rows)) return
+  const byId = new Map<string, string>()
+  for (const row of originalRows ?? []) {
+    if (row?.id && row.slug?.trim()) byId.set(row.id, row.slug.trim())
+  }
+  const pathFor = kind === 'throughline' ? throughlinePublicPath : bioEntryPublicPath
+  for (const row of rows) {
+    if (!row?.id || !row.slug?.trim()) continue
+    const prev = byId.get(row.id)
+    const next = row.slug.trim()
+    if (!prev || prev === next) continue
+    await recordSlugRedirect(req.payload, {
+      fromPath: pathFor(prev),
+      toPath: pathFor(next),
+      source: kind,
+      req,
+    })
+  }
+}
+
+export const artistBeforeChange: CollectionBeforeChangeHook = async ({
+  data,
+  originalDoc,
+  operation,
+  req,
+}) => {
   const d = data as Record<string, unknown>
   if (!d.canonicalDomain || (typeof d.canonicalDomain === 'string' && !d.canonicalDomain.trim())) {
     d.canonicalDomain = getSiteBaseUrl()
@@ -80,6 +113,21 @@ export const artistBeforeChange: CollectionBeforeChangeHook = ({ data, originalD
       originalDoc?.statementThroughlines as SlugRow[] | undefined,
       used,
     )
+
+    if (operation === 'update') {
+      await recordEntrySlugRedirects(
+        req,
+        d.bioTimelineEntries as SlugRow[] | undefined,
+        originalDoc?.bioTimelineEntries as SlugRow[] | undefined,
+        'bio-entry',
+      )
+      await recordEntrySlugRedirects(
+        req,
+        d.statementThroughlines as SlugRow[] | undefined,
+        originalDoc?.statementThroughlines as SlugRow[] | undefined,
+        'throughline',
+      )
+    }
   }
 
   return data

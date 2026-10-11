@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto'
 
 import { authenticatedReadStaffWrite } from '@/access/staffAccess'
 import { sessionAfterChange } from '@/hooks/sessionAfterChange'
+import { sessionPublicPath } from '@/lib/redirects/paths'
+import { recordSlugRedirect } from '@/lib/redirects/recordSlugRedirect'
 
 export const Sessions: CollectionConfig = {
   slug: 'sessions',
@@ -477,7 +479,7 @@ export const Sessions: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [
-      async ({ data, operation }) => {
+      async ({ data, operation, originalDoc, req }) => {
         if (operation === 'create' && !data.sessionId) {
           data.sessionId = randomUUID()
         }
@@ -486,6 +488,20 @@ export const Sessions: CollectionConfig = {
           data.artworkRecord = data.primaryArtwork
         } else if (data.artworkRecord != null && data.primaryArtwork == null) {
           data.primaryArtwork = data.artworkRecord
+        }
+
+        // Auto-record redirect when sessionId changes (Stage 2 renames + future edits).
+        if (operation === 'update') {
+          const prev = typeof originalDoc?.sessionId === 'string' ? originalDoc.sessionId.trim() : ''
+          const next = typeof data.sessionId === 'string' ? data.sessionId.trim() : prev
+          if (prev && next && prev !== next) {
+            await recordSlugRedirect(req.payload, {
+              fromPath: sessionPublicPath(prev),
+              toPath: sessionPublicPath(next),
+              source: 'session',
+              req,
+            })
+          }
         }
         return data
       },

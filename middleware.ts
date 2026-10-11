@@ -74,7 +74,43 @@ function withArtworkHtmlCache(pathname: string, response: NextResponse): NextRes
   return response
 }
 
-export function middleware(request: NextRequest) {
+async function resolvePublicRedirect(
+  request: NextRequest,
+  pathname: string,
+): Promise<NextResponse | null> {
+  const path =
+    pathname.length > 1 && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
+  if (
+    !path.startsWith('/sessions/') &&
+    !path.startsWith('/statement/throughlines/') &&
+    !path.startsWith('/bio/entries/')
+  ) {
+    return null
+  }
+  // Avoid recursion when the resolve API itself is hit.
+  if (path.startsWith('/api/')) return null
+
+  try {
+    const resolveUrl = new URL('/api/redirects/resolve', request.nextUrl.origin)
+    resolveUrl.searchParams.set('from', path)
+    const res = await fetch(resolveUrl, {
+      headers: { 'x-middleware-redirect-lookup': '1' },
+      // Fresh enough for renames; CDN may cache resolve for 60s.
+      next: { revalidate: 0 },
+    })
+    if (!res.ok) return null
+    const body = (await res.json()) as { toPath?: string | null }
+    const toPath = typeof body.toPath === 'string' ? body.toPath.trim() : ''
+    if (!toPath || toPath === path) return null
+    const dest = new URL(toPath, request.nextUrl.origin)
+    dest.search = request.nextUrl.search
+    return NextResponse.redirect(dest, 308)
+  } catch {
+    return null
+  }
+}
+
+export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-studio-path', pathname)
@@ -90,6 +126,9 @@ export function middleware(request: NextRequest) {
       })
     }
   }
+
+  const publicRedirect = await resolvePublicRedirect(request, pathname)
+  if (publicRedirect) return publicRedirect
 
   if (!pathname.startsWith(STUDIO_ROOT) || pathname.startsWith(STUDIO_LOGIN)) {
     return withArtworkHtmlCache(
