@@ -133,8 +133,10 @@ export default async function ArtworkPage({
         </p>
         {recordColumn}
         {proseColumn}
-        {sessionsBlock}
-        {visionBlock}
+        <div className="artwork-page__sessions-and-vision">
+          {sessionsBlock}
+          {visionBlock}
+        </div>
       </article>
     )
   }
@@ -161,8 +163,14 @@ export default async function ArtworkPage({
           <div className="artwork-page__column artwork-page__column--prose">{proseColumn}</div>
         </div>
 
-        {sessionsBlock}
-        {visionBlock}
+        {/*
+          One parent for sessions + vision: RSC streaming must not flush vision
+          as an uncle while transcript remainder / mentions are still in a hole.
+        */}
+        <div className="artwork-page__sessions-and-vision">
+          {sessionsBlock}
+          {visionBlock}
+        </div>
       </div>
     </article>
   )
