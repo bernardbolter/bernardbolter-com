@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Artwork } from '@/payload-types'
@@ -121,7 +122,7 @@ function prepareArtworkForPage(artwork: Artwork): Artwork {
   return prepared
 }
 
-export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
+async function fetchPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
   return withDbRetry(async () => {
     const payload = await getPayload({ config })
     const result = await payload.find({
@@ -137,6 +138,23 @@ export async function getPublishedArtworkForPage(slug: string): Promise<Artwork 
     const doc = result.docs[0]
     return doc ? prepareArtworkForPage(doc) : null
   })
+}
+
+/**
+ * Cached published artwork for public HTML. Without this, uncached Payload IO
+ * marks /{slug} (and record/vision) as fully dynamic → private, no-store.
+ */
+export async function getPublishedArtworkForPage(slug: string): Promise<Artwork | null> {
+  const trimmed = slug.trim()
+  if (!trimmed) return null
+  if (process.env.NODE_ENV === 'development') {
+    return fetchPublishedArtworkForPage(trimmed)
+  }
+  return unstable_cache(
+    () => fetchPublishedArtworkForPage(trimmed),
+    ['artwork-page', trimmed],
+    { revalidate: 3600, tags: ['artworks', `artwork-${trimmed}`] },
+  )()
 }
 
 /**

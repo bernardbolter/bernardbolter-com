@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { buildSessionGloss, type SessionGlossInput } from '@/lib/corpus/sessionGloss'
 import { sessionTier5ApiPath } from '@/lib/corpus/buildTier5SessionsResponse'
+import { formatSessionPageTitle } from '@/lib/corpus/sessionPageTitle'
 import type { Session } from '@/payload-types'
 
 type Props = {
@@ -9,6 +10,8 @@ type Props = {
   passNumber?: number | null
   /** Primary artwork slug — preferred target for the Tier 5 JSON link. */
   artworkSlug?: string | null
+  /** Primary artwork title for the public session anchor (not sessionId slice). */
+  artworkTitle?: string | null
   showJsonLink?: boolean
   className?: string
 }
@@ -40,6 +43,7 @@ export default function SessionGlossLine({
   session,
   passNumber,
   artworkSlug,
+  artworkTitle,
   showJsonLink = false,
   className,
 }: Props) {
@@ -51,12 +55,16 @@ export default function SessionGlossLine({
   const jsonHref = slug
     ? `/api/corpus/${encodeURIComponent(slug)}/sessions`
     : sessionTier5ApiPath(session.sessionId)
+  const anchor = formatSessionPageTitle({
+    artworkTitle,
+    completedAt: session.completedAt,
+  })
 
   return (
     <div className={className ?? 'session-gloss-line'}>
       <Link href={href} className="bio__inline-link">
         {session.linchpinFlag?.isLinchpin ? '◆ ' : ''}
-        Session {session.sessionId.slice(0, 8)}…
+        {anchor}
       </Link>
       <p className="bio__masonry-caption">{gloss}</p>
       {showJsonLink ? (

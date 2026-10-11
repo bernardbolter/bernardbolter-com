@@ -9,6 +9,10 @@ import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
 import SessionTranscript from '@/components/shared/SessionTranscript'
 import { buildSessionJsonLd, sessionTier5ApiPath } from '@/lib/corpus/buildTier5SessionsResponse'
+import {
+  formatSessionCompletedLabel,
+  formatSessionPageTitle,
+} from '@/lib/corpus/sessionPageTitle'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import type { Artwork } from '@/payload-types'
 
@@ -21,18 +25,7 @@ function readArtwork(value: number | Artwork | null | undefined): Artwork | null
   return value
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { sessionId } = await params
-  return {
-    title: 'Session',
-    description:
-      'Human-readable session summary. Full transcripts are public via the corpus Tier 5 API.',
-    alternates: { canonical: `/sessions/${sessionId}` },
-  }
-}
-
-export default async function PublicSessionPage({ params }: PageProps) {
-  const { sessionId } = await params
+async function loadCompletedSession(sessionId: string) {
   const payload = await getPayload({ config })
   const result = await payload.find({
     collection: 'sessions',
@@ -44,8 +37,6 @@ export default async function PublicSessionPage({ params }: PageProps) {
     },
     limit: 1,
     depth: 1,
-    // Public HTML: transcript messages only. Private session streams
-    // (firstImpression, sessionNotes, agentDraft*, fieldUpdateTimeline) live on Tier 5 JSON.
     select: {
       sessionId: true,
       sessionType: true,
@@ -58,8 +49,42 @@ export default async function PublicSessionPage({ params }: PageProps) {
       messages: true,
     },
   })
+  return result.docs[0] ?? null
+}
 
-  const session = result.docs[0]
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { sessionId } = await params
+  const session = await loadCompletedSession(sessionId)
+  if (!session) {
+    return {
+      title: 'Session',
+      alternates: { canonical: `/sessions/${sessionId}` },
+    }
+  }
+  const primary =
+    readArtwork(session.primaryArtwork) ?? readArtwork(session.artworkRecord)
+  const pageTitle = formatSessionPageTitle({
+    artworkTitle: primary?.title,
+    completedAt: session.completedAt,
+  })
+  return {
+    title: { absolute: `${pageTitle} | Bernard Bolter` },
+    description: `Art/Official session record${
+      primary?.title ? ` for ${primary.title}` : ''
+    }. Full transcript on this page; machine JSON via the corpus Tier 5 API.`,
+    alternates: { canonical: `/sessions/${sessionId}` },
+    openGraph: {
+      title: pageTitle,
+      description: `Art/Official session${primary?.title ? ` — ${primary.title}` : ''}.`,
+      url: `/sessions/${sessionId}`,
+      type: 'website',
+    },
+  }
+}
+
+export default async function PublicSessionPage({ params }: PageProps) {
+  const { sessionId } = await params
+  const session = await loadCompletedSession(sessionId)
   if (!session) notFound()
 
   const primary =
@@ -68,13 +93,11 @@ export default async function PublicSessionPage({ params }: PageProps) {
     .map((entry) => readArtwork(entry))
     .filter((artwork): artwork is Artwork => artwork !== null)
 
-  const completedLabel = session.completedAt
-    ? new Date(session.completedAt).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      })
-    : null
+  const completedLabel = formatSessionCompletedLabel(session.completedAt)
+  const pageTitle = formatSessionPageTitle({
+    artworkTitle: primary?.title,
+    completedAt: session.completedAt,
+  })
 
   const ladderSlug = primary?.slug ?? mentioned[0]?.slug ?? null
   const baseUrl = getSiteBaseUrl()
@@ -97,7 +120,8 @@ export default async function PublicSessionPage({ params }: PageProps) {
       >
         <div className="bio__content-container">
           <CorpusLadder slug={ladderSlug} current="sessions" />
-          <p className="bio__tagline">{session.sessionType.replace(/-/g, ' ')}</p>
+          <h1 className="bio__tagline">{pageTitle}</h1>
+          <p className="bio__masonry-caption">{session.sessionType.replace(/-/g, ' ')}</p>
           {completedLabel ? (
             <p className="bio__masonry-caption">Completed {completedLabel}</p>
           ) : null}

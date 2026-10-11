@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import ArtworkDimensionsRow from '@/components/artwork/ArtworkDimensionsRow'
@@ -82,7 +83,9 @@ export default function Layer1ObjectRecord({ artwork }: Props) {
                     className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: seriesColor }}
                   />
-                  {topSeries.name}
+                  <Link href={`/series/${topSeries.slug}`} className="bio__inline-link">
+                    {topSeries.name}
+                  </Link>
                 </span>
               </RecordRow>
             ) : null}

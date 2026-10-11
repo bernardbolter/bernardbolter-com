@@ -1,3 +1,4 @@
+import { unstable_cache } from 'next/cache'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
@@ -56,10 +57,10 @@ async function cardsForNeighbours(
   return cards
 }
 
-export async function getSimilarArtworksForPage(
+async function fetchSimilarArtworksForPage(
   artworkId: number,
-  limit = 3,
-  column: SimilarityColumn = 'clip_embedding',
+  limit: number,
+  column: SimilarityColumn,
 ): Promise<SimilarArtworkCard[]> {
   const embedding =
     column === 'dinov2_embedding'
@@ -71,7 +72,32 @@ export async function getSimilarArtworksForPage(
   return cardsForNeighbours(neighbours)
 }
 
+export async function getSimilarArtworksForPage(
+  artworkId: number,
+  limit = 3,
+  column: SimilarityColumn = 'clip_embedding',
+): Promise<SimilarArtworkCard[]> {
+  if (process.env.NODE_ENV === 'development') {
+    return fetchSimilarArtworksForPage(artworkId, limit, column)
+  }
+  return unstable_cache(
+    () => fetchSimilarArtworksForPage(artworkId, limit, column),
+    ['similar-artworks-page', String(artworkId), String(limit), column],
+    { revalidate: 3600, tags: ['artworks'] },
+  )()
+}
+
 export async function artworkHasClipEmbedding(artworkId: number): Promise<boolean> {
-  const embedding = await fetchArtworkClipEmbedding(artworkId)
-  return Boolean(embedding?.length)
+  if (process.env.NODE_ENV === 'development') {
+    const embedding = await fetchArtworkClipEmbedding(artworkId)
+    return Boolean(embedding?.length)
+  }
+  return unstable_cache(
+    async () => {
+      const embedding = await fetchArtworkClipEmbedding(artworkId)
+      return Boolean(embedding?.length)
+    },
+    ['artwork-has-clip', String(artworkId)],
+    { revalidate: 3600, tags: ['artworks'] },
+  )()
 }

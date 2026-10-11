@@ -5,6 +5,6 @@ export function artworkPublicRevalidatePaths(slug: string): string[] {
   if (!trimmed) return paths
 
   const path = `/${trimmed}`
-  paths.push(path, `${path}/vision`, `${path}/record`)
+  paths.push(path, `${path}/vision`, `${path}/record`, `${path}/sessions`)
   return paths
 }

@@ -20,7 +20,7 @@ export default function CorpusLadder({ slug, current }: Props) {
   const artworkHref = slug ? `/${slug}` : null
   const visionHref = slug ? `/${slug}/vision` : null
   const recordHref = slug ? `/${slug}/record` : null
-  const sessionsHref = slug ? `/sessions?artwork=${encodeURIComponent(slug)}` : '/sessions'
+  const sessionsHref = slug ? `/${slug}/sessions` : '/sessions'
 
   const items: Array<{ key: Props['current']; label: string; href: string | null }> = [
     { key: 'corpus', label: 'Corpus', href: corpusHref },

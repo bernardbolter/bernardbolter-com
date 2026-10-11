@@ -474,6 +474,24 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 19 — Artwork page consolidation Phase 2 (2026-10-11)
+
+**What it was.** `/{slug}` was the canonical artwork page but not self-sufficient for a search lander: no corpus ladder, series name plain text (not `/series/{slug}`), no inline primary transcripts, vision sat mid-prose, `/record` was a thin “Tier 4” subset with less than the artwork page, session HTML titles were generic “Session | Bernard Bolter”, `/sessions` row anchors used `sessionId.slice(0,8)`, `/{slug}/sessions` 404’d, and artwork HTML still emitted `Cache-Control: private, no-cache, no-store` (CF `DYNAMIC`) because uncached Payload IO marked the route dynamic.
+
+**Decided, implemented.**
+- Corpus ladder on `/{slug}` (Artwork current); Sessions rung → `/{slug}/sessions`. Series name in Layer1 links to `/series/{slug}`.
+- Primary completed sessions inlined on `/{slug}` (full transcript SSR, collapsed UI, visible “copy of session record” + link to canonical `/sessions/{id}`); mention-only sessions linked with real titles. Order: record fields → transcripts → mentions → vision last. Private streams never selected (`sessionNotes`, `firstImpression`, `agentDraft*`, `fieldUpdateTimeline`).
+- `/{slug}/sessions` path index; `/{slug}/session` → `/{slug}/sessions` (next.config redirect). `/sessions?artwork=` kept.
+- Session page + `/sessions` anchors use `formatSessionPageTitle` (“The Thinker — Art/Official session, July 28, 2026”).
+- `/record` is a plain-text mirror of the same `ArtworkPage` builder (`variant="plain"`); `rel=canonical` → `/{slug}`; “Tier 4” label dropped.
+- Origin: wrap artwork/session/similar/edition fetches in `unstable_cache` so ISR can emit cacheable `Cache-Control`. Edge: `scripts/ensure-cloudflare-artwork-html-cache-rule.mjs` (cache `/{slug}|/record|/vision`, bypass `/admin|/studio|/preview`). `revalidateArchive` / session afterChange also purge `/{slug}/sessions`.
+
+**Privacy carry-over.** Transcripts public; private session streams absent from HTML and flight. Verify with full-document grep.
+
+**Not this pass.** Vision route client-boundary slim; enabling Next `cacheComponents`.
+
+---
+
 ## Standing process
 
 1. Any chat session that finds a spec/reality mismatch, or makes a flow-level decision (retiring a mechanism, resolving an edge case), logs it here **the same session** — not left in chat scrollback for someone to rediscover later.

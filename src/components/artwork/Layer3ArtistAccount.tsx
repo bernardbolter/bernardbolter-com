@@ -18,6 +18,8 @@ type Props = {
   hasClipEmbedding: boolean
   relatedThroughlines?: ReciprocalLink[]
   relatedBioEvents?: ReciprocalLink[]
+  /** When false, vision analysis card is omitted (rendered later on the page). */
+  includeVisionAnalysis?: boolean
 }
 
 const TAG_COLORS: Record<Tag['type'], string> = {
@@ -81,6 +83,7 @@ export default function Layer3ArtistAccount({
   hasClipEmbedding,
   relatedThroughlines = [],
   relatedBioEvents = [],
+  includeVisionAnalysis = true,
 }: Props) {
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
   const seriesColor = getSeriesColor(seriesSlug)
@@ -214,7 +217,7 @@ export default function Layer3ArtistAccount({
           bioEvents={relatedBioEvents}
         />
 
-        {latestAnalysis ? (
+        {includeVisionAnalysis && latestAnalysis ? (
           <ArtworkVisionAnalysisCard artwork={artwork} seriesColor={seriesColor} />
         ) : null}
       </div>

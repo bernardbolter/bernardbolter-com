@@ -263,6 +263,7 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
                       session={row.session}
                       passNumber={row.passNumber}
                       artworkSlug={row.primary?.slug ?? null}
+                      artworkTitle={row.primary?.title ?? null}
                       showJsonLink
                       className="session-gloss-line session-gloss-line--index"
                     />

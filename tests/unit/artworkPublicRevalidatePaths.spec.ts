@@ -13,6 +13,7 @@ describe('artworkPublicRevalidatePaths', () => {
         '/centraal-station-boats',
         '/centraal-station-boats/vision',
         '/centraal-station-boats/record',
+        '/centraal-station-boats/sessions',
       ]),
     )
     expect(paths.some((path) => path.startsWith('/api/corpus'))).toBe(false)

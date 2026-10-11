@@ -11,7 +11,7 @@ import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
 import { getArtworkForPage } from '@/lib/payload/artworkPage'
-import { getArtistRecord } from '@/lib/payload/siteDocuments'
+import { getPerson } from '@/lib/payload/person'
 import { corpusAlternateTypes, corpusRecordUrl } from '@/lib/seo/corpusDiscovery'
 
 export const revalidate = 3600
@@ -63,7 +63,7 @@ export default async function Page({ params }: Props) {
 
   const [artwork, artist] = await Promise.all([
     getArtworkForPage(slug),
-    getArtistRecord(),
+    getPerson(),
   ])
   if (!artwork) notFound()
 
