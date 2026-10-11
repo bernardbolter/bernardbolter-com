@@ -62,12 +62,9 @@ function workBriefingEnvelope(
 
   const seriesContext = propValue(record, 'art-official:seriesContext')
 
-  const relatedByThroughline = Array.isArray(record['art-official:relatedByThroughline'])
-    ? (record['art-official:relatedByThroughline'] as unknown[])
-    : []
-  const relatedByBioEvent = Array.isArray(record['art-official:relatedByBioEvent'])
-    ? (record['art-official:relatedByBioEvent'] as unknown[])
-    : []
+  // Relations as URLs only — full claim text lives in throughlines/bioEntries below.
+  const relatedByThroughline = relationUrls(record['art-official:relatedByThroughline'])
+  const relatedByBioEvent = relationUrls(record['art-official:relatedByBioEvent'])
 
   return {
     slug: work.slug,
@@ -84,15 +81,19 @@ function workBriefingEnvelope(
   }
 }
 
+function relationUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  const out: string[] = []
+  for (const row of value) {
+    if (!row || typeof row !== 'object') continue
+    const url = (row as { url?: unknown }).url
+    if (typeof url === 'string' && url.trim()) out.push(url.trim())
+  }
+  return out
+}
+
 export function buildCorpusBriefing(artifact: CorpusArtifact): CorpusBriefing {
   const works = artifact.works.map(workBriefingEnvelope)
-
-  const automaticFieldsByWork: Record<string, Record<string, unknown>> = {}
-  for (const work of artifact.works) {
-    if (work.sessionCount > 0 && work.automaticFields) {
-      automaticFieldsByWork[work.slug] = work.automaticFields
-    }
-  }
 
   return {
     'art-official:corpusVersion': artifact['art-official:corpusVersion'],
@@ -100,7 +101,6 @@ export function buildCorpusBriefing(artifact: CorpusArtifact): CorpusBriefing {
     'art-official:supersedesNote': artifact['art-official:supersedesNote'],
     'art-official:deeperFieldsNote': DEEPER_FIELDS_NOTE,
     works,
-    automaticFieldsByWork,
     throughlines: artifact.throughlines,
     bioEntries: artifact.bioEntries,
     sessionLedger: artifact.sessionLedger,

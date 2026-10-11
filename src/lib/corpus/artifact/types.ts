@@ -85,8 +85,10 @@ export type CorpusBriefingWork = {
   intent: string | null
   descriptionShort: string | null
   seriesContext: string | null
-  relatedByThroughline: unknown[]
-  relatedByBioEvent: unknown[]
+  /** Throughline page URLs only — claim text is in `throughlines`. */
+  relatedByThroughline: string[]
+  /** Bio entry page URLs only — claim text is in `bioEntries`. */
+  relatedByBioEvent: string[]
 }
 
 export type CorpusBriefing = {
@@ -96,7 +98,6 @@ export type CorpusBriefing = {
   /** Deeper prose lives on the per-work corpus URL, not in this paste. */
   'art-official:deeperFieldsNote': string
   works: CorpusBriefingWork[]
-  automaticFieldsByWork: Record<string, Record<string, unknown>>
   throughlines: CorpusThroughlineEntry[]
   bioEntries: CorpusBioEntry[]
   sessionLedger: CorpusSessionLedgerEntry[]

@@ -21,6 +21,16 @@ const PRIVATE_BRIEFING_KEYS = [
   'locationDetail',
 ] as const
 
+/** Prose fields that must not appear as briefing property values (header note may name them). */
+const DROPPED_BRIEFING_PROSE_KEYS = [
+  'formalContributionAssessment',
+  'artHistoricalContext',
+  'descriptionLong',
+  'makingNote',
+  'consciousRejections',
+  'workContext',
+] as const
+
 function asText(value: unknown, richText?: boolean): string | null {
   if (typeof value === 'string') {
     const t = value.trim()
@@ -202,6 +212,15 @@ export function scanBriefingPrivacy(briefingJson: string): CorpusBuildReport['pr
     // Object keys with values only — not field *names* in the session ledger.
     const re = new RegExp(`"${key}"\\s*:`)
     if (re.test(briefingJson)) hits.push(key)
+  }
+  for (const key of DROPPED_BRIEFING_PROSE_KEYS) {
+    // Reject as propertyID payloads; the deeperFieldsNote may still name these strings.
+    if (
+      briefingJson.includes(`"art-official:${key}"`) ||
+      briefingJson.includes(`"propertyID":"art-official:${key}"`)
+    ) {
+      hits.push(key)
+    }
   }
   return { briefingClean: hits.length === 0, hits: [...new Set(hits)] }
 }
