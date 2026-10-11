@@ -21,6 +21,7 @@
     "migrate:people-schema": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-people-schema.ts",
     "migrate:redirects-schema": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-redirects-schema.ts",
     "seed:redirect-smoke": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/seed-redirect-smoke-test.ts",
+    "rename:session-ids": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/rename-session-ids.ts",
     "backfill:clip": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillClipEmbeddings.ts",
     "backfill:dinov2": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillDinov2Embeddings.ts",
     "backfill:reasoning-text": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillReasoningTextEmbeddings.ts",

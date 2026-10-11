@@ -1,10 +1,14 @@
 import type { CollectionConfig } from 'payload'
-import { randomUUID } from 'crypto'
 
 import { authenticatedReadStaffWrite } from '@/access/staffAccess'
 import { sessionAfterChange } from '@/hooks/sessionAfterChange'
 import { sessionPublicPath } from '@/lib/redirects/paths'
 import { recordSlugRedirect } from '@/lib/redirects/recordSlugRedirect'
+import {
+  allocateSessionId,
+  buildSessionIdBase,
+  readArtworkSlug,
+} from '@/lib/sessions/sessionId'
 
 export const Sessions: CollectionConfig = {
   slug: 'sessions',
@@ -480,14 +484,56 @@ export const Sessions: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ data, operation, originalDoc, req }) => {
-        if (operation === 'create' && !data.sessionId) {
-          data.sessionId = randomUUID()
-        }
         // Keep primaryArtwork and legacy artworkRecord in sync.
         if (data.primaryArtwork != null && data.artworkRecord == null) {
           data.artworkRecord = data.primaryArtwork
         } else if (data.artworkRecord != null && data.primaryArtwork == null) {
           data.primaryArtwork = data.artworkRecord
+        }
+
+        // Public URL key: {artwork-slug}-{YYYY-MM-DD} (or session-{date}).
+        // Envelope imports may still supply an explicit sessionId.
+        if (operation === 'create' && !data.sessionId) {
+          let artworkSlug: string | null = null
+          const primaryRef = data.primaryArtwork ?? data.artworkRecord
+          if (typeof primaryRef === 'object' && primaryRef && 'slug' in primaryRef) {
+            artworkSlug = readArtworkSlug(primaryRef as { slug?: string | null })
+          } else if (typeof primaryRef === 'number' || typeof primaryRef === 'string') {
+            try {
+              const art = await req.payload.findByID({
+                collection: 'artworks',
+                id: primaryRef,
+                depth: 0,
+                overrideAccess: true,
+                req,
+              })
+              artworkSlug = readArtworkSlug(art)
+            } catch {
+              artworkSlug = null
+            }
+          }
+
+          const base = buildSessionIdBase({
+            artworkSlug,
+            completedAt:
+              typeof data.completedAt === 'string' ? data.completedAt : null,
+            createdAt: new Date().toISOString(),
+          })
+
+          const existing = await req.payload.find({
+            collection: 'sessions',
+            where: { sessionId: { like: `${base}%` } },
+            limit: 100,
+            depth: 0,
+            overrideAccess: true,
+            req,
+          })
+          const used = new Set(
+            existing.docs
+              .map((doc) => (typeof doc.sessionId === 'string' ? doc.sessionId : ''))
+              .filter(Boolean),
+          )
+          data.sessionId = allocateSessionId(base, used)
         }
 
         // Auto-record redirect when sessionId changes (Stage 2 renames + future edits).
