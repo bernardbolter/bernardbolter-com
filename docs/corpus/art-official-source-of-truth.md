@@ -484,11 +484,11 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 - `/{slug}/sessions` path index; `/{slug}/session` → `/{slug}/sessions` (next.config redirect). `/sessions?artwork=` kept.
 - Session page + `/sessions` anchors use `formatSessionPageTitle` (“The Thinker — Art/Official session, July 28, 2026”).
 - `/record` is a plain-text mirror of the same `ArtworkPage` builder (`variant="plain"`); `rel=canonical` → `/{slug}`; “Tier 4” label dropped.
-- Origin: wrap artwork/session/similar/edition fetches in `unstable_cache` so ISR can emit cacheable `Cache-Control`. Edge: `scripts/ensure-cloudflare-artwork-html-cache-rule.mjs` (cache `/{slug}|/record|/vision`, bypass `/admin|/studio|/preview`). `revalidateArchive` / session afterChange also purge `/{slug}/sessions`.
+- Origin: wrap artwork/session/similar/edition fetches in `unstable_cache`, and restore `generateStaticParams` (published slugs) on `/{slug}`, `/record`, `/vision` so Next 16 emits ISR `Cache-Control` instead of `private, no-store` (Part 11’s “no GSP” left those routes uncacheable after the Next 16 upgrade). Edge: `scripts/ensure-cloudflare-artwork-html-cache-rule.mjs` (cache `/{slug}|/record|/vision`, bypass `/admin|/studio|/preview`) — token on Netcup currently has purge but not Cache Rules edit; rule may need dashboard apply. `revalidateArchive` / session afterChange also purge `/{slug}/sessions`.
 
 **Privacy carry-over.** Transcripts public; private session streams absent from HTML and flight. Verify with full-document grep.
 
-**Not this pass.** Vision route client-boundary slim; enabling Next `cacheComponents`.
+**Not this pass.** Vision route client-boundary slim; enabling Next `cacheComponents`; widening CF API token for Cache Rules.
 
 ---
 

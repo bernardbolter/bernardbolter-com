@@ -4,11 +4,23 @@ import { notFound } from 'next/navigation'
 import ArtworkPage from '@/components/artwork/ArtworkPage'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
-import { getArtworkForPage } from '@/lib/payload/artworkPage'
+import {
+  getArtworkForPage,
+  getPublishedArtworkSlugs,
+} from '@/lib/payload/artworkPage'
 import { getPerson } from '@/lib/payload/person'
 import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
 
 export const revalidate = 3600
+
+export async function generateStaticParams() {
+  try {
+    const slugs = await getPublishedArtworkSlugs()
+    return slugs.map((slug) => ({ slug }))
+  } catch {
+    return []
+  }
+}
 
 type Props = { params: Promise<{ slug: string }> }
 

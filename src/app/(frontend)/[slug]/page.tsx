@@ -10,11 +10,24 @@ import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
 import { buildArtworkJsonLd } from '@/lib/jsonld/artwork'
-import { getArtworkForPage } from '@/lib/payload/artworkPage'
+import {
+  getArtworkForPage,
+  getPublishedArtworkSlugs,
+} from '@/lib/payload/artworkPage'
 import { getPerson } from '@/lib/payload/person'
 import { corpusAlternateTypes, corpusRecordUrl } from '@/lib/seo/corpusDiscovery'
 
 export const revalidate = 3600
+
+/** Prerender published works so /{slug} emits ISR Cache-Control (not private no-store). */
+export async function generateStaticParams() {
+  try {
+    const slugs = await getPublishedArtworkSlugs()
+    return slugs.map((slug) => ({ slug }))
+  } catch {
+    return []
+  }
+}
 
 type Props = { params: Promise<{ slug: string }> }
 
