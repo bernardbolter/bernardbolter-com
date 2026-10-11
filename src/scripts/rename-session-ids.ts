@@ -157,6 +157,7 @@ async function main() {
       id: change.id,
       data: { sessionId: change.to },
       overrideAccess: true,
+      overrideLock: true,
       context: { skipHooks: false },
     })
     console.log(`renamed ${change.from} → ${change.to}`)
