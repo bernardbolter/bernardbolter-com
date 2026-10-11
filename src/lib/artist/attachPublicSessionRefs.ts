@@ -2,15 +2,23 @@ import type { Artist, Session } from '@/payload-types'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
+import { projectPublicSessionGloss } from '@/lib/corpus/projectPublicSessionGloss'
+
+function relationToId(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (value && typeof value === 'object' && 'id' in value) {
+    const id = (value as { id: unknown }).id
+    if (typeof id === 'number' && Number.isFinite(id)) return id
+  }
+  return null
+}
+
 function collectSessionIds(artist: Artist): number[] {
   const ids = new Set<number>()
 
   const push = (value: unknown) => {
-    if (typeof value === 'number') ids.add(value)
-    else if (value && typeof value === 'object' && 'id' in value) {
-      const id = (value as { id: unknown }).id
-      if (typeof id === 'number') ids.add(id)
-    }
+    const id = relationToId(value)
+    if (id != null) ids.add(id)
   }
 
   for (const entry of artist.bioTimelineEntries ?? []) {
@@ -43,7 +51,7 @@ type PublicSession = Pick<
 /**
  * Sessions are staff-only for list/read via access control. For public bio/statement
  * pages we attach minimal session docs so completed sessions can link + gloss
- * without exposing transcripts.
+ * without exposing transcripts or timeline/conflict *values*.
  */
 export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
   const ids = collectSessionIds(artist)
@@ -73,7 +81,7 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
           },
         })
         if (session) {
-          map.set(id, {
+          const projected = projectPublicSessionGloss({
             id: session.id,
             sessionId: session.sessionId,
             status: session.status,
@@ -85,6 +93,19 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
             linchpinFlag: session.linchpinFlag,
             sessionStruggleFlag: session.sessionStruggleFlag,
             priorFieldConflicts: session.priorFieldConflicts,
+          } as Session)
+          map.set(id, {
+            id: projected.id,
+            sessionId: projected.sessionId,
+            status: projected.status,
+            sessionType: projected.sessionType,
+            completedAt: projected.completedAt,
+            fieldsCoveredThisSession: projected.fieldsCoveredThisSession,
+            fieldUpdateTimeline: projected.fieldUpdateTimeline,
+            revisitOf: projected.revisitOf,
+            linchpinFlag: projected.linchpinFlag,
+            sessionStruggleFlag: projected.sessionStruggleFlag,
+            priorFieldConflicts: projected.priorFieldConflicts,
           })
         }
       } catch {
@@ -93,14 +114,17 @@ export async function attachPublicSessionRefs(artist: Artist): Promise<Artist> {
     }),
   )
 
+  /** Always replace populated depth-2 Session docs with the slim public projection. */
   const hydrate = (ref: number | Session | null | undefined): number | Session | null | undefined => {
-    if (typeof ref !== 'number') return ref
-    return (map.get(ref) as Session | undefined) ?? ref
+    const id = relationToId(ref)
+    if (id == null) return ref == null ? ref : null
+    return (map.get(id) as Session | undefined) ?? id
   }
 
   const hydrateRequired = (ref: number | Session): number | Session => {
-    if (typeof ref !== 'number') return ref
-    return (map.get(ref) as Session | undefined) ?? ref
+    const id = relationToId(ref)
+    if (id == null) return typeof ref === 'number' ? ref : ref
+    return (map.get(id) as Session | undefined) ?? id
   }
 
   return {
