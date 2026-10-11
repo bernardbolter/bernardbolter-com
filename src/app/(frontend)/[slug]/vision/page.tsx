@@ -10,25 +10,13 @@ import {
 } from '@/lib/artwork/visionPage'
 import { buildVisionPageJsonLd } from '@/lib/jsonld/visionPage'
 import { getSiteBaseUrl } from '@/lib/jsonld/site'
-import {
-  getArtworkForPage,
-  getPublishedArtworkSlugs,
-} from '@/lib/payload/artworkPage'
+import { getArtworkForPage } from '@/lib/payload/artworkPage'
 import { fetchArtworkClipEmbeddingRecord } from '@/lib/payload/clipEmbedding'
 import { fetchArtworkDinov2EmbeddingRecord } from '@/lib/payload/dinov2Embedding'
 import { getSimilarArtworksForPage } from '@/lib/payload/similarArtworksPage'
 import { ArtworkPageChromeProvider } from '@/providers/ArtworkPageChromeContext'
 
 export const revalidate = 3600
-
-export async function generateStaticParams() {
-  try {
-    const slugs = await getPublishedArtworkSlugs()
-    return slugs.map((slug) => ({ slug }))
-  } catch {
-    return []
-  }
-}
 
 type Props = { params: Promise<{ slug: string }> }
 
