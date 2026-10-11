@@ -74,6 +74,17 @@ function withArtworkHtmlCache(pathname: string, response: NextResponse): NextRes
   return response
 }
 
+/**
+ * Look up redirects via loopback so middleware never hairpins through
+ * Caddy/Cloudflare (public origin fetch deadlocks or soft-fails to 200).
+ */
+function redirectResolveOrigin(): string {
+  const configured = process.env.REDIRECT_RESOLVE_ORIGIN?.trim()
+  if (configured) return configured.replace(/\/$/, '')
+  const port = process.env.PORT?.trim() || '3000'
+  return `http://127.0.0.1:${port}`
+}
+
 async function resolvePublicRedirect(
   request: NextRequest,
   pathname: string,
@@ -91,12 +102,11 @@ async function resolvePublicRedirect(
   if (path.startsWith('/api/')) return null
 
   try {
-    const resolveUrl = new URL('/api/redirects/resolve', request.nextUrl.origin)
+    const resolveUrl = new URL('/api/redirects/resolve', redirectResolveOrigin())
     resolveUrl.searchParams.set('from', path)
     const res = await fetch(resolveUrl, {
       headers: { 'x-middleware-redirect-lookup': '1' },
-      // Fresh enough for renames; CDN may cache resolve for 60s.
-      next: { revalidate: 0 },
+      cache: 'no-store',
     })
     if (!res.ok) return null
     const body = (await res.json()) as { toPath?: string | null }
