@@ -5,6 +5,8 @@ import type { Artwork } from '@/payload-types'
 
 import { omitPrivateArtworkCommerceFields } from '@/hooks/artworkAfterRead'
 import { projectArtworkProvenanceForPublicPage } from '@/lib/artwork/artworkProvenancePublic'
+import { withDerivedReasoningStatus } from '@/lib/artwork/deriveReasoningStatus'
+import { fetchPrimarySessionEvidenceForArtwork } from '@/lib/artwork/fetchSessionEvidence'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const defaultLocale = 'en' as const
@@ -136,7 +138,13 @@ async function fetchPublishedArtworkForPage(slug: string): Promise<Artwork | nul
       overrideAccess: true,
     })
     const doc = result.docs[0]
-    return doc ? prepareArtworkForPage(doc) : null
+    if (!doc) return null
+    const prepared = prepareArtworkForPage(doc)
+    const sessions = await fetchPrimarySessionEvidenceForArtwork(payload, {
+      id: prepared.id,
+      slug: prepared.slug?.trim() || slug,
+    })
+    return withDerivedReasoningStatus(prepared, sessions)
   })
 }
 
@@ -173,7 +181,13 @@ export async function getArtworkForPreview(slug: string): Promise<Artwork | null
       overrideAccess: true,
     })
     const doc = result.docs[0]
-    return doc ? prepareArtworkForPage(doc) : null
+    if (!doc) return null
+    const prepared = prepareArtworkForPage(doc)
+    const sessions = await fetchPrimarySessionEvidenceForArtwork(payload, {
+      id: prepared.id,
+      slug: prepared.slug?.trim() || slug,
+    })
+    return withDerivedReasoningStatus(prepared, sessions)
   })
 }
 

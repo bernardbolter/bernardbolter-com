@@ -57,6 +57,19 @@ async function main() {
           completeWithNoIntent: report.reasoningStatusAudit.completeWithNoIntent.length,
           intentNotMarkedComplete: report.reasoningStatusAudit.intentNotMarkedComplete.length,
         },
+        reasoningEvidence: {
+          derivedDistribution: report.reasoningEvidence.derivedDistribution,
+          partialSplit: {
+            sessionButNoWhy: report.reasoningEvidence.partialSplit.sessionButNoWhy.length,
+            whyButNoSession: report.reasoningEvidence.partialSplit.whyButNoSession.length,
+          },
+          completeEvidence: {
+            liveTimeline: report.reasoningEvidence.completeEvidence.liveTimeline.length,
+            envelopeTranscript:
+              report.reasoningEvidence.completeEvidence.envelopeTranscriptEmptyTimeline.length,
+          },
+          ghostShellSessions: report.reasoningEvidence.ghostShellSessions.length,
+        },
         brokenInternalLinks: report.brokenInternalLinks.length,
         publicProseMarkers: report.publicProseMarkers.length,
         privacyScan: report.privacyScan,

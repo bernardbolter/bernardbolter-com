@@ -357,7 +357,7 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 - Identity fields (title, year, series name, medium, both-unit dimensions) live in each per-work block in the server-rendered HTML. Flip is a CSS state (`.is-flipped`) over both faces from the first commit. `--verso-min-width: 320px` is the size-floor variable; slot width/height stay the physical container so timeline scroll geometry is unchanged. A `rotateY` / `preserve-3d` scene was the first implementation and leaked verso onto the painting in Firefox; see Part 14.
 - Series name on Phase A comes from `filterSeries` (already on the client), not from widening `CATALOGUE_ARTWORK_SELECT`.
 - Alt text: `primaryImageAltText` → first vision sentence → identity label line (title, year, medium). Not title-only.
-- Homepage meta title/description recast as archive framing. Coverage line: `{n} artworks · {n} fully catalogued` (catalogued count is a `payload.count` on `reasoningStatus: complete`, not a per-row select widen).
+- Homepage meta title/description recast as archive framing. Coverage line: `{n} artworks · {n} fully catalogued` (catalogued count is **derived** — see Part 21; no longer a `payload.count` on the stored column).
 - Bio-entry paragraph-links removed from the homepage timeline marker layer. Throughline SVG connectors left in place — that removal is Phase 4 of the master brief, not homepage Phase A.
 - `drawings` / `performances` / `watercolors` added to `getSeriesColor`. Megacities `#E8453C`, videos `#8B5A2B`. Keep-row hexes are the live helper values, not the spec's screenshot estimates.
 
@@ -489,6 +489,26 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 **Privacy carry-over.** Transcripts public; private session streams absent from HTML and flight. Verify with full-document grep.
 
 **Not this pass.** Vision route client-boundary slim; enabling Next `cacheComponents`; widening CF API token for Cache Rules dashboard automation.
+
+---
+
+## Part 21 — Derived reasoningStatus (2026-10-11)
+
+`reasoningStatus` is **derived**, not written for public use. Stored column remains in Payload unread by public surfaces (mid-migration safety).
+
+**Rule**
+- **complete** = completed primary session with `messages.length > 0` **and** a why-field (`intent` ∨ `formalContributionAssessment` ∨ `descriptionShort` ∨ `workContext`)
+- **partial** = session+messages but no why, **or** why but no such session (report splits these as `session-but-no-why` / `why-but-no-session`)
+- **stub** = neither
+- Zero-message completed sessions are ghost shells — not cataloguing evidence. Same test gates the verso `formatCatalogueStatus` date list.
+
+**Stopped writes:** session commit blind `complete`, envelope guarded `reasoningStatus` write, Quick Upload `stub`, schema `defaultValue`. Field allowlisted forbidden. Backfill script retired (exits non-zero).
+
+**Consumers updated:** homepage `cataloguedCount`, verso catalogue-status dates, corpus artifact filters + JSON-LD projections, `/corpus` status filter, unreasoned-queue, artwork page overlay via `getArtworkForPage`.
+
+**Importer gap closed going forward:** session envelope schema accepts `fieldUpdateTimeline`. Historical coverage for ~23 envelope sessions is lost (plain `{role,content}` messages only) — no reconstruction attempted; original pastes are the only recovery path.
+
+**Coverage line is a derived figure** — will move as evidence meets the rule (expected first move 29 → 31). Build report `reasoningEvidence` publishes distribution + complete-evidence buckets (live-timeline / envelope-transcript) + ghost-shell session count alongside `reasoningComplete`.
 
 ---
 

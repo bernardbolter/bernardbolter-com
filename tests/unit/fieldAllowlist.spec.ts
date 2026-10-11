@@ -19,6 +19,10 @@ describe('isFieldAllowedForAgent', () => {
     expect(isFieldAllowedForAgent('artworks', 'dateDisplay')).toBe(false)
   })
 
+  it('blocks derived reasoningStatus on artworks', () => {
+    expect(isFieldAllowedForAgent('artworks', 'reasoningStatus')).toBe(false)
+  })
+
   it('allows where-has-this-lived provenance cluster on artworks', () => {
     expect(isFieldAllowedForAgent('artworks', 'ownershipHistory')).toBe(true)
     expect(isFieldAllowedForAgent('artworks', 'provenanceConfidenceLayer')).toBe(true)

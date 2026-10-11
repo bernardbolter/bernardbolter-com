@@ -3,6 +3,15 @@ import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 
 import { computeArchiveMedianAreaMm2 } from '@/lib/artwork/archiveMedianArea'
+import {
+  deriveReasoningStatus,
+  indexSessionEvidence,
+  primarySessionsForArtwork,
+} from '@/lib/artwork/deriveReasoningStatus'
+import {
+  fetchCompletedSessionEvidence,
+  sessionDatesByArtworkIdFromEvidence,
+} from '@/lib/artwork/fetchSessionEvidence'
 import { buildSeriesSlugByArtworkSlug } from '@/lib/artwork/seriesSlugMap'
 import { mapArtistToInfoData } from '@/helpers/mapArtistInfo'
 import {
@@ -11,7 +20,13 @@ import {
 } from '@/lib/payload/artworks'
 import { fetchFilterSeriesWithPayload } from '@/lib/payload/series'
 import { getPerson } from '@/lib/payload/person'
+import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
+import {
+  catalogueSnapshotMode,
+  readDevCatalogueSnapshot,
+  writeDevCatalogueSnapshot,
+} from '@/lib/payload/devCatalogueSnapshot'
 import type { ArtistInfoData, FilterCategory, TimelineMarkersData } from '@/types/frontend'
 import type { Artist } from '@/payload-types'
 /** Same value as `TIER_FALLBACK_AREA_MM2.md` — keep this file off `gridRealSize` so caption edits do not HMR-bust the catalogue cache. */
@@ -155,41 +170,55 @@ function mapTimelineMarkers(person: Artist | null): TimelineMarkersData {
 }
 
 /**
- * Dates only — no transcripts. Sessions are staff-read in Payload; this layout
- * fetch uses the Local API default (overrideAccess true) so the public verso
- * can show "Catalogued July 2026" without exposing session bodies.
+ * Derived catalogued count — completed primary session with messages > 0
+ * plus a why-field. Never reads the stored reasoningStatus column.
  */
-async function fetchCatalogueSessionDates(payload: Payload): Promise<Record<number, string[]>> {
-  const result = await payload.find({
-    collection: 'sessions',
-    where: { status: { equals: 'completed' } },
-    depth: 0,
-    limit: 500,
-    overrideAccess: true,
-    select: {
-      primaryArtwork: true,
-      artworkRecord: true,
-      createdAt: true,
-    },
-  })
+async function fetchDerivedCataloguedCount(
+  payload: Payload,
+  sessionIndex: ReturnType<typeof indexSessionEvidence>,
+): Promise<number> {
+  let count = 0
+  let page = 1
+  let hasNextPage = true
 
-  const datesByArtworkId: Record<number, string[]> = {}
-  for (const session of result.docs) {
-    const artworkId = relationId(session.primaryArtwork) ?? relationId(session.artworkRecord)
-    const createdAt = session.createdAt
-    if (artworkId == null || !createdAt) continue
-    const existing = datesByArtworkId[artworkId] ?? []
-    existing.push(createdAt)
-    datesByArtworkId[artworkId] = existing
+  while (hasNextPage) {
+    const result = await payload.find({
+      collection: 'artworks',
+      where: { status: { equals: 'published' } },
+      limit: 100,
+      page,
+      depth: 0,
+      overrideAccess: false,
+      select: {
+        id: true,
+        slug: true,
+        intent: true,
+        formalContributionAssessment: true,
+        descriptionShort: true,
+        workContext: true,
+      },
+    })
+
+    for (const doc of result.docs) {
+      const slug = doc.slug?.trim() || ''
+      if (!isPublicCatalogueSlug(slug)) continue
+      const primary = primarySessionsForArtwork({ id: doc.id, slug }, sessionIndex)
+      const derived = deriveReasoningStatus(doc, primary)
+      if (derived.status === 'complete') count += 1
+    }
+
+    hasNextPage = result.hasNextPage
+    page += 1
   }
-  return datesByArtworkId
+
+  return count
 }
 
 async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
   return withDbRetry(async () => {
     const payload = await getPayload({ config })
 
-    const [artworks, artistResult, filterSeries, catalogued, sessionDatesResult] = await Promise.all([
+    const [artworks, artistResult, filterSeries, sessionEvidence] = await Promise.all([
       fetchCatalogueArtworksWithPayload(payload),
       payload.find({
         collection: 'artists',
@@ -198,18 +227,16 @@ async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
         overrideAccess: false,
       }),
       fetchFilterSeriesWithPayload(payload),
-      payload.count({
-        collection: 'artworks',
-        where: {
-          and: [{ status: { equals: 'published' } }, { reasoningStatus: { equals: 'complete' } }],
-        },
-        overrideAccess: false,
-      }),
-      fetchCatalogueSessionDates(payload).catch((err) => {
-        console.error('[layout-provider-data] session dates unavailable', err)
-        return {} as Record<number, string[]>
+      fetchCompletedSessionEvidence(payload).catch((err) => {
+        console.error('[layout-provider-data] session evidence unavailable', err)
+        return []
       }),
     ])
+
+    const sessionIndex = indexSessionEvidence(sessionEvidence)
+    // Dates only for sessions with messages > 0 — ghost shells are not cataloguing events.
+    const sessionDatesResult = sessionDatesByArtworkIdFromEvidence(sessionEvidence)
+    const cataloguedCount = await fetchDerivedCataloguedCount(payload, sessionIndex)
 
     const person = artistResult.docs[0] ?? null
     const timelineMarkers = mapTimelineMarkers(person)
@@ -222,10 +249,17 @@ async function fetchLayoutProviderData(): Promise<LayoutProviderData> {
       filterSeries,
       seriesSlugByArtworkSlug: buildSeriesSlugByArtworkSlug(artworks),
       archiveMedianAreaMm2: computeArchiveMedianAreaMm2(artworks),
-      cataloguedCount: catalogued.totalDocs,
+      cataloguedCount,
       sessionDatesByArtworkId: sessionDatesResult,
     }
   })
+}
+
+/** Hit Payload and rewrite `.cache/catalogue-layout.json`. */
+export async function refreshDevCatalogueSnapshotFromPayload(): Promise<number> {
+  const data = await fetchLayoutProviderData()
+  await writeDevCatalogueSnapshot(data)
+  return data.artworks.length
 }
 
 const DEV_CATALOGUE_TTL_MS = 5 * 60_000
@@ -257,11 +291,25 @@ async function fetchLayoutProviderDataCached(): Promise<LayoutProviderData> {
   }
   if (store.inflight) return store.inflight
 
-  console.info('[layout-provider-data] catalogue fetch (dev cache miss)')
+  const mode = catalogueSnapshotMode()
+  if (mode === 'use') {
+    const snapshot = await readDevCatalogueSnapshot()
+    if (snapshot) {
+      console.info(`[layout-provider-data] snapshot (${snapshot.artworks.length} works)`)
+      store.cache = { at: Date.now(), data: snapshot }
+      return snapshot
+    }
+  }
+
+  console.info('[layout-provider-data] catalogue fetch (Payload)')
   store.inflight = fetchLayoutProviderData()
-    .then((data) => {
+    .then(async (data) => {
       if (data.artworks.length > 0) {
         store.cache = { at: Date.now(), data }
+        if (mode !== 'off') {
+          await writeDevCatalogueSnapshot(data)
+          console.info('[layout-provider-data] snapshot written')
+        }
       }
       return data
     })
@@ -274,8 +322,9 @@ async function fetchLayoutProviderDataCached(): Promise<LayoutProviderData> {
 
 /**
  * React `cache` dedupes root layout + collection page reads in the same request.
- * In local dev, a short in-memory cache also coalesces stacked browser refreshes
- * so the SSH tunnel is not hit once per retry.
+ * In local dev, a disk snapshot of the last successful Payload catalogue is the
+ * default source so HMR / Firefox refreshes do not re-query Neon through SSH.
+ * `CATALOGUE_SNAPSHOT=refresh` rewrites it; `=live` always hits Payload.
  */
 export const getLayoutProviderData = cache(async (): Promise<LayoutProviderData> => {
   try {
@@ -289,6 +338,17 @@ export const getLayoutProviderData = cache(async (): Promise<LayoutProviderData>
 /** Root layout: artist only — do not wait on the 220-row catalogue. */
 export const getRootChromeData = cache(async (): Promise<RootChromeData> => {
   try {
+    if (catalogueSnapshotMode() === 'use') {
+      const snapshot = await readDevCatalogueSnapshot()
+      if (snapshot?.person || snapshot?.artistInfo) {
+        return {
+          person: snapshot.person,
+          artistInfo: snapshot.artistInfo,
+          seriesSlugByArtworkSlug: snapshot.seriesSlugByArtworkSlug,
+          archiveMedianAreaMm2: snapshot.archiveMedianAreaMm2,
+        }
+      }
+    }
     const person = await getPerson()
     return {
       person,

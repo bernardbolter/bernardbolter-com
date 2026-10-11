@@ -111,6 +111,14 @@ export type CorpusBuildReportHeader = {
     completeWithNoIntent: number
     intentNotMarkedComplete: number
     publicProseMarkers: number
+    derivedComplete: number
+    derivedPartial: number
+    derivedStub: number
+    sessionButNoWhy: number
+    whyButNoSession: number
+    liveTimeline: number
+    envelopeTranscript: number
+    ghostShellSessions: number
   }
 }
 
@@ -136,8 +144,28 @@ export type CorpusBuildReport = {
   }
   briefingTokenEstimate: number
   reasoningStatusAudit: {
+    /** Derived complete with no intent text (may still have other why-fields). */
     completeWithNoIntent: Array<{ slug: string }>
+    /** Has intent but derived status is not complete. */
     intentNotMarkedComplete: Array<{ slug: string; reasoningStatus: string | null }>
+  }
+  /** Strength of the coverage claim — derived distribution + evidence buckets. */
+  reasoningEvidence: {
+    derivedDistribution: {
+      complete: number
+      partial: number
+      stub: number
+    }
+    partialSplit: {
+      sessionButNoWhy: string[]
+      whyButNoSession: string[]
+    }
+    /** Among derived-complete works. */
+    completeEvidence: {
+      liveTimeline: string[]
+      envelopeTranscriptEmptyTimeline: string[]
+    }
+    ghostShellSessions: Array<{ sessionId: string; primarySlug: string | null }>
   }
   countDisagreements: Array<{ surface: string; expected: number; actual: number; note: string }>
   brokenInternalLinks: Array<{ slug: string; url: string; reason: string }>

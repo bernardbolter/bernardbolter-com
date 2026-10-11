@@ -1,5 +1,11 @@
 import { lexicalToPlain } from '@/lib/artOfficial/lexicalToPlain'
 import {
+  deriveReasoningStatus,
+  indexSessionEvidence,
+  primarySessionsForArtwork,
+  type SessionEvidence,
+} from '@/lib/artwork/deriveReasoningStatus'
+import {
   findPublicProseMarkers,
   PUBLIC_PROSE_FIELD_MAP,
 } from '@/lib/artwork/publicProseMarkers'
@@ -43,14 +49,17 @@ function asText(value: unknown, richText?: boolean): string | null {
   return null
 }
 
-export function auditReasoningStatus(artworks: Artwork[]): CorpusBuildReport['reasoningStatusAudit'] {
+export function auditReasoningStatus(
+  artworks: Artwork[],
+  derivedBySlug: Map<string, string>,
+): CorpusBuildReport['reasoningStatusAudit'] {
   const completeWithNoIntent: Array<{ slug: string }> = []
   const intentNotMarkedComplete: Array<{ slug: string; reasoningStatus: string | null }> = []
 
   for (const artwork of artworks) {
     const slug = artwork.slug?.trim() || String(artwork.id)
     const intent = artwork.intent?.trim() || ''
-    const status = artwork.reasoningStatus ?? null
+    const status = derivedBySlug.get(slug) ?? null
 
     if (status === 'complete' && !intent) {
       completeWithNoIntent.push({ slug })
@@ -61,6 +70,61 @@ export function auditReasoningStatus(artworks: Artwork[]): CorpusBuildReport['re
   }
 
   return { completeWithNoIntent, intentNotMarkedComplete }
+}
+
+/** Build-report evidence buckets for derived reasoningStatus. */
+export function buildReasoningEvidenceReport(
+  artworks: Artwork[],
+  sessions: SessionEvidence[],
+): {
+  evidence: CorpusBuildReport['reasoningEvidence']
+  derivedBySlug: Map<string, string>
+} {
+  const index = indexSessionEvidence(sessions)
+  const derivedBySlug = new Map<string, string>()
+  const distribution = { complete: 0, partial: 0, stub: 0 }
+  const sessionButNoWhy: string[] = []
+  const whyButNoSession: string[] = []
+  const liveTimeline: string[] = []
+  const envelopeTranscriptEmptyTimeline: string[] = []
+
+  for (const artwork of artworks) {
+    const slug = artwork.slug?.trim() || String(artwork.id)
+    const primary = primarySessionsForArtwork(
+      { id: artwork.id, slug: artwork.slug?.trim() || slug },
+      index,
+    )
+    const derived = deriveReasoningStatus(artwork, primary)
+    derivedBySlug.set(slug, derived.status)
+    distribution[derived.status] += 1
+
+    if (derived.partialKind === 'session-but-no-why') sessionButNoWhy.push(slug)
+    if (derived.partialKind === 'why-but-no-session') whyButNoSession.push(slug)
+
+    if (derived.status === 'complete') {
+      if (derived.evidenceKind === 'live-timeline') liveTimeline.push(slug)
+      else if (derived.evidenceKind === 'envelope-transcript') {
+        envelopeTranscriptEmptyTimeline.push(slug)
+      }
+    }
+  }
+
+  const ghostShellSessions = sessions
+    .filter((s) => s.messageCount === 0 && (s.primaryArtworkId != null || s.primarySlug))
+    .map((s) => ({ sessionId: s.sessionId, primarySlug: s.primarySlug }))
+
+  return {
+    derivedBySlug,
+    evidence: {
+      derivedDistribution: distribution,
+      partialSplit: { sessionButNoWhy, whyButNoSession },
+      completeEvidence: {
+        liveTimeline,
+        envelopeTranscriptEmptyTimeline,
+      },
+      ghostShellSessions,
+    },
+  }
 }
 
 export function collectPublicProseMarkerHits(

@@ -1,10 +1,17 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 
 import { fieldsCoveredFromTimeline } from '@/lib/artOfficial/automaticFieldConflicts'
+import {
+  indexSessionEvidence,
+  primarySessionsForArtwork,
+  withDerivedReasoningStatus,
+} from '@/lib/artwork/deriveReasoningStatus'
+import { fetchCompletedSessionEvidence } from '@/lib/artwork/fetchSessionEvidence'
 import { artworkHasVisionTier } from '@/lib/corpus/availableTiers'
 import { buildCorpusBriefing } from '@/lib/corpus/artifact/buildBriefing'
 import {
   auditReasoningStatus,
+  buildReasoningEvidenceReport,
   checkBrokenInternalLinks,
   collectPublicProseMarkerHits,
   countDisagreements,
@@ -278,16 +285,40 @@ export async function assembleCorpusArtifact(
   const timingsMs: Record<string, number> = {}
 
   let t = Date.now()
-  const [artworks, seriesList, artist, payloadPublishedTotal, sessionCountBySlug, sessionLedger] =
-    await Promise.all([
-      fetchAllPublishedArtworks(payload),
-      fetchCorpusSeries(payload),
-      fetchCorpusArtistForReciprocalLinks(payload),
-      fetchCorpusTotalArtworks(payload),
-      fetchSessionCountBySlug(payload),
-      fetchSessionLedger(payload),
-    ])
+  const [
+    artworksRaw,
+    seriesList,
+    artist,
+    payloadPublishedTotal,
+    sessionCountBySlug,
+    sessionLedger,
+    sessionEvidence,
+  ] = await Promise.all([
+    fetchAllPublishedArtworks(payload),
+    fetchCorpusSeries(payload),
+    fetchCorpusArtistForReciprocalLinks(payload),
+    fetchCorpusTotalArtworks(payload),
+    fetchSessionCountBySlug(payload),
+    fetchSessionLedger(payload),
+    fetchCompletedSessionEvidence(payload),
+  ])
   timingsMs.fetch = Date.now() - t
+
+  const sessionIndex = indexSessionEvidence(sessionEvidence)
+  const { evidence: reasoningEvidence, derivedBySlug } = buildReasoningEvidenceReport(
+    artworksRaw,
+    sessionEvidence,
+  )
+
+  // Overlay derived status so JSON-LD / corpus projections never read the stored column.
+  const artworks = artworksRaw.map((artwork) => {
+    const slug = artwork.slug?.trim() || String(artwork.id)
+    const primary = primarySessionsForArtwork(
+      { id: artwork.id, slug: artwork.slug?.trim() || slug },
+      sessionIndex,
+    )
+    return withDerivedReasoningStatus(artwork, primary)
+  })
 
   const idToSlug = new Map<number, string>()
   for (const artwork of artworks) {
@@ -301,6 +332,7 @@ export async function assembleCorpusArtifact(
     const slug = artwork.slug?.trim() || ''
     const sessionCount = sessionCountBySlug.get(slug) ?? 0
     const series = resolveSeries(artwork)
+    const derivedStatus = derivedBySlug.get(slug) ?? artwork.reasoningStatus ?? null
     const indexProjection = buildCorpusRecord(artwork, 'index', {
       baseUrl,
       sessionCount,
@@ -327,7 +359,7 @@ export async function assembleCorpusArtifact(
         seriesSlug: series?.slug?.trim() || null,
         seriesName: series?.name?.trim() || null,
         yearCreated: typeof artwork.yearCreated === 'number' ? artwork.yearCreated : null,
-        reasoningStatus: artwork.reasoningStatus ?? null,
+        reasoningStatus: derivedStatus,
         hasVisionAnalyses: artworkHasVisionTier(artwork),
         title: artwork.title?.trim() || slug,
       },
@@ -377,7 +409,7 @@ export async function assembleCorpusArtifact(
   const corpusBytes = Buffer.byteLength(corpusJson, 'utf8')
   const briefingBytes = Buffer.byteLength(briefingJson, 'utf8')
 
-  const reasoningStatusAudit = auditReasoningStatus(artworks)
+  const reasoningStatusAudit = auditReasoningStatus(artworks, derivedBySlug)
   const publicProseMarkers = collectPublicProseMarkerHits(artworks)
   const brokenInternalLinks = checkBrokenInternalLinks(artifact)
   const privacyScan = scanBriefingPrivacy(briefingJson)
@@ -393,6 +425,15 @@ export async function assembleCorpusArtifact(
     completeWithNoIntent: reasoningStatusAudit.completeWithNoIntent.length,
     intentNotMarkedComplete: reasoningStatusAudit.intentNotMarkedComplete.length,
     publicProseMarkers: publicProseMarkers.length,
+    derivedComplete: reasoningEvidence.derivedDistribution.complete,
+    derivedPartial: reasoningEvidence.derivedDistribution.partial,
+    derivedStub: reasoningEvidence.derivedDistribution.stub,
+    sessionButNoWhy: reasoningEvidence.partialSplit.sessionButNoWhy.length,
+    whyButNoSession: reasoningEvidence.partialSplit.whyButNoSession.length,
+    liveTimeline: reasoningEvidence.completeEvidence.liveTimeline.length,
+    envelopeTranscript:
+      reasoningEvidence.completeEvidence.envelopeTranscriptEmptyTimeline.length,
+    ghostShellSessions: reasoningEvidence.ghostShellSessions.length,
   }
   const header = {
     generatedAt,
@@ -416,6 +457,7 @@ export async function assembleCorpusArtifact(
       reasoningComplete: coverage.reasoningComplete,
     },
     reasoningStatusAudit,
+    reasoningEvidence,
     countDisagreements: disagreements,
     brokenInternalLinks,
     publicProseMarkers,
@@ -430,12 +472,12 @@ export async function assembleCorpusArtifact(
   }
   if (reasoningStatusAudit.completeWithNoIntent.length) {
     reportBase.warnings.push(
-      `reasoningStatus: ${reasoningStatusAudit.completeWithNoIntent.length} complete with no intent`,
+      `reasoningStatus: ${reasoningStatusAudit.completeWithNoIntent.length} derived-complete with no intent`,
     )
   }
   if (reasoningStatusAudit.intentNotMarkedComplete.length) {
     reportBase.warnings.push(
-      `reasoningStatus: ${reasoningStatusAudit.intentNotMarkedComplete.length} with intent not marked complete`,
+      `reasoningStatus: ${reasoningStatusAudit.intentNotMarkedComplete.length} with intent not derived-complete`,
     )
   }
   if (brokenInternalLinks.length) {
@@ -444,6 +486,16 @@ export async function assembleCorpusArtifact(
   if (publicProseMarkers.length) {
     reportBase.warnings.push(`public prose markers: ${publicProseMarkers.length}`)
   }
+  reportBase.warnings.push(
+    `derived coverage: ${reasoningEvidence.derivedDistribution.complete} complete` +
+      ` (${reasoningEvidence.completeEvidence.liveTimeline.length} live-timeline,` +
+      ` ${reasoningEvidence.completeEvidence.envelopeTranscriptEmptyTimeline.length} envelope-transcript);` +
+      ` partial ${reasoningEvidence.derivedDistribution.partial}` +
+      ` (${reasoningEvidence.partialSplit.sessionButNoWhy.length} session-but-no-why,` +
+      ` ${reasoningEvidence.partialSplit.whyButNoSession.length} why-but-no-session);` +
+      ` stub ${reasoningEvidence.derivedDistribution.stub};` +
+      ` ghost-shell sessions ${reasoningEvidence.ghostShellSessions.length}`,
+  )
 
   let reportJson = ''
   const finalizeReport = (sizes: CorpusBuildReport['sizesBytes']): CorpusBuildReport => {

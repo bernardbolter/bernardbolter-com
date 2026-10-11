@@ -22,6 +22,8 @@ const FORBIDDEN = new Set([
   'artworks.recordOrigin',
   'artworks.status',
   'artworks._status',
+  // Derived at build/read time — never agent- or envelope-writable.
+  'artworks.reasoningStatus',
   // artHistoricalReferences: allowed as structured array (2026-07-27) —
   // prose/string values rejected by validateArtHistoricalReferencesValue.
   'sessions.messages',
