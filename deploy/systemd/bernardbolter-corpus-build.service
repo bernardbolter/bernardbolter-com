@@ -1,0 +1,19 @@
+[Unit]
+Description=Bernard Bolter nightly corpus artifact build
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bernard
+Group=bernard
+WorkingDirectory=/home/bernard/apps/bernardbolter
+Environment=NODE_ENV=production
+# Load R2 + DATABASE_URL from the app env file
+EnvironmentFile=-/home/bernard/apps/bernardbolter/.env
+ExecStart=/bin/bash -lc 'npm run corpus:build'
+Nice=10
+TimeoutStartSec=600
+
+[Install]
+WantedBy=multi-user.target

@@ -405,6 +405,20 @@ See canonical entry in `docs/corpus/art-official-source-of-truth.md` Part 19. Su
 
 ---
 
+## Part 20 — Nightly corpus artifact (2026-10-11)
+
+Phase 3 shipped. Public corpus JSON + HTML `/corpus` read from `data/corpus/corpus.json` (nightly assembler). Live Payload assembly (`fetchCorpusArtworks` / `buildCorpusResponse` / per-slug `payload.find`) stays in the codebase for `npm run corpus:build` only — public routes do not call it.
+
+- Artifact: `data/corpus/{corpus,briefing,build-report}.json`; R2 mirror under `corpus/`.
+- Timer: user systemd `bernardbolter-corpus-build.timer` at 03:30 Europe/Berlin.
+- Staleness: missing/unparseable → 503; age >48h → still serve + loud log + `X-Corpus-Artifact-Stale`. No live fallback.
+- Briefing slimmed to per-work KEEP envelopes (identity, series, status, gist/gistSource, intent, descriptionShort, seriesContext, throughline/bio relations) + session ledger; deeper prose pointed at `/api/corpus/{slug}`. Target under ~60k tokens.
+- Session ledger: field names only (sanitized paths); never timeline values.
+- Build report `header`: generatedAt, artifactAgeHoursAtWrite, staleThresholdHours (48), auditCounts.
+- First-run audits (not auto-fixed): 5 `complete` with no intent; 8 with intent still `stub`; 1 public-prose marker (`the-thinker` / inThePractice); 0 broken internal links after skipping `{slug}` templates; count surfaces agree at 220.
+
+---
+
 ## Standing process
 
 1. Any chat session that finds a spec/reality mismatch, or makes a flow-level decision (retiring a mechanism, resolving an edge case), logs it here **the same session** — not left in chat scrollback for someone to rediscover later.

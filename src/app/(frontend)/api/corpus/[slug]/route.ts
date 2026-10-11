@@ -1,24 +1,22 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
 
+import { findArtifactWork } from '@/lib/corpus/artifact/projectFromArtifact'
+import {
+  artifactResponseHeaders,
+  readCorpusArtifact,
+} from '@/lib/corpus/artifact/readCorpusArtifact'
 import { CORPUS_BASE } from '@/lib/corpus/constants'
-import { fetchCorpusArtistForReciprocalLinks } from '@/lib/corpus/fetchCorpusData'
-import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
 import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
-import { buildArtworkJsonLd } from '@/utilities/buildArtworkJsonLd'
-import config from '@payload-config'
 
-/** Always live from Payload — never an ISR snapshot shared with HTML pages. */
+/**
+ * Per-artwork corpus record (Tier 4) — slice from the nightly artifact.
+ * `?tier=5` permanently redirects to `/api/corpus/[slug]/sessions` (live Tier 5).
+ */
 export const dynamic = 'force-dynamic'
 
 type RouteParams = { params: Promise<{ slug: string }> }
 
-/**
- * Per-artwork or per-event corpus record (Tier 4 artwork / Tier 5 redirect).
- * `?tier=5` permanently redirects to `/api/corpus/[slug]/sessions`.
- * Optional `?type=artwork|event` when the same slug exists in both collections.
- */
 export async function GET(request: Request, { params }: RouteParams) {
   const headers = corpusResponseHeaders(request)
   const { slug: rawSlug } = await params
@@ -54,10 +52,6 @@ export async function GET(request: Request, { params }: RouteParams) {
     )
   }
 
-  const payload = await getPayload({ config })
-
-  // Tier 4 remains artwork-keyed. Event slugs without a matching artwork 404 here;
-  // their Tier 5 sessions are available at /api/corpus/{eventSlug}/sessions.
   if (typeParam === 'event') {
     return NextResponse.json(
       {
@@ -70,54 +64,24 @@ export async function GET(request: Request, { params }: RouteParams) {
     )
   }
 
-  const [result, sessionCountBySlug, artist] = await Promise.all([
-    payload.find({
-      collection: 'artworks',
-      locale: 'en',
-      where: {
-        and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
+  const loaded = await readCorpusArtifact()
+  if (!loaded) {
+    return NextResponse.json(
+      {
+        error: 'Corpus artifact unavailable',
+        message:
+          'Nightly artifact missing or unparseable. No live fallback. Re-run pnpm corpus:build.',
       },
-      limit: 1,
-      depth: 3,
-      overrideAccess: true,
-    }),
-    fetchSessionCountBySlug(payload),
-    fetchCorpusArtistForReciprocalLinks(payload),
-  ])
+      { status: 503, headers },
+    )
+  }
 
-  const artwork = result.docs[0]
-  if (!artwork) {
-    // Fall through: if this slug is an event, point clients at Tier 5 sessions.
-    const eventResult = await payload.find({
-      collection: 'events',
-      locale: 'en',
-      where: {
-        and: [{ slug: { equals: slug } }, { status: { equals: 'published' } }],
-      },
-      limit: 1,
-      depth: 0,
-      select: { slug: true },
-      overrideAccess: true,
-    })
-    if (eventResult.docs[0]) {
-      return NextResponse.json(
-        {
-          error: 'Event Tier 4 not implemented',
-          message:
-            'This slug matches a published event. Use Tier 5 sessions: /api/corpus/{slug}/sessions.',
-          sessionsUrl: `${CORPUS_BASE}/api/corpus/${encodeURIComponent(slug)}/sessions`,
-        },
-        { status: 404, headers },
-      )
-    }
+  const work = findArtifactWork(loaded.artifact, slug)
+  if (!work) {
     return NextResponse.json({ error: 'Not found' }, { status: 404, headers })
   }
 
-  const body = buildArtworkJsonLd(artwork, artist, {
-    baseUrl: CORPUS_BASE,
-    sessionCount: sessionCountBySlug.get(slug) ?? 0,
-    includeTraversalLinks: true,
+  return NextResponse.json(work.record, {
+    headers: artifactResponseHeaders(headers, loaded.meta),
   })
-
-  return NextResponse.json(body, { headers })
 }

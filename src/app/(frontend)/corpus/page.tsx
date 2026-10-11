@@ -1,15 +1,18 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { getPayload } from 'payload'
-import config from '@payload-config'
 
 import CorpusFiltersPersist from '@/components/corpus/CorpusFiltersPersist'
-import CorpusIndex, { rowsFromArtworks } from '@/components/corpus/CorpusIndex'
+import CorpusIndex from '@/components/corpus/CorpusIndex'
+import {
+  filterArtifactWorks,
+  rowsFromArtifactWorks,
+  seriesOptionsFromArtifact,
+} from '@/lib/corpus/artifact/projectFromArtifact'
+import { readCorpusArtifact } from '@/lib/corpus/artifact/readCorpusArtifact'
 import { parseCorpusIndexFilters } from '@/lib/corpus/corpusIndexFilters'
-import { fetchCorpusArtworks, fetchCorpusSeries } from '@/lib/corpus/fetchCorpusData'
-import { withDbUnavailableFallback } from '@/lib/payload/buildSafeDb'
 
-export const revalidate = 3600
+/** HTML index tracks the nightly artifact — not a separate Payload ISR path. */
+export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
   title: 'Corpus',
@@ -35,22 +38,23 @@ export default async function CorpusPage({ searchParams }: PageProps) {
   }
   const filters = parseCorpusIndexFilters(params)
 
-  const payload = await getPayload({ config })
-  const [artworks, seriesList] = await Promise.all([
-    withDbUnavailableFallback(() => fetchCorpusArtworks(payload, filters), []),
-    withDbUnavailableFallback(() => fetchCorpusSeries(payload), []),
-  ])
+  const loaded = await readCorpusArtifact()
+  const rows = loaded
+    ? rowsFromArtifactWorks(filterArtifactWorks(loaded.artifact.works, filters))
+    : []
+  const seriesList = loaded ? seriesOptionsFromArtifact(loaded.artifact) : []
 
   return (
     <div className="bio-page__container">
       <Suspense fallback={null}>
         <CorpusFiltersPersist />
       </Suspense>
-      <CorpusIndex
-        rows={rowsFromArtworks(artworks)}
-        seriesList={seriesList}
-        filters={filters}
-      />
+      {!loaded ? (
+        <p className="bio__masonry-caption">
+          Corpus index unavailable — nightly artifact missing or unparseable.
+        </p>
+      ) : null}
+      <CorpusIndex rows={rows} seriesList={seriesList} filters={filters} />
     </div>
   )
 }
