@@ -7,7 +7,8 @@ export const artistAfterChange: CollectionAfterChangeHook = ({ context }) => {
   if (context?.skipRevalidate) return
 
   revalidateArchive({
-    tags: ['artists'],
-    paths: ['/', '/bio', '/statement', '/cv', '/contact', '/datenschutz'],
+    // artworks: reciprocal throughline/bio hrefs on /{slug} read artist entry slugs
+    tags: ['artists', 'artworks'],
+    paths: ['/', '/bio', '/statement', '/cv', '/contact', '/datenschutz', '/sitemap.xml'],
   })
 }
