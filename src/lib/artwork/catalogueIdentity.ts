@@ -175,6 +175,50 @@ export type VersoConnectorLink = {
   label: string
 }
 
+export type VersoConnector = {
+  id: string
+  kind: 'throughline' | 'bio'
+  href: string
+  label: string
+  /** Full claim / entry text — SSR'd into the chip overlay. */
+  claim: string
+  linkedArtworkIds: number[]
+}
+
+export function resolveVersoConnectors(
+  artworkId: number,
+  kind: 'throughline' | 'bio',
+  entries: Array<{
+    id: string
+    text: string
+    shortTitle?: string | null
+    permalinkHref: string | null
+    linkedArtworkIds: number[]
+  }>,
+): VersoConnector[] {
+  const connectors: VersoConnector[] = []
+  for (const entry of entries) {
+    if (!entry.linkedArtworkIds.includes(artworkId)) continue
+    if (!entry.permalinkHref) continue
+    const claim = entry.text.replace(/\s+/g, ' ').trim()
+    if (!claim) continue
+    const label = resolveConnectorCardLabel({
+      text: claim,
+      shortTitle: entry.shortTitle,
+    })
+    if (!label) continue
+    connectors.push({
+      id: `${kind}:${entry.id}`,
+      kind,
+      href: entry.permalinkHref,
+      label,
+      claim,
+      linkedArtworkIds: entry.linkedArtworkIds,
+    })
+  }
+  return connectors
+}
+
 export function resolveVersoConnectorLinks(
   artworkId: number,
   entries: Array<{

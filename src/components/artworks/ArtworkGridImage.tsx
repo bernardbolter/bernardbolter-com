@@ -189,6 +189,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
         sessionDates={state.sessionDatesByArtworkId[artwork.id] ?? []}
         className="artwork-block__face artwork-grid__card"
         dataGridCard
+        active={selected}
       />
     </article>
   )

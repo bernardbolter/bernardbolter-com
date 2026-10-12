@@ -82,6 +82,7 @@ export default function ArtworkBlock({
             filterSeries={filterSeries}
             timelineMarkers={timelineMarkers}
             sessionDates={sessionDates}
+            active={flipped}
           />
         </div>
       </div>

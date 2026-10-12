@@ -492,6 +492,12 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 29 — Verso connector chips + claim overlay (2026-10-12)
+
+Connector links are chips (flowing wrap; Throughlines / Biography groups). Chip opens an SSR'd overlay inside the inset card: short title, full claim, related works, link to the connector page. Overlay covers the record bar while open. Dismiss: close control, tap card outside overlay (does not flip), Escape (overlay first, then flip). Claims for every linked work are in the homepage HTML at load — no fetch on click.
+
+---
+
 ## Part 28 — Verso registrar card styling (2026-10-12)
 
 Shared `ArtworkVerso`: series-tint wash + inset near-white card (1px radius, soft shadow); body content vertically centred, left-aligned; connector groups labelled **Throughlines** / **Biography** (leading dash, hover underline); record CTA is full-width bottom bar (`OPEN_THE_RECORD_LABEL` = “See the whole painting →”), min 44px, with ~10px dead zone so near-misses neither flip nor navigate. `ArtworkTitle` fully hidden while flipped. Dark `prefers-color-scheme` tokens for card/tint/ink.
