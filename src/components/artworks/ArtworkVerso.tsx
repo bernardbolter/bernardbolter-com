@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { CSSProperties } from 'react'
 
 import {
+  OPEN_THE_RECORD_LABEL,
   formatCatalogueStatus,
   resolveVersoConnectorLinks,
   resolveVersoDescription,
@@ -15,8 +16,10 @@ type ArtworkVersoProps = {
   timelineMarkers: TimelineMarkersData
   sessionDates: string[]
   className?: string
-  /** Extra attrs for the grid card (data-grid-card, series accent). */
+  /** Extra attrs for the grid card (series accent border). */
   style?: CSSProperties
+  /** Grid selection dismisses on outside click via `[data-grid-card]`. */
+  dataGridCard?: boolean
 }
 
 export default function ArtworkVerso({
@@ -25,6 +28,7 @@ export default function ArtworkVerso({
   sessionDates,
   className,
   style,
+  dataGridCard = false,
 }: ArtworkVersoProps) {
   const title = artwork.title?.trim() || artwork.slug
   const recordHref = `/${artwork.slug}`
@@ -34,7 +38,11 @@ export default function ArtworkVerso({
   const bioLinks = resolveVersoConnectorLinks(artwork.id, timelineMarkers.bioEntries)
 
   return (
-    <div className={className} style={style} data-grid-card="">
+    <div
+      className={className}
+      style={style}
+      {...(dataGridCard ? { 'data-grid-card': '' } : {})}
+    >
       <h2 className="artwork-block__verso-title">{title}</h2>
       {description ? <p className="artwork-block__verso-description">{description}</p> : null}
       {throughlineLinks.length > 0 || bioLinks.length > 0 ? (
@@ -53,7 +61,7 @@ export default function ArtworkVerso({
       ) : null}
       <p className="artwork-block__verso-status">{status}</p>
       <Link href={recordHref} className="artwork-block__record-link">
-        Open the record
+        {OPEN_THE_RECORD_LABEL}
       </Link>
     </div>
   )

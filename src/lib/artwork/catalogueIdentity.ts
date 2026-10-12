@@ -9,6 +9,9 @@ import type { FilterCategory } from '@/types/frontend'
 /** Minimum readable width of a flipped verso. Single source for CSS and layout. */
 export const VERSO_MIN_WIDTH_PX = 320
 
+/** Record CTA on timeline/grid verso — single string; styling pass may retitle. */
+export const OPEN_THE_RECORD_LABEL = 'Open the record'
+
 const ALT_MAX_CHARS = 125
 
 export type ArtworkDimensionLines = {

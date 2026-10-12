@@ -1,15 +1,10 @@
 'use client'
 
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import ArtworkIdentityLabel from '@/components/artworks/ArtworkIdentityLabel'
-import {
-  VERSO_MIN_WIDTH_PX,
-  formatCatalogueStatus,
-  resolveVersoConnectorLinks,
-  resolveVersoDescription,
-} from '@/lib/artwork/catalogueIdentity'
+import ArtworkVerso from '@/components/artworks/ArtworkVerso'
+import { VERSO_MIN_WIDTH_PX } from '@/lib/artwork/catalogueIdentity'
 import type { CatalogueClientRow, FilterCategory, TimelineMarkersData } from '@/types/frontend'
 
 type ArtworkBlockProps = {
@@ -35,11 +30,6 @@ export default function ArtworkBlock({
   allowFootprintBreak = false,
 }: ArtworkBlockProps) {
   const title = artwork.title?.trim() || artwork.slug
-  const recordHref = `/${artwork.slug}`
-  const description = resolveVersoDescription(artwork)
-  const status = formatCatalogueStatus(sessionDates)
-  const throughlineLinks = resolveVersoConnectorLinks(artwork.id, timelineMarkers.throughlines)
-  const bioLinks = resolveVersoConnectorLinks(artwork.id, timelineMarkers.bioEntries)
 
   return (
     <article
@@ -71,26 +61,11 @@ export default function ArtworkBlock({
         </div>
 
         <div className="artwork-block__face artwork-block__face--back">
-          <h2 className="artwork-block__verso-title">{title}</h2>
-          {description ? <p className="artwork-block__verso-description">{description}</p> : null}
-          {throughlineLinks.length > 0 || bioLinks.length > 0 ? (
-            <ul className="artwork-block__verso-links">
-              {throughlineLinks.map((link) => (
-                <li key={`throughline-${link.href}`}>
-                  <Link href={link.href}>{link.label}</Link>
-                </li>
-              ))}
-              {bioLinks.map((link) => (
-                <li key={`bio-${link.href}`}>
-                  <Link href={link.href}>{link.label}</Link>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <p className="artwork-block__verso-status">{status}</p>
-          <Link href={recordHref} className="artwork-block__record-link">
-            Open the record
-          </Link>
+          <ArtworkVerso
+            artwork={artwork}
+            timelineMarkers={timelineMarkers}
+            sessionDates={sessionDates}
+          />
         </div>
       </div>
 

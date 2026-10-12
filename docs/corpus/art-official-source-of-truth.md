@@ -492,6 +492,12 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 26 — Shared ArtworkVerso (2026-10-12)
+
+Timeline (`ArtworkBlock`) and grid (`ArtworkGridImage`) both mount `ArtworkVerso` for verso fields. Block keeps `.artwork-block__face--back` for position/sizing/flip; grid keeps its own card chrome + `data-grid-card`. `OPEN_THE_RECORD_LABEL` is the single CTA string. **Field parity before extract:** both paths already rendered the same five fields (title, description, throughline/bio links, catalogue status, record CTA) — no content-field diff; only structural (`data-grid-card` / className/style on the grid root).
+
+---
+
 ## Part 25 — Timeline throughline connector overlay removed (2026-10-12)
 
 Removed the SVG that drew a two-anchor line across the chronological timeline when a throughline resolved to exactly two artwork positions (`throughlineSegments`, `buildArtworkAnchorMap`, `.artworks-timeline__throughline-svg`). Kept: year axis (`artworks-timeline__line` + ticks), historical markers, and `state.timelineMarkers.throughlines` / `mapTimelineMarkers` for verso connector text links. Sequence view stays on the throughline page; the connection remains stated per work on the verso.
