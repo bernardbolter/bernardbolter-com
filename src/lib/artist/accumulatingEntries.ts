@@ -3,6 +3,9 @@ import type { Artist, Artwork, Session } from '@/payload-types'
 export type AccumulatingEntry = {
   id: string
   dateLabel: string
+  /** Short display title when present; link anchor on /statement and /bio lists. */
+  shortTitle: string | null
+  /** Full claim / life-fact body. */
   text: string
   /** Permalink to bio entry or throughline page (preferred). */
   permalinkHref: string | null
@@ -56,6 +59,7 @@ export function publicBioTimelineEntries(artist: Artist): AccumulatingEntry[] {
     .map((entry) => ({
       id: entry.id ?? entry.text,
       dateLabel: entry.eventDate?.trim() || '—',
+      shortTitle: entry.shortTitle?.replace(/\s+/g, ' ').trim() || null,
       text: entry.text.trim(),
       permalinkHref: entry.slug?.trim() ? `/bio/entries/${entry.slug.trim()}` : null,
       sessionHref: sessionPublicHref(entry.sourceSessionRef),
@@ -68,6 +72,7 @@ export function publicStatementThroughlines(artist: Artist): AccumulatingEntry[]
     .map((entry) => ({
       id: entry.id ?? entry.text,
       dateLabel: formatIsoDate(entry.dateRecognized) || '—',
+      shortTitle: entry.shortTitle?.replace(/\s+/g, ' ').trim() || null,
       text: entry.text.trim(),
       permalinkHref: entry.slug?.trim()
         ? `/statement/throughlines/${entry.slug.trim()}`

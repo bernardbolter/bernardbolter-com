@@ -109,6 +109,7 @@ function mapTimelineMarkers(person: Artist | null): TimelineMarkersData {
         id: entry.id ?? `${entry.text}-${eventDate}`,
         eventDate,
         year: parseYear(eventDate),
+        shortTitle: entry.shortTitle?.replace(/\s+/g, ' ').trim() || null,
         text: entry.text?.trim() ?? '',
         permalinkHref: entry.slug?.trim() ? `/bio/entries/${entry.slug.trim()}` : null,
         sourceSessionHref: null,
@@ -124,6 +125,7 @@ function mapTimelineMarkers(person: Artist | null): TimelineMarkersData {
         .filter((id): id is number => id !== null)
       return {
         id: entry.id ?? entry.text,
+        shortTitle: entry.shortTitle?.replace(/\s+/g, ' ').trim() || null,
         text: entry.text?.trim() ?? '',
         permalinkHref: entry.slug?.trim() ? `/statement/throughlines/${entry.slug.trim()}` : null,
         linkedArtworkIds,

@@ -1,10 +1,6 @@
 import type { CollectionBeforeChangeHook, PayloadRequest } from 'payload'
 
-import {
-  ENTRY_SLUG_MAX_LENGTH,
-  slugifyEntryText,
-  uniqueEntrySlug,
-} from '@/lib/artist/entrySlug'
+import { slugifyEntryText, uniqueEntrySlug } from '@/lib/artist/entrySlug'
 import {
   mergeLocationRows,
   validateContactLocations,
@@ -31,8 +27,8 @@ function ensureEntrySlugs(
       row.slug = byId.get(row.id)!
     }
     const current = typeof row.slug === 'string' ? row.slug.trim() : ''
-    // Sticky when present and within the 60-char cap; regenerate over-length.
-    if (current && current.length <= ENTRY_SLUG_MAX_LENGTH) {
+    // Sticky once set — claim-text edits never regenerate. Rename deliberately.
+    if (current) {
       used.add(current)
       continue
     }

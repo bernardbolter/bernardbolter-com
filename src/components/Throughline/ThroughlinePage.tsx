@@ -18,6 +18,7 @@ export type ReinforcementRow = {
 
 type Props = {
   dateRecognized: string | null
+  shortTitle: string | null
   text: string
   discoveryExcerpt: unknown
   artworks: StatementRelatedWork[]
@@ -27,6 +28,7 @@ type Props = {
 
 export default function ThroughlinePage({
   dateRecognized,
+  shortTitle,
   text,
   discoveryExcerpt,
   artworks,
@@ -34,6 +36,7 @@ export default function ThroughlinePage({
   siblings,
 }: Props) {
   const confirmedCount = reinforcementRows.length
+  const heading = shortTitle?.trim() || text
 
   return (
     <article className="throughline-page">
@@ -45,7 +48,10 @@ export default function ThroughlinePage({
       {dateRecognized ? (
         <p className="throughline-page__date">Recognized {dateRecognized}</p>
       ) : null}
-      <h1 className="throughline-page__title">{text}</h1>
+      <h1 className="throughline-page__title">{heading}</h1>
+      {shortTitle?.trim() && shortTitle.trim() !== text ? (
+        <p className="throughline-page__claim">{text}</p>
+      ) : null}
 
       <DiscoveryExcerpt data={discoveryExcerpt} />
 

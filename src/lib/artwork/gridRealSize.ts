@@ -31,6 +31,9 @@ export const TIER_FALLBACK_AREA_MM2: Record<ArtworkSizeTier, number> = {
 /** Caption under each grid tile: title, year, series, medium, both-unit dimensions. */
 export const GRID_CAPTION_BLOCK_HEIGHT_PX = 80
 
+/** Selected grid tile grows by this factor — not to a shared pixel size. */
+export const GRID_SELECTION_SCALE = 1.35
+
 export type GridAreaResolution = {
   areaMm2: number
   usingFallbackSizing: boolean

@@ -35,7 +35,10 @@ export async function recordSlugRedirect(
 
   const doc = existing.docs[0]
   if (doc) {
-    if (doc.toPath === toPath && doc.source === options.source) return
+    if (doc.toPath === toPath && doc.source === options.source) {
+      await flattenInboundRedirects(payload, fromPath, toPath, options.source, options.req)
+      return
+    }
     await payload.update({
       collection: 'redirects',
       id: doc.id,
@@ -44,20 +47,60 @@ export async function recordSlugRedirect(
       context: { skipRedirectHooks: true },
       req: options.req,
     })
-    return
+  } else {
+    await payload.create({
+      collection: 'redirects',
+      data: {
+        fromPath,
+        toPath,
+        source: options.source,
+      },
+      overrideAccess: true,
+      context: { skipRedirectHooks: true },
+      req: options.req,
+    })
   }
 
-  await payload.create({
+  // Second hop → retarget every row that still pointed at fromPath so old
+  // URLs 308 in one hop to the final slug (not via an intermediate).
+  await flattenInboundRedirects(payload, fromPath, toPath, options.source, options.req)
+}
+
+/**
+ * Any redirect whose toPath is `oldTo` now points at `newTo`.
+ * Skips self-loops (fromPath === newTo).
+ */
+async function flattenInboundRedirects(
+  payload: Payload,
+  oldTo: string,
+  newTo: string,
+  source: RedirectSource,
+  req?: PayloadRequest,
+): Promise<void> {
+  if (!oldTo || !newTo || oldTo === newTo) return
+
+  const inbound = await payload.find({
     collection: 'redirects',
-    data: {
-      fromPath,
-      toPath,
-      source: options.source,
-    },
+    where: { toPath: { equals: oldTo } },
+    limit: 500,
+    depth: 0,
     overrideAccess: true,
-    context: { skipRedirectHooks: true },
-    req: options.req,
+    req,
   })
+
+  for (const row of inbound.docs) {
+    const from = normalizeRedirectPath(row.fromPath)
+    if (!from || from === newTo) continue
+    if (row.toPath === newTo && row.source === source) continue
+    await payload.update({
+      collection: 'redirects',
+      id: row.id,
+      data: { toPath: newTo, source },
+      overrideAccess: true,
+      context: { skipRedirectHooks: true },
+      req,
+    })
+  }
 }
 
 /**

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { resolveConnectorCardLabel } from '@/lib/artwork/catalogueIdentity'
 import type { Artist } from '@/payload-types'
 
 export type SiblingLink = {
@@ -31,10 +32,15 @@ export function collectSessionSiblingLinks(options: {
     if (!entry.slug?.trim() || !entry.text?.trim()) continue
     if (excludeSlug && entry.slug === excludeSlug) continue
     if (relationId(entry.sourceSessionRef) !== sourceSessionId) continue
+    const label = resolveConnectorCardLabel({
+      text: entry.text.trim(),
+      shortTitle: entry.shortTitle,
+    })
+    if (!label) continue
     out.push({
       kind: 'bio',
       slug: entry.slug,
-      label: entry.text.trim(),
+      label,
       href: `/bio/entries/${entry.slug}`,
     })
   }
@@ -44,10 +50,15 @@ export function collectSessionSiblingLinks(options: {
     if (!entry.slug?.trim() || !entry.text?.trim()) continue
     if (excludeSlug && entry.slug === excludeSlug) continue
     if (relationId(entry.sourceSessionRef) !== sourceSessionId) continue
+    const label = resolveConnectorCardLabel({
+      text: entry.text.trim(),
+      shortTitle: entry.shortTitle,
+    })
+    if (!label) continue
     out.push({
       kind: 'throughline',
       slug: entry.slug,
-      label: entry.text.trim(),
+      label,
       href: `/statement/throughlines/${entry.slug}`,
     })
   }
@@ -71,7 +82,6 @@ export default function SessionSiblingLinks({ siblings }: Props) {
           <li key={`${sib.kind}-${sib.slug}`}>
             <Link href={sib.href} className="bio__inline-link">
               {sib.kind === 'bio' ? 'Bio' : 'Throughline'}: {sib.label}
-              {sib.label.length >= 120 ? '…' : ''}
             </Link>
           </li>
         ))}

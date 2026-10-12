@@ -143,41 +143,26 @@ export function resolveVersoDescription(
 }
 
 const SHORT_LABEL_MAX_WORDS = 6
-const SLUG_LABEL_MAX_CHARS = 48
-const SLUG_LABEL_MAX_TOKENS = 8
 
 function wordCount(value: string): number {
   return value.split(/\s+/).filter(Boolean).length
 }
 
-function humanizeSlug(slug: string): string {
-  const trimmed = slug.trim()
-  if (!trimmed) return ''
-  const spaced = trimmed.replaceAll('-', ' ')
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1)
-}
-
 /**
- * Card label for a throughline or bio entry.
- * Short titles are not on the live schema yet (Phase 4 writing task).
- * Use the full text only when it is already short; never slice a paragraph.
+ * Display label for a throughline or bio entry link.
+ * Order: shortTitle → claim text if already short (≤6 words) → omit.
+ * Never humanise a slug.
  */
 export function resolveConnectorCardLabel(entry: {
   text: string
+  shortTitle?: string | null
   slug?: string | null
 }): string | null {
+  const shortTitle = entry.shortTitle?.replace(/\s+/g, ' ').trim()
+  if (shortTitle) return shortTitle
+
   const text = entry.text.replace(/\s+/g, ' ').trim()
   if (text && wordCount(text) <= SHORT_LABEL_MAX_WORDS) return text
-
-  const slug = entry.slug?.trim()
-  if (
-    slug &&
-    slug.length <= SLUG_LABEL_MAX_CHARS &&
-    slug.split('-').filter(Boolean).length <= SLUG_LABEL_MAX_TOKENS
-  ) {
-    const label = humanizeSlug(slug)
-    return label || null
-  }
 
   return null
 }
@@ -191,6 +176,7 @@ export function resolveVersoConnectorLinks(
   artworkId: number,
   entries: Array<{
     text: string
+    shortTitle?: string | null
     permalinkHref: string | null
     linkedArtworkIds: number[]
   }>,
@@ -199,8 +185,10 @@ export function resolveVersoConnectorLinks(
   for (const entry of entries) {
     if (!entry.linkedArtworkIds.includes(artworkId)) continue
     if (!entry.permalinkHref) continue
-    const slug = entry.permalinkHref.split('/').filter(Boolean).at(-1) ?? null
-    const label = resolveConnectorCardLabel({ text: entry.text, slug })
+    const label = resolveConnectorCardLabel({
+      text: entry.text,
+      shortTitle: entry.shortTitle,
+    })
     if (!label) continue
     links.push({ href: entry.permalinkHref, label })
   }

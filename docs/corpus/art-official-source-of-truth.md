@@ -492,6 +492,30 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 25 — Timeline throughline connector overlay removed (2026-10-12)
+
+Removed the SVG that drew a two-anchor line across the chronological timeline when a throughline resolved to exactly two artwork positions (`throughlineSegments`, `buildArtworkAnchorMap`, `.artworks-timeline__throughline-svg`). Kept: year axis (`artworks-timeline__line` + ticks), historical markers, and `state.timelineMarkers.throughlines` / `mapTimelineMarkers` for verso connector text links. Sequence view stays on the throughline page; the connection remains stated per work on the verso.
+
+---
+
+## Part 24 — Shared ArtworkIdentityLabel (2026-10-12)
+
+Homepage identity fields (title, year, medium, dimensions, series) extracted to `ArtworkIdentityLabel` (`artwork-identity__*`). Mounted by `ArtworkBlock`, `ArtworkGridImage`, and `ArtworkTitle` (chrome kept; fields replaced). Field order normalised to block order. Series colour only when series resolves — no slug-derived fallback dot. Flip/select and CSS namespaces for block/grid wrappers unchanged.
+
+---
+
+## Part 23 — Throughline / bio shortTitle + sticky slugs (2026-10-12)
+
+- `shortTitle` added on `statementThroughlines[]` and `bioTimelineEntries[]`.
+- Display order for verso / Related Patterns / list anchors: **shortTitle → claim if ≤6 words → omit**. Slug-humanising retired (`resolveConnectorCardLabel`).
+- Throughline own page: `h1` = shortTitle; full claim as body. `/statement` list: short title link + claim below.
+- Slugs are **sticky**: once set, claim-text edits never regenerate them. Deliberate rename records a redirect; inbound hops are flattened so old URLs 308 in one hop to the final slug.
+- 35 throughlines renamed + titled from `docs/throughlines/throughline-short-titles-draft.md` (2026-10-12).
+- 7 bio entries titled/renamed (2026-10-12): Utrecht pair merged — fuller `-2` text kept under `leaving-utrecht`; shorter original + `-2` (+ prior long slugs) 308 to it. No other collision-suffixed (`-2`…`-99`) slugs remain on bio or throughlines.
+- Note: `linkedArtworkSlugs` is still empty on throughlines/bios — Related Patterns / verso connectors have nothing to attach until links are populated.
+
+---
+
 ## Standing process
 
 1. Any chat session that finds a spec/reality mismatch, or makes a flow-level decision (retiring a mechanism, resolving an edge case), logs it here **the same session** — not left in chat scrollback for someone to rediscover later.

@@ -11,6 +11,7 @@ import type { Session } from '@/payload-types'
 
 type Props = {
   eventDate: string | null
+  shortTitle: string | null
   text: string
   discoveryExcerpt: unknown
   artworks: StatementRelatedWork[]
@@ -20,12 +21,15 @@ type Props = {
 
 export default function BioEntryPage({
   eventDate,
+  shortTitle,
   text,
   discoveryExcerpt,
   artworks,
   sourceSession,
   siblings,
 }: Props) {
+  const heading = shortTitle?.trim() || text
+
   return (
     <article className="bio-entry-page">
       <p className="bio__masonry-caption">
@@ -34,7 +38,10 @@ export default function BioEntryPage({
         </Link>
       </p>
       {eventDate ? <p className="bio-entry-page__date">{eventDate}</p> : null}
-      <h1 className="bio-entry-page__title">{text}</h1>
+      <h1 className="bio-entry-page__title">{heading}</h1>
+      {shortTitle?.trim() && shortTitle.trim() !== text ? (
+        <p className="bio-entry-page__claim">{text}</p>
+      ) : null}
 
       <DiscoveryExcerpt data={discoveryExcerpt} />
 

@@ -22,12 +22,13 @@ type PageProps = { params: Promise<{ slug: string }> }
 
 function buildEntryJsonLd(options: {
   slug: string
+  name: string
   text: string
   eventDate: string | null
   session: Session | null
   baseUrl: string
 }): Record<string, unknown> {
-  const { slug, text, eventDate, session, baseUrl } = options
+  const { slug, name, text, eventDate, session, baseUrl } = options
   const basedOn =
     session?.status === 'completed' && session.sessionId
       ? `${baseUrl}/sessions/${session.sessionId}`
@@ -36,7 +37,8 @@ function buildEntryJsonLd(options: {
     '@context': CORPUS_CONTEXT,
     '@type': 'CreativeWork',
     '@id': `${baseUrl}/bio/entries/${slug}`,
-    name: text,
+    name,
+    description: text,
     url: `${baseUrl}/bio/entries/${slug}`,
     ...(eventDate ? { 'art-official:eventDate': eventDate } : {}),
     ...(basedOn ? { isBasedOn: basedOn } : {}),
@@ -47,8 +49,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params
   const raw = await getBioPageArtist()
   const entry = raw?.bioTimelineEntries?.find((e) => e.slug === slug)
+  const title =
+    entry?.shortTitle?.trim() || entry?.text?.trim()?.slice(0, 60) || 'Bio entry'
   return {
-    title: entry?.text?.slice(0, 60) || 'Bio entry',
+    title,
     alternates: { canonical: `/bio/entries/${slug}` },
   }
 }
@@ -87,9 +91,12 @@ export default async function BioEntryPermalinkPage({ params }: PageProps) {
       : []
 
   const baseUrl = getSiteBaseUrl()
+  const shortTitle = entry.shortTitle?.replace(/\s+/g, ' ').trim() || null
+  const claim = entry.text.trim()
   const jsonLd = buildEntryJsonLd({
     slug: entry.slug!,
-    text: entry.text.trim(),
+    name: shortTitle || claim,
+    text: claim,
     eventDate: entry.eventDate?.trim() || null,
     session: sourceSession,
     baseUrl,
@@ -107,7 +114,8 @@ export default async function BioEntryPermalinkPage({ params }: PageProps) {
         <div className="bio__content-container">
           <BioEntryPage
             eventDate={entry.eventDate?.trim() || null}
-            text={entry.text.trim()}
+            shortTitle={shortTitle}
+            text={claim}
             discoveryExcerpt={entry.discoveryExcerpt}
             artworks={linkedArtworksToCards(entry.linkedArtworkSlugs)}
             sourceSession={sourceSession}

@@ -1,3 +1,4 @@
+import { resolveConnectorCardLabel } from '@/lib/artwork/catalogueIdentity'
 import { CORPUS_BASE } from '@/lib/corpus/constants'
 import type { Artist, Artwork } from '@/payload-types'
 
@@ -45,9 +46,13 @@ export function findRelatedThroughlines(
     const text = entry.text?.trim()
     if (!slug || !text) continue
     if (!entryLinksArtwork(entry.linkedArtworkSlugs, artwork)) continue
+    const name = resolveConnectorCardLabel({
+      text,
+      shortTitle: entry.shortTitle,
+    })
+    if (!name) continue
     out.push({
-      // Full text in HTML; CSS clips visually if needed (never mid-word in the string).
-      name: text,
+      name,
       url: `${origin}/statement/throughlines/${slug}`,
     })
   }
@@ -74,8 +79,13 @@ export function findRelatedBioEvents(
     const text = entry.text?.trim()
     if (!slug || !text) continue
     if (!entryLinksArtwork(entry.linkedArtworkSlugs, artwork)) continue
+    const name = resolveConnectorCardLabel({
+      text,
+      shortTitle: entry.shortTitle,
+    })
+    if (!name) continue
     out.push({
-      name: text,
+      name,
       url: `${origin}/bio/entries/${slug}`,
     })
   }

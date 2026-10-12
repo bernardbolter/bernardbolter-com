@@ -94,9 +94,11 @@ function buildBiographicalNotes(
     .map((entry) => {
       const basedOn = sessionHref(entry.sourceSessionRef, baseUrl)
       const slug = entry.slug?.trim()
+      const shortTitle = entry.shortTitle?.replace(/\s+/g, ' ').trim()
       return {
         '@type': 'PropertyValue',
         propertyID: 'art-official:biographicalNote',
+        name: shortTitle || undefined,
         value: entry.text.trim(),
         ...(entry.eventDate?.trim() ? { 'art-official:eventDate': entry.eventDate.trim() } : {}),
         ...(slug ? { url: `${baseUrl}/bio/entries/${slug}` } : {}),

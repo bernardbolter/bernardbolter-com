@@ -389,7 +389,11 @@ export interface Artist {
         eventDate?: string | null;
         text: string;
         /**
-         * Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.
+         * 3–6 word label for lists, verso links, and reciprocal anchors. Full claim stays in text.
+         */
+        shortTitle?: string | null;
+        /**
+         * Stable permalink. Auto-set on create from text; never regenerated when claim text changes. Rename deliberately — redirects are recorded.
          */
         slug?: string | null;
         /**
@@ -595,7 +599,11 @@ export interface Artist {
         dateRecognized?: string | null;
         text: string;
         /**
-         * Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.
+         * 3–6 word label for /statement, verso connectors, Related Patterns, and anchors. Full claim stays in text.
+         */
+        shortTitle?: string | null;
+        /**
+         * Stable permalink. Auto-set on create from text; never regenerated when claim text changes. Rename deliberately — redirects are recorded.
          */
         slug?: string | null;
         /**
@@ -5065,6 +5073,7 @@ export interface ArtistsSelect<T extends boolean = true> {
     | {
         eventDate?: T;
         text?: T;
+        shortTitle?: T;
         slug?: T;
         discoveryExcerpt?: T;
         sourceSessionRef?: T;
@@ -5116,6 +5125,7 @@ export interface ArtistsSelect<T extends boolean = true> {
     | {
         dateRecognized?: T;
         text?: T;
+        shortTitle?: T;
         slug?: T;
         discoveryExcerpt?: T;
         linkedArtworkSlugs?: T;

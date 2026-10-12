@@ -79,9 +79,11 @@ function buildThroughlineProperties(
     .map((entry) => {
       const basedOn = sessionHref(entry.sourceSessionRef, baseUrl)
       const slug = entry.slug?.trim()
+      const shortTitle = entry.shortTitle?.replace(/\s+/g, ' ').trim()
       return {
         '@type': 'PropertyValue',
         propertyID: 'art-official:statementThroughline',
+        name: shortTitle || undefined,
         value: entry.text.trim(),
         ...(entry.dateRecognized
           ? { 'art-official:dateRecognized': entry.dateRecognized }

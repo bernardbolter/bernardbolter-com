@@ -9,6 +9,7 @@ import {
   getDisplayDimensions,
   getGridItemContentHeight,
   GRID_CAPTION_BLOCK_HEIGHT_PX,
+  GRID_SELECTION_SCALE,
   getMedianArea,
   getRealAreaMm2,
   getScaleFactor,
@@ -68,6 +69,11 @@ describe('gridRealSize', () => {
   it('includes cell padding in masonry content height', () => {
     const contentHeight = getGridItemContentHeight(100)
     expect(contentHeight).toBe(100 + 2 * CELL_PAD + GRID_CAPTION_BLOCK_HEIGHT_PX)
+  })
+
+  it('grows a selected tile by a constant factor, not a shared pixel size', () => {
+    expect(GRID_SELECTION_SCALE).toBeGreaterThan(1)
+    expect(GRID_SELECTION_SCALE).toBeLessThan(2)
   })
 
   it('renders landscape wider than portrait at identical real area', () => {

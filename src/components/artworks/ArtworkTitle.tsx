@@ -8,15 +8,10 @@ import {
   TitleCornerTopLeft,
   TitleCornerTopRight,
 } from '@/components/icons'
+import ArtworkIdentityLabel from '@/components/artworks/ArtworkIdentityLabel'
 import { useHomepageFlip } from '@/components/artworks/homepageFlip'
-import { resolveSeriesSlug } from '@/helpers/artworkCatalog'
-import { getSeriesColor } from '@/helpers/seriesColor'
 import useWindowSize from '@/hooks/useWindowSize'
-import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
-import { resolveSeriesDisplay } from '@/lib/artwork/catalogueIdentity'
 import { useArtworks } from '@/providers/ArtworkProvider'
-
-import ArtworkSize, { getArtworkSizeInput } from './ArtworkSize'
 
 export default function ArtworkTitle() {
   const [state] = useArtworks()
@@ -33,10 +28,6 @@ export default function ArtworkTitle() {
   if (!currentArtwork) return null
 
   const isMobile = Boolean(size.width && size.width <= 768)
-  const mediumLabel = resolveMediumLabel(currentArtwork)
-  const seriesColor = getSeriesColor(resolveSeriesSlug(currentArtwork) ?? 'a-colorful-history')
-  const series = resolveSeriesDisplay(currentArtwork, state.filterSeries)
-  const sizeInput = getArtworkSizeInput(currentArtwork)
   const currentSlug = currentArtwork.slug?.trim() || null
   const isFlipped = Boolean(currentSlug && flippedSlug === currentSlug)
   const isTimelineCard = state.artworkViewTimeline && !state.showSlideshow
@@ -126,19 +117,16 @@ export default function ArtworkTitle() {
                 : 'artwork-title__inside artwork-title__inside--desktop'
           }
         >
-          <h1 className="artwork-title__title">{currentArtwork.title}</h1>
-          <h2 className="artwork-title__year">{currentArtwork.yearCreated ?? '—'}</h2>
-          {mediumLabel ? <h3 className="artwork-title__medium">{mediumLabel}</h3> : null}
-          {sizeInput ? (
-            <ArtworkSize width={sizeInput.width} height={sizeInput.height} units={sizeInput.units} />
-          ) : null}
-          {series ? (
-            <p className="artwork-title__series-name">{series.name}</p>
-          ) : null}
-          <div
-            className="artwork-title__series-box"
-            style={{ background: seriesColor }}
-            aria-hidden
+          <ArtworkIdentityLabel
+            artwork={currentArtwork}
+            filterSeries={state.filterSeries}
+            renderSeriesAccent={(resolved) => (
+              <span
+                className="artwork-identity__accent artwork-identity__accent--title"
+                style={{ backgroundColor: resolved.color }}
+                aria-hidden
+              />
+            )}
           />
         </div>
         <div

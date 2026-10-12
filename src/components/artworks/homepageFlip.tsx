@@ -5,11 +5,15 @@ import { createContext, useContext, type ReactNode } from 'react'
 export type HomepageFlipContextValue = {
   flippedSlug: string | null
   setFlippedSlug: (slug: string | null | ((prev: string | null) => string | null)) => void
+  gridSelectedSlug: string | null
+  setGridSelectedSlug: (slug: string | null | ((prev: string | null) => string | null)) => void
 }
 
 const HomepageFlipContext = createContext<HomepageFlipContextValue>({
   flippedSlug: null,
   setFlippedSlug: () => {},
+  gridSelectedSlug: null,
+  setGridSelectedSlug: () => {},
 })
 
 export function HomepageFlipProvider({

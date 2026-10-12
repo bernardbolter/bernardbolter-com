@@ -317,13 +317,21 @@ export const Artists: CollectionConfig = {
         },
         { name: 'text', type: 'textarea', required: true },
         {
+          name: 'shortTitle',
+          type: 'text',
+          admin: {
+            description:
+              '3–6 word label for lists, verso links, and reciprocal anchors. Full claim stays in text.',
+          },
+        },
+        {
           name: 'slug',
           type: 'text',
           unique: true,
           index: true,
           admin: {
             description:
-              'Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.',
+              'Stable permalink. Auto-set on create from text; never regenerated when claim text changes. Rename deliberately — redirects are recorded.',
           },
         },
         {
@@ -499,13 +507,21 @@ export const Artists: CollectionConfig = {
         },
         { name: 'text', type: 'textarea', required: true },
         {
+          name: 'shortTitle',
+          type: 'text',
+          admin: {
+            description:
+              '3–6 word label for /statement, verso connectors, Related Patterns, and anchors. Full claim stays in text.',
+          },
+        },
+        {
           name: 'slug',
           type: 'text',
           unique: true,
           index: true,
           admin: {
             description:
-              'Auto-generated from text on save (same slugify as artworks). Collision suffix added if needed.',
+              'Stable permalink. Auto-set on create from text; never regenerated when claim text changes. Rename deliberately — redirects are recorded.',
           },
         },
         {

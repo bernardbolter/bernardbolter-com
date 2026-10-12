@@ -37,13 +37,14 @@ function formatRecognized(value: string | null | undefined): string | null {
 
 function buildThroughlineJsonLd(options: {
   slug: string
+  name: string
   text: string
   dateRecognized: string | null
   origin: Session | null
   reinforcing: Session[]
   baseUrl: string
 }): Record<string, unknown> {
-  const { slug, text, dateRecognized, origin, reinforcing, baseUrl } = options
+  const { slug, name, text, dateRecognized, origin, reinforcing, baseUrl } = options
   const basedOn = [origin, ...reinforcing]
     .filter((s): s is Session => Boolean(s?.sessionId))
     .map((s) => `${baseUrl}/sessions/${s.sessionId}`)
@@ -52,7 +53,8 @@ function buildThroughlineJsonLd(options: {
     '@context': CORPUS_CONTEXT,
     '@type': 'CreativeWork',
     '@id': `${baseUrl}/statement/throughlines/${slug}`,
-    name: text,
+    name,
+    description: text,
     url: `${baseUrl}/statement/throughlines/${slug}`,
     ...(dateRecognized ? { 'art-official:dateRecognized': dateRecognized } : {}),
     ...(basedOn.length === 1
@@ -67,8 +69,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params
   const raw = await getStatementPageArtist()
   const entry = raw?.statementThroughlines?.find((e) => e.slug === slug)
+  const title =
+    entry?.shortTitle?.trim() ||
+    entry?.text?.trim()?.slice(0, 60) ||
+    'Throughline'
   return {
-    title: entry?.text?.slice(0, 60) || 'Throughline',
+    title,
     alternates: { canonical: `/statement/throughlines/${slug}` },
   }
 }
@@ -143,9 +149,12 @@ export default async function ThroughlinePermalinkPage({ params }: PageProps) {
       : []
 
   const baseUrl = getSiteBaseUrl()
+  const shortTitle = entry.shortTitle?.replace(/\s+/g, ' ').trim() || null
+  const claim = entry.text.trim()
   const jsonLd = buildThroughlineJsonLd({
     slug: entry.slug!,
-    text: entry.text.trim(),
+    name: shortTitle || claim,
+    text: claim,
     dateRecognized: entry.dateRecognized ?? null,
     origin,
     reinforcing: reinforcingSessions.map((r) => r.session),
@@ -164,7 +173,8 @@ export default async function ThroughlinePermalinkPage({ params }: PageProps) {
         <div className="bio__content-container">
           <ThroughlinePage
             dateRecognized={formatRecognized(entry.dateRecognized)}
-            text={entry.text.trim()}
+            shortTitle={shortTitle}
+            text={claim}
             discoveryExcerpt={entry.discoveryExcerpt}
             artworks={linkedArtworksToCards(entry.linkedArtworkSlugs, { sortByYear: true })}
             reinforcementRows={reinforcementRows}

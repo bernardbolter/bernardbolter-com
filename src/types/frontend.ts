@@ -110,6 +110,7 @@ export type TimelineBioEntryMarker = {
   id: string
   eventDate: string
   year: number | null
+  shortTitle?: string | null
   text: string
   permalinkHref: string | null
   sourceSessionHref: string | null
@@ -118,6 +119,7 @@ export type TimelineBioEntryMarker = {
 
 export type TimelineThroughlineMarker = {
   id: string
+  shortTitle?: string | null
   text: string
   permalinkHref: string | null
   linkedArtworkIds: number[]

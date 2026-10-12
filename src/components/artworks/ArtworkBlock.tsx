@@ -3,16 +3,13 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
+import ArtworkIdentityLabel from '@/components/artworks/ArtworkIdentityLabel'
 import {
   VERSO_MIN_WIDTH_PX,
-  formatArtworkDimensionLines,
   formatCatalogueStatus,
-  resolveSeriesDisplay,
   resolveVersoConnectorLinks,
   resolveVersoDescription,
-  type SeriesDisplay,
 } from '@/lib/artwork/catalogueIdentity'
-import { resolveMediumLabel } from '@/lib/artwork/mediumVocabulary'
 import type { CatalogueClientRow, FilterCategory, TimelineMarkersData } from '@/types/frontend'
 
 type ArtworkBlockProps = {
@@ -27,21 +24,6 @@ type ArtworkBlockProps = {
   allowFootprintBreak?: boolean
 }
 
-function SeriesLine({ series }: { series: SeriesDisplay }) {
-  return (
-    <p className="artwork-block__series">
-      <span
-        className="artwork-block__series-dot"
-        style={{ backgroundColor: series.color }}
-        aria-hidden
-      />
-      <Link href={series.href} className="artwork-block__series-name">
-        {series.name}
-      </Link>
-    </p>
-  )
-}
-
 export default function ArtworkBlock({
   artwork,
   filterSeries,
@@ -53,10 +35,6 @@ export default function ArtworkBlock({
   allowFootprintBreak = false,
 }: ArtworkBlockProps) {
   const title = artwork.title?.trim() || artwork.slug
-  const year = artwork.yearCreated ? String(artwork.yearCreated) : ''
-  const medium = resolveMediumLabel(artwork)
-  const dimensions = formatArtworkDimensionLines(artwork)
-  const series = resolveSeriesDisplay(artwork, filterSeries)
   const recordHref = `/${artwork.slug}`
   const description = resolveVersoDescription(artwork)
   const status = formatCatalogueStatus(sessionDates)
@@ -117,20 +95,17 @@ export default function ArtworkBlock({
       </div>
 
       <div className="artwork-block__label">
-        <p className="artwork-block__title">
-          <Link href={recordHref}>{title}</Link>
-        </p>
-        {year ? <p className="artwork-block__year">{year}</p> : null}
-        {medium ? <p className="artwork-block__medium">{medium}</p> : null}
-        {dimensions ? (
-          <p className="artwork-block__dimensions">
-            <span>{dimensions.primary}</span>
-            {dimensions.secondary ? (
-              <span className="artwork-block__dimensions-converted">{dimensions.secondary}</span>
-            ) : null}
-          </p>
-        ) : null}
-        {series ? <SeriesLine series={series} /> : null}
+        <ArtworkIdentityLabel
+          artwork={artwork}
+          filterSeries={filterSeries}
+          renderSeriesAccent={(series) => (
+            <span
+              className="artwork-identity__accent artwork-identity__accent--block"
+              style={{ backgroundColor: series.color }}
+              aria-hidden
+            />
+          )}
+        />
       </div>
     </article>
   )

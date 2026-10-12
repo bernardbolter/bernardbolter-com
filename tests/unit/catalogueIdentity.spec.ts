@@ -104,11 +104,18 @@ describe('catalogueIdentity', () => {
     ).toBe('Megacities')
   })
 
-  it('does not slice a long throughline into a card label', () => {
+  it('prefers shortTitle over claim text; never humanises a slug', () => {
     expect(
       resolveConnectorCardLabel({
         text: 'The city is not a backdrop but the subject, carried from canvas to composite.',
-        slug: 'the-city-is-not-a-backdrop-but-the-subject-carried-from-canvas-to-composite',
+        shortTitle: 'City as subject',
+        slug: 'korea-gap-korea-1950-53-entirely',
+      }),
+    ).toBe('City as subject')
+    expect(
+      resolveConnectorCardLabel({
+        text: 'The city is not a backdrop but the subject, carried from canvas to composite.',
+        slug: 'korea-gap-korea-1950-53-entirely',
       }),
     ).toBeNull()
     expect(

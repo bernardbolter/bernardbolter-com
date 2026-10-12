@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
   expireTime: 3600,
   experimental: {
     // Studio field-note uploads are multipart POSTs (video clips can be large).
-    middlewareClientMaxBodySize: '500mb',
+    proxyClientMaxBodySize: '500mb',
   },
   async redirects() {
     return [

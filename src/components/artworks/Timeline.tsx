@@ -22,9 +22,7 @@ import TimelineArtworkSlot from './TimelineArtworkSlot'
 const DRAG_THRESHOLD_PX = 5
 const WHEEL_SCROLL_SENSITIVITY = 0.85
 const TIMELINE_AXIS_OFFSET = 24
-const BIO_TRACK_OFFSET = 16
 const HISTORICAL_TRACK_OFFSET = -16
-const MOBILE_BIO_TRACK_OFFSET = 16
 const MOBILE_HISTORICAL_TRACK_OFFSET = -12
 /** Must match former generateSmallLines `targetSpacing` — drives CSS tick periods. */
 const TICK_SPACING_PX = 20
@@ -32,37 +30,6 @@ const TICK_SPACING_PX = 20
 const TICK_LARGE_PX = 14
 /** Offset of ticks from the axis — former .artworks-timeline__small-line top/left. */
 const TICK_AXIS_OFFSET_PX = 18
-
-type AnchorPoint = { x: number; y: number }
-
-function buildArtworkAnchorMap(args: {
-  isMobile: boolean
-  sideWidth: number
-  artworkContainerWidth: number
-  artworkContainerHeight: number
-  artworksArray: Array<{ id: number; marginRight: number; marginBottom: number }>
-}): Map<number, AnchorPoint> {
-  const { isMobile, sideWidth, artworkContainerWidth, artworkContainerHeight, artworksArray } = args
-  const anchors = new Map<number, AnchorPoint>()
-
-  if (isMobile) {
-    let currentY = 0
-    artworksArray.forEach((artwork) => {
-      const y = currentY + artworkContainerHeight / 2
-      anchors.set(artwork.id, { x: TIMELINE_AXIS_OFFSET, y })
-      currentY += artworkContainerHeight + artwork.marginBottom
-    })
-    return anchors
-  }
-
-  let currentX = sideWidth
-  artworksArray.forEach((artwork) => {
-    const x = currentX + artworkContainerWidth / 2
-    anchors.set(artwork.id, { x, y: TIMELINE_AXIS_OFFSET })
-    currentX += artworkContainerWidth + artwork.marginRight
-  })
-  return anchors
-}
 
 export default function Timeline() {
   const router = useRouter()
@@ -344,22 +311,6 @@ export default function Timeline() {
     return map
   }, [timeline.timepointsArray])
 
-  const artworkAnchors = useMemo(
-    () =>
-      buildArtworkAnchorMap({
-        isMobile,
-        sideWidth,
-        artworkContainerWidth: state.artworkContainerWidth,
-        artworkContainerHeight: state.artworkContainerHeight,
-        artworksArray: timeline.artworksArray.map((artwork) => ({
-          id: artwork.id,
-          marginRight: artwork.marginRight,
-          marginBottom: artwork.marginBottom,
-        })),
-      }),
-    [isMobile, sideWidth, state.artworkContainerWidth, state.artworkContainerHeight, timeline.artworksArray],
-  )
-
   const historicalMarkerLayout = useMemo(() => {
     return timelineMarkers.historicalReadings
       .map((entry) => {
@@ -389,44 +340,6 @@ export default function Timeline() {
       })
       .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
   }, [halfHeight, isMobile, sideWidth, timelineMarkers.historicalReadings, yearAnchorByYear])
-
-  const throughlineSegments = useMemo(() => {
-    return timelineMarkers.throughlines
-      .map((throughline) => {
-        const linkedPoints = throughline.linkedArtworkIds
-          .map((artworkId) => artworkAnchors.get(artworkId))
-          .filter((point): point is AnchorPoint => Boolean(point))
-        if (linkedPoints.length !== 2) return null
-        const [start, end] = linkedPoints
-
-        if (isMobile) {
-          const x = TIMELINE_AXIS_OFFSET + MOBILE_BIO_TRACK_OFFSET
-          return {
-            id: throughline.id,
-            href: throughline.permalinkHref,
-            title: throughline.text,
-            x1: x,
-            y1: start.y,
-            x2: x,
-            y2: end.y,
-            endpointX: x,
-          }
-        }
-
-        const y = TIMELINE_AXIS_OFFSET + BIO_TRACK_OFFSET
-        return {
-          id: throughline.id,
-          href: throughline.permalinkHref,
-          title: throughline.text,
-          x1: start.x,
-          y1: y,
-          x2: end.x,
-          y2: y,
-          endpointY: y,
-        }
-      })
-      .filter((segment): segment is NonNullable<typeof segment> => segment !== null)
-  }, [artworkAnchors, isMobile, timelineMarkers.throughlines])
 
   return (
     <div className="artworks-timeline__container">
@@ -475,24 +388,6 @@ export default function Timeline() {
             height: isMobile ? `${timeline.totalTimelineHeight}px` : '84px',
           }}
         >
-          <svg
-            className="artworks-timeline__throughline-svg"
-            width={!isMobile ? timeline.totalTimelineWidth : 64}
-            height={isMobile ? timeline.totalTimelineHeight : 84}
-            viewBox={`0 0 ${!isMobile ? timeline.totalTimelineWidth : 64} ${
-              isMobile ? timeline.totalTimelineHeight : 84
-            }`}
-            role="presentation"
-          >
-            {throughlineSegments.map((segment) => (
-              <g key={segment.id} className="artworks-timeline__throughline-segment">
-                <line x1={segment.x1} y1={segment.y1} x2={segment.x2} y2={segment.y2} />
-                <circle cx={segment.x1} cy={segment.y1} r="2.25" />
-                <circle cx={segment.x2} cy={segment.y2} r="2.25" />
-              </g>
-            ))}
-          </svg>
-
           {historicalMarkerLayout.map((marker) => (
             <Link
               key={marker.id}
