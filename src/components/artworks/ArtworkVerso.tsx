@@ -134,16 +134,7 @@ export default function ArtworkVerso({
       data-verso-overlay={openId ? 'open' : undefined}
       {...(dataGridCard ? { 'data-grid-card': '' } : {})}
     >
-      <div
-        className="artwork-verso__card"
-        onClick={(event) => {
-          if (!openId) return
-          // Tap inside the card but outside the overlay — dismiss overlay only.
-          if ((event.target as HTMLElement).closest('[data-verso-overlay-panel]')) return
-          event.stopPropagation()
-          setOpenId(null)
-        }}
-      >
+      <div className="artwork-verso__card">
         <div className="artwork-verso__body">
           <div className="artwork-verso__body-inner">
             <h2 className="artwork-block__verso-title">{title}</h2>
@@ -188,9 +179,23 @@ export default function ArtworkVerso({
         </div>
 
         {/*
-          All overlays are SSR'd; only one is visible. Covers the record bar while open —
-          dismiss returns to the bar.
+          Dimmed rim around the inset overlay: tap here closes the overlay only
+          (stopPropagation), never flips the card. Overlay covers the record bar
+          while open.
         */}
+        {openId ? (
+          <div
+            className="artwork-verso__dismiss-layer"
+            data-verso-dismiss=""
+            aria-hidden
+            onClick={(event) => {
+              event.stopPropagation()
+              setOpenId(null)
+            }}
+          />
+        ) : null}
+
+        {/* All overlays are SSR'd with full claim text; only one is visible. */}
         {connectors.map((connector) => {
           const related = connector.linkedArtworkIds
             .filter((id) => id !== artwork.id)

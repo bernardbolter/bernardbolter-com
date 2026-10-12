@@ -1071,16 +1071,27 @@ h6 {
   outline: none;
 }
 
-.artwork-verso__overlay {
+.artwork-verso__dismiss-layer {
   position: absolute;
   inset: 0;
+  z-index: 5;
+  background: color-mix(in srgb, var(--verso-ink) 10%, transparent);
+  cursor: pointer;
+}
+
+.artwork-verso__overlay {
+  position: absolute;
+  /* Inset leaves a tappable dismiss rim on the card (layer underneath). */
+  inset: 0.4rem;
   z-index: 6;
   display: none;
   flex-direction: column;
   box-sizing: border-box;
   background: var(--verso-card-bg);
   color: var(--verso-ink);
-  box-shadow: inset 0 0 0 1px var(--verso-rule);
+  box-shadow: var(--verso-shadow);
+  border: 1px solid var(--verso-rule);
+  border-radius: 1px;
 }
 
 .artwork-verso__overlay.is-open {
