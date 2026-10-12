@@ -25,6 +25,8 @@ export type ArtworkIdentityLabelProps = {
    * `leading` — accent sits before the whole field stack (grid caption).
    */
   seriesAccentPlacement?: 'series-line' | 'leading'
+  /** When false, omit title (verso keeps its own h2). Default true. */
+  includeTitle?: boolean
 }
 
 /**
@@ -38,6 +40,7 @@ export default function ArtworkIdentityLabel({
   className,
   renderSeriesAccent,
   seriesAccentPlacement = 'series-line',
+  includeTitle = true,
 }: ArtworkIdentityLabelProps) {
   const title = artwork.title?.trim() || artwork.slug
   const year = artwork.yearCreated ? String(artwork.yearCreated) : ''
@@ -51,9 +54,11 @@ export default function ArtworkIdentityLabel({
     <div className={['artwork-identity', className].filter(Boolean).join(' ')}>
       {seriesAccentPlacement === 'leading' ? accent : null}
       <div className="artwork-identity__fields">
-        <p className="artwork-identity__title">
-          <Link href={recordHref}>{title}</Link>
-        </p>
+        {includeTitle ? (
+          <p className="artwork-identity__title">
+            <Link href={recordHref}>{title}</Link>
+          </p>
+        ) : null}
         {year ? <p className="artwork-identity__year">{year}</p> : null}
         {medium ? <p className="artwork-identity__medium">{medium}</p> : null}
         {dimensions ? (

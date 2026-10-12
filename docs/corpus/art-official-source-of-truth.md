@@ -492,6 +492,12 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 27 — Timeline block styling step 1–4 (2026-10-12)
+
+Verso carries full identity via `ArtworkIdentityLabel` (`includeTitle: false` under the verso h2): year, medium, dimensions, series — then description, connectors, status, record link. Timeline front `.artwork-block__label` removed; SSR identity stays on the verso for all 220. Back face matches the painting box (no 320px floor on timeline); overflow scrolls inside. 3D flip (`preserve-3d` / `backface-visibility`) mounts only on the flipped slot (`.artwork-block--flip-3d`). Tap back (except links) returns to front.
+
+---
+
 ## Part 26 — Shared ArtworkVerso (2026-10-12)
 
 Timeline (`ArtworkBlock`) and grid (`ArtworkGridImage`) both mount `ArtworkVerso` for verso fields. Block keeps `.artwork-block__face--back` for position/sizing/flip; grid keeps its own card chrome + `data-grid-card`. `OPEN_THE_RECORD_LABEL` is the single CTA string. **Field parity before extract:** both paths already rendered the same five fields (title, description, throughline/bio links, catalogue status, record CTA) — no content-field diff; only structural (`data-grid-card` / className/style on the grid root).

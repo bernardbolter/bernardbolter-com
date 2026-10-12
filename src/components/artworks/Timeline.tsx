@@ -34,7 +34,7 @@ const TICK_AXIS_OFFSET_PX = 18
 export default function Timeline() {
   const router = useRouter()
   const [state, setState] = useArtworks()
-  const { setFlippedSlug } = useHomepageFlip()
+  const { flippedSlug, setFlippedSlug } = useHomepageFlip()
   const timelineRef = useRef<HTMLDivElement>(null)
   const isProgramScroll = useRef(false)
   const pointerActive = useRef(false)
@@ -228,6 +228,12 @@ export default function Timeline() {
             const href = target.closest('a[href]')?.getAttribute('href')
             if (href) {
               router.push(href)
+            } else if (
+              flippedSlug &&
+              !target.closest(`[data-artwork-slug="${CSS.escape(flippedSlug)}"]`)
+            ) {
+              // Click outside the flipped card — return to the front.
+              setFlippedSlug(null)
             }
           }
         }
@@ -241,7 +247,14 @@ export default function Timeline() {
       document.addEventListener('pointerup', onEnd)
       document.addEventListener('pointercancel', onEnd)
     },
-    [beginPointerTracking, endPointerTracking, movePointerTracking, router, setFlippedSlug],
+    [
+      beginPointerTracking,
+      endPointerTracking,
+      flippedSlug,
+      movePointerTracking,
+      router,
+      setFlippedSlug,
+    ],
   )
 
   const handleCanvasClick = useCallback((event: MouseEvent<HTMLDivElement>) => {

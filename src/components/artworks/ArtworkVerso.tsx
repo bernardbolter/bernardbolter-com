@@ -3,16 +3,18 @@
 import Link from 'next/link'
 import type { CSSProperties } from 'react'
 
+import ArtworkIdentityLabel from '@/components/artworks/ArtworkIdentityLabel'
 import {
   OPEN_THE_RECORD_LABEL,
   formatCatalogueStatus,
   resolveVersoConnectorLinks,
   resolveVersoDescription,
 } from '@/lib/artwork/catalogueIdentity'
-import type { CatalogueClientRow, TimelineMarkersData } from '@/types/frontend'
+import type { CatalogueClientRow, FilterCategory, TimelineMarkersData } from '@/types/frontend'
 
 type ArtworkVersoProps = {
   artwork: CatalogueClientRow
+  filterSeries: FilterCategory[]
   timelineMarkers: TimelineMarkersData
   sessionDates: string[]
   className?: string
@@ -24,6 +26,7 @@ type ArtworkVersoProps = {
 
 export default function ArtworkVerso({
   artwork,
+  filterSeries,
   timelineMarkers,
   sessionDates,
   className,
@@ -44,6 +47,19 @@ export default function ArtworkVerso({
       {...(dataGridCard ? { 'data-grid-card': '' } : {})}
     >
       <h2 className="artwork-block__verso-title">{title}</h2>
+      <ArtworkIdentityLabel
+        artwork={artwork}
+        filterSeries={filterSeries}
+        includeTitle={false}
+        className="artwork-block__verso-identity"
+        renderSeriesAccent={(series) => (
+          <span
+            className="artwork-identity__accent artwork-identity__accent--block"
+            style={{ backgroundColor: series.color }}
+            aria-hidden
+          />
+        )}
+      />
       {description ? <p className="artwork-block__verso-description">{description}</p> : null}
       {throughlineLinks.length > 0 || bioLinks.length > 0 ? (
         <ul className="artwork-block__verso-links">
@@ -60,7 +76,11 @@ export default function ArtworkVerso({
         </ul>
       ) : null}
       <p className="artwork-block__verso-status">{status}</p>
-      <Link href={recordHref} className="artwork-block__record-link">
+      <Link
+        href={recordHref}
+        className="artwork-block__record-link"
+        onClick={(event) => event.stopPropagation()}
+      >
         {OPEN_THE_RECORD_LABEL}
       </Link>
     </div>

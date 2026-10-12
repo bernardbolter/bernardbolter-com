@@ -189,6 +189,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
 
       <ArtworkVerso
         artwork={artwork}
+        filterSeries={state.filterSeries}
         timelineMarkers={state.timelineMarkers}
         sessionDates={state.sessionDatesByArtworkId[artwork.id] ?? []}
         className="artwork-block__face artwork-grid__card"

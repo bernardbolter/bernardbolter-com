@@ -778,11 +778,11 @@ h6 {
   }
 }
 
-/* Homepage artwork block — one element, two CSS faces. Slot size stays physical.
-   Flip is a CSS state (`.is-flipped`), not a 3D scene: preserve-3d + backface-visibility
-   on ~220 works leaks the verso over the painting in Firefox. */
+/* Homepage artwork block — painting footprint + verso face.
+   3D flip (preserve-3d / backface-visibility) mounts only on `.artwork-block--flip-3d`
+   (the currently flipped slot). Unflipped slots stay flat so Firefox does not leak
+   220 versos over the paintings. */
 .artwork-block {
-  --verso-min-width: 320px;
   position: relative;
   width: 100%;
   height: 100%;
@@ -801,10 +801,6 @@ h6 {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.artwork-block.is-flipped .artwork-block__face--front {
-  visibility: hidden;
 }
 
 .artwork-block__flip-surface {
@@ -838,25 +834,6 @@ h6 {
 
 .artwork-block.is-flipped .artwork-block__flip-affordance {
   visibility: hidden;
-}
-
-.artwork-block__label {
-  position: absolute;
-  left: 50%;
-  bottom: 0.35rem;
-  transform: translateX(-50%);
-  z-index: 2;
-  width: max-content;
-  max-width: min(calc(100% - 0.5rem), 16rem);
-  padding: 0.2rem 0.4rem;
-  text-align: left;
-  pointer-events: auto;
-  background: color-mix(in srgb, var(--surface-page) 88%, transparent);
-}
-
-.artwork-block.is-flipped .artwork-block__label {
-  visibility: hidden;
-  pointer-events: none;
 }
 
 /* Shared identity fields — one markup source for block / grid / title overlay. */
@@ -934,29 +911,35 @@ h6 {
   height: 8px;
 }
 
-.artwork-block__label .artwork-identity__year,
-.artwork-block__label .artwork-identity__medium,
-.artwork-block__label .artwork-identity__dimensions,
-.artwork-block__label .artwork-identity__series {
+.artwork-block__verso-identity {
+  margin: 0 0 0.7rem;
+}
+
+.artwork-block__verso-identity .artwork-identity__year,
+.artwork-block__verso-identity .artwork-identity__medium,
+.artwork-block__verso-identity .artwork-identity__dimensions,
+.artwork-block__verso-identity .artwork-identity__series {
   color: var(--title-text);
 }
 
+/* Back matches the painting box exactly; content scrolls inside. */
 .artwork-block__face--back {
   position: absolute;
-  left: 50%;
-  top: 50%;
+  inset: 0;
   z-index: 4;
-  transform: translate(-50%, -50%);
-  min-width: var(--verso-min-width);
-  width: max(100%, var(--verso-min-width));
   box-sizing: border-box;
-  padding: 1.1rem 1.15rem 1.2rem;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem 0.85rem 0.9rem;
   background: var(--title-light);
   color: var(--title-text-dark);
   pointer-events: none;
   box-shadow: 0 1px 0 var(--title-dark);
   visibility: hidden;
   opacity: 0;
+  cursor: pointer;
 }
 
 .artwork-block.is-flipped .artwork-block__face--back {
@@ -965,8 +948,44 @@ h6 {
   opacity: 1;
 }
 
+/* Single-slot 3D flip — only when `.artwork-block--flip-3d` is mounted. */
+.artwork-block--flip-3d {
+  perspective: 1400px;
+}
+
+.artwork-block--flip-3d .artwork-block__scene {
+  transform: rotateY(0deg);
+  transform-style: preserve-3d;
+  transition: transform 0.55s ease;
+}
+
+.artwork-block--flip-3d.is-flipped .artwork-block__scene {
+  transform: rotateY(180deg);
+}
+
+.artwork-block--flip-3d .artwork-block__face--front,
+.artwork-block--flip-3d .artwork-block__face--back {
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.artwork-block--flip-3d .artwork-block__face--back {
+  transform: rotateY(180deg);
+  /* Visible via 3D, not the opacity toggle — keep readable while rotating. */
+  visibility: visible;
+  opacity: 1;
+}
+
+.artwork-block--flip-3d:not(.is-flipped) .artwork-block__face--back {
+  pointer-events: none;
+}
+
+.artwork-block--flip-3d.is-flipped .artwork-block__face--back {
+  pointer-events: auto;
+}
+
 .artwork-block__verso-title {
-  margin: 0 0 0.85rem;
+  margin: 0 0 0.55rem;
   font-family: var(--font-staatliches), sans-serif;
   font-size: 1.35rem;
   font-weight: 400;
@@ -1020,11 +1039,6 @@ h6 {
   text-underline-offset: 0.15em;
 }
 
-@media screen and (max-width: 767px) {
-  .artwork-block--may-break-footprint .artwork-block__face--back {
-    min-height: 10rem;
-  }
-}
 
 .artwork-title__container--faded {
   opacity: 0.12;

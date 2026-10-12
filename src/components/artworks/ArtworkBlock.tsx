@@ -1,10 +1,8 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useEffect, useState, type ReactNode, type TransitionEvent } from 'react'
 
-import ArtworkIdentityLabel from '@/components/artworks/ArtworkIdentityLabel'
 import ArtworkVerso from '@/components/artworks/ArtworkVerso'
-import { VERSO_MIN_WIDTH_PX } from '@/lib/artwork/catalogueIdentity'
 import type { CatalogueClientRow, FilterCategory, TimelineMarkersData } from '@/types/frontend'
 
 type ArtworkBlockProps = {
@@ -30,16 +28,27 @@ export default function ArtworkBlock({
   allowFootprintBreak = false,
 }: ArtworkBlockProps) {
   const title = artwork.title?.trim() || artwork.slug
+  /** Keep preserve-3d mounted through the close animation, then drop it. */
+  const [flip3d, setFlip3d] = useState(flipped)
+
+  useEffect(() => {
+    if (flipped) setFlip3d(true)
+  }, [flipped])
+
+  const onSceneTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
+    if (event.propertyName !== 'transform') return
+    if (event.target !== event.currentTarget) return
+    if (!flipped) setFlip3d(false)
+  }
 
   return (
     <article
-      className={`artwork-block${flipped ? ' is-flipped' : ''}${
+      className={`artwork-block${flipped ? ' is-flipped' : ''}${flip3d ? ' artwork-block--flip-3d' : ''}${
         allowFootprintBreak ? ' artwork-block--may-break-footprint' : ''
       }`}
-      style={{ ['--verso-min-width' as string]: `${VERSO_MIN_WIDTH_PX}px` }}
       data-artwork-slug={artwork.slug}
     >
-      <div className="artwork-block__scene">
+      <div className="artwork-block__scene" onTransitionEnd={onSceneTransitionEnd}>
         <div className="artwork-block__face artwork-block__face--front">
           <button
             type="button"
@@ -60,27 +69,21 @@ export default function ArtworkBlock({
           </button>
         </div>
 
-        <div className="artwork-block__face artwork-block__face--back">
+        <div
+          className="artwork-block__face artwork-block__face--back"
+          onClick={(event) => {
+            if ((event.target as HTMLElement).closest('a[href]')) return
+            onToggleFlip()
+          }}
+          role="presentation"
+        >
           <ArtworkVerso
             artwork={artwork}
+            filterSeries={filterSeries}
             timelineMarkers={timelineMarkers}
             sessionDates={sessionDates}
           />
         </div>
-      </div>
-
-      <div className="artwork-block__label">
-        <ArtworkIdentityLabel
-          artwork={artwork}
-          filterSeries={filterSeries}
-          renderSeriesAccent={(series) => (
-            <span
-              className="artwork-identity__accent artwork-identity__accent--block"
-              style={{ backgroundColor: series.color }}
-              aria-hidden
-            />
-          )}
-        />
       </div>
     </article>
   )
