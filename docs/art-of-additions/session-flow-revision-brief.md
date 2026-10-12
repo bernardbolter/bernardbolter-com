@@ -1,5 +1,11 @@
 # Session Flow Revision Brief
 
+> **SUPERSEDED 2026-10-12.** Live protocol/contract:
+> [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol),
+> [`/art-official/contract`](https://bernardbolter.com/art-official/contract),
+> [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing).
+> Twin of `docs/sessions/session-flow-revision-brief.md` — historical only.
+
 *Derived from The Thinker (BB-OGP-1993-005) Art/Official session, July 15, 2026. Read alongside `art-official-dialogue-spec.md`, which this brief amends — not replaces.*
 
 ## Part 1 — Why

@@ -97,10 +97,40 @@ export type CorpusBriefing = {
   'art-official:supersedesNote': string
   /** Deeper prose lives on the per-work corpus URL, not in this paste. */
   'art-official:deeperFieldsNote': string
+  /**
+   * Read order: version notes → protocol → contract → corpus.
+   * Protocol + contract are inlined so a session needs one paste.
+   */
+  'art-official:protocolVersion': string
+  'art-official:contractVersion': string
+  protocol: string
+  contract: ArtOfficialContractBrief
   works: CorpusBriefingWork[]
   throughlines: CorpusThroughlineEntry[]
   bioEntries: CorpusBioEntry[]
   sessionLedger: CorpusSessionLedgerEntry[]
+}
+
+/** Slim contract projection for the briefing paste (full page at /art-official/contract). */
+export type ArtOfficialContractBrief = {
+  title: string
+  reasoningStatusNote: string
+  coverageNote: string
+  endpoints: Array<{ method: string; path: string; role: string }>
+  visionImport: { key: string; notKey: string; entryFields: string[] }
+  artworkForbidden: string[]
+  artworkAllowedProvenance: string[]
+  artHistoricalReferencesShape: string
+  rejections: Array<{
+    keyOrField: string
+    where: string
+    why: string
+    behaviour: string
+  }>
+  sessionEnvelopeFields: string[]
+  workedExampleEnvelope: Record<string, unknown>
+  htmlUrl: string
+  validateUrl: string
 }
 
 export type CorpusBuildReportHeader = {

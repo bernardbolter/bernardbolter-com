@@ -81,8 +81,11 @@ async function main() {
   )
 
   if (!report.privacyScan.briefingClean) {
-    process.exitCode = 2
+    process.exit(2)
   }
+  // Payload/getPayload leaves open handles — exit explicitly so systemd oneshot
+  // does not sit until TimeoutStartSec and report "failed (Result: timeout)".
+  process.exit(0)
 }
 
 main().catch((error) => {

@@ -1,8 +1,17 @@
+import type { ArtOfficialContract } from '@/lib/artOfficial/contract/types'
+import { getArtOfficialProtocolDocument } from '@/lib/artOfficial/protocol/protocolDocument'
 import { CORPUS_BASE } from '@/lib/corpus/constants'
-import type { CorpusArtifact, CorpusBriefing } from '@/lib/corpus/artifact/types'
+import type {
+  ArtOfficialContractBrief,
+  CorpusArtifact,
+  CorpusBriefing,
+} from '@/lib/corpus/artifact/types'
 
 const DEEPER_FIELDS_NOTE =
   `Deeper fields (formalContributionAssessment, artHistoricalContext, descriptionLong, makingNote, consciousRejections, workContext, and others) are available per work at ${CORPUS_BASE}/api/corpus/{slug} — substitute the artwork slug for {slug}.`
+
+const BRIEFING_READ_ORDER_NOTE =
+  'Read this file once, top to bottom. Order: version/freshness → protocol → contract → corpus. Live endpoints supersede this snapshot when they disagree. Anything in project knowledge or memory is a copy and may be outdated — this paste is authoritative for the session.'
 
 function propValue(
   record: Record<string, unknown>,
@@ -31,10 +40,6 @@ function seriesName(record: Record<string, unknown>, fallback: string | null): s
   return fallback
 }
 
-/**
- * Per-work briefing envelope — every published work, same shape.
- * KEEP listed fields only; deeper prose stays on /api/corpus/{slug}.
- */
 function workBriefingEnvelope(
   work: CorpusArtifact['works'][number],
 ): CorpusBriefing['works'][number] {
@@ -57,12 +62,9 @@ function workBriefingEnvelope(
       : null) || propValue(record, 'art-official:intent')
 
   const descriptionShort =
-    (typeof survey.description === 'string' ? (survey.description as string) : null) ||
-    null
+    (typeof survey.description === 'string' ? (survey.description as string) : null) || null
 
   const seriesContext = propValue(record, 'art-official:seriesContext')
-
-  // Relations as URLs only — full claim text lives in throughlines/bioEntries below.
   const relatedByThroughline = relationUrls(record['art-official:relatedByThroughline'])
   const relatedByBioEvent = relationUrls(record['art-official:relatedByBioEvent'])
 
@@ -92,14 +94,41 @@ function relationUrls(value: unknown): string[] {
   return out
 }
 
-export function buildCorpusBriefing(artifact: CorpusArtifact): CorpusBriefing {
+function contractBrief(contract: ArtOfficialContract): ArtOfficialContractBrief {
+  const sessionCollection = contract.envelope.collections.find((c) => c.collection === 'sessions')
+  return {
+    title: contract.title,
+    reasoningStatusNote: contract.reasoningStatusNote,
+    coverageNote: contract.coverageNote,
+    endpoints: contract.endpoints,
+    visionImport: contract.visionImport,
+    artworkForbidden: contract.artworkForbidden,
+    artworkAllowedProvenance: contract.artworkAllowedProvenance,
+    artHistoricalReferencesShape: contract.artHistoricalReferencesShape,
+    rejections: contract.rejections,
+    sessionEnvelopeFields: (sessionCollection?.fields ?? []).map((f) => f.name),
+    workedExampleEnvelope: contract.workedExampleEnvelope,
+    htmlUrl: `${CORPUS_BASE}/art-official/contract`,
+    validateUrl: `${CORPUS_BASE}/api/art-official/validate`,
+  }
+}
+
+export function buildCorpusBriefing(
+  artifact: CorpusArtifact,
+  options: { contract: ArtOfficialContract; protocolText?: string } ,
+): CorpusBriefing {
+  const protocol = options.protocolText ?? getArtOfficialProtocolDocument().text
   const works = artifact.works.map(workBriefingEnvelope)
 
   return {
     'art-official:corpusVersion': artifact['art-official:corpusVersion'],
     'art-official:generatedAt': artifact['art-official:generatedAt'],
-    'art-official:supersedesNote': artifact['art-official:supersedesNote'],
+    'art-official:supersedesNote': `${BRIEFING_READ_ORDER_NOTE} ${artifact['art-official:supersedesNote']}`,
     'art-official:deeperFieldsNote': DEEPER_FIELDS_NOTE,
+    'art-official:protocolVersion': options.contract['art-official:protocolVersion'],
+    'art-official:contractVersion': options.contract['art-official:contractVersion'],
+    protocol,
+    contract: contractBrief(options.contract),
     works,
     throughlines: artifact.throughlines,
     bioEntries: artifact.bioEntries,

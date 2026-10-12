@@ -1,6 +1,13 @@
 # Art/Official — Source of Truth
 *The one place to check when a spec doc and live behavior might disagree. Supersedes `art-official-field-source-of-truth.md` and `art-official-flow-source-of-truth.md` — both fully absorbed below; stop maintaining those two separately.*
 
+> **SUPERSEDED twin 2026-10-12.** Prefer `docs/corpus/art-official-source-of-truth.md`
+> (ahead) for the discrepancy log. Live protocol/contract:
+> [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol),
+> [`/art-official/contract`](https://bernardbolter.com/art-official/contract),
+> briefing [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing).
+> This copy lags (missing later Parts) — do not paste from it.
+
 **For Cursor:** validate against the live Payload schema and report discrepancies here. Do not silently "fix" mismatches by picking one side — flag them back for a decision.
 
 ## Purpose and governing rule

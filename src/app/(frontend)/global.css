@@ -526,10 +526,62 @@ h6 {
   position: relative;
   margin: 0 auto;
   overflow: visible;
+  transform: translate(var(--scatter-x, 0px), var(--scatter-y, 0px));
+  transform-origin: center center;
+  transition: transform 0.28s ease;
+}
+
+.artwork-grid__image-container.is-selected {
+  position: relative;
+  z-index: 6;
+}
+
+.artwork-grid__image-container.is-selected .artwork-grid__image-wrapper {
+  transform: translate(var(--scatter-x, 0px), var(--scatter-y, 0px))
+    scale(var(--grid-selection-scale, 1.35));
+}
+
+.artwork-grid__container.is-selecting .artwork-grid__image-container:not(.is-selected) {
+  opacity: 0.32;
+  transition: opacity 0.25s ease;
 }
 
 .artwork-grid__image-frame {
   position: relative;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.artwork-grid__card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.artwork-grid__image-container.is-selected .artwork-grid__card {
+  position: fixed;
+  inset: 0 0 auto auto;
+  z-index: 4000;
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  width: min(24rem, calc(100vw - 2rem));
+  min-width: var(--verso-min-width, 320px);
+  max-height: calc(100vh - 1.5rem);
+  overflow: auto;
+  box-sizing: border-box;
+  padding: 1.1rem 1.15rem 1.2rem;
+  background: var(--title-light);
+  box-shadow: 0 1px 0 var(--title-dark);
+  border-left: 4px solid var(--title-dark);
+  transition: opacity 0.25s ease;
 }
 
 .artwork-grid__image {
@@ -3015,5 +3067,128 @@ h6 {
   border: 0;
   opacity: 0;
   pointer-events: none;
+}
+
+/* Art/Official contract + protocol pages */
+.art-official-doc {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.art-official-doc__kicker {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.art-official-doc__title {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 400;
+  margin: 0 0 0.35rem;
+  line-height: 1.15;
+}
+
+.art-official-doc__meta {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0 0 1.5rem;
+}
+
+.art-official-doc__lead {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin: 0 0 1.75rem;
+  max-width: 40rem;
+}
+
+.art-official-doc__section {
+  margin: 0 0 2rem;
+}
+
+.art-official-doc__section-title {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  margin: 0 0 0.75rem;
+}
+
+.art-official-doc__section-lead {
+  margin: 0 0 0.75rem;
+  color: var(--text-muted);
+}
+
+.art-official-doc__list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.art-official-doc__list li {
+  margin: 0 0 0.4rem;
+  line-height: 1.45;
+}
+
+.art-official-doc__beat {
+  margin: 0 0 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+}
+
+.art-official-doc__beat:last-child {
+  border-bottom: 0;
+}
+
+.art-official-doc__beat-title {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+
+.art-official-doc__beat p {
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+
+.art-official-doc__pre,
+.art-official-doc__protocol {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: color-mix(in srgb, var(--text-muted) 8%, transparent);
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 0;
+  overflow: auto;
+}
+
+.art-official-doc__protocol {
+  max-height: none;
+  font-size: 13px;
+  background: transparent;
+  padding: 0;
+}
+
+.art-official-doc__code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+.art-official-doc__footer {
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--text-muted) 25%, transparent);
+  font-size: 0.95rem;
+}
+
+.art-official-doc__footer p {
+  margin: 0 0 0.5rem;
 }
 

@@ -1,5 +1,13 @@
 # Art/Official — Artwork Cataloguing Session Protocol
 
+> **SUPERSEDED 2026-10-12.** Authoritative protocol is now versioned at
+> [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol)
+> (source: `src/lib/artOfficial/protocol/protocolDocument.ts`), inlined at the
+> top of [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing).
+> Import contract: [`/art-official/contract`](https://bernardbolter.com/art-official/contract).
+> Dry-run: `POST /api/art-official/validate`. Keep this file as historical spine
+> reference only — do not paste it into new sessions.
+
 *Use this as the session spine everywhere: paste into Claude (claude.ai / mobile) at the start of a cataloguing conversation, or keep open as the operator card while running Art/Official in Payload admin. Same 11 beats either way.*
 
 **Session type:** artwork cataloguing (one primary artwork)  

@@ -1,6 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 
 import { fieldsCoveredFromTimeline } from '@/lib/artOfficial/automaticFieldConflicts'
+import { buildArtOfficialContract } from '@/lib/artOfficial/contract/buildContractArtifact'
+import {
+  artOfficialContractPath,
+  artOfficialProtocolPath,
+} from '@/lib/artOfficial/contract/paths'
+import { getArtOfficialProtocolDocument } from '@/lib/artOfficial/protocol/protocolDocument'
 import {
   indexSessionEvidence,
   primarySessionsForArtwork,
@@ -268,7 +274,13 @@ export type AssembleCorpusArtifactResult = {
   artifact: CorpusArtifact
   briefing: ReturnType<typeof buildCorpusBriefing>
   report: CorpusBuildReport
-  paths: { corpus: string; briefing: string; buildReport: string }
+  paths: {
+    corpus: string
+    briefing: string
+    buildReport: string
+    contract: string
+    protocol: string
+  }
 }
 
 /**
@@ -400,12 +412,19 @@ export async function assembleCorpusArtifact(
   }
 
   t = Date.now()
-  const briefing = buildCorpusBriefing(artifact)
+  const contract = buildArtOfficialContract(generatedAt)
+  const protocolDoc = getArtOfficialProtocolDocument()
+  const briefing = buildCorpusBriefing(artifact, {
+    contract,
+    protocolText: protocolDoc.text,
+  })
   timingsMs.briefing = Date.now() - t
 
   t = Date.now()
   const corpusJson = `${JSON.stringify(artifact)}\n`
   const briefingJson = `${JSON.stringify(briefing)}\n`
+  const contractJson = `${JSON.stringify(contract, null, 2)}\n`
+  const protocolText = `${protocolDoc.text}\n`
   const corpusBytes = Buffer.byteLength(corpusJson, 'utf8')
   const briefingBytes = Buffer.byteLength(briefingJson, 'utf8')
 
@@ -528,9 +547,13 @@ export async function assembleCorpusArtifact(
     corpus: corpusArtifactPath(cwd),
     briefing: corpusBriefingPath(cwd),
     buildReport: corpusBuildReportPath(cwd),
+    contract: artOfficialContractPath(cwd),
+    protocol: artOfficialProtocolPath(cwd),
   }
   await writeFile(paths.corpus, corpusJson, 'utf8')
   await writeFile(paths.briefing, briefingJson, 'utf8')
+  await writeFile(paths.contract, contractJson, 'utf8')
+  await writeFile(paths.protocol, protocolText, 'utf8')
   reportJson = `${JSON.stringify(report, null, 2)}\n`
   report.sizesBytes.buildReport = Buffer.byteLength(reportJson, 'utf8')
   reportJson = `${JSON.stringify(report, null, 2)}\n`

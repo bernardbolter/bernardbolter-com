@@ -26,6 +26,8 @@ export function corpusBuildReportPath(cwd?: string): string {
 
 export const CORPUS_R2_PREFIX = 'corpus'
 
-export function corpusR2ObjectKey(filename: 'corpus.json' | 'briefing.json' | 'build-report.json'): string {
+export function corpusR2ObjectKey(
+  filename: 'corpus.json' | 'briefing.json' | 'build-report.json' | 'contract.json' | 'protocol.txt',
+): string {
   return `${CORPUS_R2_PREFIX}/${filename}`
 }

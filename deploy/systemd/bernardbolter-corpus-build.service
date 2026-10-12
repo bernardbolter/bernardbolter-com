@@ -13,7 +13,10 @@ Environment=NODE_ENV=production
 EnvironmentFile=-/home/bernard/apps/bernardbolter/.env
 ExecStart=/bin/bash -lc 'npm run corpus:build'
 Nice=10
-TimeoutStartSec=600
+# Build usually finishes in <2 min; leftover open handles used to hang until this
+# fired and marked the unit failed even after a successful write. Script now
+# process.exit(0); keep a generous bound for slow DB nights.
+TimeoutStartSec=900
 
 [Install]
 WantedBy=multi-user.target

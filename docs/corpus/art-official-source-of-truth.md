@@ -1,6 +1,16 @@
 # Art/Official — Source of Truth
 *The one place to check when a spec doc and live behavior might disagree. Supersedes `art-official-field-source-of-truth.md` and `art-official-flow-source-of-truth.md` — both fully absorbed below; stop maintaining those two separately.*
 
+> **2026-10-12 — Protocol + import contract moved to generated/versioned pages.**
+> For session conduct and paste rules use
+> [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol) and
+> [`/art-official/contract`](https://bernardbolter.com/art-official/contract)
+> (also inlined in [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing)).
+> Dry-run: `POST /api/art-official/validate`. This SoT remains the **dated
+> discrepancy log** between specs and live behaviour — not the session paste
+> source. Strip any instruction here that says to paste `reasoningStatus`
+> (derived; F1). Coverage counts come from the nightly artifact, not prose.
+
 **For Cursor:** validate against the live Payload schema and report discrepancies here. Do not silently "fix" mismatches by picking one side — flag them back for a decision.
 
 ## Purpose and governing rule
@@ -509,6 +519,24 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 **Importer gap closed going forward:** session envelope schema accepts `fieldUpdateTimeline`. Historical coverage for ~23 envelope sessions is lost (plain `{role,content}` messages only) — no reconstruction attempted; original pastes are the only recovery path.
 
 **Coverage line is a derived figure** — will move as evidence meets the rule (expected first move 29 → 31). Build report `reasoningEvidence` publishes distribution + complete-evidence buckets (live-timeline / envelope-transcript) + ghost-shell session count alongside `reasoningComplete`.
+
+---
+
+## Part 22 — Protocol + contract pages + briefing + validate (2026-10-12)
+
+Implemented `docs/sept-revamp/art-official-protocol-contract-brief.md`.
+
+| Surface | Role |
+|---|---|
+| `/art-official/protocol` | Hand-written versioned protocol (`protocolDocument.ts`, currently 12 beats = July 11 + revisits) |
+| `/art-official/contract` | Generated nightly from importer/allowlist (`buildArtOfficialContract`) |
+| `/api/corpus/briefing` | Order: freshness → **protocol** → **contract** → corpus |
+| `POST /api/art-official/validate` | Dry-run; accepted / rejected / silentlyDropped; commits nothing |
+| `data/corpus/contract.json` + `protocol.txt` | Written with nightly `corpus:build`; uploaded to R2 |
+
+Bernard resolutions locked into protocol: vision A-2.0 non-blind (fork closed); throughlines short slug + 4–6 word title + create/reinforce/extend/weaken; revisits beat; money ask-in-prose never write field; `reasoningStatus` derived (strip paste instruction); coverage from artifact only; pre-upload = four context Qs then blind as its own beat.
+
+Superseded-in-place banners on session-protocol, field-SoT, cursor-followup, duplicate SoT twin, dialogue-spec pointer, and the design brief.
 
 ---
 

@@ -34,6 +34,11 @@ const FORBIDDEN = new Set([
   'artists.externalIdentifiers',
 ])
 
+/** Snapshot for the generated contract page — sorted paths. */
+export function listForbiddenFieldPaths(): string[] {
+  return [...FORBIDDEN].sort()
+}
+
 /** Corpus + core narrative fields Art/Official may stage on triptychs (not commerce or structure). */
 const TRIPTYCH_AGENT_FIELDS = new Set([
   'title',
