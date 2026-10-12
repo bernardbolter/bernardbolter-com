@@ -271,17 +271,31 @@ export function checkBrokenInternalLinks(artifact: CorpusArtifact): CorpusBuildR
 }
 
 export function scanBriefingPrivacy(briefingJson: string): CorpusBuildReport['privacyScan'] {
+  // Protocol + contract teach field names (incl. private ones) by design — scan corpus only.
+  let corpusJson = briefingJson
+  try {
+    const parsed = JSON.parse(briefingJson) as Record<string, unknown>
+    const {
+      protocol: _protocol,
+      contract: _contract,
+      ...corpusRest
+    } = parsed
+    corpusJson = JSON.stringify(corpusRest)
+  } catch {
+    // Fall back to full string if unparseable.
+  }
+
   const hits: string[] = []
   for (const key of PRIVATE_BRIEFING_KEYS) {
     // Object keys with values only — not field *names* in the session ledger.
     const re = new RegExp(`"${key}"\\s*:`)
-    if (re.test(briefingJson)) hits.push(key)
+    if (re.test(corpusJson)) hits.push(key)
   }
   for (const key of DROPPED_BRIEFING_PROSE_KEYS) {
     // Reject as propertyID payloads; the deeperFieldsNote may still name these strings.
     if (
-      briefingJson.includes(`"art-official:${key}"`) ||
-      briefingJson.includes(`"propertyID":"art-official:${key}"`)
+      corpusJson.includes(`"art-official:${key}"`) ||
+      corpusJson.includes(`"propertyID":"art-official:${key}"`)
     ) {
       hits.push(key)
     }
