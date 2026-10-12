@@ -1,28 +1,24 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
 
-import { buildCorpusIndexResponse } from '@/lib/corpus/buildCorpusResponse'
+import { buildIndexResponseFromArtifact } from '@/lib/corpus/artifact/projectFromArtifact'
 import {
-  CORPUS_BASE,
+  artifactResponseHeaders,
+  readCorpusArtifact,
+} from '@/lib/corpus/artifact/readCorpusArtifact'
+import {
   CORPUS_INDEX_PER_PAGE,
   CORPUS_SURVEY_PER_PAGE,
 } from '@/lib/corpus/constants'
 import { parseCorpusIndexFilters } from '@/lib/corpus/corpusIndexFilters'
-import {
-  fetchCorpusArtworks,
-  fetchCorpusArtistForReciprocalLinks,
-  fetchCorpusSeries,
-  fetchCorpusTotalArtworks,
-} from '@/lib/corpus/fetchCorpusData'
-import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
 import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import { parsePageParam, parsePerPageParam } from '@/lib/corpus/pagination'
-import config from '@payload-config'
 
-/** Always live from Payload — never an ISR snapshot shared with HTML pages. */
+/**
+ * Canonical Tier-1 / Tier-2 machine index — served from the nightly artifact.
+ * Live Payload assembly remains in codebase for corpus:build only.
+ */
 export const dynamic = 'force-dynamic'
 
-/** Canonical Tier-1 / Tier-2 machine index. */
 export async function GET(request: Request) {
   const headers = corpusResponseHeaders(request)
   const { searchParams } = new URL(request.url)
@@ -45,27 +41,27 @@ export async function GET(request: Request) {
   const page = parsePageParam(searchParams.get('page'))
   const perPage = parsePerPageParam(searchParams.get('perPage'), defaultPerPage, defaultPerPage)
 
-  const payload = await getPayload({ config })
-  const [artworks, seriesList, totalArtworks, sessionCountBySlug, artist] = await Promise.all([
-    fetchCorpusArtworks(payload, filters),
-    fetchCorpusSeries(payload),
-    fetchCorpusTotalArtworks(payload),
-    fetchSessionCountBySlug(payload),
-    fetchCorpusArtistForReciprocalLinks(payload),
-  ])
+  const loaded = await readCorpusArtifact()
+  if (!loaded) {
+    return NextResponse.json(
+      {
+        error: 'Corpus artifact unavailable',
+        message:
+          'Nightly artifact missing or unparseable. No live fallback. Re-run pnpm corpus:build.',
+      },
+      { status: 503, headers },
+    )
+  }
 
-  const body = buildCorpusIndexResponse({
-    artworks,
-    totalArtworks,
-    seriesList,
-    artist,
-    baseUrl: CORPUS_BASE,
+  const body = buildIndexResponseFromArtifact({
+    artifact: loaded.artifact,
     filters,
     depth,
     page,
     perPage,
-    sessionCountBySlug,
   })
 
-  return NextResponse.json(body, { headers })
+  return NextResponse.json(body, {
+    headers: artifactResponseHeaders(headers, loaded.meta),
+  })
 }

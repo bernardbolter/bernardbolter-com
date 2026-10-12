@@ -22,6 +22,8 @@ const FORBIDDEN = new Set([
   'artworks.recordOrigin',
   'artworks.status',
   'artworks._status',
+  // Derived at build/read time — never agent- or envelope-writable.
+  'artworks.reasoningStatus',
   // artHistoricalReferences: allowed as structured array (2026-07-27) —
   // prose/string values rejected by validateArtHistoricalReferencesValue.
   'sessions.messages',
@@ -31,6 +33,11 @@ const FORBIDDEN = new Set([
   'artists.publicEmail',
   'artists.externalIdentifiers',
 ])
+
+/** Snapshot for the generated contract page — sorted paths. */
+export function listForbiddenFieldPaths(): string[] {
+  return [...FORBIDDEN].sort()
+}
 
 /** Corpus + core narrative fields Art/Official may stage on triptychs (not commerce or structure). */
 const TRIPTYCH_AGENT_FIELDS = new Set([

@@ -3,28 +3,22 @@ import Link from 'next/link'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import CorpusFiltersClearLink from '@/components/corpus/CorpusFiltersClearLink'
 import CorpusLadder from '@/components/corpus/CorpusLadder'
-import { corpusGistFromArtwork } from '@/lib/corpus/corpusGist'
+import type {
+  ArtifactCorpusIndexRow,
+  ArtifactSeriesOption,
+} from '@/lib/corpus/artifact/projectFromArtifact'
 import {
   buildCorpusIndexQueryString,
   corpusIndexHasActiveFilters,
   type CorpusIndexFilters,
 } from '@/lib/corpus/corpusIndexFilters'
-import type { Artwork, Series } from '@/payload-types'
 
-export type CorpusIndexRow = {
-  artwork: Artwork
-  gist: string | null
-}
+export type CorpusIndexRow = ArtifactCorpusIndexRow
 
 type Props = {
   rows: CorpusIndexRow[]
-  seriesList: Series[]
+  seriesList: ArtifactSeriesOption[]
   filters: CorpusIndexFilters
-}
-
-function resolveSeriesName(artwork: Artwork): string | null {
-  if (artwork.series && typeof artwork.series === 'object') return artwork.series.name
-  return null
 }
 
 export default function CorpusIndex({ rows, seriesList, filters }: Props) {
@@ -113,9 +107,8 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
         </p>
 
         <ul className="corpus-page__list">
-          {rows.map(({ artwork, gist }) => {
-            const seriesName = resolveSeriesName(artwork)
-            const intent = artwork.intent?.trim()
+          {rows.map((row) => {
+            const intent = row.intent?.trim()
             const intentLine =
               isTier2 && intent
                 ? intent.length > 160
@@ -123,41 +116,39 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
                   : intent
                 : null
             return (
-              <li key={artwork.id} className="corpus-page__row">
+              <li key={row.slug} className="corpus-page__row">
                 <div className="corpus-page__meta">
-                  <span className="corpus-page__year">
-                    {artwork.yearCreated ?? '—'}
-                  </span>
-                  <span className="corpus-page__status">
-                    {artwork.reasoningStatus ?? '—'}
-                  </span>
+                  <span className="corpus-page__year">{row.yearCreated ?? '—'}</span>
+                  <span className="corpus-page__status">{row.reasoningStatus ?? '—'}</span>
                 </div>
                 <div className="corpus-page__body">
-                  <Link href={`/${artwork.slug}`} className="corpus-page__title">
-                    {artwork.title}
+                  <Link href={`/${row.slug}`} className="corpus-page__title">
+                    {row.title}
                   </Link>
-                  {seriesName ? (
-                    <p className="bio__masonry-caption">{seriesName}</p>
+                  {row.seriesName ? (
+                    <p className="bio__masonry-caption">{row.seriesName}</p>
                   ) : null}
-                  {gist ? <p className="bio__masonry-caption corpus-page__gist">{gist}</p> : null}
+                  {row.gist ? (
+                    <p className="bio__masonry-caption corpus-page__gist">{row.gist}</p>
+                  ) : null}
                   {intentLine ? (
                     <p className="bio__masonry-caption corpus-page__intent">{intentLine}</p>
                   ) : null}
                   <p className="corpus-page__links">
-                    <Link href={`/${artwork.slug}/vision`} className="still-being-written__session-link">
+                    <Link href={`/${row.slug}/vision`} className="still-being-written__session-link">
                       Vision
                     </Link>
-                    <Link href={`/${artwork.slug}/record`} className="still-being-written__session-link">
+                    <Link href={`/${row.slug}/record`} className="still-being-written__session-link">
                       Record
                     </Link>
                     <Link
-                      href={`/sessions?artwork=${encodeURIComponent(artwork.slug)}`}
+                      href={`/sessions?artwork=${encodeURIComponent(row.slug)}`}
                       className="still-being-written__session-link"
                     >
                       Sessions
                     </Link>
                     <a
-                      href={`/api/corpus/${encodeURIComponent(artwork.slug)}/sessions`}
+                      href={`/api/corpus/${encodeURIComponent(row.slug)}/sessions`}
                       className="still-being-written__session-link"
                     >
                       Full session data (JSON)
@@ -171,12 +162,4 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
       </div>
     </DocumentScrollShell>
   )
-}
-
-/** Helper for page.tsx */
-export function rowsFromArtworks(artworks: Artwork[]): CorpusIndexRow[] {
-  return artworks.map((artwork) => ({
-    artwork,
-    gist: corpusGistFromArtwork(artwork),
-  }))
 }

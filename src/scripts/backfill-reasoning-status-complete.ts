@@ -1,62 +1,20 @@
 /**
- * Mark existing artworks as fully catalogued (not in the Unreasoned Queue).
- * Quick Upload still sets reasoningStatus: stub on new records.
+ * RETIRED — reasoningStatus is derived from evidence, not stored for public use.
  *
- * Usage: npx tsx src/scripts/backfill-reasoning-status-complete.ts [--dry-run]
+ * This script previously wrote reasoningStatus=complete across the catalogue.
+ * That column is now unread by public surfaces; writing it would only confuse
+ * admins and mid-migration tooling.
+ *
+ * Usage: npx tsx src/scripts/backfill-reasoning-status-complete.ts
+ * Always exits non-zero without touching the database.
  */
-import dotenv from 'dotenv'
-dotenv.config({ path: '.env.local' })
-
-import { getPayload } from 'payload'
-import config from '@/payload.config'
-
-const dryRun = process.argv.includes('--dry-run')
-
-async function main() {
-  const payload = await getPayload({ config })
-
-  let page = 1
-  let updated = 0
-  let skipped = 0
-
-  while (true) {
-    const { docs, hasNextPage } = await payload.find({
-      collection: 'artworks',
-      limit: 100,
-      page,
-      depth: 0,
-      overrideAccess: true,
-    })
-
-    for (const doc of docs) {
-      if (doc.reasoningStatus === 'complete') {
-        skipped += 1
-        continue
-      }
-
-      if (!dryRun) {
-        await payload.update({
-          collection: 'artworks',
-          id: doc.id,
-          data: { reasoningStatus: 'complete' },
-          overrideAccess: true,
-        })
-      }
-      updated += 1
-    }
-
-    if (!hasNextPage) break
-    page += 1
-  }
-
-  console.log(
-    dryRun
-      ? `[dry-run] Would set reasoningStatus=complete on ${updated} artworks (${skipped} already complete).`
-      : `Set reasoningStatus=complete on ${updated} artworks (${skipped} already complete).`,
-  )
-}
-
-main().catch((err) => {
-  console.error(err)
-  process.exit(1)
-})
+console.error(
+  [
+    'backfill-reasoning-status-complete is retired.',
+    'reasoningStatus is derived at build/read time from:',
+    '  - completed primary session with messages.length > 0',
+    '  - plus a why-field (intent | formalContributionAssessment | descriptionShort | workContext)',
+    'Do not write the stored column. See src/lib/artwork/deriveReasoningStatus.ts.',
+  ].join('\n'),
+)
+process.exit(1)

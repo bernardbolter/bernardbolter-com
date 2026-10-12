@@ -23,6 +23,7 @@ export function computeCoverage(
     if (artwork.intent?.trim() || artwork.descriptionShort?.trim()) withArtistIntent += 1
     if (preferredVisionAnalysis(artwork)) withVisionAnalysis += 1
     if ((sessionCountBySlug.get(artwork.slug) ?? 0) > 0) withSessions += 1
+    // Caller must overlay derived reasoningStatus before calling — never trust the stored column.
     if (artwork.reasoningStatus === 'complete') reasoningComplete += 1
   }
 

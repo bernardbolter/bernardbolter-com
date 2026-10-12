@@ -16,8 +16,7 @@ const FIELDS_EXAMPLE = `{
   "slug": "gates-iii",
   "fields": {
     "intent": "What this work pushes against…",
-    "formalContributionAssessment": "How it contributes formally…",
-    "reasoningStatus": "complete"
+    "formalContributionAssessment": "How it contributes formally…"
   }
 }`
 
@@ -38,7 +37,7 @@ const VISION_BATCH_EXAMPLE = `{
 
 const FIELDS_BATCH_EXAMPLE = `{
   "items": [
-    { "slug": "gates-iii", "fields": { "reasoningStatus": "complete" } }
+    { "slug": "gates-iii", "fields": { "intent": "…" } }
   ]
 }`
 
@@ -56,6 +55,9 @@ const ENVELOPE_EXAMPLE = `{
         "messages": [
           { "role": "user", "content": "…" },
           { "role": "assistant", "content": "…" }
+        ],
+        "fieldUpdateTimeline": [
+          { "field": "intent", "source": "conversation", "timestamp": "2026-07-15T12:00:00.000Z" }
         ]
       }
     },
@@ -67,12 +69,6 @@ const ENVELOPE_EXAMPLE = `{
         "intent": "…",
         "formalContributionAssessment": "…"
       }
-    },
-    {
-      "collection": "artworks",
-      "slug": "the-thinker",
-      "operation": "set",
-      "fields": { "reasoningStatus": "complete" }
     },
     {
       "collection": "bio-timeline",
@@ -353,9 +349,9 @@ export function ArchiveImportPanel() {
       <form className="studio-archive__panel" onSubmit={handleFieldsSubmit}>
         <h3>Artwork fields (Art/Official)</h3>
         <p className="studio-archive__hint">
-          Same field allowlist as Art/Official dialogue. Set{' '}
-          <code>reasoningStatus</code> to <code>complete</code> when a stub is finished —
-          this only updates that artwork; it does not confirm other collections.
+          Same field allowlist as Art/Official dialogue.{' '}
+          <code>reasoningStatus</code> is derived from session messages + why-fields and
+          is rejected if included — do not write it.
         </p>
         <textarea
           className="studio-archive__textarea"
@@ -385,10 +381,10 @@ export function ArchiveImportPanel() {
           One paste routes to artworks + bio timeline + statement throughlines + sessions.
           Writes succeed or fail independently — not atomic across collections. Append is
           idempotent (same session + text skips duplicates). Sessions writes in a paste run
-          before bio/throughline appends that reference them. Prefer{' '}
-          <code>reasoningStatus: complete</code> in its own <code>set</code> write after other
-          artwork fields; a bundled artworks write still commits other fields first, but
-          complete does not wait for bio-timeline or throughline writes.
+          before bio/throughline appends that reference them. Include{' '}
+          <code>fieldUpdateTimeline</code> on session writes so coverage is retained —
+          historical pastes without it cannot be reconstructed.{' '}
+          <code>reasoningStatus</code> is derived and ignored if pasted.
         </p>
         <textarea
           className="studio-archive__textarea"

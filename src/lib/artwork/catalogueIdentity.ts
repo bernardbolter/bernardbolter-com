@@ -199,7 +199,11 @@ function formatCataloguedMonthYear(date: Date): string {
   return date.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' })
 }
 
-/** Public verso status from completed primary-artwork session dates. */
+/**
+ * Public verso status from completed primary-artwork session dates.
+ * Callers must pass only sessions with messages.length > 0 — a zero-message
+ * completed shell is not a cataloguing event.
+ */
 export function formatCatalogueStatus(isoDates: string[]): string {
   const dates = isoDates
     .map((value) => new Date(value))

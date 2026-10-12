@@ -245,25 +245,17 @@ async function applyArtworkSet(
   write: Extract<EnvelopeWrite, { collection: 'artworks' }>,
 ): Promise<EnvelopeWriteResult> {
   const fields = { ...write.fields }
-  const reasoningStatus = fields.reasoningStatus
-  const hasOtherFields = Object.keys(fields).some((key) => key !== 'reasoningStatus')
   const warnings: string[] = []
 
-  // Guarded final write: apply other fields first; only then flip reasoningStatus.
-  if (reasoningStatus !== undefined && hasOtherFields) {
+  // reasoningStatus is derived from session messages + why-fields — strip if pasted.
+  if (fields.reasoningStatus !== undefined) {
     delete fields.reasoningStatus
-    const primary = await applyArtworkFieldsImport(payload, user, {
-      slug: write.slug,
-      fields,
-    })
-    for (const row of primary) {
-      if (row.warnings?.length) warnings.push(...row.warnings)
-    }
-    await applyArtworkFieldsImport(payload, user, {
-      slug: write.slug,
-      fields: { reasoningStatus },
-    })
-  } else {
+    warnings.push(
+      'reasoningStatus is derived and was ignored — do not include it in envelope writes',
+    )
+  }
+
+  if (Object.keys(fields).length > 0) {
     const rows = await applyArtworkFieldsImport(payload, user, {
       slug: write.slug,
       fields,
@@ -330,6 +322,10 @@ async function applySessionSet(
     completedAt: fields.status === 'completed' ? new Date().toISOString() : null,
   }
 
+  if (fields.fieldUpdateTimeline !== undefined) {
+    data.fieldUpdateTimeline = fields.fieldUpdateTimeline
+  }
+
   const existing = await payload.find({
     collection: 'sessions',
     where: { sessionId: { equals: sessionId } },
@@ -349,6 +345,9 @@ async function applySessionSet(
       user,
     })
   } else {
+    if (data.fieldUpdateTimeline === undefined) {
+      data.fieldUpdateTimeline = []
+    }
     await payload.create({
       collection: 'sessions',
       data: data as never,
