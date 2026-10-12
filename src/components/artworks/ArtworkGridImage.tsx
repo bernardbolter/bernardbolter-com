@@ -13,11 +13,7 @@ import {
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
-import {
-  VERSO_MIN_WIDTH_PX,
-  resolveCatalogueImageAlt,
-  resolveSeriesDisplay,
-} from '@/lib/artwork/catalogueIdentity'
+import { VERSO_MIN_WIDTH_PX, resolveCatalogueImageAlt } from '@/lib/artwork/catalogueIdentity'
 import { CELL_PAD, type GridItemLayout } from '@/lib/artwork/gridRealSize'
 import { getTranslateOffset } from '@/lib/artwork/gridTranslate'
 import { useArtworks } from '@/providers/ArtworkProvider'
@@ -64,7 +60,6 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
   const captionMaxWidth = columnWidth - (columnWidth - displayWidth) / 2
   const translate = getTranslateOffset(artwork.id)
   const title = artwork.title?.trim() || artwork.slug
-  const series = resolveSeriesDisplay(artwork, state.filterSeries)
   const imageAlt = resolveCatalogueImageAlt(artwork)
   const slug = artwork.slug?.trim() || ''
   const selected = Boolean(slug && gridSelectedSlug === slug)
@@ -193,7 +188,6 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
         timelineMarkers={state.timelineMarkers}
         sessionDates={state.sessionDatesByArtworkId[artwork.id] ?? []}
         className="artwork-block__face artwork-grid__card"
-        style={series ? { borderLeftColor: series.color } : undefined}
         dataGridCard
       />
     </article>

@@ -41,22 +41,22 @@ export default function ArtworkTitle() {
         : isMobile
           ? 'artwork-title__container--mobile'
           : 'artwork-title__container--desktop',
-    isTimelineCard && isFlipped ? 'artwork-title__container--faded' : '',
+    isTimelineCard && isFlipped ? 'artwork-title__container--hidden-flipped' : '',
   ]
     .filter(Boolean)
     .join(' ')
 
   const toggleCurrentFlip = () => {
-    if (!isTimelineCard || !currentSlug) return
-    setFlippedSlug(isFlipped ? null : currentSlug)
+    if (!isTimelineCard || !currentSlug || isFlipped) return
+    setFlippedSlug(currentSlug)
   }
 
   return (
     <div
       className={containerClass}
-      onClick={isTimelineCard && isMobile ? toggleCurrentFlip : undefined}
+      onClick={isTimelineCard && isMobile && !isFlipped ? toggleCurrentFlip : undefined}
       onKeyDown={
-        isTimelineCard && isMobile
+        isTimelineCard && isMobile && !isFlipped
           ? (event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault()
@@ -65,22 +65,11 @@ export default function ArtworkTitle() {
             }
           : undefined
       }
-      role={isTimelineCard && isMobile ? 'button' : undefined}
-      tabIndex={isTimelineCard && isMobile ? 0 : undefined}
+      role={isTimelineCard && isMobile && !isFlipped ? 'button' : undefined}
+      tabIndex={isTimelineCard && isMobile && !isFlipped ? 0 : undefined}
       aria-pressed={isTimelineCard && isMobile ? isFlipped : undefined}
+      aria-hidden={isTimelineCard && isFlipped ? true : undefined}
     >
-      {isTimelineCard && isFlipped ? (
-        <button
-          type="button"
-          className="artwork-title__front-affordance"
-          onClick={(event) => {
-            event.stopPropagation()
-            setFlippedSlug(null)
-          }}
-        >
-          front
-        </button>
-      ) : null}
 
       <div className="artwork-title__border-top">
         <div className="artwork-title__border-top--left">

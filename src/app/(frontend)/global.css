@@ -912,31 +912,30 @@ h6 {
 }
 
 .artwork-block__verso-identity {
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.45rem;
 }
 
 .artwork-block__verso-identity .artwork-identity__year,
 .artwork-block__verso-identity .artwork-identity__medium,
 .artwork-block__verso-identity .artwork-identity__dimensions,
 .artwork-block__verso-identity .artwork-identity__series {
-  color: var(--title-text);
+  color: var(--verso-muted, var(--title-text));
 }
 
-/* Back matches the painting box exactly; content scrolls inside. */
+/* Back matches the painting box; tint + inset card live on .artwork-verso. */
 .artwork-block__face--back {
   position: absolute;
   inset: 0;
   z-index: 4;
   box-sizing: border-box;
+  display: flex;
   width: 100%;
   height: 100%;
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding: 0.75rem 0.85rem 0.9rem;
-  background: var(--title-light);
-  color: var(--title-text-dark);
+  overflow: hidden;
+  padding: 0;
+  background: transparent;
+  color: var(--verso-ink, var(--title-text-dark));
   pointer-events: none;
-  box-shadow: 0 1px 0 var(--title-dark);
   visibility: hidden;
   opacity: 0;
   cursor: pointer;
@@ -946,6 +945,200 @@ h6 {
   pointer-events: auto;
   visibility: visible;
   opacity: 1;
+}
+
+/* Shared registrar verso — timeline face and grid card. */
+.artwork-verso {
+  --verso-inset: 0.45rem;
+  --verso-dead-zone: 10px;
+  --verso-card-bg: #fffcfa;
+  --verso-ink: var(--title-text-dark);
+  --verso-muted: var(--title-text);
+  --verso-rule: color-mix(in srgb, var(--title-text-dark) 14%, transparent);
+  --verso-tint-neutral: color-mix(in srgb, var(--text-muted) 14%, var(--surface-page));
+  --verso-tint: var(--verso-tint-neutral);
+  --verso-shadow: 0 1px 2px color-mix(in srgb, #000 10%, transparent),
+    0 4px 14px color-mix(in srgb, #000 8%, transparent);
+
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: var(--verso-inset);
+  background: var(--verso-tint);
+  color: var(--verso-ink);
+  cursor: pointer;
+}
+
+.artwork-verso[data-verso-tint='series'] {
+  --verso-tint: color-mix(in srgb, var(--verso-series-color) 18%, var(--surface-page));
+}
+
+.artwork-verso__card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  border-radius: 1px;
+  background: var(--verso-card-bg);
+  box-shadow: var(--verso-shadow);
+  overflow: hidden;
+}
+
+.artwork-verso__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.artwork-verso__body-inner {
+  box-sizing: border-box;
+  width: 100%;
+  margin-block: auto;
+  padding: 0.55rem 0.65rem 0.35rem;
+}
+
+.artwork-verso__connectors {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0 0 0.45rem;
+}
+
+.artwork-verso__connector-group {
+  min-width: 0;
+}
+
+.artwork-verso__connector-label {
+  margin: 0 0 0.15rem;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+.artwork-verso__connector-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.artwork-verso__connector-link {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  min-width: 0;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--verso-ink);
+  text-decoration: none;
+}
+
+.artwork-verso__connector-mark {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  line-height: 1.25;
+}
+
+.artwork-verso__connector-text {
+  min-width: 0;
+}
+
+.artwork-verso__connector-link:hover .artwork-verso__connector-text,
+.artwork-verso__connector-link:focus-visible .artwork-verso__connector-text {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.artwork-verso__footer {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  padding: var(--verso-dead-zone);
+  /* Clicks in the padding are swallowed — near-miss does nothing. */
+}
+
+.artwork-verso__record-bar {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.65rem;
+  border-top: 1px solid var(--verso-rule);
+  margin: 0;
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--verso-ink);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--verso-card-bg) 92%, var(--verso-ink));
+  transition: background 0.12s ease, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.artwork-verso__record-bar-label {
+  flex: 1 1 auto;
+  text-align: left;
+}
+
+.artwork-verso__record-bar:hover {
+  background: color-mix(in srgb, var(--verso-card-bg) 84%, var(--verso-ink));
+}
+
+.artwork-verso__record-bar:active {
+  background: color-mix(in srgb, var(--verso-card-bg) 72%, var(--verso-ink));
+  transform: translateY(1px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .artwork-verso {
+    --verso-card-bg: #2c2c2e;
+    --verso-ink: #ececec;
+    --verso-muted: #b0b0b0;
+    --verso-rule: color-mix(in srgb, #fff 16%, transparent);
+    --verso-tint-neutral: color-mix(in srgb, #9a9a9a 16%, #1a1a1c);
+    --verso-shadow: 0 1px 2px color-mix(in srgb, #000 45%, transparent),
+      0 6px 18px color-mix(in srgb, #000 35%, transparent);
+  }
+
+  .artwork-verso[data-verso-tint='series'] {
+    --verso-tint: color-mix(in srgb, var(--verso-series-color) 28%, #1a1a1c);
+  }
+
+  .artwork-verso__connector-label {
+    color: #8e8e93;
+  }
+
+  .artwork-verso__record-bar {
+    background: color-mix(in srgb, var(--verso-card-bg) 88%, #fff);
+  }
+
+  .artwork-verso__record-bar:hover {
+    background: color-mix(in srgb, var(--verso-card-bg) 78%, #fff);
+  }
+
+  .artwork-verso__record-bar:active {
+    background: color-mix(in srgb, var(--verso-card-bg) 68%, #fff);
+  }
 }
 
 /* Single-slot 3D flip — only when `.artwork-block--flip-3d` is mounted. */
@@ -985,69 +1178,51 @@ h6 {
 }
 
 .artwork-block__verso-title {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.35rem;
   font-family: var(--font-staatliches), sans-serif;
-  font-size: 1.35rem;
+  font-size: clamp(0.95rem, 2.8vw, 1.25rem);
   font-weight: 400;
   letter-spacing: 0.04em;
   line-height: 1.1;
+  color: var(--verso-ink, var(--title-text-dark));
 }
 
 .artwork-block__verso-description {
-  margin: 0 0 0.7rem;
+  margin: 0 0 0.45rem;
   font-family: var(--font-barlow), sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 400;
   line-height: 1.35;
-  color: var(--title-text-dark);
-}
-
-.artwork-block__verso-links {
-  margin: 0 0 0.7rem;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.artwork-block__verso-links a {
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--title-text-dark);
-  text-decoration: underline;
-  text-underline-offset: 0.12em;
+  color: var(--verso-ink, var(--title-text-dark));
 }
 
 .artwork-block__verso-status {
-  margin: 0 0 0.85rem;
+  margin: 0;
   font-family: var(--font-barlow-condensed), sans-serif;
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.03em;
-  color: var(--title-text);
+  color: var(--verso-muted, var(--title-text));
 }
 
-.artwork-block__record-link {
-  display: inline-block;
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--title-text-dark);
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
+/* Grid selected card — same registrar shell as the timeline face. */
+.artwork-grid__image-container.is-selected .artwork-grid__card {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  width: auto;
+  height: auto;
 }
 
+.artwork-grid__image-container:not(.is-selected) .artwork-grid__card {
+  display: none;
+}
 
-.artwork-title__container--faded {
-  opacity: 0.12;
+.artwork-title__container--hidden-flipped {
+  opacity: 0;
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.25s ease;
-}
-
-.artwork-title__container--faded .artwork-title__front-affordance {
-  pointer-events: auto;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 .artwork-title__front-affordance {

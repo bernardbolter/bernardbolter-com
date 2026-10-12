@@ -492,6 +492,12 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 28 — Verso registrar card styling (2026-10-12)
+
+Shared `ArtworkVerso`: series-tint wash + inset near-white card (1px radius, soft shadow); body content vertically centred, left-aligned; connector groups labelled **Throughlines** / **Biography** (leading dash, hover underline); record CTA is full-width bottom bar (`OPEN_THE_RECORD_LABEL` = “See the whole painting →”), min 44px, with ~10px dead zone so near-misses neither flip nor navigate. `ArtworkTitle` fully hidden while flipped. Dark `prefers-color-scheme` tokens for card/tint/ink.
+
+---
+
 ## Part 27 — Timeline block styling step 1–4 (2026-10-12)
 
 Verso carries full identity via `ArtworkIdentityLabel` (`includeTitle: false` under the verso h2): year, medium, dimensions, series — then description, connectors, status, record link. Timeline front `.artwork-block__label` removed; SSR identity stays on the verso for all 220. Back face matches the painting box (no 320px floor on timeline); overflow scrolls inside. 3D flip (`preserve-3d` / `backface-visibility`) mounts only on the flipped slot (`.artwork-block--flip-3d`). Tap back (except links) returns to front.
