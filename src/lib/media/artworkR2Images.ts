@@ -104,9 +104,11 @@ export function getArtworkImageSources(
 
   const src400 = derivativePublicUrl(slug, '400w')
   const src800 = derivativePublicUrl(slug, '800w')
+  // Use 1x/2x — not 400w/800w. A ~406 CSS-px slot makes 400/406 < 1, so
+  // width descriptors skip 400w and fetch 800w even on 1x screens.
   return {
     src: src400,
-    srcSet: `${src400} 400w, ${src800} 800w`,
+    srcSet: `${src400} 1x, ${src800} 2x`,
     fallback,
   }
 }

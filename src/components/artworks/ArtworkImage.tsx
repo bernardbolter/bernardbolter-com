@@ -92,10 +92,8 @@ export default function ArtworkImage({
         src={imagePair.src}
         // srcSet only on the LCP candidate — React 19 preloads every eager
         // imageSrcSet, which re-contended the first paint with five siblings.
+        // Timeline srcSet uses 1x/2x (no sizes needed).
         srcSet={lcpCandidate ? imagePair.srcSet : undefined}
-        sizes={
-          lcpCandidate && imagePair.srcSet ? `${Math.ceil(displayWidth)}px` : undefined
-        }
         fallbackSrc={imagePair.fallback}
         alt={imageAlt}
         width={displayWidth}
