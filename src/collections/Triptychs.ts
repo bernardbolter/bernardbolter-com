@@ -20,7 +20,7 @@ export const Triptychs: CollectionConfig = {
   },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'series', 'status', 'yearStart', 'updatedAt'],
+    defaultColumns: ['title', 'series', 'status', 'discoverable', 'yearStart', 'updatedAt'],
     description:
       'MoP triptych sets — three panels sold and catalogued as a unit. Commerce fields live here, not on individual artworks.',
   },
@@ -62,6 +62,16 @@ export const Triptychs: CollectionConfig = {
                 { label: 'Archived', value: 'archived' },
               ],
               admin: { position: 'sidebar' },
+            },
+            {
+              name: 'discoverable',
+              type: 'checkbox',
+              defaultValue: true,
+              admin: {
+                position: 'sidebar',
+                description:
+                  'False for Mediums of War — not in primary nav, reached via Mediums of Perception only. True for city triptychs (Berlin, Munich, etc.).',
+              },
             },
             {
               type: 'row',

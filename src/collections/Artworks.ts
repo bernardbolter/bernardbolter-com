@@ -26,6 +26,11 @@ import {
 import { dcsTab } from './artworks/dcsTabFields'
 import { fieldNotesTab } from './artworks/fieldNotesTab'
 import { megacitiesTab } from './artworks/megacitiesTabFields'
+import {
+  NEIGHBORHOOD_COMMISSION_CITY_DEFAULT,
+  NEIGHBORHOOD_COMMISSION_CITY_OPTIONS,
+  NEIGHBORHOOD_PROOF_ROLE_OPTIONS,
+} from '@/fields/neighborhoodCommissionShared'
 
 const RESERVED_FRONTEND_SLUGS = new Set([
   '',
@@ -2262,7 +2267,11 @@ export const Artworks: CollectionConfig = {
         {
           label: 'A Colorful History',
           admin: {
-            condition: (data) => data?.seriesSlug === 'a-colorful-history',
+            condition: (data) =>
+              data?.seriesSlug === 'a-colorful-history' ||
+              data?.seriesSlug === 'mediums-of-perception' ||
+              data?.seriesSlug === 'mediums-of-war' ||
+              data?.seriesSlug === 'gates-of-perception',
           },
           fields: [
             {
@@ -2704,6 +2713,77 @@ export const Artworks: CollectionConfig = {
                   ],
                 },
 
+                // ── Neighborhood Commissions (Tier 2 flags) ──
+                {
+                  name: 'neighborhoodCommission',
+                  type: 'group',
+                  label: 'Neighborhood Commissions',
+                  admin: {
+                    description:
+                      'Tier 2 flags for acolorfulhistory.com/neighborhood — revisited subjects and proof roles. Spec: docs/ach/neighborhood-commissions-payload-schema.md',
+                  },
+                  fields: [
+                    {
+                      name: 'revisitedSubjectAvailable',
+                      type: 'checkbox',
+                      defaultValue: false,
+                      admin: {
+                        description:
+                          'Include this work in the Neighborhood Commissions Tier 2 (revisited subjects) list.',
+                      },
+                    },
+                    {
+                      name: 'city',
+                      type: 'select',
+                      defaultValue: NEIGHBORHOOD_COMMISSION_CITY_DEFAULT,
+                      options: [...NEIGHBORHOOD_COMMISSION_CITY_OPTIONS],
+                      admin: {
+                        description: 'City slug for future /neighborhood/[city] filtering.',
+                      },
+                    },
+                    {
+                      name: 'proofRoles',
+                      type: 'select',
+                      hasMany: true,
+                      options: [...NEIGHBORHOOD_PROOF_ROLE_OPTIONS],
+                      admin: {
+                        description:
+                          'Trust/proof roles this work carries on the commissions page.',
+                      },
+                    },
+                    {
+                      name: 'proofNote',
+                      type: 'textarea',
+                      localized: true,
+                      admin: {
+                        description:
+                          'e.g. designer commission line when no install photo is available.',
+                      },
+                    },
+                    {
+                      name: 'priorSubjectArtwork',
+                      type: 'relationship',
+                      relationTo: 'artworks',
+                      filterOptions: {
+                        seriesSlug: { equals: 'a-colorful-history' },
+                      },
+                      admin: {
+                        description:
+                          'Earlier painting of the same historical subject, if catalogued.',
+                      },
+                    },
+                    {
+                      name: 'neighborhoodSource',
+                      type: 'relationship',
+                      relationTo: 'ach-neighborhood-sources',
+                      admin: {
+                        description:
+                          'Source inventory row if this subject was listed in Tier 1 first.',
+                      },
+                    },
+                  ],
+                },
+
                 // ── Group 5 — Reveal Slider ───────────────────
                 {
                   name: 'revealSlider',
@@ -2904,7 +2984,7 @@ export const Artworks: CollectionConfig = {
                       data?.seriesSlug === 'mediums-of-perception' ||
                       data?.seriesSlug === 'mediums-of-war',
                     description:
-                      'Visible only when the artwork is in the Mediums of Perception or Mediums of War series.',
+                      'Visible when the artwork is in Mediums of Perception (including nested Mediums of War panels) or still tagged to the legacy Mediums of War series.',
                   },
                   fields: [
                     {

@@ -43,6 +43,8 @@ import { Triptychs } from './collections/Triptychs'
 import { SmallPrints } from './collections/SmallPrints'
 import { Sessions } from './collections/Sessions'
 import { Redirects } from './collections/Redirects'
+import { AchNeighborhoodSources } from './collections/AchNeighborhoodSources'
+import { WebhookEvents } from './collections/WebhookEvents'
 import { Campaigns } from './collections/Campaigns'
 import { Themes } from './collections/Themes'
 import { QueueItems } from './collections/QueueItems'
@@ -54,6 +56,7 @@ import { Shots } from './collections/Shots'
 import { Takes } from './collections/Takes'
 import { ArtOfficialSettings } from './globals/ArtOfficialSettings'
 import { PrintSetConfig } from './globals/PrintSetConfig'
+import { NeighborhoodCommissions } from './globals/NeighborhoodCommissions'
 
 import { s3Storage } from '@payloadcms/storage-s3'
 
@@ -155,8 +158,10 @@ export default buildConfig({
     SmallPrints,
     Sessions,
     Redirects,
+    AchNeighborhoodSources,
+    WebhookEvents,
   ],
-  globals: [PrintSetConfig, ArtOfficialSettings],
+  globals: [PrintSetConfig, ArtOfficialSettings, NeighborhoodCommissions],
   // Public catalogue reads for external sites (e.g. A Colorful History).
   // Access control still limits anonymous clients to published artist-catalogued works.
   cors: corsOrigins.length > 0 ? corsOrigins : undefined,

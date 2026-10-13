@@ -63,3 +63,64 @@ export function findTriptychByVendurePrintProductId(
     doc.printSets.some((row) => row?.vendureProductId?.trim() === targetId),
   )
 }
+
+export type TriptychPrintSaleUpdate = {
+  triptychId: number | string
+  printSets: TriptychPrintSetRow[]
+}
+
+export type ApplyPrintSalesResult =
+  | { ok: true; updates: TriptychPrintSaleUpdate[] }
+  | { ok: false; reason: 'invalid-quantity' }
+
+/**
+ * Applies quantitySold from each sale line onto matching triptych print sets.
+ * Lines whose vendureProductId is not a triptych print are skipped (e.g. selections).
+ */
+export function applyTriptychPrintSalesFromLines(
+  triptychs: TriptychForPrintSync[],
+  lines: Array<{ vendureProductId: string; quantitySold: number }>,
+): ApplyPrintSalesResult {
+  const working = new Map<string | number, TriptychForPrintSync>()
+  for (const doc of triptychs) {
+    working.set(doc.id, {
+      id: doc.id,
+      printSets: Array.isArray(doc.printSets) ? [...doc.printSets] : doc.printSets,
+    })
+  }
+
+  const touched = new Set<string | number>()
+
+  for (const line of lines) {
+    if (!Number.isFinite(line.quantitySold) || line.quantitySold < 1) {
+      return { ok: false, reason: 'invalid-quantity' }
+    }
+
+    const match = findTriptychByVendurePrintProductId([...working.values()], line.vendureProductId)
+    if (!match) continue
+
+    const current = working.get(match.id) ?? match
+    const result = decrementTriptychPrintAvailableCount(
+      current,
+      line.vendureProductId,
+      line.quantitySold,
+    )
+    if (!result.ok) {
+      if (result.reason === 'invalid-quantity') {
+        return { ok: false, reason: 'invalid-quantity' }
+      }
+      continue
+    }
+
+    working.set(result.triptychId, { id: result.triptychId, printSets: result.printSets })
+    touched.add(result.triptychId)
+  }
+
+  return {
+    ok: true,
+    updates: [...touched].map((id) => {
+      const doc = working.get(id)
+      return { triptychId: id, printSets: doc?.printSets ?? [] }
+    }),
+  }
+}

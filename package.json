@@ -42,7 +42,10 @@
     "recover:fieldnote-inbox": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/recoverOrphanInboxFieldNote.ts",
     "typecheck": "tsc --noEmit",
     "worker": "cross-env NODE_OPTIONS=--no-deprecation tsx src/workers/index.ts",
-    "deploy:netcup": "bash scripts/deploy-netcup.sh"
+    "deploy:netcup": "bash scripts/deploy-netcup.sh",
+    "migrate:neighborhood-commissions": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-neighborhood-commissions-schema.ts",
+    "migrate:webhook-events": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/add-webhook-events-schema.ts",
+    "push:neighborhood-commissions": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/push-neighborhood-commissions-schema.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.96.0",
