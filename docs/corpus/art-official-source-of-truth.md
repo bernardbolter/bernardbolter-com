@@ -643,6 +643,17 @@ Homepage identity fields (title, year, medium, dimensions, series) extracted to 
 
 ---
 
+## Part 34 — Briefing under fetch-tool truncation (2026-10-13)
+
+**Problem.** `/api/corpus/briefing` grew past ~100k chars; fetch tools truncate there, so agents never saw the works tail and under-counted the corpus (~150 vs 220).
+
+**Decided.**
+- Identity first on the briefing JSON: `totalWorks`, `coverage`, `generatedAt`.
+- Cuts to stay under budget (protocol + contract remain inlined): session ledger → count pointer; stub works → slug/title/series/status only; throughline claims → `claimUrl` (full text on throughline pages); drop per-work `relatedBy*` URL arrays from the briefing; omit contract worked-example body from the paste.
+- Soft budget `BRIEFING_FETCH_CHAR_BUDGET` (95k); build warns if exceeded.
+
+---
+
 ## Standing process
 
 1. Any chat session that finds a spec/reality mismatch, or makes a flow-level decision (retiring a mechanism, resolving an edge case), logs it here **the same session** — not left in chat scrollback for someone to rediscover later.

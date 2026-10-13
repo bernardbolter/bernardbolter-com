@@ -43,6 +43,7 @@ import type {
 } from '@/lib/corpus/artifact/types'
 import { buildCorpusRecord } from '@/lib/corpus/buildCorpusRecord'
 import {
+  BRIEFING_FETCH_CHAR_BUDGET,
   CORPUS_ARTWORK_DEPTH,
   CORPUS_BASE,
   CORPUS_CONTEXT,
@@ -427,6 +428,7 @@ export async function assembleCorpusArtifact(
   const protocolText = `${protocolDoc.text}\n`
   const corpusBytes = Buffer.byteLength(corpusJson, 'utf8')
   const briefingBytes = Buffer.byteLength(briefingJson, 'utf8')
+  const briefingChars = briefingJson.length
 
   const reasoningStatusAudit = auditReasoningStatus(artworks, derivedBySlug)
   const publicProseMarkers = collectPublicProseMarkerHits(artworks)
@@ -504,6 +506,12 @@ export async function assembleCorpusArtifact(
   }
   if (publicProseMarkers.length) {
     reportBase.warnings.push(`public prose markers: ${publicProseMarkers.length}`)
+  }
+  if (briefingChars > BRIEFING_FETCH_CHAR_BUDGET) {
+    reportBase.warnings.push(
+      `BRIEFING OVER FETCH BUDGET: ${briefingChars} chars > ${BRIEFING_FETCH_CHAR_BUDGET}` +
+        ` — common tools truncate at 100k; identity header may survive but works tail will not`,
+    )
   }
   reportBase.warnings.push(
     `derived coverage: ${reasoningEvidence.derivedDistribution.complete} complete` +

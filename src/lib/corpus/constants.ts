@@ -1,5 +1,12 @@
 export const CORPUS_VERSION = '1.0'
 
+/**
+ * Soft ceiling for `/api/corpus/briefing` JSON (chars). Common fetch/tool
+ * truncators cut at 100_000 — stay comfortably under so the full works list
+ * survives a single paste.
+ */
+export const BRIEFING_FETCH_CHAR_BUDGET = 95_000
+
 export const CORPUS_ARTWORK_DEPTH = 3
 
 /** Max chars for Tier-1 index `gist` (boundary-aware truncate). */

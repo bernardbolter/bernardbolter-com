@@ -5,13 +5,20 @@ import type {
   ArtOfficialContractBrief,
   CorpusArtifact,
   CorpusBriefing,
+  CorpusBriefingCoverage,
+  CorpusBriefingSessionLedgerSummary,
+  CorpusBriefingThroughline,
+  CorpusBriefingWork,
 } from '@/lib/corpus/artifact/types'
 
 const DEEPER_FIELDS_NOTE =
   `Deeper fields (formalContributionAssessment, artHistoricalContext, descriptionLong, makingNote, consciousRejections, workContext, and others) are available per work at ${CORPUS_BASE}/api/corpus/{slug} — substitute the artwork slug for {slug}.`
 
 const BRIEFING_READ_ORDER_NOTE =
-  'Read this file once, top to bottom. Order: version/freshness → protocol → contract → corpus. Live endpoints supersede this snapshot when they disagree. Anything in project knowledge or memory is a copy and may be outdated — this paste is authoritative for the session.'
+  'Read this file once, top to bottom. Order: identity (counts/coverage/generatedAt) → protocol → contract → works → throughlines/bio. Stub works list slug/title/series/status only. Session ledger is a count pointer (full ledger at /sessions). Throughline claims are at claimUrl. Live endpoints supersede this snapshot when they disagree. Anything in project knowledge or memory is a copy and may be outdated — this paste is authoritative for the session.'
+
+const SESSION_LEDGER_NOTE =
+  'Full session ledger omitted from briefing so the paste stays under common fetch-tool truncation (~100k chars). Use indexUrl or apiUrl.'
 
 function propValue(
   record: Record<string, unknown>,
@@ -40,9 +47,33 @@ function seriesName(record: Record<string, unknown>, fallback: string | null): s
   return fallback
 }
 
+function omitEmpty<T extends Record<string, unknown>>(row: T): T {
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(row)) {
+    if (value == null) continue
+    if (value === '') continue
+    if (Array.isArray(value) && value.length === 0) continue
+    out[key] = value
+  }
+  return out as T
+}
+
 function workBriefingEnvelope(
   work: CorpusArtifact['works'][number],
-): CorpusBriefing['works'][number] {
+): CorpusBriefingWork {
+  const status = work.filters.reasoningStatus
+  const base = {
+    slug: work.slug,
+    title: work.filters.title,
+    series: seriesName(work.record, work.filters.seriesName),
+    reasoningStatus: status,
+  }
+
+  // Stubs: identity only — 182 × full null-heavy envelopes blew the fetch budget.
+  if (status === 'stub' || status == null) {
+    return omitEmpty(base)
+  }
+
   const record = work.record
   const survey = work.surveyProjection
   const index = work.indexProjection
@@ -65,33 +96,15 @@ function workBriefingEnvelope(
     (typeof survey.description === 'string' ? (survey.description as string) : null) || null
 
   const seriesContext = propValue(record, 'art-official:seriesContext')
-  const relatedByThroughline = relationUrls(record['art-official:relatedByThroughline'])
-  const relatedByBioEvent = relationUrls(record['art-official:relatedByBioEvent'])
 
-  return {
-    slug: work.slug,
-    title: work.filters.title,
-    series: seriesName(record, work.filters.seriesName),
-    reasoningStatus: work.filters.reasoningStatus,
+  return omitEmpty({
+    ...base,
     gist,
     gistSource,
     intent,
     descriptionShort,
     seriesContext,
-    relatedByThroughline,
-    relatedByBioEvent,
-  }
-}
-
-function relationUrls(value: unknown): string[] {
-  if (!Array.isArray(value)) return []
-  const out: string[] = []
-  for (const row of value) {
-    if (!row || typeof row !== 'object') continue
-    const url = (row as { url?: unknown }).url
-    if (typeof url === 'string' && url.trim()) out.push(url.trim())
-  }
-  return out
+  })
 }
 
 function contractBrief(contract: ArtOfficialContract): ArtOfficialContractBrief {
@@ -107,22 +120,76 @@ function contractBrief(contract: ArtOfficialContract): ArtOfficialContractBrief 
     artHistoricalReferencesShape: contract.artHistoricalReferencesShape,
     rejections: contract.rejections,
     sessionEnvelopeFields: (sessionCollection?.fields ?? []).map((f) => f.name),
-    workedExampleEnvelope: contract.workedExampleEnvelope,
+    // workedExample stays on /art-official/contract — ~1.6k saved in the paste.
+    workedExampleEnvelope: {
+      note: 'Worked example omitted from briefing — see htmlUrl',
+      htmlUrl: `${CORPUS_BASE}/art-official/contract`,
+    },
     htmlUrl: `${CORPUS_BASE}/art-official/contract`,
     validateUrl: `${CORPUS_BASE}/api/art-official/validate`,
   }
 }
 
+function coverageFromArtifact(artifact: CorpusArtifact): CorpusBriefingCoverage {
+  const base = artifact['art-official:coverage']
+  let complete = 0
+  let partial = 0
+  let stub = 0
+  for (const work of artifact.works) {
+    const status = work.filters.reasoningStatus
+    if (status === 'complete') complete += 1
+    else if (status === 'partial') partial += 1
+    else stub += 1
+  }
+  return {
+    complete,
+    partial,
+    stub,
+    reasoningComplete: base.reasoningComplete ?? complete,
+    matched: base.matched,
+    withArtistIntent: base.withArtistIntent,
+    withVisionAnalysis: base.withVisionAnalysis,
+    withSessions: base.withSessions,
+  }
+}
+
+function throughlineBrief(entry: CorpusArtifact['throughlines'][number]): CorpusBriefingThroughline {
+  const row: CorpusBriefingThroughline = {
+    slug: entry.slug,
+    memberSlugs: entry.memberSlugs ?? [],
+    claimUrl: `${CORPUS_BASE}/statement/throughlines/${encodeURIComponent(entry.slug)}`,
+  }
+  const shortTitle = (entry as { shortTitle?: string }).shortTitle
+  if (typeof shortTitle === 'string' && shortTitle.trim()) {
+    row.shortTitle = shortTitle.trim()
+  }
+  return row
+}
+
+function sessionLedgerSummary(
+  artifact: CorpusArtifact,
+): CorpusBriefingSessionLedgerSummary {
+  return {
+    count: artifact.sessionLedger.length,
+    indexUrl: `${CORPUS_BASE}/sessions`,
+    apiUrl: `${CORPUS_BASE}/api/corpus/sessions`,
+    note: SESSION_LEDGER_NOTE,
+  }
+}
+
 export function buildCorpusBriefing(
   artifact: CorpusArtifact,
-  options: { contract: ArtOfficialContract; protocolText?: string } ,
+  options: { contract: ArtOfficialContract; protocolText?: string },
 ): CorpusBriefing {
   const protocol = options.protocolText ?? getArtOfficialProtocolDocument().text
   const works = artifact.works.map(workBriefingEnvelope)
+  const coverage = coverageFromArtifact(artifact)
 
   return {
-    'art-official:corpusVersion': artifact['art-official:corpusVersion'],
+    'art-official:totalWorks': artifact['art-official:totalPublished'] ?? artifact.works.length,
+    'art-official:coverage': coverage,
     'art-official:generatedAt': artifact['art-official:generatedAt'],
+    'art-official:corpusVersion': artifact['art-official:corpusVersion'],
     'art-official:supersedesNote': `${BRIEFING_READ_ORDER_NOTE} ${artifact['art-official:supersedesNote']}`,
     'art-official:deeperFieldsNote': DEEPER_FIELDS_NOTE,
     'art-official:protocolVersion': options.contract['art-official:protocolVersion'],
@@ -130,8 +197,8 @@ export function buildCorpusBriefing(
     protocol,
     contract: contractBrief(options.contract),
     works,
-    throughlines: artifact.throughlines,
+    throughlines: artifact.throughlines.map(throughlineBrief),
     bioEntries: artifact.bioEntries,
-    sessionLedger: artifact.sessionLedger,
+    sessionLedger: sessionLedgerSummary(artifact),
   }
 }

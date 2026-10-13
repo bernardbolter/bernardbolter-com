@@ -80,35 +80,62 @@ export type CorpusBriefingWork = {
   title: string
   series: string | null
   reasoningStatus: string | null
-  gist: string | null
-  gistSource: string | null
-  intent: string | null
-  descriptionShort: string | null
-  seriesContext: string | null
-  /** Throughline page URLs only — claim text is in `throughlines`. */
-  relatedByThroughline: string[]
-  /** Bio entry page URLs only — claim text is in `bioEntries`. */
-  relatedByBioEvent: string[]
+  /** Present on complete/partial only — stubs omit prose to stay under fetch truncation. */
+  gist?: string | null
+  gistSource?: string | null
+  intent?: string | null
+  descriptionShort?: string | null
+  seriesContext?: string | null
+}
+
+/** Throughline index row — full claim text lives at `claimUrl`. */
+export type CorpusBriefingThroughline = {
+  slug: string
+  memberSlugs: string[]
+  shortTitle?: string
+  claimUrl: string
+}
+
+/** Session ledger is a pointer in the briefing; full rows stay on the corpus artifact / HTML. */
+export type CorpusBriefingSessionLedgerSummary = {
+  count: number
+  indexUrl: string
+  apiUrl: string
+  note: string
+}
+
+export type CorpusBriefingCoverage = {
+  complete: number
+  partial: number
+  stub: number
+  reasoningComplete: number
+  matched: number
+  withArtistIntent: number
+  withVisionAnalysis: number
+  withSessions: number
 }
 
 export type CorpusBriefing = {
-  'art-official:corpusVersion': string
+  /** Identity block — always first so truncation cannot hide corpus size. */
+  'art-official:totalWorks': number
+  'art-official:coverage': CorpusBriefingCoverage
   'art-official:generatedAt': string
+  'art-official:corpusVersion': string
   'art-official:supersedesNote': string
   /** Deeper prose lives on the per-work corpus URL, not in this paste. */
   'art-official:deeperFieldsNote': string
   /**
-   * Read order: version notes → protocol → contract → corpus.
-   * Protocol + contract are inlined so a session needs one paste.
+   * Read order: identity → protocol → contract → works → throughlines/bio.
+   * Protocol + contract stay inlined so a session needs one paste.
    */
   'art-official:protocolVersion': string
   'art-official:contractVersion': string
   protocol: string
   contract: ArtOfficialContractBrief
   works: CorpusBriefingWork[]
-  throughlines: CorpusThroughlineEntry[]
+  throughlines: CorpusBriefingThroughline[]
   bioEntries: CorpusBioEntry[]
-  sessionLedger: CorpusSessionLedgerEntry[]
+  sessionLedger: CorpusBriefingSessionLedgerSummary
 }
 
 /** Slim contract projection for the briefing paste (full page at /art-official/contract). */
