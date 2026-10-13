@@ -198,14 +198,17 @@ export function buildCorpusBriefing(
     contract: contractBrief(options.contract),
     works,
     throughlines: artifact.throughlines.map(throughlineBrief),
-    bioEntries: artifact.bioEntries.map((entry) =>
-      omitEmpty({
+    bioEntries: artifact.bioEntries.map((entry) => {
+      const row: CorpusBriefing['bioEntries'][number] = {
         slug: entry.slug,
         memberSlugs: entry.memberSlugs ?? [],
-        year: entry.year,
         entryUrl: `${CORPUS_BASE}/bio/entries/${encodeURIComponent(entry.slug)}`,
-      }),
-    ),
+      }
+      if (entry.year != null && String(entry.year).trim()) {
+        row.year = entry.year
+      }
+      return row
+    }),
     sessionLedger: sessionLedgerSummary(artifact),
   }
 }
