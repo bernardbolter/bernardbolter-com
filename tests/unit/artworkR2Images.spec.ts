@@ -47,7 +47,9 @@ describe('artworkR2Images', () => {
     })
 
     expect(getArtworkImageSources(artwork, 'timeline')).toEqual({
-      src: 'https://cdn.example.com/basel-switzerland-800w.jpg',
+      src: 'https://cdn.example.com/basel-switzerland-400w.jpg',
+      srcSet:
+        'https://cdn.example.com/basel-switzerland-400w.jpg 400w, https://cdn.example.com/basel-switzerland-800w.jpg 800w',
       fallback: 'https://cdn.example.com/basel-switzerland-composite.jpg',
     })
 

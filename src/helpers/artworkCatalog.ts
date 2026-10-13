@@ -48,7 +48,7 @@ export function getArtworkImageFallbackUrl(artwork: ArtworkImageFields): string 
 export function getArtworkImagePair(
   artwork: ArtworkImageFields,
   context: ArtworkImageContext,
-): { src: string; fallback: string } | null {
+): { src: string; srcSet?: string; fallback: string } | null {
   return getArtworkImageSources(artwork, context)
 }
 

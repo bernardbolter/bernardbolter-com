@@ -106,7 +106,11 @@ export default function TimelineArtworkSlot({
               artworkContainerWidth={artworkContainerWidth}
               artworkContainerHeight={artworkContainerHeight}
               imageContext="timeline"
-              priority={index < TIMELINE_INITIAL_LOAD_COUNT}
+              // React 19 preloads every loading=eager img. Only the LCP painting
+              // is eager+high; the rest of the first row stay mounted (showImage)
+              // with loading=lazy so they still fetch in-viewport without preloads.
+              priority={index === 0}
+              lcpCandidate={index === 0}
               alt={resolveCatalogueImageAlt(artwork)}
             />
           ) : (

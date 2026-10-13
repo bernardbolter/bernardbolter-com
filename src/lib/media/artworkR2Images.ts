@@ -33,18 +33,25 @@ export const ARTWORK_DERIVATIVE_SIZES = [
 export type ArtworkDerivativeSuffix = (typeof ARTWORK_DERIVATIVE_SIZES)[number]['suffix']
 
 export type ArtworkImageSources = {
+  /** Default / fallback `src` — prefer the 1x derivative when a srcSet exists. */
   src: string
+  /** Responsive candidates, e.g. `…-400w.jpg 400w, …-800w.jpg 800w`. */
+  srcSet?: string
   fallback: string
 }
 
 const CONTEXT_SUFFIX: Record<ArtworkImageContext, ArtworkDerivativeSuffix> = {
   grid: '400w',
   'similar-works': '400w',
-  timeline: '800w',
+  // Timeline paints ~300–450 CSS px; 400w for 1x, 800w for 2x via srcSet.
+  timeline: '400w',
   slideshow: '800w',
   'artwork-page': '800w',
   'vision-page': '1200w',
 }
+
+/** Contexts that expose 400w + 800w so the browser can pick by DPR / sizes. */
+const RESPONSIVE_SRCSET_CONTEXTS = new Set<ArtworkImageContext>(['timeline'])
 
 function readPrimaryMedia(artwork: ArtworkImageSource): ImageMediaLike | null {
   const primary = artwork.primaryImage
@@ -90,8 +97,16 @@ export function getArtworkImageSources(
     return { src: fallback, fallback }
   }
 
+  const src = getArtworkImageUrl(slug, context)
+  if (!RESPONSIVE_SRCSET_CONTEXTS.has(context)) {
+    return { src, fallback }
+  }
+
+  const src400 = derivativePublicUrl(slug, '400w')
+  const src800 = derivativePublicUrl(slug, '800w')
   return {
-    src: getArtworkImageUrl(slug, context),
+    src: src400,
+    srcSet: `${src400} 400w, ${src800} 800w`,
     fallback,
   }
 }

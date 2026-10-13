@@ -14,6 +14,7 @@ import {
 type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'onError'> & {
   src: string
   fallbackSrc: string
+  srcSet?: string
   /** Fires only when both src and fallbackSrc fail to load. */
   onError?: () => void
 }
@@ -29,6 +30,7 @@ function fireLoadIfComplete(
 export default function ArtworkR2Image({
   src,
   fallbackSrc,
+  srcSet,
   onLoad,
   onError,
   ...props
@@ -60,6 +62,7 @@ export default function ArtworkR2Image({
       {...props}
       ref={imgRef}
       src={currentSrc}
+      srcSet={usedFallback ? undefined : srcSet}
       onError={handleError}
       onLoad={onLoad}
       style={props.style as CSSProperties | undefined}

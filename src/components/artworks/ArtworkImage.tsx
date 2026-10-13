@@ -20,8 +20,14 @@ interface ArtworkImageProps {
   artworkContainerWidth: number
   artworkContainerHeight: number
   useImageFactors?: boolean
+  /** Eager load (first timeline row). Does not by itself set fetchpriority. */
   priority?: boolean
-  /** R2 derivative — grid/similar 400w, timeline/slideshow/artwork page 800w, vision 1200w. */
+  /**
+   * LCP candidate — only the first visible painting. Sets fetchpriority=high so
+   * the runtime preloads this image alone (not the rest of the eager row).
+   */
+  lcpCandidate?: boolean
+  /** R2 derivative — grid/similar 400w, timeline 400w+800w srcset, etc. */
   imageContext?: ArtworkImageContext
   onLoad?: () => void
   /** Overrides title-only alt. Catalogue homepage passes the identity label line. */
@@ -34,6 +40,7 @@ export default function ArtworkImage({
   artworkContainerHeight,
   useImageFactors = false,
   priority = false,
+  lcpCandidate = false,
   imageContext = 'artwork-page',
   onLoad,
   alt,
@@ -83,13 +90,21 @@ export default function ArtworkImage({
     >
       <ArtworkR2Image
         src={imagePair.src}
+        // srcSet only on the LCP candidate — React 19 preloads every eager
+        // imageSrcSet, which re-contended the first paint with five siblings.
+        srcSet={lcpCandidate ? imagePair.srcSet : undefined}
+        sizes={
+          lcpCandidate && imagePair.srcSet ? `${Math.ceil(displayWidth)}px` : undefined
+        }
         fallbackSrc={imagePair.fallback}
         alt={imageAlt}
+        width={displayWidth}
+        height={displayHeight}
         draggable={false}
         className="h-full w-full object-contain"
-        loading={priority ? 'eager' : 'lazy'}
+        loading={priority || lcpCandidate ? 'eager' : 'lazy'}
         decoding="async"
-        fetchPriority={priority ? 'high' : 'auto'}
+        fetchPriority={lcpCandidate ? 'high' : 'auto'}
         onLoad={onLoad}
         onError={() => setFailed(true)}
         style={{ opacity: failed ? 0 : 1 }}

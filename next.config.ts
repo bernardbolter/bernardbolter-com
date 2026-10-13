@@ -48,4 +48,35 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withPayload(nextConfig, { devBundleServerPackages: false })
+/**
+ * Payload's withPayload injects Accept-CH + Critical-CH: Sec-CH-Prefers-Color-Scheme
+ * on every path for admin theme SSR. Critical-CH forces browsers to 307-retry the
+ * same URL on first navigation (~200–1000ms) before painting. Frontend theme is
+ * CSS-only (prefers-color-scheme); admin theme still resolves via cookie/default.
+ * Strip those headers; keep X-Powered-By from withPayload.
+ */
+const payloadConfig = withPayload(nextConfig, { devBundleServerPackages: false })
+
+const STRIP_HEADER_KEYS = new Set(['Accept-CH', 'Critical-CH'])
+
+export default {
+  ...payloadConfig,
+  headers: async () => {
+    const rules = (await payloadConfig.headers?.()) ?? []
+    return rules
+      .map((rule) => ({
+        ...rule,
+        headers: (rule.headers ?? []).filter((header) => {
+          if (STRIP_HEADER_KEYS.has(header.key)) return false
+          if (
+            header.key === 'Vary' &&
+            header.value === 'Sec-CH-Prefers-Color-Scheme'
+          ) {
+            return false
+          }
+          return true
+        }),
+      }))
+      .filter((rule) => (rule.headers?.length ?? 0) > 0)
+  },
+} satisfies NextConfig

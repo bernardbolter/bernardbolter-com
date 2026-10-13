@@ -492,6 +492,16 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 30 — Homepage first-paint: Critical-CH 307 + timeline LCP (2026-10-13)
+
+**307 on `/` (normal path, not query-only).** Not Next redirects, not CF. Payload `withPayload` injects `Accept-CH` + `Critical-CH: Sec-CH-Prefers-Color-Scheme` on `/:path*` (admin theme via `getRequestTheme`). Browsers without the hint 307-retry the same URL before first paint (~200–1000ms). Curl never sees it. **Fix:** `next.config.ts` strips those three headers after `withPayload` (keeps `X-Powered-By`). Admin theme still resolves via cookie/default. Live needs deploy.
+
+**LCP image.** Timeline context now serves `400w` + `800w` srcSet; LCP candidate (index 0) gets srcSet/sizes + `fetchpriority=high` (one preload). React 19 preloads every `loading=eager` img, so indices 1–5 stay mounted with `loading=lazy` (in-viewport fetch, no preload). Venice 400w ≈ 50KB vs 800w ≈ 175KB.
+
+**Consolidation Part 3 (RSC flight) — attempted, reverted.** Provider flight ≈195KB artworks + ≈39KB throughline/bio markers. A verso registry (server bodies as children of a client item, Map by slug) put claim text into the flight only — **0 claims in HTML body**, breaking the identity SSR rule. Root cause: client `HomepageVersoItem` still serialises server children into the flight even when it returns `null`; timeline never mounted them into body HTML. Correct shape (not this pass): **server-mapped** timeline/grid slots where each `ClientFlipShell` receives `<ServerVerso/>` as in-place children — not a registry Map. Deviations: none vs diagnosis; Part 3 blocked on architecture.
+
+---
+
 ## Part 29 — Verso connector chips + claim overlay (2026-10-12)
 
 Connector links are chips (flowing wrap; Throughlines / Biography groups). Chip opens an SSR'd overlay inside the inset card: short title, full claim, related works, link to the connector page. Overlay covers the record bar while open. Dismiss: close control, tap card outside overlay (does not flip), Escape (overlay first, then flip). Claims for every linked work are in the homepage HTML at load — no fetch on click.
