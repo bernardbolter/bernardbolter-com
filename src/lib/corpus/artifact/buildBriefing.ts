@@ -198,7 +198,14 @@ export function buildCorpusBriefing(
     contract: contractBrief(options.contract),
     works,
     throughlines: artifact.throughlines.map(throughlineBrief),
-    bioEntries: artifact.bioEntries,
+    bioEntries: artifact.bioEntries.map((entry) =>
+      omitEmpty({
+        slug: entry.slug,
+        memberSlugs: entry.memberSlugs ?? [],
+        year: entry.year,
+        entryUrl: `${CORPUS_BASE}/bio/entries/${encodeURIComponent(entry.slug)}`,
+      }),
+    ),
     sessionLedger: sessionLedgerSummary(artifact),
   }
 }

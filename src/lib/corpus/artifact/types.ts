@@ -134,7 +134,13 @@ export type CorpusBriefing = {
   contract: ArtOfficialContractBrief
   works: CorpusBriefingWork[]
   throughlines: CorpusBriefingThroughline[]
-  bioEntries: CorpusBioEntry[]
+  /** Bio index rows — full entry text at `entryUrl`. */
+  bioEntries: Array<{
+    slug: string
+    memberSlugs: string[]
+    year?: string | null
+    entryUrl: string
+  }>
   sessionLedger: CorpusBriefingSessionLedgerSummary
 }
 
