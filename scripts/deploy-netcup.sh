@@ -39,12 +39,16 @@ git pull --ff-only origin main
 
 echo "==> build to ${STAGING_DIR} (live ${ACTIVE_DIR} untouched)"
 rm -rf "$STAGING_DIR"
-# tsconfig.json hard-includes .next/types/**/*.ts. A staging build writes
-# fresh stubs under .next-staging/types, but `next build` still typechecks the
-# live .next/types validators — which reference pages removed since the last
-# swap and fail the build (e.g. [slug]/record/page.js after route retirement).
-# Runtime does not need .next/types; drop them for the staging typecheck window.
+# tsconfig.json hard-includes .next/types/**/*.ts. Staging writes correct
+# stubs under .next-staging/types, but tsc still loads live .next/types —
+# which keep deleted page modules from the previous swap and fail the build
+# (e.g. [slug]/record/page.js after route retirement). Pre-generate staging
+# route types and mirror them into the tsconfig path before `next build`.
 rm -rf "${ACTIVE_DIR}/types"
+NEXT_DIST_DIR="$STAGING_DIR" npx next typegen
+mkdir -p "${ACTIVE_DIR}"
+rm -rf "${ACTIVE_DIR}/types"
+cp -a "${STAGING_DIR}/types" "${ACTIVE_DIR}/types"
 NEXT_DIST_DIR="$STAGING_DIR" npm run build
 
 if [[ ! -f "${STAGING_DIR}/BUILD_ID" && ! -f "${STAGING_DIR}/build-manifest.json" && ! -d "${STAGING_DIR}/server" ]]; then
