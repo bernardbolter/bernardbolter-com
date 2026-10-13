@@ -62,6 +62,20 @@ export type CatalogueClientRow = {
   descriptionShort?: string | null
   intent?: string | null
   primaryImageAltText?: string | null
+  /**
+   * Verso page 3 — public provenance/exhibition projection only.
+   * Built server-side; never carries evidenceBasis or private ownership fields.
+   */
+  versoRecord?: {
+    provenanceSummary: string | null
+    provenanceClaims: Array<{ claim: string; inferred: boolean }>
+    exhibitions: Array<{
+      year: number
+      title: string
+      href: string | null
+      venue: string | null
+    }>
+  } | null
 }
 
 /** @deprecated Prefer CatalogueClientRow — alias kept for call-site churn. */

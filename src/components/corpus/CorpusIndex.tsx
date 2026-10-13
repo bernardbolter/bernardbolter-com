@@ -2,7 +2,6 @@ import Link from 'next/link'
 
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import CorpusFiltersClearLink from '@/components/corpus/CorpusFiltersClearLink'
-import CorpusLadder from '@/components/corpus/CorpusLadder'
 import type {
   ArtifactCorpusIndexRow,
   ArtifactSeriesOption,
@@ -32,13 +31,12 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
       closeClassName="bio__close-container"
     >
       <div className="bio__content-container corpus-page">
-        <CorpusLadder current="corpus" />
         <p className="bio__tagline">
           {isTier2 ? 'Filtered orientation' : 'Archive orientation'}
         </p>
         <p className="bio__masonry-caption corpus-page__lede">
-          A compact index for triage — not a discovery engine for cross-work patterns. Drill into
-          Vision, Record, then Sessions for how a work was reasoned.
+          A compact index for triage — not a discovery engine for cross-work patterns. Open a work
+          for the full record and sessions; vision analysis has its own page when present.
         </p>
 
         <form className="corpus-page__filters" method="get" action="/corpus">
@@ -135,14 +133,14 @@ export default function CorpusIndex({ rows, seriesList, filters }: Props) {
                     <p className="bio__masonry-caption corpus-page__intent">{intentLine}</p>
                   ) : null}
                   <p className="corpus-page__links">
+                    <Link href={`/${row.slug}`} className="still-being-written__session-link">
+                      Artwork
+                    </Link>
                     <Link href={`/${row.slug}/vision`} className="still-being-written__session-link">
                       Vision
                     </Link>
-                    <Link href={`/${row.slug}/record`} className="still-being-written__session-link">
-                      Record
-                    </Link>
                     <Link
-                      href={`/sessions?artwork=${encodeURIComponent(row.slug)}`}
+                      href={`/${row.slug}#sessions`}
                       className="still-being-written__session-link"
                     >
                       Sessions

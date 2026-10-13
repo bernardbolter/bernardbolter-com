@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
 import SessionTranscript from '@/components/shared/SessionTranscript'
@@ -115,7 +114,6 @@ export default async function PublicSessionPage({ params }: PageProps) {
     completedAt: session.completedAt,
   })
 
-  const ladderSlug = primary?.slug ?? mentioned[0]?.slug ?? null
   const baseUrl = getSiteBaseUrl()
   const jsonLd = buildSessionJsonLd(session, baseUrl)
   const tier5Href = session.sessionId
@@ -135,7 +133,6 @@ export default async function PublicSessionPage({ params }: PageProps) {
         closeClassName="bio__close-container"
       >
         <div className="bio__content-container">
-          <CorpusLadder slug={ladderSlug} current="sessions" />
           <h1 className="bio__tagline">{pageTitle}</h1>
           <p className="bio__masonry-caption">{session.sessionType.replace(/-/g, ' ')}</p>
           {completedLabel ? (

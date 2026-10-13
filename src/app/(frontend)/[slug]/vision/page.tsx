@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import VisionPage from '@/components/artwork/VisionPage'
-import CorpusLadder from '@/components/corpus/CorpusLadder'
+import CorpusBackLink from '@/components/corpus/CorpusBackLink'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
 import {
@@ -108,7 +108,7 @@ export default async function Page({ params }: Props) {
       >
         <div className="bio-page__container">
           <div className="corpus-ladder-wrap">
-            <CorpusLadder slug={slug} current="vision" />
+            <CorpusBackLink />
           </div>
           <VisionPage
             artwork={artwork}

@@ -540,6 +540,21 @@ Superseded-in-place banners on session-protocol, field-SoT, cursor-followup, dup
 
 ---
 
+## Part 31 — Artwork block peel, grid scan captions, paged verso (2026-10-13)
+
+**1. Peel + icon.** Timeline front text label (“Details for {title}”) removed. Desktop hover peels ≈6° on the existing single-slot `.artwork-block--flip-3d` mount (not on all 220). Touch / `prefers-reduced-motion`: corner `RotateFlipSvg` (44px hit), no peel. Accessible name survives on the flip button (`aria-label="Details for {title}"`); Enter/Space still flip.
+
+**2. Grid captions.** `ArtworkIdentityLabel` gains `fields: 'full' | 'scan'`. Grid mounts `scan` (title + series only). Year / medium / dimensions remain on every timeline verso (SSR path for `/`). Timeline front still has no caption.
+
+**3. Paged verso.** Three SSR pages: (1) identity + description, (2) throughline/bio chips + claim overlay, (3) provenance / exhibitions / catalogue status. Record bar on every page. Dots always; arrows on fine pointer; swipe on touch; ←/→ when flipped and no overlay. Escape still overlay → front (pages do not consume Escape). 10px record-bar dead zone kept. Page nav clicks `stopPropagation` so they never flip.
+
+**Provenance / exhibitions on homepage — measured, do not deploy until Bernard OK.** Reversal of homepage-rebuild-spec §2.3 (“explicitly out of scope”). Catalogue fetch uses `overrideAccess: true` only to project public `versoRecord` (claims without `evidenceBasis`; slim exhibition lines). Coverage today: ~6 works with provenance, ~6 with exhibitions. **HTML `/` delta: ~992 KB → ~1.32–1.35 MB (+≈330–360 KB).** Nearly all of that is paging chrome × 220, not claim text. Content JSON for page 3 is a few KB. Spec gate: report before deploy — **stopped here.**
+
+**4.** `OPEN_THE_RECORD_LABEL` = “Everything about the work →”.
+
+
+---
+
 ## Part 30 — Homepage first-paint: Critical-CH 307 + timeline LCP (2026-10-13)
 
 **307 on `/` (normal path, not query-only).** Not Next redirects, not CF. Payload `withPayload` injects `Accept-CH` + `Critical-CH: Sec-CH-Prefers-Color-Scheme` on `/:path*` (admin theme via `getRequestTheme`). Browsers without the hint 307-retry the same URL before first paint (~200–1000ms). Curl never sees it. **Fix:** `next.config.ts` strips those three headers after `withPayload` (keeps `X-Powered-By`). Admin theme still resolves via cookie/default. Live needs deploy.
@@ -596,6 +611,23 @@ Homepage identity fields (title, year, medium, dimensions, series) extracted to 
 - 7 bio entries titled/renamed (2026-10-12): Utrecht pair merged — fuller `-2` text kept under `leaving-utrecht`; shorter original + `-2` (+ prior long slugs) 308 to it. No other collision-suffixed (`-2`…`-99`) slugs remain on bio or throughlines.
 - Note: `linkedArtworkSlugs` is still empty on throughlines/bios — Related Patterns / verso connectors have nothing to attach until links are populated.
 
+
+---
+
+## Part 32 — Retire /{slug}/record and /{slug}/sessions (2026-10-13)
+
+**What changed.** Those two per-work HTML surfaces were redundant after Part 19 folded transcripts into `/{slug}` and made `/record` a plain mirror with canonical already pointing at `/{slug}`.
+
+**Decided, implemented.**
+- `/{slug}/record` → 308 `/{slug}` (one hop).
+- `/{slug}/sessions` and `/{slug}/session` → 308 `/{slug}#sessions` (one hop each; singular no longer chains through plural).
+- Redirects live in middleware so the `#sessions` fragment survives (next.config strips hashes).
+- Sessions block on `/{slug}` has `id="sessions"`. Keep `/vision`, `/sessions`, `/sessions/{id}`.
+- Removed the Corpus / Artwork / Vision / Record / Sessions ladder; `/{slug}` and `/vision` get a plain Corpus back-link (filter query restored).
+- Sitemap drops per-work `/record` locs (~220). Per-work `/sessions` were never sitemap’d.
+- JSON-LD / urlTemplates `sessionsPage` → `/{slug}#sessions`. Tier 5 map description notes the HTML anchor. `llms.txt` updated (also `artism:` → `art-official:` in that file).
+
+**Not this pass.** Nightly corpus build link-check (still only specified in `archive-model-revision-brief.md` Phase 3 — no script in repo yet). Static audit after this change: no remaining `href`s to `/{slug}/record` or `/{slug}/sessions` in `src`/`tests`/`public` (API `/api/corpus/.../sessions` kept).
 
 ---
 

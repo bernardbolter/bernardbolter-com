@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 import ArtworkSessionsSection from '@/components/artwork/ArtworkSessionsSection'
 import ArtworkVisionAnalysisCard from '@/components/artwork/ArtworkVisionAnalysisCard'
 import Layer0Image from '@/components/artwork/Layer0Image'
@@ -9,7 +7,7 @@ import Layer2StatusAndProvenance from '@/components/artwork/Layer2StatusAndProve
 import Layer3ArtistAccount from '@/components/artwork/Layer3ArtistAccount'
 import Layer4History from '@/components/artwork/Layer4History'
 import SeriesCard from '@/components/artwork/SeriesCard'
-import CorpusLadder from '@/components/corpus/CorpusLadder'
+import CorpusBackLink from '@/components/corpus/CorpusBackLink'
 import CorpusMachineLinks from '@/components/corpus/CorpusMachineLinks'
 import {
   findRelatedBioEvents,
@@ -38,15 +36,9 @@ import './vision-page.css'
 export type ArtworkPageProps = {
   artwork: Artwork
   artist: Artist | null
-  /** Plain-text /record surface: same fields, no hero/series chrome. */
-  variant?: 'default' | 'plain'
 }
 
-export default async function ArtworkPage({
-  artwork,
-  artist,
-  variant = 'default',
-}: ArtworkPageProps) {
+export default async function ArtworkPage({ artwork, artist }: ArtworkPageProps) {
   const artworkId = typeof artwork.id === 'number' ? artwork.id : null
   const artworkSlug = artwork.slug?.trim() || ''
   const [similarWorksResult, hasClipEmbedding, editionTierLabelMaps, sessionGroups] =
@@ -73,8 +65,6 @@ export default async function ArtworkPage({
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
   const seriesColor = getSeriesColor(seriesSlug)
   const latestAnalysis = preferredVisionAnalysis(artwork)
-  const ladderCurrent = variant === 'plain' ? 'record' : 'artwork'
-  const isPlain = variant === 'plain'
 
   const recordColumn = (
     <>
@@ -122,31 +112,12 @@ export default async function ArtworkPage({
       </section>
     ) : null
 
-  if (isPlain) {
-    return (
-      <article className="artwork-plain-record">
-        <CorpusLadder slug={artwork.slug} current={ladderCurrent} />
-        <h1>{artwork.title}</h1>
-        <p>
-          Plain-text copy of the artwork record. Canonical page:{' '}
-          <Link href={`/${artwork.slug}`}>{`/${artwork.slug}`}</Link>.
-        </p>
-        {recordColumn}
-        {proseColumn}
-        <div className="artwork-page__sessions-and-vision">
-          {sessionsBlock}
-          {visionBlock}
-        </div>
-      </article>
-    )
-  }
-
   return (
     <article
       className={`artwork-page artwork-image__main-scroll-wrapper${hasProseColumn ? '' : ' artwork-page--single-column'}`}
     >
       <div className="corpus-ladder-wrap">
-        <CorpusLadder slug={artwork.slug} current="artwork" />
+        <CorpusBackLink />
       </div>
 
       {showVideo ? (

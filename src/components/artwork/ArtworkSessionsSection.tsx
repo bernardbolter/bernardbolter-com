@@ -42,7 +42,11 @@ export default function ArtworkSessionsSection({
   if (primarySessions.length === 0 && mentionedSessions.length === 0) return null
 
   return (
-    <section className="artwork-page__layer artwork-page__sessions" aria-label="Sessions">
+    <section
+      id="sessions"
+      className="artwork-page__layer artwork-page__sessions"
+      aria-label="Sessions"
+    >
       <div className="artwork-page__inner">
         {primarySessions.length > 0 ? (
           <>
@@ -95,7 +99,7 @@ export default function ArtworkSessionsSection({
 
         <p className="corpus-page__links" style={{ marginTop: '1rem' }}>
           <Link
-            href={`/${artworkSlug}/sessions`}
+            href={`/sessions?artwork=${encodeURIComponent(artworkSlug)}`}
             className="still-being-written__session-link"
           >
             All sessions for this work

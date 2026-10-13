@@ -54,7 +54,8 @@ export function buildTierMap(
     urlTemplate: `${baseUrl}/api/corpus/{slug}/sessions`,
     scope: 'work',
     depth: 'sessions',
-    description: 'session transcripts — how it came to be known',
+    description:
+      'session transcripts — how it came to be known (HTML copy on /{slug}#sessions)',
   }
 
   return map

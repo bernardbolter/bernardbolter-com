@@ -866,26 +866,35 @@ h6 {
   line-height: 0;
 }
 
-.artwork-block__flip-affordance {
+/* Touch / reduced-motion flip glyph — no text label on the painting. */
+.artwork-block__flip-icon {
   position: absolute;
-  right: 0.35rem;
-  bottom: 0.35rem;
+  right: 0;
+  bottom: 0;
   z-index: 2;
-  display: inline-block;
-  padding: 0.15rem 0.4rem;
-  font-family: var(--font-barlow-condensed), sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: 0.04em;
-  text-transform: lowercase;
-  color: var(--title-text-dark);
-  background: color-mix(in srgb, var(--title-light) 88%, transparent);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: color-mix(in srgb, var(--title-text-dark) 42%, transparent);
   pointer-events: none;
 }
 
-.artwork-block.is-flipped .artwork-block__flip-affordance {
+.artwork-block.is-flipped .artwork-block__flip-icon {
   visibility: hidden;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .artwork-block__flip-icon {
+    display: flex;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artwork-block__flip-icon {
+    display: flex;
+  }
 }
 
 /* Shared identity fields — one markup source for block / grid / title overlay. */
@@ -1050,6 +1059,18 @@ h6 {
   display: flex;
   flex-direction: column;
   text-align: left;
+  touch-action: pan-y;
+}
+
+.artwork-verso__page {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.artwork-verso__page[hidden] {
+  display: none;
 }
 
 .artwork-verso__body-inner {
@@ -1057,6 +1078,126 @@ h6 {
   width: 100%;
   margin-block: auto;
   padding: 0.55rem 0.65rem 0.35rem;
+}
+
+.artwork-verso__page-empty {
+  margin: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--verso-muted, var(--title-text));
+}
+
+.artwork-verso__record-section {
+  margin: 0 0 0.55rem;
+}
+
+.artwork-verso__claim-list,
+.artwork-verso__exhibition-list {
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.artwork-verso__claim-item,
+.artwork-verso__exhibition-item {
+  margin: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--verso-ink, var(--title-text-dark));
+}
+
+.artwork-verso__claim-inferred,
+.artwork-verso__exhibition-venue {
+  color: var(--verso-muted, var(--title-text));
+}
+
+.artwork-verso__exhibition-item a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
+.artwork-verso__exhibition-year {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-weight: 500;
+}
+
+.artwork-verso__page-nav {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.45rem 0.1rem;
+}
+
+.artwork-verso__page-dots {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.artwork-verso__page-dot {
+  position: relative;
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.artwork-verso__page-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--verso-ink) 35%, transparent);
+  background: transparent;
+}
+
+.artwork-verso__page-dot.is-active::before {
+  background: var(--verso-ink);
+  border-color: var(--verso-ink);
+}
+
+.artwork-verso__page-arrow {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--verso-muted, var(--title-text));
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.artwork-verso__page-arrow:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .artwork-verso__page-arrow {
+    display: inline-flex;
+  }
 }
 
 .artwork-verso__connectors {
@@ -1332,7 +1473,7 @@ h6 {
   }
 }
 
-/* Single-slot 3D flip — only when `.artwork-block--flip-3d` is mounted. */
+/* Single-slot 3D flip / peel — only when `.artwork-block--flip-3d` is mounted. */
 .artwork-block--flip-3d {
   perspective: 1400px;
 }
@@ -1341,6 +1482,12 @@ h6 {
   transform: rotateY(0deg);
   transform-style: preserve-3d;
   transition: transform 0.55s ease;
+}
+
+/* Hover peel — page lifting a few degrees, not a flip in progress. */
+.artwork-block--flip-3d.is-peeling:not(.is-flipped) .artwork-block__scene {
+  transform: rotateY(-6deg);
+  transition: transform 0.22s ease-out;
 }
 
 .artwork-block--flip-3d.is-flipped .artwork-block__scene {
@@ -1366,6 +1513,13 @@ h6 {
 
 .artwork-block--flip-3d.is-flipped .artwork-block__face--back {
   pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artwork-block--flip-3d.is-peeling:not(.is-flipped) .artwork-block__scene {
+    transform: none;
+    transition: none;
+  }
 }
 
 .artwork-block__verso-title {
@@ -3002,17 +3156,13 @@ h6 {
   }
 }
 
-/* Corpus tier ladder + index */
+/* Corpus back-link on artwork / vision pages */
 .corpus-ladder-wrap {
   padding: 0.75rem 1rem 0;
   max-width: 42rem;
 }
 
-.corpus-ladder {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.15rem 0;
+.corpus-back-link {
   margin: 0 0 1rem;
   font-family: var(--font-barlow), sans-serif;
   font-size: 10px;
@@ -3021,27 +3171,13 @@ h6 {
   color: var(--text-muted);
 }
 
-.corpus-ladder__sep {
-  margin: 0 0.35rem;
-  opacity: 0.5;
-}
-
-.corpus-ladder__link {
+.corpus-back-link__a {
   color: inherit;
   text-decoration: none;
 }
 
-.corpus-ladder__link:hover {
+.corpus-back-link__a:hover {
   opacity: 0.75;
-}
-
-.corpus-ladder__current {
-  color: var(--text-dark);
-  opacity: 0.85;
-}
-
-.corpus-ladder__muted {
-  opacity: 0.4;
 }
 
 .corpus-page__lede {

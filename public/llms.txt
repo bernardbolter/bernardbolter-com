@@ -1,10 +1,10 @@
 # Bernard Bolter — Artist Archive
 
-> A machine-readable archive of Bernard Bolter's visual art practice (1993–present), structured as a five-tier corpus so agents can choose how deep to go per question. Not a commercial site — a personal catalogue raisonné and a reference implementation of the `artism:` schema.org extension for artist archives.
+> A machine-readable archive of Bernard Bolter's visual art practice (1993–present), structured as a five-tier corpus so agents can choose how deep to go per question. Not a commercial site — a personal catalogue raisonné and a reference implementation of the `art-official:` schema.org extension for artist archives.
 
 ## Start here
 
-- [Corpus index](https://bernardbolter.com/api/corpus/index) — Tier 1. Paginated JSON list of all published works: title, slug, year, series, and a coverage signal (`artism:hasThroughlineConnections`) per entry. Start here for corpus-wide questions.
+- [Corpus index](https://bernardbolter.com/api/corpus/index) — Tier 1. Paginated JSON list of all published works: title, slug, year, series, and a coverage signal (`art-official:hasThroughlineConnections`) per entry. Start here for corpus-wide questions.
 - [Corpus index, survey depth](https://bernardbolter.com/api/corpus/index?depth=survey) — Tier 2. Same set, more per-entry context, still corpus-wide in scope.
 
 ## Per-artwork depth (Tiers 3–5)
@@ -12,16 +12,16 @@
 Every artwork's Tier 1/2 entry and Tier 4 record carries a `tierMap` / `availableTiers` object showing which of the following actually exist for that specific work — not every artwork has all five tiers populated.
 
 - **Tier 3 — Vision analysis.** `https://bernardbolter.com/{slug}/vision` — HTML only, no JSON endpoint. Present only when the artwork has at least one machine vision analysis on record.
-- **Tier 4 — Full record.** `https://bernardbolter.com/api/corpus/{slug}` — JSON. Curated fields: intent, making, provenance, series context, and — when present — `artism:relatedByThroughline` / `artism:relatedByBioEvent` (lateral links, see below).
+- **Tier 4 — Full record.** `https://bernardbolter.com/api/corpus/{slug}` — JSON. Curated fields: intent, making, provenance, series context, and — when present — `art-official:relatedByThroughline` / `art-official:relatedByBioEvent` (lateral links, see below).
 - **Tier 5 — Session transcript.** `https://bernardbolter.com/api/corpus/{slug}/sessions` — JSON. The cataloguing dialogue itself, when reasoning is complete. This is the only place the artist's own words appear verbatim; Tier 4 prose is a framework paraphrase, not a direct quote.
 
-The human-facing artwork page at `https://bernardbolter.com/{slug}` renders the Tier 4 content as prose and links onward to Tiers 3 and 5 directly — a reliable entry point if arriving via search rather than the JSON API.
+The human-facing artwork page at `https://bernardbolter.com/{slug}` renders the Tier 4 content as prose, inlines primary session transcripts (anchor `#sessions`), and links to Tier 3 when present. Retired HTML mirrors `/{slug}/record` and `/{slug}/sessions` 308 to `/{slug}` and `/{slug}#sessions` respectively. Canonical session crumbs remain at `/sessions` and `/sessions/{id}`.
 
 ## Lateral connections — not every question needs more depth, some need more breadth
 
 Artworks are not only reachable by drilling deeper into one record. Two lateral mechanisms connect a single artwork to others:
 
-- **Related Patterns** (`artism:relatedByThroughline`, `artism:relatedByBioEvent` on Tier 4) — links to thematic or biographical threads that recur across multiple works, e.g. [Statement throughlines](https://bernardbolter.com/statement) and [Bio timeline entries](https://bernardbolter.com/bio). Each throughline/bio-event page lists every artwork connected to that pattern.
+- **Related Patterns** (`art-official:relatedByThroughline`, `art-official:relatedByBioEvent` on Tier 4) — links to thematic or biographical threads that recur across multiple works, e.g. [Statement throughlines](https://bernardbolter.com/statement) and [Bio timeline entries](https://bernardbolter.com/bio). Each throughline/bio-event page lists every artwork connected to that pattern.
 - **Visual Similarity** — embedding-based visual resemblance to other works, surfaced directly on artwork pages and Tier 4 records.
 
 A throughline or bio-event page is itself a useful entry point for a question like "what recurs across this artist's work" — start there rather than assembling the pattern from individual artwork pages.

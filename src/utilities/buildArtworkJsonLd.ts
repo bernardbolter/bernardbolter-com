@@ -304,7 +304,7 @@ export function buildArtworkJsonLd(
   if (includeTraversal && slug) {
     doc['art-official:indexUrl'] = `${baseUrl}/api/corpus/index`
     doc['art-official:sessionsUrl'] = `${baseUrl}/api/corpus/${slug}/sessions`
-    doc['art-official:sessionsPageUrl'] = `${baseUrl}/sessions?artwork=${encodeURIComponent(slug)}`
+    doc['art-official:sessionsPageUrl'] = `${baseUrl}/${slug}#sessions`
     Object.assign(doc, buildScopeDepthEnvelope('record'))
     doc['art-official:availableTiers'] = computeAvailableTiers(artwork, sessionCount)
     doc['art-official:tierMap'] = buildTierMap(baseUrl, {

@@ -214,6 +214,26 @@ export function MenuSvg() {
   )
 }
 
+/** Flip/rotate affordance for timeline peel — Tabler-style rotate glyph. */
+export function RotateFlipSvg({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M19.95 11a8 8 0 1 0 -.5 4m.5 5v-5h-5" />
+    </svg>
+  )
+}
+
 export function PlayButtonSvg() {
   return (
     <svg viewBox="0 0 52 50" aria-hidden="true">
