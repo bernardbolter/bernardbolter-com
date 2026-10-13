@@ -113,7 +113,7 @@ export const sessionAfterChange: CollectionAfterChangeHook<Session> = async ({
     paths.push(`/sessions/${sid}`)
   }
   for (const slug of slugs) {
-    paths.push(`/${slug}`, `/${slug}/sessions`, `/${slug}/record`, `/sessions?artwork=${slug}`)
+    paths.push(`/${slug}`, `/sessions?artwork=${slug}`)
   }
 
   revalidateArchive({ tags: ['artworks'], paths })

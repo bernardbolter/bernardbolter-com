@@ -69,7 +69,7 @@ describe('buildCorpusIndexResponse', () => {
       record: `${baseUrl}/api/corpus/{slug}`,
       visionPage: `${baseUrl}/{slug}/vision`,
       sessions: `${baseUrl}/api/corpus/{slug}/sessions`,
-      sessionsPage: `${baseUrl}/sessions?artwork={slug}`,
+      sessionsPage: `${baseUrl}/{slug}#sessions`,
     })
     expect(response['art-official:tierMap']).toHaveProperty('1')
     expect(response['art-official:tierMap']).toHaveProperty('3')

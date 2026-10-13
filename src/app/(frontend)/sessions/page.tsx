@@ -4,7 +4,6 @@ import { getPayload } from 'payload'
 import { cache } from 'react'
 import config from '@payload-config'
 
-import CorpusLadder from '@/components/corpus/CorpusLadder'
 import { DocumentScrollShell } from '@/components/layout/DocumentScrollShell'
 import SessionGlossLine from '@/components/shared/SessionGlossLine'
 import {
@@ -212,8 +211,6 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
 export default async function SessionsIndexPage({ searchParams }: PageProps) {
   const raw = await searchParams
   const { filters, hasFilters, rows, seriesList } = await loadSessionsIndex(raw)
-  const ladderSlug = filters.artwork ?? null
-
   return (
     <div className="bio-page__container">
       <DocumentScrollShell
@@ -223,7 +220,6 @@ export default async function SessionsIndexPage({ searchParams }: PageProps) {
         closeClassName="bio__close-container"
       >
         <div className="bio__content-container corpus-page">
-          <CorpusLadder slug={ladderSlug} current="sessions" />
           <p className="bio__tagline">
             {filters.artwork
               ? `Sessions for ${filters.artwork}`

@@ -10,7 +10,7 @@ import type { FilterCategory } from '@/types/frontend'
 export const VERSO_MIN_WIDTH_PX = 320
 
 /** Record CTA on timeline/grid verso — single string for the bottom bar. */
-export const OPEN_THE_RECORD_LABEL = 'See the whole painting →'
+export const OPEN_THE_RECORD_LABEL = 'Everything about the work →'
 
 const ALT_MAX_CHARS = 125
 

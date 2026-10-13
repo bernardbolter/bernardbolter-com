@@ -9,6 +9,7 @@ import type {
   CatalogueClientSeries,
   CatalogueClientVideoClip,
 } from '@/types/frontend'
+import { buildVersoRecordExtras } from '@/lib/artwork/versoRecordExtras'
 import { withDbRetry } from '@/lib/payload/withDbRetry'
 
 const getPayloadInstance = async () => getPayload({ config })
@@ -17,6 +18,8 @@ const getPayloadInstance = async () => getPayload({ config })
  * Fields required by the home grid, timeline, filters, verso, and Info menu.
  * Omits status / yearCompleted / dateDisplay (fetched for where/recompute only —
  * never read by catalogue UI). Media relations are slimmed post-fetch.
+ * Provenance/exhibition keys are selected only to project public versoRecord —
+ * never forwarded raw onto CatalogueClientRow.
  */
 const CATALOGUE_ARTWORK_SELECT = {
   id: true,
@@ -49,6 +52,16 @@ const CATALOGUE_ARTWORK_SELECT = {
   descriptionShort: true,
   intent: true,
   primaryImageAltText: true,
+  provenanceOriginKnown: true,
+  provenanceConfidenceLayer: {
+    claim: true,
+    confidenceLevel: true,
+  },
+  // Join fields only accept `true` in ArtworksSelect — slim in toCatalogueClientRow.
+  events: true,
+  exhibitionHistory: {
+    event: true,
+  },
 } as const
 
 export type LayoutProviderArtworks = CatalogueClientRow[]
@@ -87,6 +100,7 @@ function slimVideoClips(value: Artwork['videos']): CatalogueClientVideoClip[] | 
 /**
  * Map a Payload artwork doc to the slim client row.
  * Post-fetch (not denylist select) — same pattern as stripEmbeddings.
+ * Provenance layer is projected to public versoRecord only (no evidenceBasis).
  */
 export function toCatalogueClientRow(artwork: Artwork): CatalogueClientRow {
   return {
@@ -120,6 +134,7 @@ export function toCatalogueClientRow(artwork: Artwork): CatalogueClientRow {
     descriptionShort: artwork.descriptionShort ?? null,
     intent: artwork.intent ?? null,
     primaryImageAltText: artwork.primaryImageAltText ?? null,
+    versoRecord: buildVersoRecordExtras(artwork),
   }
 }
 
@@ -136,6 +151,9 @@ export async function fetchCatalogueArtworksWithPayload(
       }
     : { status: { equals: 'published' } }
 
+  // overrideAccess true so provenanceConfidenceLayer (privateFieldAccess) can be
+  // read for public verso projection — same pattern as getArtworkForPage.
+  // toCatalogueClientRow never forwards the raw layer or evidenceBasis.
   const result = await payload.find({
     collection: 'artworks',
     where,
@@ -143,7 +161,7 @@ export async function fetchCatalogueArtworksWithPayload(
     depth: 1,
     limit: 500,
     select: CATALOGUE_ARTWORK_SELECT,
-    overrideAccess: false,
+    overrideAccess: true,
   })
 
   return result.docs.map((doc) => toCatalogueClientRow(doc as Artwork))

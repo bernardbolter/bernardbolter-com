@@ -26,8 +26,9 @@ const nextConfig: NextConfig = {
       { source: '/artworks', destination: '/', permanent: true },
       { source: '/artworks/:slug', destination: '/:slug', permanent: true },
       { source: '/:slug/embedding', destination: '/:slug/vision', permanent: true },
-      // Agents guess singular /session; canonical index is plural.
-      { source: '/:slug/session', destination: '/:slug/sessions', permanent: true },
+      // /{slug}/sessions and /{slug}/session → /{slug}#sessions via route handlers
+      // (next.config strips hash fragments). /record also has a route handler.
+      { source: '/:slug/record', destination: '/:slug', permanent: true },
     ]
   },
   images: {

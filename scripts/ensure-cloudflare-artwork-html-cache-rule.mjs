@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Ensure a Cloudflare Cache Rule caches public artwork HTML:
- *   /{slug}, /{slug}/record, /{slug}/vision
+ *   /{slug}, /{slug}/vision
  * Bypasses /admin, /studio, /preview (separate rule, higher priority).
  *
  * Requires CLOUDFLARE_ZONE_ID + CLOUDFLARE_API_TOKEN (Zone → Cache Rules Edit).
@@ -57,7 +57,6 @@ const cacheRule = {
     and not starts_with(http.request.uri.path, "/_next/")
     and (
       http.request.uri.path matches "^/[^/]+$"
-      or http.request.uri.path matches "^/[^/]+/record$"
       or http.request.uri.path matches "^/[^/]+/vision$"
     )
   )`.replace(/\s+/g, ' ').trim(),

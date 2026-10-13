@@ -170,6 +170,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
           <ArtworkIdentityLabel
             artwork={artwork}
             filterSeries={state.filterSeries}
+            fields="scan"
             seriesAccentPlacement="leading"
             renderSeriesAccent={(resolved) => (
               <span

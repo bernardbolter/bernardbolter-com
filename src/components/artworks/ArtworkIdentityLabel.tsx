@@ -27,6 +27,11 @@ export type ArtworkIdentityLabelProps = {
   seriesAccentPlacement?: 'series-line' | 'leading'
   /** When false, omit title (verso keeps its own h2). Default true. */
   includeTitle?: boolean
+  /**
+   * `full` — title → year → medium → dimensions → series (verso, title overlay).
+   * `scan` — title + series only (grid wall caption).
+   */
+  fields?: 'full' | 'scan'
 }
 
 /**
@@ -41,11 +46,13 @@ export default function ArtworkIdentityLabel({
   renderSeriesAccent,
   seriesAccentPlacement = 'series-line',
   includeTitle = true,
+  fields = 'full',
 }: ArtworkIdentityLabelProps) {
   const title = artwork.title?.trim() || artwork.slug
-  const year = artwork.yearCreated ? String(artwork.yearCreated) : ''
-  const medium = resolveMediumLabel(artwork)
-  const dimensions = formatArtworkDimensionLines(artwork)
+  const scan = fields === 'scan'
+  const year = !scan && artwork.yearCreated ? String(artwork.yearCreated) : ''
+  const medium = !scan ? resolveMediumLabel(artwork) : ''
+  const dimensions = !scan ? formatArtworkDimensionLines(artwork) : null
   const series = resolveSeriesDisplay(artwork, filterSeries)
   const recordHref = `/${artwork.slug}`
   const accent = series && renderSeriesAccent ? renderSeriesAccent(series) : null

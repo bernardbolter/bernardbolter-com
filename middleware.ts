@@ -46,12 +46,38 @@ function isCacheableArtworkHtmlPath(pathname: string): boolean {
   ) {
     return false
   }
-  const match = pathname.match(/^\/([^/]+)(?:\/(record|vision))?$/)
+  const match = pathname.match(/^\/([^/]+)(?:\/(vision))?$/)
   if (!match) return false
   const slug = match[1]
   if (!slug || NON_ARTWORK_ROOT_SEGMENTS.has(slug.toLowerCase())) return false
   if (isReservedFrontendSlug(slug)) return false
   return true
+}
+
+/**
+ * Retire redundant per-work HTML surfaces in one hop:
+ *   /{slug}/record → /{slug}
+ *   /{slug}/sessions | /{slug}/session → /{slug}#sessions
+ * Hash must live here — next.config redirects strip fragments.
+ */
+function retireArtworkSubrouteRedirect(request: NextRequest): NextResponse | null {
+  const pathname =
+    request.nextUrl.pathname.length > 1 && request.nextUrl.pathname.endsWith('/')
+      ? request.nextUrl.pathname.slice(0, -1)
+      : request.nextUrl.pathname
+  const match = pathname.match(/^\/([^/]+)\/(record|sessions|session)$/)
+  if (!match) return null
+  const slug = match[1]
+  const kind = match[2]
+  if (!slug || NON_ARTWORK_ROOT_SEGMENTS.has(slug.toLowerCase())) return null
+  if (isReservedFrontendSlug(slug)) return null
+
+  const dest = new URL(`/${slug}`, request.nextUrl.origin)
+  dest.search = request.nextUrl.search
+  if (kind === 'sessions' || kind === 'session') {
+    dest.hash = 'sessions'
+  }
+  return NextResponse.redirect(dest, 308)
 }
 
 function withPublicApiCors(request: NextRequest, response: NextResponse): NextResponse {
@@ -136,6 +162,9 @@ export async function middleware(request: NextRequest) {
       })
     }
   }
+
+  const retiredSubroute = retireArtworkSubrouteRedirect(request)
+  if (retiredSubroute) return retiredSubroute
 
   const publicRedirect = await resolvePublicRedirect(request, pathname)
   if (publicRedirect) return publicRedirect

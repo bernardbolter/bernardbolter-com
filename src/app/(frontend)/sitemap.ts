@@ -31,13 +31,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'weekly',
   }))
 
-  const recordRoutes: MetadataRoute.Sitemap = artworks.map((artwork) => ({
-    url: `${baseUrl}/${artwork.slug}/record`,
-    lastModified: artwork.updatedAt ? new Date(artwork.updatedAt) : undefined,
-    priority: 0.5,
-    changeFrequency: 'monthly',
-  }))
-
   const visionRoutes: MetadataRoute.Sitemap = artworks
     .filter(artworkHasVisionAnalysis)
     .map((artwork) => ({
@@ -97,7 +90,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...staticRoutes,
     ...artworkRoutes,
-    ...recordRoutes,
     ...visionRoutes,
     ...seriesRoutes,
     ...eventRoutes,

@@ -120,7 +120,7 @@ export function buildUrlTemplates(baseUrl: string = CORPUS_BASE): Record<string,
     record: `${baseUrl}/api/corpus/{slug}`,
     visionPage: `${baseUrl}/{slug}/vision`,
     sessions: `${baseUrl}/api/corpus/{slug}/sessions`,
-    sessionsPage: `${baseUrl}/sessions?artwork={slug}`,
+    sessionsPage: `${baseUrl}/{slug}#sessions`,
   }
 }
 
