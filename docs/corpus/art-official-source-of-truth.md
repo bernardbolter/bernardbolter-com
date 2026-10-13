@@ -649,8 +649,8 @@ Homepage identity fields (title, year, medium, dimensions, series) extracted to 
 
 **Decided.**
 - Identity first on the briefing JSON: `totalWorks`, `coverage`, `generatedAt`.
-- Cuts to stay under budget (protocol + contract remain inlined): session ledger → count pointer; stub works → slug/title/series/status only; throughline claims → `claimUrl` (full text on throughline pages); drop per-work `relatedBy*` URL arrays from the briefing; omit contract worked-example body from the paste.
-- Soft budget `BRIEFING_FETCH_CHAR_BUDGET` (95k); build warns if exceeded.
+- Cuts to stay under budget (protocol + contract remain inlined): session ledger → count pointer; stub works → slug/title/series/status only; throughline claims → `claimUrl`; bio claims → `entryUrl`; drop per-work `relatedBy*` URL arrays; omit contract worked-example body from the paste.
+- Soft budget `BRIEFING_FETCH_CHAR_BUDGET` (95k); build warns if exceeded. Live paste ~93k with all 220 works before the 100k mark.
 
 ---
 
