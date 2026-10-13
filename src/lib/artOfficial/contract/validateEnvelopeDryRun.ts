@@ -81,6 +81,97 @@ function validateVisionDryRun(body: unknown): EnvelopeDryRunResult {
   })
 }
 
+const AGENT_DRAFT_REJECT_REASON =
+  'REJECT — agentDraft* belongs on the live admin/chat commit path, not the multi-collection envelope'
+
+const DIALOGUE_SELF_AUDIT_REJECT_REASON =
+  'REJECT — DialogueSelfAudit is projected at Tier 5 read time from live session fields; not an envelope write key'
+
+/**
+ * Process-layer keys that Zod .strict() would hard-reject. Strip them for
+ * structured dry-run reporting so a mixed paste can show accept/reject per field
+ * instead of only "Unrecognized key" on the whole paste. Live import still uses
+ * .strict() — the same paste fails until these keys are removed.
+ */
+function isEnvelopeProcessLayerReject(key: string): string | null {
+  if (key === 'DialogueSelfAudit' || key === 'art-official:DialogueSelfAudit') {
+    return DIALOGUE_SELF_AUDIT_REJECT_REASON
+  }
+  if (key === 'agentDraft' || key.startsWith('agentDraft')) {
+    return AGENT_DRAFT_REJECT_REASON
+  }
+  return null
+}
+
+function stripProcessLayerRejects(body: unknown): {
+  cleaned: unknown
+  rejected: Array<{ path: string; reason: string }>
+} {
+  const rejected: Array<{ path: string; reason: string }> = []
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return { cleaned: body, rejected }
+  }
+
+  const root = body as Record<string, unknown>
+  if (!Array.isArray(root.writes)) {
+    return { cleaned: body, rejected }
+  }
+
+  const writes = root.writes.map((write, i) => {
+    if (!write || typeof write !== 'object' || Array.isArray(write)) return write
+    const w = { ...(write as Record<string, unknown>) }
+    const base = `writes[${i}]`
+
+    if (w.collection === 'sessions' && w.fields && typeof w.fields === 'object' && !Array.isArray(w.fields)) {
+      const fields = { ...(w.fields as Record<string, unknown>) }
+      for (const key of Object.keys(fields)) {
+        const reason = isEnvelopeProcessLayerReject(key)
+        if (reason) {
+          rejected.push({ path: `${base}.fields.${key}`, reason })
+          delete fields[key]
+        }
+      }
+      w.fields = fields
+    }
+
+    // DialogueSelfAudit / agentDraft mistakenly placed on the write object itself.
+    for (const key of Object.keys(w)) {
+      if (key === 'fields' || key === 'entry' || key === 'collection' || key === 'operation' || key === 'sessionId' || key === 'slug') {
+        continue
+      }
+      const reason = isEnvelopeProcessLayerReject(key)
+      if (reason) {
+        rejected.push({ path: `${base}.${key}`, reason })
+        delete w[key]
+      }
+    }
+
+    if (
+      (w.collection === 'statement-throughlines' || w.collection === 'bio-timeline') &&
+      w.entry &&
+      typeof w.entry === 'object' &&
+      !Array.isArray(w.entry)
+    ) {
+      const entry = { ...(w.entry as Record<string, unknown>) }
+      for (const key of Object.keys(entry)) {
+        const reason = isEnvelopeProcessLayerReject(key)
+        if (reason) {
+          rejected.push({ path: `${base}.entry.${key}`, reason })
+          delete entry[key]
+        }
+      }
+      w.entry = entry
+    }
+
+    return w
+  })
+
+  return {
+    cleaned: { ...root, writes },
+    rejected,
+  }
+}
+
 /**
  * Dry-run a multi-collection envelope paste (or a vision import).
  * Commits nothing. Reports what Zod would accept, what would be stripped,
@@ -95,7 +186,10 @@ export function validateEnvelopeDryRun(body: unknown): EnvelopeDryRunResult {
   const rejected: EnvelopeDryRunResult['rejected'] = []
   const silentlyDropped: EnvelopeDryRunResult['silentlyDropped'] = []
 
-  const parsed = envelopeImportSchema.safeParse(body)
+  const { cleaned, rejected: processRejects } = stripProcessLayerRejects(body)
+  rejected.push(...processRejects)
+
+  const parsed = envelopeImportSchema.safeParse(cleaned)
   if (!parsed.success) {
     // Common mis-paste: vision shape sent without writes — try vision path for clearer errors.
     if (looksLikeVisionBody(body)) {
@@ -104,7 +198,7 @@ export function validateEnvelopeDryRun(body: unknown): EnvelopeDryRunResult {
     return emptyResult({
       ok: false,
       wholePasteRejected: true,
-      rejected: zodIssues(parsed.error),
+      rejected: [...rejected, ...zodIssues(parsed.error)],
       zodError: parsed.error.message,
     })
   }
@@ -133,7 +227,7 @@ export function validateEnvelopeDryRun(body: unknown): EnvelopeDryRunResult {
       } else {
         accepted.push({
           path: `${base}.fields.fieldUpdateTimeline`,
-          note: `${write.fields.fieldUpdateTimeline.length} timeline row(s)`,
+          note: `${write.fields.fieldUpdateTimeline.length} timeline row(s); fieldsCoveredThisSession derived on apply`,
         })
       }
       continue
@@ -145,14 +239,12 @@ export function validateEnvelopeDryRun(body: unknown): EnvelopeDryRunResult {
         note: 'entry shape valid (idempotent append on live import)',
       })
       if (
-        write.entry &&
-        typeof write.entry === 'object' &&
-        'reinforcingSessions' in (write.entry as object)
+        write.collection === 'statement-throughlines' &&
+        write.entry.reinforcingSessions !== undefined
       ) {
-        // Unreachable if Zod strict — kept for clarity if schema loosens.
-        rejected.push({
+        accepted.push({
           path: `${base}.entry.reinforcingSessions`,
-          reason: 'Not in entry schema — Unrecognized key',
+          note: `${write.entry.reinforcingSessions.length} reinforcing session(s); merged onto existing claim text on apply`,
         })
       }
       continue

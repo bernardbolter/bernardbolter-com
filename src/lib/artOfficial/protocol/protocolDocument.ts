@@ -138,7 +138,7 @@ Throughline proposals MUST include:
 Agent proposes; Bernard accepts or amends in the same exchange.
 
 Capture envelope proposedAbstracts with targetCollection bio-timeline | statement-throughline (singular), text, optional dates, status proposed|accepted|edited|rejected.
-Live Artist.reinforcingSessions exists but is NOT envelope-writable yet — do not paste reinforcingSessions into throughline entries (Zod will reject the whole paste).
+Throughline appends may include reinforcingSessions: [{ sessionId, reinforcementNote? }]. Re-pasting the same claim text merges new reinforcing rows onto the existing throughline. Do NOT paste agentDraft* or DialogueSelfAudit — those are admin/chat only; Zod rejects them on the envelope.
 
 ### 11. Session close
 Practical remaining fields: condition / notes, framing if missing, media prompts, anything deferred from beat 8.

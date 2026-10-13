@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 
+import { fieldsCoveredFromTimeline } from '@/lib/artOfficial/automaticFieldConflicts'
 import type { Artist, Session, User } from '@/payload-types'
 
 import {
@@ -11,6 +12,11 @@ import {
 import { applyArtworkFieldsImport } from './applyArtworkFieldsImport'
 import { formatDbError } from './formatDbError'
 import { revalidateArtworkPaths } from './revalidateArtworkPaths'
+
+type ReinforcingSessionRow = {
+  session: number
+  reinforcementNote?: string
+}
 
 export type EnvelopeWriteResult = {
   collection: string
@@ -135,17 +141,66 @@ function hasDuplicateBioEntry(
   })
 }
 
-function hasDuplicateThroughline(
-  artist: Artist,
-  sessionId: number | undefined,
-  text: string,
-): boolean {
+function findThroughlineIndexByText(artist: Artist, text: string): number {
   const needle = entryTextKey(text)
-  return (artist.statementThroughlines ?? []).some((entry) => {
-    if (entryTextKey(entry.text ?? '') !== needle) return false
-    if (sessionId == null) return true
-    return relationId(entry.sourceSessionRef) === sessionId
-  })
+  return (artist.statementThroughlines ?? []).findIndex(
+    (entry) => entryTextKey(entry.text ?? '') === needle,
+  )
+}
+
+async function resolveReinforcingSessions(
+  payload: Payload,
+  user: User,
+  rows:
+    | Array<{ sessionId: string; reinforcementNote?: string }>
+    | undefined,
+): Promise<ReinforcingSessionRow[]> {
+  if (!rows?.length) return []
+  const out: ReinforcingSessionRow[] = []
+  const seen = new Set<number>()
+  for (const row of rows) {
+    const id = await resolveSessionId(payload, user, row.sessionId)
+    if (id == null) {
+      throw new Error(`reinforcingSessions: session not found for "${row.sessionId}"`)
+    }
+    if (seen.has(id)) continue
+    seen.add(id)
+    out.push({
+      session: id,
+      ...(row.reinforcementNote?.trim()
+        ? { reinforcementNote: row.reinforcementNote.trim() }
+        : {}),
+    })
+  }
+  return out
+}
+
+function mergeReinforcingSessions(
+  existing: Array<{ session?: unknown; reinforcementNote?: string | null } | null> | null | undefined,
+  incoming: ReinforcingSessionRow[],
+): { merged: ReinforcingSessionRow[]; added: number } {
+  const merged: ReinforcingSessionRow[] = []
+  const seen = new Set<number>()
+  for (const row of existing ?? []) {
+    if (!row) continue
+    const id = relationId(row.session)
+    if (id == null || seen.has(id)) continue
+    seen.add(id)
+    merged.push({
+      session: id,
+      ...(typeof row.reinforcementNote === 'string' && row.reinforcementNote.trim()
+        ? { reinforcementNote: row.reinforcementNote.trim() }
+        : {}),
+    })
+  }
+  let added = 0
+  for (const row of incoming) {
+    if (seen.has(row.session)) continue
+    seen.add(row.session)
+    merged.push(row)
+    added += 1
+  }
+  return { merged, added }
 }
 
 async function applyBioTimelineAppend(
@@ -201,12 +256,45 @@ async function applyStatementThroughlineAppend(
   const sessionRef = write.entry.sourceSessionRef ?? sourceSessionRefDefault
   const sessionId = await resolveSessionId(payload, user, sessionRef)
   const text = write.entry.text
+  const reinforcing = await resolveReinforcingSessions(
+    payload,
+    user,
+    write.entry.reinforcingSessions,
+  )
 
-  if (hasDuplicateThroughline(artist, sessionId, text)) {
+  const existingIdx = findThroughlineIndexByText(artist, text)
+  if (existingIdx >= 0) {
+    const existing = artist.statementThroughlines![existingIdx]!
+    const { merged, added } = mergeReinforcingSessions(
+      existing.reinforcingSessions,
+      reinforcing,
+    )
+
+    if (added === 0) {
+      return {
+        collection: 'statement-throughlines',
+        status: 'skipped',
+        reason: 'duplicate entry',
+      }
+    }
+
+    // Same claim text — merge new reinforcingSessions onto the live row (reinforce path).
+    const next = [...(artist.statementThroughlines ?? [])]
+    next[existingIdx] = {
+      ...existing,
+      reinforcingSessions: merged,
+    }
+    await payload.update({
+      collection: 'artists',
+      id: artist.id,
+      data: { statementThroughlines: next },
+      overrideAccess: false,
+      user,
+    })
     return {
       collection: 'statement-throughlines',
-      status: 'skipped',
-      reason: 'duplicate entry',
+      status: 'saved',
+      reason: 'merged reinforcingSessions onto existing throughline',
     }
   }
 
@@ -223,7 +311,7 @@ async function applyStatementThroughlineAppend(
       text,
       linkedArtworkSlugs: linkedIds,
       sourceSessionRef: sessionId,
-      reinforcingSessions: [],
+      reinforcingSessions: reinforcing,
       visibility: write.entry.visibility ?? 'public',
     },
   ]
@@ -324,6 +412,8 @@ async function applySessionSet(
 
   if (fields.fieldUpdateTimeline !== undefined) {
     data.fieldUpdateTimeline = fields.fieldUpdateTimeline
+    // Keep /sessions gloss + commit-path consumers in sync (same derivation as admin commit).
+    data.fieldsCoveredThisSession = fieldsCoveredFromTimeline(fields.fieldUpdateTimeline)
   }
 
   const existing = await payload.find({
@@ -347,6 +437,7 @@ async function applySessionSet(
   } else {
     if (data.fieldUpdateTimeline === undefined) {
       data.fieldUpdateTimeline = []
+      data.fieldsCoveredThisSession = []
     }
     await payload.create({
       collection: 'sessions',

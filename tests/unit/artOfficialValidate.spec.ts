@@ -128,5 +128,64 @@ describe('validateEnvelopeDryRun', () => {
     expect(result.ok).toBe(true)
     expect(result.accepted[0]?.path).toBe('vision:nature-vs-nurture')
   })
+
+  it('reports accept/reject per field for reinforcingSessions, fieldUpdateTimeline, agentDraft*, DialogueSelfAudit', () => {
+    const result = validateEnvelopeDryRun({
+      sourceSessionRef: 'the-thinker-2026-07-15',
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'the-thinker-2026-07-15',
+          fields: {
+            sessionType: 'artwork',
+            status: 'completed',
+            primaryArtwork: 'the-thinker',
+            messages: [{ role: 'user', content: '…' }],
+            fieldUpdateTimeline: [
+              { field: 'intent', source: 'conversation' },
+              { field: 'workContext', source: 'conversation' },
+            ],
+            agentDraftDescriptionShort: 'should not be in envelope',
+            DialogueSelfAudit: { agentModel: 'claude-sonnet-4-6' },
+          },
+        },
+        {
+          collection: 'statement-throughlines',
+          operation: 'append',
+          entry: {
+            text: 'Inside/outside as a standing position.',
+            linkedArtworkSlugs: ['the-thinker'],
+            reinforcingSessions: [
+              {
+                sessionId: 'basel-switzerland-2026-08-12',
+                reinforcementNote: 'Same language unprompted.',
+              },
+            ],
+          },
+        },
+      ],
+    })
+
+    expect(result.wholePasteRejected).toBe(false)
+    expect(result.ok).toBe(false)
+    expect(
+      result.accepted.some((r) => r.path.endsWith('fieldUpdateTimeline')),
+    ).toBe(true)
+    expect(
+      result.accepted.some((r) => r.path.endsWith('reinforcingSessions')),
+    ).toBe(true)
+    expect(
+      result.rejected.some(
+        (r) =>
+          r.path.includes('agentDraftDescriptionShort') && /REJECT/i.test(r.reason),
+      ),
+    ).toBe(true)
+    expect(
+      result.rejected.some(
+        (r) => r.path.includes('DialogueSelfAudit') && /REJECT/i.test(r.reason),
+      ),
+    ).toBe(true)
+  })
 })
 

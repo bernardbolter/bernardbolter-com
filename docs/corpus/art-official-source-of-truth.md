@@ -631,6 +631,18 @@ Homepage identity fields (title, year, medium, dimensions, series) extracted to 
 
 ---
 
+## Part 33 — Envelope accept/reject alignment (2026-10-13)
+
+**Problem.** Contract page named `reinforcingSessions`, `agentDraft*`, and `DialogueSelfAudit` while Zod `.strict()` rejected the first and the latter two had no honest "not envelope" explanation. Sessions paid for the mismatch.
+
+**Decided.**
+- `reinforcingSessions` on `statement-throughlines` append — **ACCEPT**. Schema + apply write `{ sessionId, reinforcementNote? }[]` (resolved to Payload `session` ids). Re-pasting the same claim text **merges** new reinforcing rows onto the existing throughline (Thinker corroboration path). No longer hardcoded `[]`.
+- `fieldUpdateTimeline` — already accepted; apply now also derives `fieldsCoveredThisSession` so `/sessions` gloss is not stuck on “0 fields confirmed” after envelope import.
+- `agentDraft*` and `DialogueSelfAudit` — **REJECT**. Live admin/chat / Tier 5 projection only. Removed from the accept surface; contract rejections list states why. Dry-run strips them for per-field reporting then Zod-parses the rest (`ok: false` until removed); live import still `.strict()`-fails if they remain.
+- Contract **1.1.0** / protocol **1.0.1**. Pages prefer nightly artifact only when version matches live — otherwise fall back to live build so post-deploy contract cannot disagree with the importer.
+
+---
+
 ## Standing process
 
 1. Any chat session that finds a spec/reality mismatch, or makes a flow-level decision (retiring a mechanism, resolving an edge case), logs it here **the same session** — not left in chat scrollback for someone to rediscover later.

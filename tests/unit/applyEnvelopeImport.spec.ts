@@ -238,6 +238,122 @@ describe('applyEnvelopeImport', () => {
     expect(mocks.revalidateArtworkPaths).toHaveBeenCalledWith('the-thinker')
   })
 
+  it('writes fieldUpdateTimeline and derives fieldsCoveredThisSession', async () => {
+    const { payload, getSessionDoc } = buildPayloadForSessionUpsert()
+
+    const results = await applyEnvelopeImport(payload, user, {
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'coverage-import',
+          fields: {
+            sessionType: 'artwork',
+            status: 'completed',
+            primaryArtwork: 'the-thinker',
+            messages: [{ role: 'user', content: 'done' }],
+            fieldUpdateTimeline: [
+              { field: 'intent', source: 'conversation' },
+              { field: 'workContext', source: 'conversation' },
+              { field: 'intent', source: 'conversation' },
+            ],
+          },
+        },
+      ],
+    })
+
+    expect(results[0]).toMatchObject({
+      collection: 'sessions',
+      sessionId: 'coverage-import',
+      status: 'saved',
+    })
+    expect(getSessionDoc()?.fieldUpdateTimeline).toHaveLength(3)
+    expect(getSessionDoc()?.fieldsCoveredThisSession).toEqual([
+      { field: 'intent' },
+      { field: 'workContext' },
+    ])
+  })
+
+  it('writes reinforcingSessions on throughline create and merges on reinforce', async () => {
+    const { payload, artist } = buildPayloadForIdempotency()
+    ;(payload.find as ReturnType<typeof vi.fn>).mockImplementation(
+      async (args: Record<string, unknown>) => {
+        if (args.collection === 'artists') return { docs: [artist] }
+        if (args.collection === 'artworks') {
+          return { docs: [{ id: 44, slug: 'the-thinker' }] }
+        }
+        if (args.collection === 'sessions') {
+          const where = args.where as
+            | { sessionId?: { equals?: string } }
+            | undefined
+          const sid = where?.sessionId?.equals
+          if (sid === 'origin-session') return { docs: [{ id: 10, sessionId: sid }] }
+          if (sid === 'basel-revisit') return { docs: [{ id: 11, sessionId: sid }] }
+          if (sid === 'venice-revisit') return { docs: [{ id: 12, sessionId: sid }] }
+          return { docs: [] }
+        }
+        return { docs: [] }
+      },
+    )
+
+    const create = await applyEnvelopeImport(payload, user, {
+      writes: [
+        {
+          collection: 'statement-throughlines',
+          operation: 'append',
+          entry: {
+            text: 'Inside/outside as a standing position.',
+            sourceSessionRef: 'origin-session',
+            linkedArtworkSlugs: ['the-thinker'],
+            reinforcingSessions: [
+              {
+                sessionId: 'basel-revisit',
+                reinforcementNote: 'Basel unprompted.',
+              },
+            ],
+          },
+        },
+      ],
+    })
+    expect(create[0]).toMatchObject({
+      collection: 'statement-throughlines',
+      status: 'saved',
+    })
+    expect(artist.statementThroughlines).toHaveLength(1)
+    expect(artist.statementThroughlines?.[0]?.reinforcingSessions).toEqual([
+      { session: 11, reinforcementNote: 'Basel unprompted.' },
+    ])
+
+    const reinforce = await applyEnvelopeImport(payload, user, {
+      writes: [
+        {
+          collection: 'statement-throughlines',
+          operation: 'append',
+          entry: {
+            text: 'Inside/outside as a standing position.',
+            sourceSessionRef: 'venice-revisit',
+            reinforcingSessions: [
+              {
+                sessionId: 'venice-revisit',
+                reinforcementNote: 'Venice echoed it.',
+              },
+            ],
+          },
+        },
+      ],
+    })
+    expect(reinforce[0]).toMatchObject({
+      collection: 'statement-throughlines',
+      status: 'saved',
+      reason: 'merged reinforcingSessions onto existing throughline',
+    })
+    expect(artist.statementThroughlines).toHaveLength(1)
+    expect(artist.statementThroughlines?.[0]?.reinforcingSessions).toEqual([
+      { session: 11, reinforcementNote: 'Basel unprompted.' },
+      { session: 12, reinforcementNote: 'Venice echoed it.' },
+    ])
+  })
+
   it('keeps session in-progress and replaces messages on upsert', async () => {
     const { payload, getSessionDoc } = buildPayloadForSessionUpsert()
 

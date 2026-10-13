@@ -97,6 +97,13 @@ export function buildArtOfficialContract(generatedAt: string = new Date().toISOS
           text: '…',
           sourceSessionRef: 'the-thinker-2026-07-15',
           linkedArtworkSlugs: ['the-thinker'],
+          reinforcingSessions: [
+            {
+              sessionId: 'basel-switzerland-2026-08-12',
+              reinforcementNote:
+                'Same inside/outside language used unprompted on the Basel revisit.',
+            },
+          ],
         },
       },
     ],
@@ -279,6 +286,10 @@ export function buildArtOfficialContract(generatedAt: string = new Date().toISOS
             field('dateRecognized', 'string', {}),
             field('sourceSessionRef', 'string | number', {}),
             field('linkedArtworkSlugs', 'string[]', {}),
+            field('reinforcingSessions', '{sessionId, reinforcementNote?}[]', {
+              notes:
+                'Sessions that independently corroborate this throughline. sessionId is Sessions.sessionId (resolved on apply). Re-pasting the same claim text merges new rows onto the existing throughline.',
+            }),
             field('visibility', 'public | private', {}),
           ],
         },
@@ -339,15 +350,15 @@ export function buildArtOfficialContract(generatedAt: string = new Date().toISOS
         behaviour: 'hard-reject',
       },
       {
-        keyOrField: 'reinforcingSessions (throughline entry)',
-        where: 'statementThroughlineEntrySchema',
-        why: 'Not in entry schema; Artist field exists but envelope cannot write it yet',
+        keyOrField: 'agentDraft* (session fields)',
+        where: 'sessionFieldsSchema .strict()',
+        why: 'Process-layer drafts live on the admin/chat commit path only — never in the multi-collection envelope. Do not paste agentDraftDescriptionShort/Long, agentDraftConceptualKeywords, or agentDraftFormalContributionAssessment.',
         behaviour: 'hard-reject',
       },
       {
-        keyOrField: 'agentDraft*',
-        where: 'sessionFieldsSchema',
-        why: 'Live session/tool fields only — not envelope-writable',
+        keyOrField: 'DialogueSelfAudit / art-official:DialogueSelfAudit',
+        where: 'sessionFieldsSchema .strict()',
+        why: 'Process-integrity node is projected from live session fields at Tier 5 read time. It is not an envelope write key — admin/chat owns those fields.',
         behaviour: 'hard-reject',
       },
       {

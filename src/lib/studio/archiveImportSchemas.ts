@@ -65,12 +65,22 @@ const bioTimelineEntrySchema = z
   })
   .strict()
 
+/** Later sessions that corroborate a throughline — sessionId is Sessions.sessionId. */
+const reinforcingSessionEntrySchema = z
+  .object({
+    sessionId: z.string().min(1),
+    reinforcementNote: z.string().optional(),
+  })
+  .strict()
+
 const statementThroughlineEntrySchema = z
   .object({
     dateRecognized: z.string().optional(),
     text: z.string().min(1),
     sourceSessionRef: z.union([z.string(), z.number()]).optional(),
     linkedArtworkSlugs: z.array(z.string()).optional(),
+    /** Optional — sessions that independently corroborate this pattern. */
+    reinforcingSessions: z.array(reinforcingSessionEntrySchema).optional(),
     visibility: z.enum(['public', 'private']).optional(),
   })
   .strict()

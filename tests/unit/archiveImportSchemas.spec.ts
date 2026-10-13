@@ -163,6 +163,64 @@ describe('archiveImportSchemas strict validation', () => {
     expect(parsed.success).toBe(true)
   })
 
+  it('accepts reinforcingSessions on statement-throughlines append', () => {
+    const parsed = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'statement-throughlines',
+          operation: 'append',
+          entry: {
+            text: 'Inside/outside as a standing position.',
+            linkedArtworkSlugs: ['the-thinker'],
+            reinforcingSessions: [
+              {
+                sessionId: 'basel-switzerland-2026-08-12',
+                reinforcementNote: 'Same language unprompted.',
+              },
+            ],
+          },
+        },
+      ],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
+  it('rejects agentDraft* and DialogueSelfAudit on session fields (.strict)', () => {
+    const draft = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'x',
+          fields: {
+            sessionType: 'artwork',
+            status: 'completed',
+            messages: [{ role: 'user', content: 'hi' }],
+            agentDraftDescriptionShort: 'nope',
+          },
+        },
+      ],
+    })
+    expect(draft.success).toBe(false)
+
+    const audit = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'x',
+          fields: {
+            sessionType: 'artwork',
+            status: 'completed',
+            messages: [{ role: 'user', content: 'hi' }],
+            DialogueSelfAudit: { agentModel: 'claude' },
+          },
+        },
+      ],
+    })
+    expect(audit.success).toBe(false)
+  })
+
   it('accepts sessions fields for mentioned artworks and second description', () => {
     const parsed = envelopeImportSchema.safeParse({
       writes: [
