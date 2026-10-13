@@ -1,6 +1,14 @@
 # Follow-up: Field Source-of-Truth Corrections
 *Response to the 2026-07-23 audit against Artworks.ts / Sessions.ts / studio importers*
 
+> **SUPERSEDED 2026-10-12 as a live contract source.** Item 3’s provenance /
+> `artHistoricalReferences` blocks were later reversed (2026-07-27/28 allowlist);
+> financials remain admin-only. Authoritative surfaces:
+> [`/art-official/contract`](https://bernardbolter.com/art-official/contract),
+> [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol),
+> [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing),
+> `POST /api/art-official/validate`. Keep this file as the dated decision log only.
+
 The bridge doc (`art-official-field-source-of-truth.md`) has been updated with decisions below. Apply these to the doc's corrections — do not re-litigate, these are final for now. Two items still need your answer (marked at the end).
 
 ---

@@ -175,10 +175,10 @@ describe('applyEnvelopeImport', () => {
     expect(artist.bioTimelineEntries).toHaveLength(1)
   })
 
-  it('applies reasoningStatus only after other artwork fields succeed', async () => {
+  it('strips reasoningStatus from artwork writes (derived field)', async () => {
     const payload = buildPayloadForMixedResult()
 
-    await applyEnvelopeImport(payload, user, {
+    const results = await applyEnvelopeImport(payload, user, {
       writes: [
         {
           collection: 'artworks',
@@ -192,9 +192,8 @@ describe('applyEnvelopeImport', () => {
       ],
     })
 
-    expect(mocks.applyArtworkFieldsImport).toHaveBeenCalledTimes(2)
-    expect(mocks.applyArtworkFieldsImport).toHaveBeenNthCalledWith(
-      1,
+    expect(mocks.applyArtworkFieldsImport).toHaveBeenCalledTimes(1)
+    expect(mocks.applyArtworkFieldsImport).toHaveBeenCalledWith(
       payload,
       user,
       expect.objectContaining({
@@ -202,23 +201,19 @@ describe('applyEnvelopeImport', () => {
         fields: { intent: 'Consolidates structural motifs.' },
       }),
     )
-    expect(mocks.applyArtworkFieldsImport).toHaveBeenNthCalledWith(
-      2,
-      payload,
-      user,
-      expect.objectContaining({
-        slug: 'the-thinker',
-        fields: { reasoningStatus: 'complete' },
-      }),
-    )
+    expect(results[0]).toMatchObject({
+      collection: 'artworks',
+      slug: 'the-thinker',
+      status: 'saved',
+      warnings: expect.arrayContaining([
+        expect.stringContaining('reasoningStatus is derived'),
+      ]),
+    })
     expect(mocks.revalidateArtworkPaths).toHaveBeenCalledWith('the-thinker')
   })
 
-  it('does not apply reasoningStatus when prior artwork field write fails', async () => {
+  it('ignores reasoningStatus-only artwork writes without calling field import', async () => {
     const payload = buildPayloadForMixedResult()
-    mocks.applyArtworkFieldsImport
-      .mockRejectedValueOnce(new Error('Invalid field payload'))
-      .mockResolvedValueOnce(undefined)
 
     const results = await applyEnvelopeImport(payload, user, {
       writes: [
@@ -226,30 +221,21 @@ describe('applyEnvelopeImport', () => {
           collection: 'artworks',
           slug: 'the-thinker',
           operation: 'set',
-          fields: {
-            intent: 'This write will fail validation.',
-            reasoningStatus: 'complete',
-          },
+          fields: { reasoningStatus: 'complete' },
         },
       ],
     })
 
+    expect(mocks.applyArtworkFieldsImport).not.toHaveBeenCalled()
     expect(results[0]).toMatchObject({
       collection: 'artworks',
       slug: 'the-thinker',
-      status: 'failed',
-      reason: 'Invalid field payload',
+      status: 'saved',
+      warnings: expect.arrayContaining([
+        expect.stringContaining('reasoningStatus is derived'),
+      ]),
     })
-    expect(mocks.applyArtworkFieldsImport).toHaveBeenCalledTimes(1)
-    expect(mocks.applyArtworkFieldsImport).toHaveBeenCalledWith(
-      payload,
-      user,
-      expect.objectContaining({
-        slug: 'the-thinker',
-        fields: { intent: 'This write will fail validation.' },
-      }),
-    )
-    expect(mocks.revalidateArtworkPaths).not.toHaveBeenCalled()
+    expect(mocks.revalidateArtworkPaths).toHaveBeenCalledWith('the-thinker')
   })
 
   it('keeps session in-progress and replaces messages on upsert', async () => {

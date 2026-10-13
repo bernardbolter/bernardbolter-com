@@ -136,6 +136,33 @@ describe('archiveImportSchemas strict validation', () => {
     expect(parsed.success).toBe(true)
   })
 
+  it('accepts fieldUpdateTimeline on session envelope writes', () => {
+    const parsed = envelopeImportSchema.safeParse({
+      writes: [
+        {
+          collection: 'sessions',
+          operation: 'set',
+          sessionId: 'coverage-session',
+          fields: {
+            sessionType: 'artwork',
+            status: 'completed',
+            primaryArtwork: 'gates-iii',
+            messages: [{ role: 'user', content: '…' }],
+            fieldUpdateTimeline: [
+              {
+                field: 'intent',
+                source: 'conversation',
+                timestamp: '2026-07-15T12:00:00.000Z',
+                value: '…',
+              },
+            ],
+          },
+        },
+      ],
+    })
+    expect(parsed.success).toBe(true)
+  })
+
   it('accepts sessions fields for mentioned artworks and second description', () => {
     const parsed = envelopeImportSchema.safeParse({
       writes: [

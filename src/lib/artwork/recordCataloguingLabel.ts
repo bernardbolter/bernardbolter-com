@@ -4,10 +4,9 @@ import type { Artwork } from '@/payload-types'
 /**
  * Human-facing cataloguing label on artwork pages.
  *
- * Decoupled from `reasoningStatus` (which tracks Art/Official session depth for
- * the unreasoned queue and `art-official:coverage.reasoningComplete`). A record with
- * real descriptive prose is never labeled "not yet fully catalogued", even when
- * `reasoningStatus` is still `stub` because no session was saved.
+ * Uses derived `reasoningStatus` (session messages > 0 + why-fields) overlaid by
+ * the page loader. A record with real descriptive prose is never labeled
+ * "not yet fully catalogued" when status is still stub/partial for session reasons.
  */
 export function resolveRecordCataloguingLabel(
   artwork: Pick<

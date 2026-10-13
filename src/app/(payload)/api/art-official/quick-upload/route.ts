@@ -200,7 +200,7 @@ export async function POST(request: Request) {
     availabilityStatus: data.availabilityStatus,
     primaryImage: data.primaryImageMediaId,
     status: 'published',
-    reasoningStatus: 'stub',
+    // reasoningStatus is derived — do not seed the stored column.
     recordOrigin: 'artist-catalogued',
     wp_id: data.wpId,
     city: data.city?.trim() || undefined,

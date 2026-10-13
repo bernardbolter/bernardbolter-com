@@ -147,16 +147,7 @@ export async function POST(request: Request, context: RouteContext) {
           artworkId = created.id
         }
 
-        if (artworkId) {
-          await payload.update({
-            collection: 'artworks',
-            id: artworkId,
-            data: { reasoningStatus: 'complete' },
-            overrideAccess: false,
-            user,
-            context: { skipAgent: true },
-          })
-        }
+        // reasoningStatus is derived from session messages + why-fields — do not write.
       } catch (err) {
         const message =
           formatPayloadValidationError(err) ??

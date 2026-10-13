@@ -1,0 +1,11 @@
+[Unit]
+Description=Run corpus artifact build nightly at 03:30 Europe/Berlin
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Timezone=Europe/Berlin
+Persistent=true
+Unit=bernardbolter-corpus-build.service
+
+[Install]
+WantedBy=timers.target

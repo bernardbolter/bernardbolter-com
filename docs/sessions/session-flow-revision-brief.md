@@ -1,5 +1,11 @@
 # Session Flow Revision Brief
 
+> **SUPERSEDED 2026-10-12 for session paste / beat spine.** Use
+> [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol) and
+> [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing).
+> Contract: [`/art-official/contract`](https://bernardbolter.com/art-official/contract).
+> Validate: `POST /api/art-official/validate`. This brief is historical design notes.
+
 *Derived from The Thinker (BB-OGP-1993-005) Art/Official session, July 15, 2026. Read alongside `art-official-dialogue-spec.md`, which this brief amends — not replaces.*
 
 **Canonical operator document:** [`art-official-session-protocol.md`](./art-official-session-protocol.md) — pasteable single spine for Claude app **and** Payload Art/Official admin. Use that for sessions; this brief is the design rationale only.

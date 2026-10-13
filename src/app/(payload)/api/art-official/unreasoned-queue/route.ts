@@ -1,5 +1,13 @@
 import { countMissingIntentFields } from '@/lib/artOfficial/unreasonedQueue'
 import { requireStaff } from '@/lib/artOfficial/requireStaff'
+import {
+  deriveReasoningStatus,
+  indexSessionEvidence,
+  primarySessionsForArtwork,
+  type ReasoningStatusValue,
+} from '@/lib/artwork/deriveReasoningStatus'
+import { fetchCompletedSessionEvidence } from '@/lib/artwork/fetchSessionEvidence'
+import { isPublicCatalogueSlug } from '@/lib/payload/publicSlug'
 
 export async function GET(request: Request) {
   const { ok, payload, user } = await requireStaff()
@@ -13,9 +21,7 @@ export async function GET(request: Request) {
   const sort = url.searchParams.get('sort') ?? 'year-desc'
 
   const where: Record<string, unknown> = {
-    reasoningStatus: {
-      in: statusFilter === 'stub' ? ['stub'] : statusFilter === 'partial' ? ['partial'] : ['stub', 'partial'],
-    },
+    status: { equals: 'published' },
   }
 
   if (seriesId && seriesId !== 'all') {
@@ -29,71 +35,79 @@ export async function GET(request: Request) {
         ? 'series'
         : 'yearCreated'
 
-  const result = await payload.find({
-    collection: 'artworks',
-    where: where as never,
-    limit: 200,
-    depth: 1,
-    sort: sortKey,
-    overrideAccess: false,
-    user,
-  })
+  const [result, sessionEvidence] = await Promise.all([
+    payload.find({
+      collection: 'artworks',
+      where: where as never,
+      limit: 500,
+      depth: 1,
+      sort: sortKey,
+      overrideAccess: false,
+      user,
+    }),
+    fetchCompletedSessionEvidence(payload),
+  ])
 
-  let docs = result.docs.map((doc) => {
-    const series =
-      typeof doc.series === 'object' && doc.series !== null
-        ? {
-            id: doc.series.id,
-            title: doc.series.name,
-            slug: doc.series.slug,
-          }
-        : null
+  const sessionIndex = indexSessionEvidence(sessionEvidence)
 
-    const primaryImage =
-      typeof doc.primaryImage === 'object' && doc.primaryImage !== null
-        ? {
-            id: doc.primaryImage.id,
-            url: doc.primaryImage.url,
-            thumbnailURL: doc.primaryImage.thumbnailURL ?? doc.primaryImage.url,
-            width: doc.primaryImage.width,
-            height: doc.primaryImage.height,
-          }
-        : null
+  const allowedStatuses: ReasoningStatusValue[] =
+    statusFilter === 'stub'
+      ? ['stub']
+      : statusFilter === 'partial'
+        ? ['partial']
+        : ['stub', 'partial']
 
-    const missingCount = countMissingIntentFields(doc as unknown as Record<string, unknown>)
+  let docs = result.docs
+    .filter((doc) => isPublicCatalogueSlug(doc.slug))
+    .map((doc) => {
+      const slug = doc.slug?.trim() || String(doc.id)
+      const primary = primarySessionsForArtwork({ id: doc.id, slug }, sessionIndex)
+      const derived = deriveReasoningStatus(doc, primary)
 
-    return {
-      id: doc.id,
-      title: doc.title,
-      slug: doc.slug,
-      yearCreated: doc.yearCreated,
-      reasoningStatus: doc.reasoningStatus ?? 'complete',
-      series,
-      primaryImage,
-      missingCount,
-    }
-  })
+      const series =
+        typeof doc.series === 'object' && doc.series !== null
+          ? {
+              id: doc.series.id,
+              title: doc.series.name,
+              slug: doc.series.slug,
+            }
+          : null
+
+      const primaryImage =
+        typeof doc.primaryImage === 'object' && doc.primaryImage !== null
+          ? {
+              id: doc.primaryImage.id,
+              url: doc.primaryImage.url,
+              thumbnailURL: doc.primaryImage.thumbnailURL ?? doc.primaryImage.url,
+              width: doc.primaryImage.width,
+              height: doc.primaryImage.height,
+            }
+          : null
+
+      const missingCount = countMissingIntentFields(doc as unknown as Record<string, unknown>)
+
+      return {
+        id: doc.id,
+        title: doc.title,
+        slug: doc.slug,
+        yearCreated: doc.yearCreated,
+        reasoningStatus: derived.status,
+        partialKind: derived.partialKind,
+        series,
+        primaryImage,
+        missingCount,
+      }
+    })
+    .filter((row) => allowedStatuses.includes(row.reasoningStatus))
 
   if (sort === 'missing-desc') {
     docs = [...docs].sort((a, b) => b.missingCount - a.missingCount)
   }
 
-  const seriesCounts = await payload.find({
-    collection: 'artworks',
-    where: {
-      reasoningStatus: { in: ['stub', 'partial'] },
-    } as never,
-    limit: 500,
-    depth: 1,
-    overrideAccess: false,
-    user,
-  })
-
   const seriesFilterOptions: Array<{ id: number; title: string; count: number }> = []
   const bySeries = new Map<number, { id: number; title: string; count: number }>()
-  for (const row of seriesCounts.docs) {
-    const s =
-      typeof row.series === 'object' && row.series !== null ? row.series : null
+  for (const row of docs) {
+    const s = row.series
     if (!s?.id) continue
     const existing = bySeries.get(s.id)
     if (existing) {
@@ -101,7 +115,7 @@ export async function GET(request: Request) {
     } else {
       bySeries.set(s.id, {
         id: s.id,
-        title: typeof s.name === 'string' ? s.name : String(s.id),
+        title: typeof s.title === 'string' ? s.title : String(s.id),
         count: 1,
       })
     }

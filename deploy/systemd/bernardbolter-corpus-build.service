@@ -1,0 +1,22 @@
+[Unit]
+Description=Bernard Bolter nightly corpus artifact build
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=bernard
+Group=bernard
+WorkingDirectory=/home/bernard/apps/bernardbolter
+Environment=NODE_ENV=production
+# Load R2 + DATABASE_URL from the app env file
+EnvironmentFile=-/home/bernard/apps/bernardbolter/.env
+ExecStart=/bin/bash -lc 'npm run corpus:build'
+Nice=10
+# Build usually finishes in <2 min; leftover open handles used to hang until this
+# fired and marked the unit failed even after a successful write. Script now
+# process.exit(0); keep a generous bound for slow DB nights.
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target

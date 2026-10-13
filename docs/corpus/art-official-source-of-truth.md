@@ -1,6 +1,16 @@
 # Art/Official — Source of Truth
 *The one place to check when a spec doc and live behavior might disagree. Supersedes `art-official-field-source-of-truth.md` and `art-official-flow-source-of-truth.md` — both fully absorbed below; stop maintaining those two separately.*
 
+> **2026-10-12 — Protocol + import contract moved to generated/versioned pages.**
+> For session conduct and paste rules use
+> [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol) and
+> [`/art-official/contract`](https://bernardbolter.com/art-official/contract)
+> (also inlined in [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing)).
+> Dry-run: `POST /api/art-official/validate`. This SoT remains the **dated
+> discrepancy log** between specs and live behaviour — not the session paste
+> source. Strip any instruction here that says to paste `reasoningStatus`
+> (derived; F1). Coverage counts come from the nightly artifact, not prose.
+
 **For Cursor:** validate against the live Payload schema and report discrepancies here. Do not silently "fix" mismatches by picking one side — flag them back for a decision.
 
 ## Purpose and governing rule
@@ -357,7 +367,7 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 - Identity fields (title, year, series name, medium, both-unit dimensions) live in each per-work block in the server-rendered HTML. Flip is a CSS state (`.is-flipped`) over both faces from the first commit. `--verso-min-width: 320px` is the size-floor variable; slot width/height stay the physical container so timeline scroll geometry is unchanged. A `rotateY` / `preserve-3d` scene was the first implementation and leaked verso onto the painting in Firefox; see Part 14.
 - Series name on Phase A comes from `filterSeries` (already on the client), not from widening `CATALOGUE_ARTWORK_SELECT`.
 - Alt text: `primaryImageAltText` → first vision sentence → identity label line (title, year, medium). Not title-only.
-- Homepage meta title/description recast as archive framing. Coverage line: `{n} artworks · {n} fully catalogued` (catalogued count is a `payload.count` on `reasoningStatus: complete`, not a per-row select widen).
+- Homepage meta title/description recast as archive framing. Coverage line: `{n} artworks · {n} fully catalogued` (catalogued count is **derived** — see Part 21; no longer a `payload.count` on the stored column).
 - Bio-entry paragraph-links removed from the homepage timeline marker layer. Throughline SVG connectors left in place — that removal is Phase 4 of the master brief, not homepage Phase A.
 - `drawings` / `performances` / `watercolors` added to `getSeriesColor`. Megacities `#E8453C`, videos `#8B5A2B`. Keep-row hexes are the live helper values, not the spec's screenshot estimates.
 
@@ -492,6 +502,44 @@ Reading copy may remain as a superseded chat handoff; **this file is canonical.*
 
 ---
 
+## Part 21 — Derived reasoningStatus (2026-10-11)
+
+`reasoningStatus` is **derived**, not written for public use. Stored column remains in Payload unread by public surfaces (mid-migration safety).
+
+**Rule**
+- **complete** = completed primary session with `messages.length > 0` **and** a why-field (`intent` ∨ `formalContributionAssessment` ∨ `descriptionShort` ∨ `workContext`)
+- **partial** = session+messages but no why, **or** why but no such session (report splits these as `session-but-no-why` / `why-but-no-session`)
+- **stub** = neither
+- Zero-message completed sessions are ghost shells — not cataloguing evidence. Same test gates the verso `formatCatalogueStatus` date list.
+
+**Stopped writes:** session commit blind `complete`, envelope guarded `reasoningStatus` write, Quick Upload `stub`, schema `defaultValue`. Field allowlisted forbidden. Backfill script retired (exits non-zero).
+
+**Consumers updated:** homepage `cataloguedCount`, verso catalogue-status dates, corpus artifact filters + JSON-LD projections, `/corpus` status filter, unreasoned-queue, artwork page overlay via `getArtworkForPage`.
+
+**Importer gap closed going forward:** session envelope schema accepts `fieldUpdateTimeline`. Historical coverage for ~23 envelope sessions is lost (plain `{role,content}` messages only) — no reconstruction attempted; original pastes are the only recovery path.
+
+**Coverage line is a derived figure** — will move as evidence meets the rule (expected first move 29 → 31). Build report `reasoningEvidence` publishes distribution + complete-evidence buckets (live-timeline / envelope-transcript) + ghost-shell session count alongside `reasoningComplete`.
+
+---
+
+## Part 22 — Protocol + contract pages + briefing + validate (2026-10-12)
+
+Implemented `docs/sept-revamp/art-official-protocol-contract-brief.md`.
+
+| Surface | Role |
+|---|---|
+| `/art-official/protocol` | Hand-written versioned protocol (`protocolDocument.ts`, currently 12 beats = July 11 + revisits) |
+| `/art-official/contract` | Generated nightly from importer/allowlist (`buildArtOfficialContract`) |
+| `/api/corpus/briefing` | Order: freshness → **protocol** → **contract** → corpus |
+| `POST /api/art-official/validate` | Dry-run; accepted / rejected / silentlyDropped; commits nothing |
+| `data/corpus/contract.json` + `protocol.txt` | Written with nightly `corpus:build`; uploaded to R2 |
+
+Bernard resolutions locked into protocol: vision A-2.0 non-blind (fork closed); throughlines short slug + 4–6 word title + create/reinforce/extend/weaken; revisits beat; money ask-in-prose never write field; `reasoningStatus` derived (strip paste instruction); coverage from artifact only; pre-upload = four context Qs then blind as its own beat.
+
+Superseded-in-place banners on session-protocol, field-SoT, cursor-followup, duplicate SoT twin, dialogue-spec pointer, and the design brief.
+
+---
+
 ## Part 30 — Homepage first-paint: Critical-CH 307 + timeline LCP (2026-10-13)
 
 **307 on `/` (normal path, not query-only).** Not Next redirects, not CF. Payload `withPayload` injects `Accept-CH` + `Critical-CH: Sec-CH-Prefers-Color-Scheme` on `/:path*` (admin theme via `getRequestTheme`). Browsers without the hint 307-retry the same URL before first paint (~200–1000ms). Curl never sees it. **Fix:** `next.config.ts` strips those three headers after `withPayload` (keeps `X-Powered-By`). Admin theme still resolves via cookie/default. Live needs deploy.
@@ -547,6 +595,7 @@ Homepage identity fields (title, year, medium, dimensions, series) extracted to 
 - 35 throughlines renamed + titled from `docs/throughlines/throughline-short-titles-draft.md` (2026-10-12).
 - 7 bio entries titled/renamed (2026-10-12): Utrecht pair merged — fuller `-2` text kept under `leaving-utrecht`; shorter original + `-2` (+ prior long slugs) 308 to it. No other collision-suffixed (`-2`…`-99`) slugs remain on bio or throughlines.
 - Note: `linkedArtworkSlugs` is still empty on throughlines/bios — Related Patterns / verso connectors have nothing to attach until links are populated.
+
 
 ---
 

@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
-import { getPayload } from 'payload'
 
 import {
-  buildCorpusResponse,
-  type CorpusFormat,
-} from '@/lib/corpus/buildCorpusResponse'
+  buildIndexResponseFromArtifact,
+  buildRootFeedFromArtifact,
+} from '@/lib/corpus/artifact/projectFromArtifact'
+import {
+  artifactResponseHeaders,
+  readCorpusArtifact,
+} from '@/lib/corpus/artifact/readCorpusArtifact'
 import {
   CORPUS_BASE,
   CORPUS_INDEX_PER_PAGE,
@@ -13,21 +16,16 @@ import {
   CORPUS_SURVEY_PER_PAGE,
 } from '@/lib/corpus/constants'
 import { parseCorpusIndexFilters } from '@/lib/corpus/corpusIndexFilters'
-import {
-  fetchCorpusArtist,
-  fetchCorpusArtworks,
-  fetchCorpusSeries,
-  fetchCorpusTotalArtworks,
-} from '@/lib/corpus/fetchCorpusData'
-import { fetchSessionCountBySlug } from '@/lib/corpus/fetchSessionCounts'
 import { corpusResponseHeaders } from '@/lib/corpus/ldJsonHeaders'
 import { parsePageParam, parsePerPageParam } from '@/lib/corpus/pagination'
-import config from '@payload-config'
 
-/** Always live from Payload — never an ISR snapshot shared with HTML pages. */
+/**
+ * Legacy bulk / format=index entry — served from the nightly artifact.
+ * Prefer /api/corpus/index, /api/corpus/{slug}, /api/corpus/all.
+ */
 export const dynamic = 'force-dynamic'
 
-function parseFormat(value: string | null): CorpusFormat {
+function parseFormat(value: string | null): 'index' | 'jsonld' {
   return value === 'index' ? 'index' : 'jsonld'
 }
 
@@ -60,24 +58,41 @@ export async function GET(request: Request) {
   const page = parsePageParam(searchParams.get('page'))
   const perPage = parsePerPageParam(searchParams.get('perPage'), defaultPerPage, maxPerPage)
 
-  const payload = await getPayload({ config })
-  const baseUrl = CORPUS_BASE
+  const loaded = await readCorpusArtifact()
+  if (!loaded) {
+    return NextResponse.json(
+      {
+        error: 'Corpus artifact unavailable',
+        message:
+          'Nightly artifact missing or unparseable. No live fallback. Re-run pnpm corpus:build.',
+      },
+      { status: 503, headers },
+    )
+  }
 
-  const [artworks, seriesList, artist, totalArtworks, sessionCountBySlug] = await Promise.all([
-    fetchCorpusArtworks(payload, filters),
-    fetchCorpusSeries(payload),
-    fetchCorpusArtist(payload),
-    fetchCorpusTotalArtworks(payload),
-    fetchSessionCountBySlug(payload),
-  ])
+  if (format === 'index') {
+    const body = buildIndexResponseFromArtifact({
+      artifact: loaded.artifact,
+      filters,
+      depth,
+      page,
+      perPage,
+      baseUrl: CORPUS_BASE,
+    })
+    return NextResponse.json(body, {
+      headers: artifactResponseHeaders(headers, loaded.meta),
+    })
+  }
 
-  const body = buildCorpusResponse(format, artworks, seriesList, artist, baseUrl, filters, {
-    totalArtworks,
-    depth,
+  const body = buildRootFeedFromArtifact({
+    artifact: loaded.artifact,
+    filters,
     page,
     perPage,
-    sessionCountBySlug,
+    baseUrl: CORPUS_BASE,
   })
 
-  return NextResponse.json(body, { headers })
+  return NextResponse.json(body, {
+    headers: artifactResponseHeaders(headers, loaded.meta),
+  })
 }

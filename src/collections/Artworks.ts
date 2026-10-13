@@ -211,7 +211,9 @@ export const Artworks: CollectionConfig = {
                 {
                   name: 'reasoningStatus',
                   type: 'select',
-                  defaultValue: 'complete',
+                  // Column retained unread by public surfaces — status is derived at
+                  // build/read time from session messages + why-fields. No default;
+                  // do not write this field from commit, envelope, or Quick Upload.
                   options: [
                     { label: 'Stub — quick upload only', value: 'stub' },
                     { label: 'Partial — some sessions completed', value: 'partial' },
@@ -221,7 +223,7 @@ export const Artworks: CollectionConfig = {
                     width: '50%',
                     readOnly: true,
                     description:
-                      'Tracks how deeply this artwork has been catalogued through Art/Official. Set by Quick Upload and session commit — not edited manually.',
+                      'Legacy stored column — public surfaces derive status from completed primary sessions (messages > 0) plus why-fields. Not written by commit, envelope, or Quick Upload.',
                   },
                 },
                 {

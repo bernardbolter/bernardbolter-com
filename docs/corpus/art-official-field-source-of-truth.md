@@ -1,6 +1,14 @@
 # Art/Official Field Source of Truth
 *For Cursor: validate this against the live Payload schema and report discrepancies. Do not silently "fix" mismatches by picking one side — flag them back for a decision.*
 
+> **SUPERSEDED 2026-10-12 for import contract / writable fields.** Generated
+> contract: [`/art-official/contract`](https://bernardbolter.com/art-official/contract)
+> (from code). Protocol: [`/art-official/protocol`](https://bernardbolter.com/art-official/protocol).
+> Session start paste: [`/api/corpus/briefing`](https://bernardbolter.com/api/corpus/briefing).
+> Dry-run: `POST /api/art-official/validate`. Historical step→field map below may
+> still help reading old sessions; do not treat paste instructions here as live
+> (especially `reasoningStatus: complete` writes — F1).
+
 ## Changelog
 
 **2026-07-28** — `currentLocation.category`: added `unknown` (label "Unknown / unlocated") for confirmed-unknown whereabouts. Distinct from leaving the field blank and from `provenanceOriginKnown`. Speculative guesses still use `provenanceConfidenceLayer`.

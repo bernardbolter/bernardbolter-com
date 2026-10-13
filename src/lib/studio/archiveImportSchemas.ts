@@ -101,6 +101,18 @@ const sessionProposedAbstractSchema = z
   })
   .strict()
 
+/** Coverage timeline — field names only for ledger strength; values optional. */
+const sessionFieldUpdateTimelineEntrySchema = z
+  .object({
+    field: z.string().min(1),
+    value: z.unknown().optional(),
+    confidence: z.union([z.string(), z.number()]).optional(),
+    source: z.string().optional(),
+    timestamp: z.string().optional(),
+    targetCollection: z.string().optional(),
+  })
+  .passthrough()
+
 const sessionFieldsSchema = z
   .object({
     sessionType: envelopeSessionTypeSchema,
@@ -112,6 +124,8 @@ const sessionFieldsSchema = z
     proposedAbstracts: z.array(sessionProposedAbstractSchema).optional(),
     sessionNotes: z.string().optional(),
     messages: z.array(sessionMessageSchema),
+    /** Optional — future envelope imports carry coverage; historical pastes lacked this. */
+    fieldUpdateTimeline: z.array(sessionFieldUpdateTimelineEntrySchema).optional(),
   })
   .strict()
 

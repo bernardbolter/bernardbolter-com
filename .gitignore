@@ -48,6 +48,13 @@ next-env.d.ts
 
 /media
 
+# Local Payload catalogue snapshot for frontend work
+/.cache/
+
+# Nightly corpus artifact (regenerate with pnpm corpus:build)
+/data/corpus/*.json
+
+
 # Playwright
 node_modules/
 /test-results/

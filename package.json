@@ -24,6 +24,7 @@
     "rename:session-ids": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/rename-session-ids.ts",
     "rename:entry-slugs": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/rename-entry-slugs.ts",
     "check:public-prose": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/check-public-prose-markers.ts",
+    "corpus:build": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/buildCorpusArtifact.ts",
     "backfill:clip": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillClipEmbeddings.ts",
     "backfill:dinov2": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillDinov2Embeddings.ts",
     "backfill:reasoning-text": "cross-env NODE_OPTIONS=--no-deprecation tsx src/scripts/backfillReasoningTextEmbeddings.ts",
