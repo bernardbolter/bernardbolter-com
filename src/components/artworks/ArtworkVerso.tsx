@@ -1,14 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type CSSProperties,
-  type PointerEvent as ReactPointerEvent,
-} from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 
 import ArtworkIdentityLabel from '@/components/artworks/ArtworkIdentityLabel'
 import {
@@ -24,8 +17,6 @@ import type { CatalogueClientRow, FilterCategory, TimelineMarkersData } from '@/
 
 const CONNECTOR_GROUP_THROUGHLINES = 'Throughlines'
 const CONNECTOR_GROUP_BIOGRAPHY = 'Biography'
-const VERSO_PAGE_COUNT = 3
-const SWIPE_THRESHOLD_PX = 40
 
 type ArtworkVersoProps = {
   artwork: CatalogueClientRow
@@ -34,8 +25,7 @@ type ArtworkVersoProps = {
   sessionDates: string[]
   className?: string
   style?: CSSProperties
-  dataGridCard?: boolean
-  /** When false (flipped closed / grid deselected), dismiss any open overlay. */
+  /** When false (flipped closed), dismiss any open overlay. */
   active?: boolean
 }
 
@@ -76,63 +66,227 @@ function ConnectorChipGroup({
   )
 }
 
-function VersoPageNav({
-  page,
-  onPage,
+function IdentitySection({
+  artwork,
+  filterSeries,
+  title,
+  description,
 }: {
-  page: number
-  onPage: (next: number) => void
+  artwork: CatalogueClientRow
+  filterSeries: FilterCategory[]
+  title: string
+  description: string | null
 }) {
   return (
-    <div
-      className="artwork-verso__page-nav"
-      data-verso-page-nav=""
-      onClick={(event) => event.stopPropagation()}
-    >
-      <button
-        type="button"
-        className="artwork-verso__page-arrow artwork-verso__page-arrow--prev"
-        aria-label="Previous verso page"
-        disabled={page <= 0}
-        onClick={(event) => {
-          event.stopPropagation()
-          onPage(page - 1)
-        }}
-      >
-        ‹
-      </button>
-      <div className="artwork-verso__page-dots" role="tablist" aria-label="Verso pages">
-        {Array.from({ length: VERSO_PAGE_COUNT }, (_, index) => (
-          <button
-            key={index}
-            type="button"
-            role="tab"
-            aria-selected={page === index}
-            aria-label={`Verso page ${index + 1}`}
-            className={`artwork-verso__page-dot${page === index ? ' is-active' : ''}`}
-            onClick={(event) => {
-              event.stopPropagation()
-              onPage(index)
-            }}
+    <>
+      <h2 className="artwork-block__verso-title">{title}</h2>
+      <ArtworkIdentityLabel
+        artwork={artwork}
+        filterSeries={filterSeries}
+        includeTitle={false}
+        fields="full"
+        className="artwork-block__verso-identity"
+        renderSeriesAccent={(resolved) => (
+          <span
+            className="artwork-identity__accent artwork-identity__accent--block"
+            style={{ backgroundColor: resolved.color }}
+            aria-hidden
           />
-        ))}
-      </div>
-      <button
-        type="button"
-        className="artwork-verso__page-arrow artwork-verso__page-arrow--next"
-        aria-label="Next verso page"
-        disabled={page >= VERSO_PAGE_COUNT - 1}
-        onClick={(event) => {
-          event.stopPropagation()
-          onPage(page + 1)
-        }}
-      >
-        ›
-      </button>
+        )}
+      />
+      {description ? <p className="artwork-block__verso-description">{description}</p> : null}
+    </>
+  )
+}
+
+function ConnectorsSection({
+  throughlines,
+  bios,
+  openId,
+  onOpen,
+}: {
+  throughlines: VersoConnector[]
+  bios: VersoConnector[]
+  openId: string | null
+  onOpen: (id: string) => void
+}) {
+  if (throughlines.length === 0 && bios.length === 0) return null
+  return (
+    <div className="artwork-verso__connectors">
+      <ConnectorChipGroup
+        label={CONNECTOR_GROUP_THROUGHLINES}
+        connectors={throughlines}
+        openId={openId}
+        onOpen={onOpen}
+      />
+      <ConnectorChipGroup
+        label={CONNECTOR_GROUP_BIOGRAPHY}
+        connectors={bios}
+        openId={openId}
+        onOpen={onOpen}
+      />
     </div>
   )
 }
 
+function RecordSections({
+  versoRecord,
+  hasProvenance,
+  hasExhibitions,
+  status,
+}: {
+  versoRecord: CatalogueClientRow['versoRecord']
+  hasProvenance: boolean
+  hasExhibitions: boolean
+  status: string
+}) {
+  return (
+    <>
+      {hasProvenance ? (
+        <div className="artwork-verso__record-section">
+          <p className="artwork-verso__connector-label">Provenance</p>
+          {versoRecord?.provenanceSummary ? (
+            <p className="artwork-block__verso-status">{versoRecord.provenanceSummary}</p>
+          ) : null}
+          {versoRecord && versoRecord.provenanceClaims.length > 0 ? (
+            <ul className="artwork-verso__claim-list">
+              {versoRecord.provenanceClaims.map((row) => (
+                <li key={row.claim} className="artwork-verso__claim-item">
+                  {row.claim}
+                  {row.inferred ? (
+                    <span className="artwork-verso__claim-inferred"> — inferred</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      {hasExhibitions ? (
+        <div className="artwork-verso__record-section">
+          <p className="artwork-verso__connector-label">Exhibitions</p>
+          <ul className="artwork-verso__exhibition-list">
+            {versoRecord!.exhibitions.map((row) => (
+              <li key={`${row.year}-${row.title}`} className="artwork-verso__exhibition-item">
+                <span className="artwork-verso__exhibition-year">{row.year}</span>
+                {' — '}
+                {row.href ? (
+                  <Link href={row.href} onClick={(event) => event.stopPropagation()}>
+                    {row.title}
+                  </Link>
+                ) : (
+                  <span>{row.title}</span>
+                )}
+                {row.venue ? (
+                  <span className="artwork-verso__exhibition-venue"> · {row.venue}</span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <p className="artwork-block__verso-status">{status}</p>
+    </>
+  )
+}
+
+function VersoOverlays({
+  artworkId,
+  connectors,
+  openId,
+  onClose,
+  artworkById,
+}: {
+  artworkId: number
+  connectors: VersoConnector[]
+  openId: string | null
+  onClose: () => void
+  artworkById: Map<number, { slug: string; title: string }>
+}) {
+  return (
+    <>
+      {openId ? (
+        <div
+          className="artwork-verso__dismiss-layer"
+          data-verso-dismiss=""
+          aria-hidden
+          onClick={(event) => {
+            event.stopPropagation()
+            onClose()
+          }}
+        />
+      ) : null}
+
+      {connectors.map((connector) => {
+        const related = connector.linkedArtworkIds
+          .filter((id) => id !== artworkId)
+          .map((id) => artworkById.get(id))
+          .filter((row): row is { slug: string; title: string } => Boolean(row))
+        const isOpen = openId === connector.id
+        return (
+          <div
+            key={connector.id}
+            id={`verso-overlay-${connector.id}`}
+            className={`artwork-verso__overlay${isOpen ? ' is-open' : ''}`}
+            data-verso-overlay-panel=""
+            hidden={!isOpen}
+            role="dialog"
+            aria-modal={isOpen ? true : undefined}
+            aria-labelledby={`verso-overlay-title-${connector.id}`}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="artwork-verso__overlay-toolbar">
+              <button
+                type="button"
+                className="artwork-verso__overlay-close"
+                aria-label="Close claim"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onClose()
+                }}
+              >
+                Close
+              </button>
+            </div>
+            <div className="artwork-verso__overlay-scroll">
+              <p className="artwork-verso__overlay-kind">
+                {connector.kind === 'throughline'
+                  ? CONNECTOR_GROUP_THROUGHLINES
+                  : CONNECTOR_GROUP_BIOGRAPHY}
+              </p>
+              <h3
+                id={`verso-overlay-title-${connector.id}`}
+                className="artwork-verso__overlay-title"
+              >
+                {connector.label}
+              </h3>
+              <p className="artwork-verso__overlay-claim">{connector.claim}</p>
+              {related.length > 0 ? (
+                <div className="artwork-verso__overlay-related">
+                  <p className="artwork-verso__overlay-related-label">Also on</p>
+                  <ul className="artwork-verso__overlay-related-list">
+                    {related.map((row) => (
+                      <li key={row.slug}>
+                        <Link href={`/${row.slug}`}>{row.title}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              <Link href={connector.href} className="artwork-verso__overlay-page-link">
+                Open the full {connector.kind === 'throughline' ? 'throughline' : 'biography'} page →
+              </Link>
+            </div>
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+/** Timeline verso — single scroll face with chips, claim overlay, and record link. */
 export default function ArtworkVerso({
   artwork,
   filterSeries,
@@ -140,18 +294,16 @@ export default function ArtworkVerso({
   sessionDates,
   className,
   style,
-  dataGridCard = false,
   active = true,
 }: ArtworkVersoProps) {
   const [state] = useArtworks()
   const [openId, setOpenId] = useState<string | null>(null)
-  const [page, setPage] = useState(0)
-  const swipeStartX = useRef<number | null>(null)
 
   const title = artwork.title?.trim() || artwork.slug
   const recordHref = `/${artwork.slug}`
-  const description = resolveVersoDescription(artwork)
   const status = formatCatalogueStatus(sessionDates)
+  const series = resolveSeriesDisplay(artwork, filterSeries)
+  const description = resolveVersoDescription(artwork)
   const throughlines = resolveVersoConnectors(
     artwork.id,
     'throughline',
@@ -159,7 +311,6 @@ export default function ArtworkVerso({
   )
   const bios = resolveVersoConnectors(artwork.id, 'bio', timelineMarkers.bioEntries)
   const connectors = useMemo(() => [...throughlines, ...bios], [throughlines, bios])
-  const series = resolveSeriesDisplay(artwork, filterSeries)
   const hasConnectors = connectors.length > 0
   const versoRecord = artwork.versoRecord
   const hasProvenance =
@@ -177,14 +328,9 @@ export default function ArtworkVerso({
   }, [state.original])
 
   useEffect(() => {
-    if (!active) {
-      setOpenId(null)
-      setPage(0)
-    }
+    if (!active) setOpenId(null)
   }, [active])
 
-  // Escape closes overlay first (capture); a later Escape reaches Artworks and flips.
-  // Pages never consume Escape.
   useEffect(() => {
     if (!openId) return
     const onKey = (event: KeyboardEvent) => {
@@ -197,52 +343,6 @@ export default function ArtworkVerso({
     return () => window.removeEventListener('keydown', onKey, true)
   }, [openId])
 
-  // Left/right arrows page when flipped and no claim overlay is open.
-  useEffect(() => {
-    if (!active || openId) return
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
-      const target = event.target as HTMLElement | null
-      if (target?.closest('input, textarea, select, [contenteditable="true"]')) return
-      event.preventDefault()
-      event.stopPropagation()
-      setPage((current) => {
-        if (event.key === 'ArrowLeft') return Math.max(0, current - 1)
-        return Math.min(VERSO_PAGE_COUNT - 1, current + 1)
-      })
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [active, openId])
-
-  const goPage = (next: number) => {
-    if (openId) return
-    setPage(Math.max(0, Math.min(VERSO_PAGE_COUNT - 1, next)))
-  }
-
-  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (openId) return
-    if (event.pointerType === 'mouse') return
-    swipeStartX.current = event.clientX
-  }
-
-  const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (openId || swipeStartX.current == null) {
-      swipeStartX.current = null
-      return
-    }
-    const delta = event.clientX - swipeStartX.current
-    swipeStartX.current = null
-    if (Math.abs(delta) < SWIPE_THRESHOLD_PX) return
-    event.stopPropagation()
-    if (delta < 0) goPage(page + 1)
-    else goPage(page - 1)
-  }
-
-  const onPointerCancel = () => {
-    swipeStartX.current = null
-  }
-
   const rootStyle = {
     ...style,
     ...(series ? ({ ['--verso-series-color' as string]: series.color } as CSSProperties) : null),
@@ -254,217 +354,56 @@ export default function ArtworkVerso({
       style={rootStyle}
       data-verso-tint={series ? 'series' : 'neutral'}
       data-verso-overlay={openId ? 'open' : undefined}
-      data-verso-page={page}
-      {...(dataGridCard ? { 'data-grid-card': '' } : {})}
+      data-verso-layout="full"
     >
       <div className="artwork-verso__card">
         <div
           className="artwork-verso__body"
-          onPointerDown={onPointerDown}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
+          onClick={(event) => event.stopPropagation()}
         >
-          {/* All three pages SSR'd; paging is visibility state only. */}
-          <div
-            className="artwork-verso__page"
-            data-verso-page-index="0"
-            hidden={page !== 0}
-          >
-            <div className="artwork-verso__body-inner">
-              <h2 className="artwork-block__verso-title">{title}</h2>
-              <ArtworkIdentityLabel
+          <div className="artwork-verso__body-inner">
+            <div className="artwork-verso__section artwork-verso__section--identity">
+              <IdentitySection
                 artwork={artwork}
                 filterSeries={filterSeries}
-                includeTitle={false}
-                className="artwork-block__verso-identity"
-                renderSeriesAccent={(resolved) => (
-                  <span
-                    className="artwork-identity__accent artwork-identity__accent--block"
-                    style={{ backgroundColor: resolved.color }}
-                    aria-hidden
-                  />
-                )}
+                title={title}
+                description={description}
               />
-              {description ? (
-                <p className="artwork-block__verso-description">{description}</p>
-              ) : null}
             </div>
-          </div>
-
-          <div
-            className="artwork-verso__page"
-            data-verso-page-index="1"
-            hidden={page !== 1}
-          >
-            <div className="artwork-verso__body-inner">
-              {hasConnectors ? (
-                <div className="artwork-verso__connectors">
-                  <ConnectorChipGroup
-                    label={CONNECTOR_GROUP_THROUGHLINES}
-                    connectors={throughlines}
-                    openId={openId}
-                    onOpen={setOpenId}
-                  />
-                  <ConnectorChipGroup
-                    label={CONNECTOR_GROUP_BIOGRAPHY}
-                    connectors={bios}
-                    openId={openId}
-                    onOpen={setOpenId}
-                  />
-                </div>
-              ) : (
-                <p className="artwork-verso__page-empty">No throughlines or biography links yet.</p>
-              )}
-            </div>
-          </div>
-
-          <div
-            className="artwork-verso__page"
-            data-verso-page-index="2"
-            hidden={page !== 2}
-          >
-            <div className="artwork-verso__body-inner">
-              {hasProvenance ? (
-                <div className="artwork-verso__record-section">
-                  <p className="artwork-verso__connector-label">Provenance</p>
-                  {versoRecord?.provenanceSummary ? (
-                    <p className="artwork-block__verso-status">{versoRecord.provenanceSummary}</p>
-                  ) : null}
-                  {versoRecord && versoRecord.provenanceClaims.length > 0 ? (
-                    <ul className="artwork-verso__claim-list">
-                      {versoRecord.provenanceClaims.map((row) => (
-                        <li key={row.claim} className="artwork-verso__claim-item">
-                          {row.claim}
-                          {row.inferred ? (
-                            <span className="artwork-verso__claim-inferred"> — inferred</span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-              ) : null}
-
-              {hasExhibitions ? (
-                <div className="artwork-verso__record-section">
-                  <p className="artwork-verso__connector-label">Exhibitions</p>
-                  <ul className="artwork-verso__exhibition-list">
-                    {versoRecord!.exhibitions.map((row) => (
-                      <li key={`${row.year}-${row.title}`} className="artwork-verso__exhibition-item">
-                        <span className="artwork-verso__exhibition-year">{row.year}</span>
-                        {' — '}
-                        {row.href ? (
-                          <Link href={row.href} onClick={(event) => event.stopPropagation()}>
-                            {row.title}
-                          </Link>
-                        ) : (
-                          <span>{row.title}</span>
-                        )}
-                        {row.venue ? (
-                          <span className="artwork-verso__exhibition-venue"> · {row.venue}</span>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-
-              <p className="artwork-block__verso-status">{status}</p>
+            {hasConnectors ? (
+              <div className="artwork-verso__section artwork-verso__section--connectors">
+                <ConnectorsSection
+                  throughlines={throughlines}
+                  bios={bios}
+                  openId={openId}
+                  onOpen={setOpenId}
+                />
+              </div>
+            ) : null}
+            <div className="artwork-verso__section artwork-verso__section--record">
+              <RecordSections
+                versoRecord={versoRecord}
+                hasProvenance={hasProvenance}
+                hasExhibitions={hasExhibitions}
+                status={status}
+              />
             </div>
           </div>
         </div>
 
-        <VersoPageNav page={page} onPage={goPage} />
-
-        {/* Record bar on every page — never buried on page 3 only. */}
         <div className="artwork-verso__footer" onClick={(event) => event.stopPropagation()}>
           <Link href={recordHref} className="artwork-verso__record-bar">
             <span className="artwork-verso__record-bar-label">{OPEN_THE_RECORD_LABEL}</span>
           </Link>
         </div>
 
-        {/*
-          Dimmed rim around the inset overlay: tap here closes the overlay only
-          (stopPropagation), never flips the card. Overlay covers the record bar
-          while open.
-        */}
-        {openId ? (
-          <div
-            className="artwork-verso__dismiss-layer"
-            data-verso-dismiss=""
-            aria-hidden
-            onClick={(event) => {
-              event.stopPropagation()
-              setOpenId(null)
-            }}
-          />
-        ) : null}
-
-        {/* All overlays are SSR'd with full claim text; only one is visible. */}
-        {connectors.map((connector) => {
-          const related = connector.linkedArtworkIds
-            .filter((id) => id !== artwork.id)
-            .map((id) => artworkById.get(id))
-            .filter((row): row is { slug: string; title: string } => Boolean(row))
-          const isOpen = openId === connector.id
-          return (
-            <div
-              key={connector.id}
-              id={`verso-overlay-${connector.id}`}
-              className={`artwork-verso__overlay${isOpen ? ' is-open' : ''}`}
-              data-verso-overlay-panel=""
-              hidden={!isOpen}
-              role="dialog"
-              aria-modal={isOpen ? true : undefined}
-              aria-labelledby={`verso-overlay-title-${connector.id}`}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="artwork-verso__overlay-toolbar">
-                <button
-                  type="button"
-                  className="artwork-verso__overlay-close"
-                  aria-label="Close claim"
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    setOpenId(null)
-                  }}
-                >
-                  Close
-                </button>
-              </div>
-              <div className="artwork-verso__overlay-scroll">
-                <p className="artwork-verso__overlay-kind">
-                  {connector.kind === 'throughline'
-                    ? CONNECTOR_GROUP_THROUGHLINES
-                    : CONNECTOR_GROUP_BIOGRAPHY}
-                </p>
-                <h3
-                  id={`verso-overlay-title-${connector.id}`}
-                  className="artwork-verso__overlay-title"
-                >
-                  {connector.label}
-                </h3>
-                <p className="artwork-verso__overlay-claim">{connector.claim}</p>
-                {related.length > 0 ? (
-                  <div className="artwork-verso__overlay-related">
-                    <p className="artwork-verso__overlay-related-label">Also on</p>
-                    <ul className="artwork-verso__overlay-related-list">
-                      {related.map((row) => (
-                        <li key={row.slug}>
-                          <Link href={`/${row.slug}`}>{row.title}</Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-                <Link href={connector.href} className="artwork-verso__overlay-page-link">
-                  Open the full {connector.kind === 'throughline' ? 'throughline' : 'biography'} page
-                  →
-                </Link>
-              </div>
-            </div>
-          )
-        })}
+        <VersoOverlays
+          artworkId={artwork.id}
+          connectors={connectors}
+          openId={openId}
+          onClose={() => setOpenId(null)}
+          artworkById={artworkById}
+        />
       </div>
     </div>
   )

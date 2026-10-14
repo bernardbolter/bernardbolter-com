@@ -18,7 +18,6 @@ export default function Artworks() {
   const [state] = useArtworks()
   const pathname = usePathname()
   const [flippedSlug, setFlippedSlug] = useState<string | null>(null)
-  const [gridSelectedSlug, setGridSelectedSlug] = useState<string | null>(null)
   const showSwitcher = (state.viewportWidth || 0) >= 550 && !state.showSlideshow
   const currentSlug =
     state.formattedArtworks?.artworksArray[state.currentArtworkIndex]?.slug?.trim() ||
@@ -27,7 +26,6 @@ export default function Artworks() {
 
   useEffect(() => {
     setFlippedSlug(null)
-    setGridSelectedSlug(null)
   }, [state.artworkViewTimeline, state.showSlideshow, state.filtersArray, state.isAvailableFilter])
 
   useEffect(() => {
@@ -38,10 +36,7 @@ export default function Artworks() {
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setFlippedSlug(null)
-        setGridSelectedSlug(null)
-      }
+      if (event.key === 'Escape') setFlippedSlug(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -74,7 +69,13 @@ export default function Artworks() {
   }
 
   return (
-    <HomepageFlipProvider value={{ flippedSlug, setFlippedSlug, gridSelectedSlug, setGridSelectedSlug }}>
+    <HomepageFlipProvider
+      value={{
+        flippedSlug,
+        setFlippedSlug,
+        currentTimelineSlug: currentSlug,
+      }}
+    >
       <section className="relative z-artwork min-h-screen w-full">
         {showSwitcher && <ArtworkSwitcher />}
 

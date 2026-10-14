@@ -153,8 +153,9 @@ function wordCount(value: string): number {
 
 /**
  * Display label for a throughline or bio entry link.
- * Order: shortTitle → claim text if already short (≤6 words) → omit.
- * Never humanise a slug.
+ * Order: shortTitle → full claim if ≤6 words → truncated claim (first 6 words + …).
+ * Never humanise a slug. Truncation is temporary scaffolding while shortTitles
+ * remain unfilled on live throughlines/bio entries — prefer writing shortTitle.
  */
 export function resolveConnectorCardLabel(entry: {
   text: string
@@ -165,9 +166,10 @@ export function resolveConnectorCardLabel(entry: {
   if (shortTitle) return shortTitle
 
   const text = entry.text.replace(/\s+/g, ' ').trim()
-  if (text && wordCount(text) <= SHORT_LABEL_MAX_WORDS) return text
-
-  return null
+  if (!text) return null
+  const words = text.split(/\s+/).filter(Boolean)
+  if (words.length <= SHORT_LABEL_MAX_WORDS) return text
+  return `${words.slice(0, SHORT_LABEL_MAX_WORDS).join(' ')}…`
 }
 
 export type VersoConnectorLink = {

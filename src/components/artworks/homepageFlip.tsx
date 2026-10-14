@@ -5,15 +5,14 @@ import { createContext, useContext, type ReactNode } from 'react'
 export type HomepageFlipContextValue = {
   flippedSlug: string | null
   setFlippedSlug: (slug: string | null | ((prev: string | null) => string | null)) => void
-  gridSelectedSlug: string | null
-  setGridSelectedSlug: (slug: string | null | ((prev: string | null) => string | null)) => void
+  /** Timeline focus slug — flip-open only allowed for this work (auto-unflip still runs on scroll). */
+  currentTimelineSlug: string | null
 }
 
 const HomepageFlipContext = createContext<HomepageFlipContextValue>({
   flippedSlug: null,
   setFlippedSlug: () => {},
-  gridSelectedSlug: null,
-  setGridSelectedSlug: () => {},
+  currentTimelineSlug: null,
 })
 
 export function HomepageFlipProvider({

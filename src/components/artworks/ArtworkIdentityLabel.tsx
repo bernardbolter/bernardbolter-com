@@ -21,8 +21,8 @@ export type ArtworkIdentityLabelProps = {
    */
   renderSeriesAccent?: (series: SeriesDisplay) => ReactNode
   /**
-   * `series-line` — accent sits on the series row (timeline block, title overlay).
-   * `leading` — accent sits before the whole field stack (grid caption).
+   * `series-line` — accent sits on the series row (grid caption, timeline, title).
+   * `leading` — accent sits before the whole field stack (legacy; prefer series-line).
    */
   seriesAccentPlacement?: 'series-line' | 'leading'
   /** When false, omit title (verso keeps its own h2). Default true. */

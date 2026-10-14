@@ -234,6 +234,27 @@ export function RotateFlipSvg({ className }: { className?: string }) {
   )
 }
 
+/** Grid open-record affordance — same stroke vocabulary as RotateFlipSvg. */
+export function OpenArtworkSvg({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      width="18"
+      height="18"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M7 17L17 7" />
+      <path d="M8 7h9v9" />
+    </svg>
+  )
+}
+
 export function PlayButtonSvg() {
   return (
     <svg viewBox="0 0 52 50" aria-hidden="true">

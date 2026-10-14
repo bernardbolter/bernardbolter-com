@@ -34,7 +34,7 @@ const TICK_AXIS_OFFSET_PX = 18
 export default function Timeline() {
   const router = useRouter()
   const [state, setState] = useArtworks()
-  const { flippedSlug, setFlippedSlug } = useHomepageFlip()
+  const { flippedSlug, setFlippedSlug, currentTimelineSlug } = useHomepageFlip()
   const timelineRef = useRef<HTMLDivElement>(null)
   const isProgramScroll = useRef(false)
   const pointerActive = useRef(false)
@@ -223,7 +223,13 @@ export default function Timeline() {
             'data-timeline-artwork-flip',
           )
           if (flipSlug) {
-            setFlippedSlug((prev) => (prev === flipSlug ? null : flipSlug))
+            // Only open flip for the focused (current) work — off-center slots
+            // would immediately reverse via the currentSlug unflip effect.
+            setFlippedSlug((prev) => {
+              if (prev === flipSlug) return null
+              if (flipSlug === currentTimelineSlug) return flipSlug
+              return prev
+            })
           } else {
             const href = target.closest('a[href]')?.getAttribute('href')
             if (href) {
@@ -249,6 +255,7 @@ export default function Timeline() {
     },
     [
       beginPointerTracking,
+      currentTimelineSlug,
       endPointerTracking,
       flippedSlug,
       movePointerTracking,

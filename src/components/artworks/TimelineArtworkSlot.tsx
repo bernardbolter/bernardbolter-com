@@ -43,13 +43,15 @@ export default function TimelineArtworkSlot({
   isMobile,
 }: TimelineArtworkSlotProps) {
   const [state] = useArtworks()
-  const { flippedSlug, setFlippedSlug } = useHomepageFlip()
+  const { flippedSlug, setFlippedSlug, currentTimelineSlug } = useHomepageFlip()
   const slotRef = useRef<HTMLDivElement>(null)
   const [hasHydrated, setHasHydrated] = useState(false)
   const [inView, setInView] = useState(index < TIMELINE_INITIAL_LOAD_COUNT)
   const seriesColor = getSeriesColor(resolveSeriesSlug(artwork) ?? 'default')
   const slug = artwork.slug?.trim() || ''
   const flipped = Boolean(slug && flippedSlug === slug)
+  // Off-center works auto-unflip when focus moves — don't open a flip that would reverse.
+  const canOpenFlip = Boolean(slug && slug === currentTimelineSlug)
 
   useEffect(() => {
     setHasHydrated(true)
@@ -97,7 +99,14 @@ export default function TimelineArtworkSlot({
         timelineMarkers={state.timelineMarkers}
         sessionDates={state.sessionDatesByArtworkId[artwork.id] ?? []}
         flipped={flipped}
-        onToggleFlip={() => setFlippedSlug(flipped ? null : slug)}
+        flipEnabled={canOpenFlip || flipped}
+        onToggleFlip={() => {
+          if (flipped) {
+            setFlippedSlug(null)
+            return
+          }
+          if (canOpenFlip) setFlippedSlug(slug)
+        }}
         allowFootprintBreak={isMobile}
         image={
           showImage ? (

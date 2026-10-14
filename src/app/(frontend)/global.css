@@ -576,7 +576,7 @@ h6 {
   cursor: pointer;
 }
 
-.artwork-grid__image-frame svg {
+.artwork-grid__image-frame > svg {
   position: absolute;
   width: 50px;
   height: 50px;
@@ -593,22 +593,6 @@ h6 {
   overflow: visible;
   transform: translate(var(--scatter-x, 0px), var(--scatter-y, 0px));
   transform-origin: center center;
-  transition: transform 0.28s ease;
-}
-
-.artwork-grid__image-container.is-selected {
-  position: relative;
-  z-index: 6;
-}
-
-.artwork-grid__image-container.is-selected .artwork-grid__image-wrapper {
-  transform: translate(var(--scatter-x, 0px), var(--scatter-y, 0px))
-    scale(var(--grid-selection-scale, 1.35));
-}
-
-.artwork-grid__container.is-selecting .artwork-grid__image-container:not(.is-selected) {
-  opacity: 0.32;
-  transition: opacity 0.25s ease;
 }
 
 .artwork-grid__image-frame {
@@ -619,34 +603,50 @@ h6 {
   background: transparent;
   cursor: pointer;
   line-height: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
-.artwork-grid__card {
+/*
+ * Corner open affordance — same 44px corner vocabulary as timeline flip icon.
+ * Light glyph + dark drop-shadow so it reads on both sky and satellite.
+ * Resting opacity:0 only under (hover:hover) and (pointer:fine); touch branch
+ * keeps it persistent. pointer-events:none so the image link receives the click.
+ */
+.artwork-grid__open-icon {
   position: absolute;
-  left: 0;
-  top: 0;
-  visibility: hidden;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: #f4f4f4;
+  filter: drop-shadow(0 0 1.25px rgba(0, 0, 0, 0.95))
+    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
   pointer-events: none;
-  opacity: 0;
 }
 
-.artwork-grid__image-container.is-selected .artwork-grid__card {
-  position: fixed;
-  inset: 0 0 auto auto;
-  z-index: 4000;
-  visibility: visible;
-  pointer-events: auto;
-  opacity: 1;
-  width: min(24rem, calc(100vw - 2rem));
-  min-width: var(--verso-min-width, 320px);
-  max-height: calc(100vh - 1.5rem);
-  overflow: auto;
-  box-sizing: border-box;
-  padding: 1.1rem 1.15rem 1.2rem;
-  background: var(--title-light);
-  box-shadow: 0 1px 0 var(--title-dark);
-  border-left: 4px solid var(--title-dark);
-  transition: opacity 0.25s ease;
+@media (hover: hover) and (pointer: fine) {
+  .artwork-grid__open-icon {
+    display: flex;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+  }
+
+  .artwork-grid__image-frame:hover .artwork-grid__open-icon,
+  .artwork-grid__image-frame:focus-visible .artwork-grid__open-icon {
+    opacity: 1;
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .artwork-grid__open-icon {
+    display: flex;
+    opacity: 1;
+  }
 }
 
 .artwork-grid__image {
@@ -701,39 +701,57 @@ h6 {
   box-sizing: border-box;
 }
 
-.artwork-grid__info .artwork-identity {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 0.375rem;
-}
-
 .artwork-grid__info .artwork-identity__fields {
-  gap: 0.1rem;
+  gap: 0.2rem;
 }
 
 .artwork-grid__info .artwork-identity__title {
-  color: var(--text-strong);
-  font-size: 12px;
-  font-weight: 300;
-  line-height: 1.4;
-  font-family: inherit;
+  margin: 0;
+  color: var(--title-text-dark, var(--text-strong));
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  font-family: var(--font-barlow), sans-serif;
   letter-spacing: normal;
 }
 
-.artwork-grid__info .artwork-identity__year,
-.artwork-grid__info .artwork-identity__medium,
-.artwork-grid__info .artwork-identity__dimensions,
+.artwork-grid__info .artwork-identity__title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.artwork-grid__info .artwork-identity__title a:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+}
+
 .artwork-grid__info .artwork-identity__series {
-  color: var(--text-strong);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  color: var(--text-muted, var(--title-text));
+  font-size: 11px;
+  font-weight: 400;
   line-height: 1.25;
+  font-family: var(--font-barlow), sans-serif;
+}
+
+.artwork-grid__info .artwork-identity__series-name {
+  color: inherit;
+  text-decoration: none;
+}
+
+.artwork-grid__info .artwork-identity__series-name:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
 }
 
 .artwork-identity__accent--grid {
-  width: 10px;
-  height: 10px;
-  margin-top: 0.25rem;
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
 .artworks-slideshow__container {
@@ -895,6 +913,11 @@ h6 {
   .artwork-block__flip-icon {
     display: flex;
   }
+}
+
+/* Off-focus timeline slot — no flip affordance (would reverse immediately). */
+.artwork-block--flip-locked .artwork-block__flip-surface {
+  cursor: default;
 }
 
 /* Shared identity fields — one markup source for block / grid / title overlay. */
@@ -1078,6 +1101,59 @@ h6 {
   width: 100%;
   margin-block: auto;
   padding: 0.55rem 0.65rem 0.35rem;
+}
+
+/* Timeline full: fill the card height; spread blocks; scroll only when content overflows. */
+.artwork-verso[data-verso-layout='full'] .artwork-verso__body-inner {
+  box-sizing: border-box;
+  flex: 1 0 auto;
+  min-height: 100%;
+  margin-block: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.8rem;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-verso__section {
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-verso__section--connectors {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-verso__connectors {
+  margin: 0;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-verso__record-section {
+  margin-bottom: 0.65rem;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-verso__record-section:last-of-type {
+  margin-bottom: 0.4rem;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-block__verso-title {
+  margin-bottom: 0.45rem;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-block__verso-description {
+  margin: 0.5rem 0 0;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-block__verso-identity {
+  margin-bottom: 0;
+}
+
+.artwork-verso[data-verso-layout='full'] .artwork-block__verso-status {
+  margin-top: 0.15rem;
 }
 
 .artwork-verso__page-empty {
@@ -1548,19 +1624,6 @@ h6 {
   font-weight: 500;
   letter-spacing: 0.03em;
   color: var(--verso-muted, var(--title-text));
-}
-
-/* Grid selected card — same registrar shell as the timeline face. */
-.artwork-grid__image-container.is-selected .artwork-grid__card {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  width: auto;
-  height: auto;
-}
-
-.artwork-grid__image-container:not(.is-selected) .artwork-grid__card {
-  display: none;
 }
 
 .artwork-title__container--hidden-flipped {

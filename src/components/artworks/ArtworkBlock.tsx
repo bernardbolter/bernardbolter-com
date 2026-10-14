@@ -13,6 +13,11 @@ type ArtworkBlockProps = {
   sessionDates: string[]
   flipped: boolean
   onToggleFlip: () => void
+  /**
+   * When false, the front face will not open a flip (no peel, no flip hit target).
+   * Used for off-focus timeline slots that would immediately auto-unflip.
+   */
+  flipEnabled?: boolean
   image: ReactNode
   /** Mobile timeline may let the verso break the painting footprint. */
   allowFootprintBreak?: boolean
@@ -25,10 +30,12 @@ export default function ArtworkBlock({
   sessionDates,
   flipped,
   onToggleFlip,
+  flipEnabled = true,
   image,
   allowFootprintBreak = false,
 }: ArtworkBlockProps) {
   const title = artwork.title?.trim() || artwork.slug
+  const canInteractFlip = flipEnabled || flipped
   /** Keep preserve-3d mounted through the close animation, then drop it. */
   const [flip3d, setFlip3d] = useState(flipped)
   /** Hover peel — same single-slot 3D mount, small rotateY only. */
@@ -40,6 +47,10 @@ export default function ArtworkBlock({
       setPeeling(false)
     }
   }, [flipped])
+
+  useEffect(() => {
+    if (!canInteractFlip) setPeeling(false)
+  }, [canInteractFlip])
 
   useEffect(() => {
     if (flipped) return
@@ -61,7 +72,7 @@ export default function ArtworkBlock({
   const mount3d = flip3d || peeling
 
   const onPeelEnter = () => {
-    if (flipped) return
+    if (!canInteractFlip || flipped) return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
     setPeeling(true)
@@ -77,7 +88,9 @@ export default function ArtworkBlock({
     <article
       className={`artwork-block${flipped ? ' is-flipped' : ''}${peeling && !flipped ? ' is-peeling' : ''}${
         mount3d ? ' artwork-block--flip-3d' : ''
-      }${allowFootprintBreak ? ' artwork-block--may-break-footprint' : ''}`}
+      }${allowFootprintBreak ? ' artwork-block--may-break-footprint' : ''}${
+        !canInteractFlip ? ' artwork-block--flip-locked' : ''
+      }`}
       data-artwork-slug={artwork.slug}
     >
       <div className="artwork-block__scene" onTransitionEnd={onSceneTransitionEnd}>
@@ -85,13 +98,16 @@ export default function ArtworkBlock({
           <button
             type="button"
             className="artwork-block__flip-surface"
-            data-timeline-artwork-flip={artwork.slug}
+            {...(canInteractFlip ? { 'data-timeline-artwork-flip': artwork.slug } : {})}
             aria-pressed={flipped}
-            aria-label={`Details for ${title}`}
+            aria-label={canInteractFlip ? `Details for ${title}` : title}
+            aria-disabled={!canInteractFlip || undefined}
+            tabIndex={canInteractFlip ? undefined : -1}
             onClick={(event) => event.preventDefault()}
             onMouseEnter={onPeelEnter}
             onMouseLeave={onPeelLeave}
             onKeyDown={(event) => {
+              if (!canInteractFlip) return
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault()
                 onToggleFlip()
@@ -99,9 +115,11 @@ export default function ArtworkBlock({
             }}
           >
             {image}
-            <span className="artwork-block__flip-icon" aria-hidden>
-              <RotateFlipSvg />
-            </span>
+            {canInteractFlip ? (
+              <span className="artwork-block__flip-icon" aria-hidden>
+                <RotateFlipSvg />
+              </span>
+            ) : null}
           </button>
         </div>
 

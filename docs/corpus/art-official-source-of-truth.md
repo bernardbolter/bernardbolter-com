@@ -654,6 +654,45 @@ Homepage identity fields (title, year, medium, dimensions, series) extracted to 
 
 ---
 
+## Part 36 — Timeline scroll verso + connector labels (2026-10-13)
+
+**UI.** Timeline flip uses a single scrollable verso (`layout="scroll"`); grid keeps the three-page click-through (`layout="paged"`). Throughline/bio chips sit on the timeline back face again instead of behind page 2.
+
+**Data mismatch (Part 23).** Live catalogue still has **no `shortTitle`** on any of the 35 throughlines or 8 bio entries, despite Part 23 recording the draft titles as applied. `resolveConnectorCardLabel` previously **omitted** long claims without `shortTitle`, so every verso / Related Patterns chip disappeared. Linked artworks are populated (30/35 throughlines have `linkedArtworkIds`) — the earlier “links empty” note in Part 23 is stale for the current snapshot.
+
+**Decided for now.** Label order is **shortTitle → claim ≤6 words → truncated claim (first 6 words + …)**. Still never humanise a slug. Truncation is scaffolding until `shortTitle` is actually written from `docs/throughlines/throughline-short-titles-draft.md` (and the bio draft equivalents). **decided, not yet propagated** into Part 23’s “omit” line as a formal rewrite of that policy — prefer filling `shortTitle` over relying on truncation.
+
+---
+
+## Part 37 — Grid verso sizing report (2026-10-13)
+
+**Gate.** Measured before building “verso sizes to the cell.” **Do not ship cell-sized paged verso** — headroom fails the verify targets.
+
+**Constants.** `CELL_PAD = 20`, `GRID_SELECTION_SCALE = 1.35`, caption block 80px. Column widths: 258 (xl/5-col), 223 (l/4-col), 294 (mobile/1-col).
+
+**Headroom (desktop xl 1440).** Vertical gain from the cell image-zone is always **+40px** (`2 × CELL_PAD`). Samples:
+
+| Work | Painting | Cell image-zone | Area gain |
+|---|---|---|---|
+| world-war-two (square xl) | 207×207 | 258×247 | +49% |
+| stern-grove-8 (tall xs) | 120×311 | 258×351 | +143% |
+| the-end (wide landscape) | 195×70 | 258×110 | +108% |
+| euro-train (xs) | 120×76 | 258×116 | +228% |
+
+Mobile (390): same +40px height pattern; WW2 241×241 → 294×281 (+42% area).
+
+**Selection scale.** Only `.artwork-grid__image-wrapper` scales (CSS transform). The cell layout box does **not** grow; neighbours do not reflow. The verso card is a sibling of the wrapper, so it does not inherit the 1.35 scale.
+
+**Verdict.** Cell sizing will not clear WW2’s internal scrollbar / crowded page dots, and short landscapes stay ~110px tall. Worth it for xs/tall width only — not for the stated problem cases.
+
+**CSS debt (when building next).** Two competing `.artwork-grid__image-container.is-selected .artwork-grid__card` rules in `global.css` (older `position: fixed` panel vs later `absolute; inset: 0`). Leftover `min-width: 320px` exceeds a 258px column.
+
+**Decided (2026-10-13).** Fallback **2 — drop pages** in the grid (then superseded 2026-10-14).
+
+**Superseded (2026-10-14).** Grid verso removed entirely. Grid tile is a link to `/{slug}`; caption is title + series (dot on series line); corner open icon uses `(hover: hover)/(pointer: coarse)` not viewport width. `gridSelectedSlug` retired. `ArtworkVerso` is timeline-only (scroll face, chips, overlay) — `scan`/`paged` variants gone.
+
+---
+
 ## Standing process
 
 1. Any chat session that finds a spec/reality mismatch, or makes a flow-level decision (retiring a mechanism, resolving an edge case), logs it here **the same session** — not left in chat scrollback for someone to rediscover later.

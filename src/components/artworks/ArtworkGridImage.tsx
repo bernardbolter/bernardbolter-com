@@ -1,19 +1,18 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, type CSSProperties } from 'react'
 
 import ArtworkR2Image from '@/components/artwork/ArtworkR2Image'
 import ArtworkIdentityLabel from '@/components/artworks/ArtworkIdentityLabel'
-import ArtworkVerso from '@/components/artworks/ArtworkVerso'
-import { PlayButtonSvg } from '@/components/icons'
-import { useHomepageFlip } from '@/components/artworks/homepageFlip'
+import { OpenArtworkSvg, PlayButtonSvg } from '@/components/icons'
 import {
   getArtworkImagePair,
   getPrimaryMediaDimensions,
   resolveSeriesSlug,
 } from '@/helpers/artworkCatalog'
 import { getSeriesColor } from '@/helpers/seriesColor'
-import { VERSO_MIN_WIDTH_PX, resolveCatalogueImageAlt } from '@/lib/artwork/catalogueIdentity'
+import { resolveCatalogueImageAlt } from '@/lib/artwork/catalogueIdentity'
 import { CELL_PAD, type GridItemLayout } from '@/lib/artwork/gridRealSize'
 import { getTranslateOffset } from '@/lib/artwork/gridTranslate'
 import { useArtworks } from '@/providers/ArtworkProvider'
@@ -48,7 +47,6 @@ function isVideoArtwork(artwork: CatalogueArtwork): boolean {
 
 export default function ArtworkGridImage({ layout, priority = false }: ArtworkGridImageProps) {
   const [state] = useArtworks()
-  const { gridSelectedSlug, setGridSelectedSlug } = useHomepageFlip()
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [imageFailed, setImageFailed] = useState(false)
 
@@ -62,19 +60,11 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
   const title = artwork.title?.trim() || artwork.slug
   const imageAlt = resolveCatalogueImageAlt(artwork)
   const slug = artwork.slug?.trim() || ''
-  const selected = Boolean(slug && gridSelectedSlug === slug)
-
-  const onSelectTile = () => {
-    if (gridSelectedSlug) {
-      setGridSelectedSlug(null)
-      return
-    }
-    if (slug) setGridSelectedSlug(slug)
-  }
+  const recordHref = slug ? `/${slug}` : '#'
 
   return (
     <article
-      className={`artwork-grid__image-container${selected ? ' is-selected' : ''}`}
+      className="artwork-grid__image-container"
       style={{
         width: columnWidth,
         paddingTop: CELL_PAD,
@@ -82,11 +72,9 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
         boxSizing: 'border-box',
         ['--scatter-x' as string]: `${translate.x}px`,
         ['--scatter-y' as string]: `${translate.y}px`,
-        ['--verso-min-width' as string]: `${VERSO_MIN_WIDTH_PX}px`,
       }}
       data-using-fallback-sizing={usingFallbackSizing ? 'true' : undefined}
       data-artwork-slug={slug}
-      data-grid-selected={selected ? slug : undefined}
     >
       <div
         className="artwork-grid__image-wrapper"
@@ -97,8 +85,8 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
           } as CSSProperties
         }
       >
-        <button
-          type="button"
+        <Link
+          href={recordHref}
           className="artwork-grid__image-frame"
           style={{
             position: 'relative',
@@ -106,12 +94,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
             height: displayHeight,
             display: 'block',
           }}
-          aria-pressed={selected}
-          aria-label={selected ? `Dismiss details for ${title}` : `Show details for ${title}`}
-          onClick={(event) => {
-            event.stopPropagation()
-            onSelectTile()
-          }}
+          aria-label={title}
         >
           {isVideo ? <PlayButtonSvg /> : null}
 
@@ -164,14 +147,18 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
               <p>{isVideo ? 'video' : 'no image'}</p>
             </div>
           )}
-        </button>
+
+          <span className="artwork-grid__open-icon" aria-hidden>
+            <OpenArtworkSvg />
+          </span>
+        </Link>
 
         <div className="artwork-grid__info">
           <ArtworkIdentityLabel
             artwork={artwork}
             filterSeries={state.filterSeries}
             fields="scan"
-            seriesAccentPlacement="leading"
+            seriesAccentPlacement="series-line"
             renderSeriesAccent={(resolved) => (
               <span
                 className="artwork-identity__accent artwork-identity__accent--grid"
@@ -182,16 +169,6 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
           />
         </div>
       </div>
-
-      <ArtworkVerso
-        artwork={artwork}
-        filterSeries={state.filterSeries}
-        timelineMarkers={state.timelineMarkers}
-        sessionDates={state.sessionDatesByArtworkId[artwork.id] ?? []}
-        className="artwork-block__face artwork-grid__card"
-        dataGridCard
-        active={selected}
-      />
     </article>
   )
 }
