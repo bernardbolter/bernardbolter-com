@@ -27,8 +27,6 @@ import type { EditionTierLabelMaps } from '@/lib/artwork/editionTierDisplay'
 import { collectArtworkSameAsUris } from '@/lib/artwork/sameAsUris'
 import { labelForSameAsUri } from '@/lib/artwork/sameAsDomainLabel'
 import { resolveArtworkTopLevelSeries } from '@/lib/artwork/resolveTopLevelSeries'
-import { resolveRecordCataloguingLabel } from '@/lib/artwork/recordCataloguingLabel'
-import { formatMonthYear } from '@/utilities/formatMonthYear'
 import type { Artist, Artwork } from '@/payload-types'
 
 type Props = {
@@ -202,27 +200,6 @@ function OriginalTierBlock({
   )
 }
 
-function RecordMetaFooter({ artwork }: { artwork: Artwork }) {
-  const reasoningLabel = resolveRecordCataloguingLabel(artwork)
-  const lastUpdated = formatMonthYear(artwork.updatedAt)
-
-  if (!artwork.catalogueNumber && !reasoningLabel && !lastUpdated) return null
-
-  return (
-    <div className="artwork-page__record-meta">
-      {artwork.catalogueNumber ? (
-        <p className="artwork-page__record-meta-line">{artwork.catalogueNumber}</p>
-      ) : null}
-      {reasoningLabel ? (
-        <p className="artwork-page__record-meta-line">{reasoningLabel}</p>
-      ) : null}
-      {lastUpdated ? (
-        <p className="artwork-page__record-meta-line">Last updated {lastUpdated}</p>
-      ) : null}
-    </div>
-  )
-}
-
 export default function Layer2StatusAndProvenance({
   artwork,
   artist,
@@ -261,12 +238,7 @@ export default function Layer2StatusAndProvenance({
     showEditionRegistry ||
     exhibitions.length > 0 ||
     loans.length > 0 ||
-    externalLinks.length > 0 ||
-    Boolean(
-      artwork.catalogueNumber ||
-        resolveRecordCataloguingLabel(artwork) ||
-        artwork.updatedAt,
-    )
+    externalLinks.length > 0
 
   if (!hasContent) return null
 
@@ -440,7 +412,6 @@ export default function Layer2StatusAndProvenance({
           </>
         ) : null}
 
-        <RecordMetaFooter artwork={artwork} />
       </div>
     </section>
   )

@@ -53,6 +53,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
   const { artwork, columnWidth, displayWidth, displayHeight, usingFallbackSizing } = layout
   const isVideo = isVideoArtwork(artwork)
   const seriesSlug = resolveSeriesSlug(artwork) ?? 'default'
+  const seriesColor = getSeriesColor(seriesSlug)
   const imagePair = getArtworkImagePair(artwork, 'grid')
   const { width: imageWidth, height: imageHeight } = getPrimaryMediaDimensions(artwork)
   const captionMaxWidth = columnWidth - (columnWidth - displayWidth) / 2
@@ -72,6 +73,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
         boxSizing: 'border-box',
         ['--scatter-x' as string]: `${translate.x}px`,
         ['--scatter-y' as string]: `${translate.y}px`,
+        ['--grid-series-color' as string]: seriesColor,
       }}
       data-using-fallback-sizing={usingFallbackSizing ? 'true' : undefined}
       data-artwork-slug={slug}
@@ -103,7 +105,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
               className="artwork-grid__placeholer-overlay"
               aria-hidden
               style={{
-                backgroundColor: getSeriesColor(seriesSlug),
+                backgroundColor: seriesColor,
                 zIndex: imageFailed ? 20 : 10,
               }}
             >
@@ -137,7 +139,7 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
             <div
               className="artwork-grid__placeholer-overlay artwork-placeholder"
               style={{
-                backgroundColor: getSeriesColor(seriesSlug),
+                backgroundColor: seriesColor,
                 zIndex: 10,
                 position: 'relative',
                 width: displayWidth,
@@ -148,8 +150,10 @@ export default function ArtworkGridImage({ layout, priority = false }: ArtworkGr
             </div>
           )}
 
-          <span className="artwork-grid__open-icon" aria-hidden>
-            <OpenArtworkSvg />
+          <span className="artwork-grid__open-veil" aria-hidden>
+            <span className="artwork-grid__open-icon">
+              <OpenArtworkSvg />
+            </span>
           </span>
         </Link>
 

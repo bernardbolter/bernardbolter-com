@@ -27,7 +27,7 @@ interface ArtworkImageProps {
    * the runtime preloads this image alone (not the rest of the eager row).
    */
   lcpCandidate?: boolean
-  /** R2 derivative — grid/similar 400w, timeline 400w+800w srcset, etc. */
+  /** R2 derivative — grid/similar 400w, timeline 400/800/1200w srcset, etc. */
   imageContext?: ArtworkImageContext
   onLoad?: () => void
   /** Overrides title-only alt. Catalogue homepage passes the identity label line. */
@@ -90,10 +90,10 @@ export default function ArtworkImage({
     >
       <ArtworkR2Image
         src={imagePair.src}
-        // srcSet only on the LCP candidate — React 19 preloads every eager
-        // imageSrcSet, which re-contended the first paint with five siblings.
-        // Timeline srcSet uses 1x/2x (no sizes needed).
-        srcSet={lcpCandidate ? imagePair.srcSet : undefined}
+        // Width-descriptor srcSet on every timeline tile (not only LCP). Lazy
+        // siblings are not React-19-preloaded; LCP stays the sole eager+high.
+        srcSet={imagePair.srcSet}
+        sizes={imagePair.srcSet ? `${displayWidth}px` : undefined}
         fallbackSrc={imagePair.fallback}
         alt={imageAlt}
         width={displayWidth}

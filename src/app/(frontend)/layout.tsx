@@ -1,6 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from 'next'
-import { Barlow, Barlow_Condensed, Staatliches } from 'next/font/google'
+import { Barlow, Barlow_Condensed, Source_Serif_4, Staatliches } from 'next/font/google'
 import { Suspense } from 'react'
 
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
@@ -34,6 +34,14 @@ const staatliches = Staatliches({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-staatliches',
+});
+
+/** Artist transcript voice on artwork / session pages. */
+const sourceSerif = Source_Serif_4({
+  weight: ['400', '600'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-source-serif',
 });
 
 export const metadata: Metadata = {
@@ -107,6 +115,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           ${barlow.variable}
           ${barlowCondensed.variable}
           ${staatliches.variable}
+          ${sourceSerif.variable}
           ${barlow.className}
         `}
       >

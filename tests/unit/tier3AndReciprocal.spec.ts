@@ -76,6 +76,8 @@ describe('Tier 4 reciprocal links', () => {
     expect(doc['art-official:relatedByThroughline']).toEqual([
       {
         name: 'Invented antiquity across the archive.',
+        claim: 'Invented antiquity across the archive.',
+        span: '1 work',
         url: `${baseUrl}/statement/throughlines/invented-antiquity`,
       },
     ])

@@ -234,24 +234,28 @@ export default function Layer0Image({
                   }}
                 >
                   <div
-                    className="artwork-image__image-wrapper"
+                    className={`artwork-image__image-wrapper${isLoaded && !hasError ? ' is-loaded' : ''}`}
                     style={{
                       width: displaySize.displayWidth,
                       height: displaySize.displayHeight,
-                      backgroundColor: seriesColor,
+                      // Series colour only while waiting — leave it under a loaded
+                      // image and subpixel contain gaps show a hairline on top/left.
+                      backgroundColor: isLoaded && !hasError ? 'transparent' : seriesColor,
                     }}
                   >
                     {(!isLoaded || hasError) && (
                       <div
-                        className="artwork-detail__placeholder-overlay"
+                        className={`artwork-image__loading-field${hasError ? ' artwork-image__loading-field--error' : ''}`}
                         aria-hidden={!hasError}
-                        style={{ zIndex: hasError ? 20 : 10 }}
                       >
-                        {hasError ? <p>image failed to load</p> : null}
+                        <p className="artwork-image__loading-title">{title}</p>
+                        {hasError ? (
+                          <p className="artwork-image__loading-error">image failed to load</p>
+                        ) : null}
                       </div>
                     )}
                     <ArtworkR2Image
-                      className="artwork-image__image"
+                      className={`artwork-image__image${isLoaded && !hasError ? ' is-loaded' : ''}`}
                       src={image.url}
                       fallbackSrc={image.fallbackUrl}
                       alt={image.alt || title || 'Bernard Bolter Artwork'}
@@ -274,10 +278,7 @@ export default function Layer0Image({
                         })
                       }}
                       style={{
-                        objectFit: 'contain',
-                        opacity: hasError ? 0 : 1,
-                        width: displaySize.displayWidth,
-                        height: displaySize.displayHeight,
+                        opacity: hasError ? 0 : isLoaded ? 1 : 0,
                       }}
                     />
                   </div>

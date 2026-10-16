@@ -198,6 +198,14 @@ export default function Timeline() {
   const handleCanvasPointerDown = useCallback(
     (event: ReactPointerEvent<HTMLDivElement>) => {
       if (event.button !== 0) return
+
+      const downTarget = event.target as HTMLElement
+      // Verso owns its pointer stream (scroll + flip-back). Canvas drag tracking
+      // would mark micro-moves as drags and swallow the unflip tap.
+      if (downTarget.closest('.artwork-block.is-flipped .artwork-block__face--back')) {
+        return
+      }
+
       beginPointerTracking(event.clientX, event.clientY)
 
       const pointerId = event.pointerId

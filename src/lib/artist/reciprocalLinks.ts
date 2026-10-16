@@ -3,8 +3,16 @@ import { CORPUS_BASE } from '@/lib/corpus/constants'
 import type { Artist, Artwork } from '@/payload-types'
 
 export type ReciprocalLink = {
+  /** Short title — prominent label. */
   name: string
   url: string
+  /** Full claim text — always SSR'd. */
+  claim: string
+  /**
+   * Span when derivable: year / year range, or how many works the claim touches.
+   * Null when neither is available.
+   */
+  span: string | null
 }
 
 function relationMatchesArtwork(
@@ -27,6 +35,58 @@ function entryLinksArtwork(
   return (linked ?? []).some((row) => relationMatchesArtwork(row, artwork))
 }
 
+function linkedArtworkCount(linked: (number | Artwork)[] | null | undefined): number {
+  return (linked ?? []).length
+}
+
+function yearsFromLinkedArtworks(linked: (number | Artwork)[] | null | undefined): number[] {
+  const years: number[] = []
+  for (const row of linked ?? []) {
+    if (!row || typeof row !== 'object') continue
+    if (typeof row.yearStart === 'number' && Number.isFinite(row.yearStart)) {
+      years.push(row.yearStart)
+    }
+    if (typeof row.yearCompleted === 'number' && Number.isFinite(row.yearCompleted)) {
+      years.push(row.yearCompleted)
+    }
+  }
+  return years
+}
+
+function formatYearRange(years: number[]): string | null {
+  if (years.length === 0) return null
+  const min = Math.min(...years)
+  const max = Math.max(...years)
+  if (min === max) return String(min)
+  return `${min}–${max}`
+}
+
+function formatWorksSpan(count: number): string | null {
+  if (count <= 0) return null
+  return count === 1 ? '1 work' : `${count} works`
+}
+
+/**
+ * Prefer an explicit date/year, then a range from linked works, then a work count.
+ */
+export function formatConnectorSpan(input: {
+  eventDate?: string | null
+  linked?: (number | Artwork)[] | null
+}): string | null {
+  const eventDate = input.eventDate?.replace(/\s+/g, ' ').trim()
+  if (eventDate) return eventDate
+
+  const yearRange = formatYearRange(yearsFromLinkedArtworks(input.linked))
+  if (yearRange) return yearRange
+
+  return formatWorksSpan(linkedArtworkCount(input.linked))
+}
+
+function pathForConnector(origin: string, path: string): string {
+  if (!origin) return path
+  return `${origin}${path}`
+}
+
 /**
  * Live reverse lookup: public statement throughlines whose linkedArtworkSlugs
  * include this artwork. No stored backfill — same pattern as Visual Similarity.
@@ -46,14 +106,17 @@ export function findRelatedThroughlines(
     const text = entry.text?.trim()
     if (!slug || !text) continue
     if (!entryLinksArtwork(entry.linkedArtworkSlugs, artwork)) continue
+    const claim = text.replace(/\s+/g, ' ').trim()
     const name = resolveConnectorCardLabel({
-      text,
+      text: claim,
       shortTitle: entry.shortTitle,
     })
     if (!name) continue
     out.push({
       name,
-      url: `${origin}/statement/throughlines/${slug}`,
+      claim,
+      span: formatConnectorSpan({ linked: entry.linkedArtworkSlugs }),
+      url: pathForConnector(origin, `/statement/throughlines/${slug}`),
     })
   }
 
@@ -79,14 +142,20 @@ export function findRelatedBioEvents(
     const text = entry.text?.trim()
     if (!slug || !text) continue
     if (!entryLinksArtwork(entry.linkedArtworkSlugs, artwork)) continue
+    const claim = text.replace(/\s+/g, ' ').trim()
     const name = resolveConnectorCardLabel({
-      text,
+      text: claim,
       shortTitle: entry.shortTitle,
     })
     if (!name) continue
     out.push({
       name,
-      url: `${origin}/bio/entries/${slug}`,
+      claim,
+      span: formatConnectorSpan({
+        eventDate: entry.eventDate,
+        linked: entry.linkedArtworkSlugs,
+      }),
+      url: pathForConnector(origin, `/bio/entries/${slug}`),
     })
   }
 

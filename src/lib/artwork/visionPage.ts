@@ -102,6 +102,44 @@ export function formatMonthYear(value?: string | null): string | null {
   return date.toLocaleString('en-GB', { month: 'short', year: 'numeric' })
 }
 
+/** Long day for conditioning lines — e.g. "10 July 2026". */
+export function formatVisionAnalysisDate(value?: string | null): string | null {
+  if (!value?.trim()) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
+/**
+ * Conditioning line from known fields only — never invent access notes.
+ * Schema holds text / model / date; no prompt version or blind/record flag yet.
+ */
+export function formatVisionConditioningLine(analysis: {
+  model: string
+  date: string
+}): string {
+  const parts: string[] = []
+  const model = analysis.model.trim()
+  if (model) parts.push(model)
+  const dateLabel = formatVisionAnalysisDate(analysis.date)
+  if (dateLabel) parts.push(dateLabel)
+  return parts.join(' · ')
+}
+
+/** Newest first for stacked artwork-page analyses. */
+export function visionAnalysesNewestFirst(artwork: Artwork): VisionAnalysisEntry[] {
+  return [...resolveVisionAnalyses(artwork)].sort((a, b) => {
+    const aTime = Date.parse(a.date) || 0
+    const bTime = Date.parse(b.date) || 0
+    if (bTime !== aTime) return bTime - aTime
+    return 0
+  })
+}
+
 export function toIsoDateOnly(value?: string | null): string | undefined {
   if (!value?.trim()) return undefined
   const date = new Date(value)

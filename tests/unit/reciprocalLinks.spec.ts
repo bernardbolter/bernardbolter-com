@@ -4,6 +4,7 @@ import {
   artworkHasThroughlineConnections,
   findRelatedBioEvents,
   findRelatedThroughlines,
+  formatConnectorSpan,
 } from '@/lib/artist/reciprocalLinks'
 import type { Artist, Artwork } from '@/payload-types'
 
@@ -21,6 +22,8 @@ const artist = {
     {
       id: 'bio-1',
       text: 'Visited Münster for Skulptur Projekte.',
+      shortTitle: 'Münster visit',
+      eventDate: '2007',
       slug: 'munster-2007-visit',
       visibility: 'public',
       linkedArtworkSlugs: [11],
@@ -37,6 +40,7 @@ const artist = {
     {
       id: 'tl-1',
       text: 'Venice and Münster as paired encounters of invented antiquity.',
+      shortTitle: 'Paired antiquity',
       slug: 'venice-munster-2007',
       visibility: 'public',
       linkedArtworkSlugs: [10, munster],
@@ -47,10 +51,12 @@ const artist = {
 } as Artist
 
 describe('reciprocalLinks', () => {
-  it('finds throughlines by artwork id or populated relation', () => {
+  it('finds throughlines by artwork id or populated relation with claim + span', () => {
     expect(findRelatedThroughlines(artist, venice, baseUrl)).toEqual([
       {
-        name: 'Venice and Münster as paired encounters of invented antiquity.',
+        name: 'Paired antiquity',
+        claim: 'Venice and Münster as paired encounters of invented antiquity.',
+        span: '2 works',
         url: `${baseUrl}/statement/throughlines/venice-munster-2007`,
       },
     ])
@@ -58,10 +64,18 @@ describe('reciprocalLinks', () => {
     expect(findRelatedThroughlines(artist, unrelated, baseUrl)).toEqual([])
   })
 
+  it('emits relative URLs when baseUrl is empty (artwork HTML)', () => {
+    expect(findRelatedThroughlines(artist, venice, '')[0]?.url).toBe(
+      '/statement/throughlines/venice-munster-2007',
+    )
+  })
+
   it('finds public bio events and skips private', () => {
     expect(findRelatedBioEvents(artist, munster, baseUrl)).toEqual([
       {
-        name: 'Visited Münster for Skulptur Projekte.',
+        name: 'Münster visit',
+        claim: 'Visited Münster for Skulptur Projekte.',
+        span: '2007',
         url: `${baseUrl}/bio/entries/munster-2007-visit`,
       },
     ])
@@ -73,5 +87,19 @@ describe('reciprocalLinks', () => {
     expect(artworkHasThroughlineConnections(artist, munster)).toBe(true)
     expect(artworkHasThroughlineConnections(artist, unrelated)).toBe(false)
     expect(artworkHasThroughlineConnections(null, venice)).toBe(false)
+  })
+
+  it('formats connector span from event date, year range, or work count', () => {
+    expect(formatConnectorSpan({ eventDate: '1993', linked: [1, 2] })).toBe('1993')
+    expect(
+      formatConnectorSpan({
+        linked: [
+          { id: 1, yearStart: 2007 } as Artwork,
+          { id: 2, yearStart: 2019, yearCompleted: 2020 } as Artwork,
+        ],
+      }),
+    ).toBe('2007–2020')
+    expect(formatConnectorSpan({ linked: [1, 2, 3] })).toBe('3 works')
+    expect(formatConnectorSpan({ linked: [] })).toBeNull()
   })
 })

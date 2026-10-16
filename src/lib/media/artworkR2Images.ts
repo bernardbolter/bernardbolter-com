@@ -33,7 +33,7 @@ export const ARTWORK_DERIVATIVE_SIZES = [
 export type ArtworkDerivativeSuffix = (typeof ARTWORK_DERIVATIVE_SIZES)[number]['suffix']
 
 export type ArtworkImageSources = {
-  /** Default / fallback `src` — prefer the 1x derivative when a srcSet exists. */
+  /** Default `src` when srcSet is ignored — mid-size derivative for the context. */
   src: string
   /** Responsive candidates, e.g. `…-400w.jpg 400w, …-800w.jpg 800w`. */
   srcSet?: string
@@ -43,14 +43,14 @@ export type ArtworkImageSources = {
 const CONTEXT_SUFFIX: Record<ArtworkImageContext, ArtworkDerivativeSuffix> = {
   grid: '400w',
   'similar-works': '400w',
-  // Timeline paints ~300–450 CSS px; 400w for 1x, 800w for 2x via srcSet.
-  timeline: '400w',
+  // Timeline slots often 400–750 CSS px; default 800w, srcSet covers 1x–3x.
+  timeline: '800w',
   slideshow: '800w',
   'artwork-page': '800w',
   'vision-page': '1200w',
 }
 
-/** Contexts that expose 400w + 800w so the browser can pick by DPR / sizes. */
+/** Contexts that expose a width-descriptor srcSet (pair with `sizes` on the img). */
 const RESPONSIVE_SRCSET_CONTEXTS = new Set<ArtworkImageContext>(['timeline'])
 
 function readPrimaryMedia(artwork: ArtworkImageSource): ImageMediaLike | null {
@@ -104,11 +104,12 @@ export function getArtworkImageSources(
 
   const src400 = derivativePublicUrl(slug, '400w')
   const src800 = derivativePublicUrl(slug, '800w')
-  // Use 1x/2x — not 400w/800w. A ~406 CSS-px slot makes 400/406 < 1, so
-  // width descriptors skip 400w and fetch 800w even on 1x screens.
+  const src1200 = derivativePublicUrl(slug, '1200w')
+  // Width descriptors + exact `sizes` (display CSS px) so DPR × slot picks
+  // 400 / 800 / 1200 correctly. Density 1x/2x alone underserves large xl slots.
   return {
-    src: src400,
-    srcSet: `${src400} 1x, ${src800} 2x`,
+    src: src800,
+    srcSet: `${src400} 400w, ${src800} 800w, ${src1200} 1200w`,
     fallback,
   }
 }

@@ -559,7 +559,7 @@ Superseded-in-place banners on session-protocol, field-SoT, cursor-followup, dup
 
 **307 on `/` (normal path, not query-only).** Not Next redirects, not CF. Payload `withPayload` injects `Accept-CH` + `Critical-CH: Sec-CH-Prefers-Color-Scheme` on `/:path*` (admin theme via `getRequestTheme`). Browsers without the hint 307-retry the same URL before first paint (~200–1000ms). Curl never sees it. **Fix:** `next.config.ts` strips those three headers after `withPayload` (keeps `X-Powered-By`). Admin theme still resolves via cookie/default. Live needs deploy.
 
-**LCP image.** Timeline srcSet is `400w 1x, 800w 2x` (not width descriptors — `400/406 < 1` made browsers skip 400w). LCP candidate only: srcSet + `fetchpriority=high` (one preload). React 19 preloads every `loading=eager` img, so indices 1–5 stay mounted with `loading=lazy`. Live cold 1x LCP transfers ≈51 KB (400w) vs former ≈175 KB (800w).
+**LCP image.** *(Superseded for derivative choice by Part 38, 2026-10-15.)* Original note: Timeline srcSet was `400w 1x, 800w 2x`; srcSet only on LCP; indices 1–5 `loading=lazy`. **Still true:** LCP is the sole eager + `fetchpriority=high` tile so React 19 does not preload a row of srcSets. **Changed in Part 38:** every timeline tile gets width-descriptor srcSet (`400w/800w/1200w`) + `sizes` = display CSS px; default `src` is `800w`.
 
 **Consolidation Part 3 (RSC flight) — attempted, reverted.** Provider flight ≈195KB artworks + ≈39KB throughline/bio markers. A verso registry (server bodies as children of a client item, Map by slug) put claim text into the flight only — **0 claims in HTML body**, breaking the identity SSR rule. Root cause: client `HomepageVersoItem` still serialises server children into the flight even when it returns `null`; timeline never mounted them into body HTML. Correct shape (not this pass): **server-mapped** timeline/grid slots where each `ClientFlipShell` receives `<ServerVerso/>` as in-place children — not a registry Map. Deviations: none vs diagnosis; Part 3 blocked on architecture.
 
@@ -690,6 +690,80 @@ Mobile (390): same +40px height pattern; WW2 241×241 → 294×281 (+42% area).
 **Decided (2026-10-13).** Fallback **2 — drop pages** in the grid (then superseded 2026-10-14).
 
 **Superseded (2026-10-14).** Grid verso removed entirely. Grid tile is a link to `/{slug}`; caption is title + series (dot on series line); corner open icon uses `(hover: hover)/(pointer: coarse)` not viewport width. `gridSelectedSlug` retired. `ArtworkVerso` is timeline-only (scroll face, chips, overlay) — `scan`/`paged` variants gone.
+
+---
+
+## Part 38 — Timeline image sharpness (2026-10-15)
+
+**What was wrong.** Non-LCP timeline tiles used only the `400w` `src` (srcSet was gated to the LCP candidate to avoid React 19 eager preloads). Slots often render 400–750 CSS px; on 2×/3× that underserves badly. Density `1x/2x` alone also underserved large xl slots.
+
+**Live now.** Timeline `getArtworkImageSources`: default `src` = `800w`; `srcSet` = `400w, 800w, 1200w` width descriptors. `ArtworkImage` always passes that srcSet with `sizes="${displayWidth}px"`. LCP remains the only eager + `fetchpriority=high` tile; siblings stay lazy (no preload stampede). Part 30’s “LCP-only srcSet / 1x·2x” note is superseded for sharpness; LCP preload discipline is unchanged.
+
+---
+
+## Part 39 — Session / vision dialogue layout on `/{slug}` (2026-10-15)
+
+Per `docs/artwork/session-vision-layout-spec.md`.
+
+**Layout (revised 2026-10-15).** Transcript and vision are no longer a separate dialogue grid. Transcript **continues the left prose column**; vision **continues the right record column** and both flow with the existing data columns. Tinted vision panel restored (`artwork-vision-analysis-card`). Earlier sticky 1.6fr/1fr split superseded.
+
+**Voices.** Artist = Source Serif 4 (primary); agent = Barlow (secondary, slightly smaller). Visible `ARTIST` / `ART/OFFICIAL` labels removed; speaker name remains in a visually-hidden span for AT. Long turns capped with `max-width: 38rem` on the left column.
+
+**Field-write markers.** Feasible from stored `toolUses` on assistant messages — field **names** only, attached to the preceding artist turn. Values never rendered.
+
+**Truncation.** Cut after upload turn + first assistant acknowledgment when `I have uploaded` / `[image upload` appears; else round **24**. Summary: “Show the remaining N turns”. Full transcript stays in HTML.
+
+**Vision.** Untinted; conditioning line = `model · date` only (no inventing access notes). Stacking newest first. Recording conditioning going forward needs a schema field (e.g. `accessNote` / enum `image-only | image-and-record`). `world-war-one` still has two identical analyses — flag, not auto-deduped.
+
+---
+
+## Part 40 — Open business brief: money + collector attribution (report only, 2026-10-16)
+
+Per Bernard’s 2026-10-15 brief. **Diagnose/report only — no schema or allowlist changes in this sitting.** Await Bernard before implementation.
+
+### Money fields (inventory)
+
+| Field | Where | Access today | Agent allowlist | Public HTML today |
+|---|---|---|---|---|
+| `askingPrice`, `listingCurrency` | Artwork top-level | `privateFieldAccess` | **FORBIDDEN** | No (stripped in `omitPrivateArtworkCommerceFields`) |
+| `originalAskingPrice`, `priceNotes` | Artwork | private | not in FORBIDDEN set but private read + omit list | No |
+| `insuranceValue`, `insuranceValueDate` | Artwork | private | **FORBIDDEN** | No |
+| `galleryReference` | Artwork | **public read** / staff write | **FORBIDDEN** (agent) | Yes — “Available via {gallery}” on consignment |
+| `galleryText` | Artwork | public read path | **FORBIDDEN** | Wall text when present |
+| `salesRecord` | Artwork JSON (legacy ledger) | private | **FORBIDDEN** | No |
+| `totalRevenue` | Artwork computed | private | n/a (derived) | No |
+| `ownershipHistory[].sale.*` | Same ownership row (`salePrice`, `saleCurrency`, …) | private array | ownershipHistory **allowed** since 2026-07-28; sale subgroup not separately forbidden | Sale amounts **not** projected to HTML |
+| Edition registry | `ownershipRegistry` / DCS / Megacities copies | sanitized | n/a | Claim counts (“N of M claimed”); **no list prices** in current public projector |
+
+**What breaks if FORBIDDEN stops for those money paths:** agent/envelope can write them; contract page, Zod dry-run, and `fieldAllowlist` must move together (contract version currently `1.1.0`). Public HTML/JSON still omit them until `PRIVATE_ARTWORK_COMMERCE_FIELDS` + field `access` + any UI are opened — allowlist alone does **not** publish. Briefing privacy scan does **not** currently list `askingPrice`/`salesRecord` as forbidden briefing keys (only draft/session/locationDetail prose keys).
+
+**Structured write route exists:** list price → `askingPrice` + `listingCurrency`; unique-work sale → `ownershipHistory[].sale`; edition/channel ledger → `salesRecord`. Protocol beat 8 today explicitly forbids writing those and routes money into `sessionNotes`/prose — reverse that when implementing.
+
+### Collector attribution (live reality)
+
+- Flag already exists: `collectorVisible` on `ownershipHistory` **and** edition-copy rows. **Default `false` (opt-in)** — opposite of the brief’s opt-out default.
+- **HTML** honours `collectorVisible === true` for holder line + timeline + edition claimed rows (`artworkProvenancePublic` / `ownershipRegistryPublic`).
+- **Anonymous JSON / nightly corpus artifact** omit `ownershipHistory` entirely (`omitPrivateArtworkProvenanceFields` when `!overrideAccess`). SSR page fetch uses `overrideAccess` then projects a sanitized ownership array for HTML. **HTML vs JSON disagree** — confirmed: `/the-thinker` shows `Chris Bolter, Marin County, CA`; `/api/corpus/the-thinker` has no `ownershipHistory`.
+
+**Recommended anonymised form when flag is false:** `Private collection` + best available place — prefer `place.country`, else `place.city`, else omit place. Do not invent a country from thin air. Keep claim dates out of the anonymised headline unless useful for provenance without identifying the person.
+
+**Currently exposed (`collectorVisible = true`) — live DB 2026-10-16:**
+
+| Surface | Slug | Public label shown |
+|---|---|---|
+| ownershipHistory | `the-thinker` | Chris Bolter · Marin County, CA |
+| ownershipHistory | `__fixture-basel-dcs` | Private collection, Zurich (fixture) |
+| ownership_registry copies | `__fixture-gates-iii` | S. Hartmann; T. Lehmann; several “Private collection, {city}” rows |
+| dcs edition copies | `__fixture-basel-dcs` | K. Müller + Private collection, {city} rows |
+| megacities copies | — | none |
+
+Production HTML sample: only `the-thinker` among a spot-check of non-fixture works showed a named collector. Ownership history total: **2 visible / 4 hidden / 6 rows**.
+
+**Opt-out propagation:** artwork `afterChange` already calls `revalidateArchive` + `revalidateCorpusFeed` + Cloudflare purge — HTML ~minutes (CDN ~5 min). Tier-4 `/api/corpus/{slug}`, `/api/corpus/all`, index, briefing are served from the **nightly artifact** — names stay until the next artifact rebuild (or emergency rebuild), not just purge. **Arweave annual snapshot is immutable** — a name frozen there cannot be withdrawn.
+
+**Implement later (not this sitting):** flip default to public (rename or invert `collectorVisible` → brief’s `holderPublic`), project the same public/anonymised shape into corpus JSON + artifact, open money allowlist + publish path, reverse beat 8, bump contract, extend prose-marker check to `agentDraft*` for currency/names (flag, don’t strip).
+
+Inventory helper left at `src/scripts/listVisibleOwnershipAttribution.ts` (SQL was used for this report because the Payload select hung).
 
 ---
 

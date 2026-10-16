@@ -6,7 +6,7 @@ type ViewportSize = {
 }
 
 /** Desktop timeline: clear the fixed artwork title tag (top-right). */
-export const TIMELINE_DESKTOP_NAV_TOP_PX = 152
+export const TIMELINE_DESKTOP_NAV_TOP_PX = 166
 
 /** Matches `Nav` container `top` — keep filter/search drawers aligned with their buttons. */
 export function getNavContainerTop(

@@ -357,10 +357,7 @@ export default function ArtworkVerso({
       data-verso-layout="full"
     >
       <div className="artwork-verso__card">
-        <div
-          className="artwork-verso__body"
-          onClick={(event) => event.stopPropagation()}
-        >
+        <div className="artwork-verso__body">
           <div className="artwork-verso__body-inner">
             <div className="artwork-verso__section artwork-verso__section--identity">
               <IdentitySection

@@ -449,6 +449,22 @@
   margin: 0 0 0.85rem;
 }
 
+.artwork-vision-card__conditioning {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  line-height: 1.35;
+  color: var(--text-muted);
+  margin: 0 0 0.55rem;
+}
+
+.artwork-vision-analysis-card__entry + .artwork-vision-analysis-card__entry {
+  margin-top: 1.25rem;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
 .artwork-vision-card__text {
   font-family: var(--font-barlow), sans-serif;
   font-size: 15px;
@@ -456,6 +472,10 @@
   color: var(--text-primary);
   margin: 0 0 1rem;
   white-space: pre-wrap;
+}
+
+.artwork-vision-analysis-card__entry:last-of-type .artwork-vision-card__text {
+  margin-bottom: 1rem;
 }
 
 .artwork-vision-card__explainer {
@@ -486,31 +506,128 @@
   display: none;
 }
 
-.artwork-reciprocal-links {
-  list-style: none;
-  margin: 0 0 0.85rem;
-  padding: 0;
+.artwork-reciprocal-links-card {
+  margin-bottom: 2.25rem;
 }
 
-.artwork-reciprocal-links li {
-  margin: 0 0 0.45rem;
+.artwork-reciprocal-links-card .artwork-vision-card__label {
+  font-size: 11px;
+  margin-bottom: 0.55rem;
 }
 
-/* Full text is in the HTML; clip visually (not mid-word string truncation). */
-.artwork-reciprocal-links a {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  overflow: hidden;
-  overflow-wrap: anywhere;
+.artwork-reciprocal-links__group {
+  margin: 0 0 1.1rem;
 }
 
-.artwork-reciprocal-links li:last-child {
+.artwork-reciprocal-links__group:last-child {
   margin-bottom: 0;
 }
 
-.artwork-reciprocal-links + .artwork-reciprocal-links {
-  margin-top: 0.65rem;
-  padding-top: 0.65rem;
+.artwork-reciprocal-links__group-label {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 0.65rem;
+}
+
+.artwork-reciprocal-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.artwork-reciprocal-links__entry {
+  margin: 0 0 1rem;
+  padding: 0 0 0 0.85rem;
+  border-left: 2px solid var(--vision-accent-color, rgba(0, 0, 0, 0.22));
+}
+
+.artwork-reciprocal-links__entry:last-child {
+  margin-bottom: 0;
+}
+
+.artwork-reciprocal-links__title {
+  display: block;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+  text-decoration: none;
+  margin: 0 0 0.35rem;
+}
+
+.artwork-reciprocal-links__title:hover {
+  text-decoration: underline;
+}
+
+.artwork-reciprocal-links__claim-block {
+  margin: 0 0 0.3rem;
+}
+
+.artwork-reciprocal-links__claim {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin: 0 0 0.3rem;
+  overflow-wrap: anywhere;
+}
+
+.artwork-reciprocal-links__claim--rest {
+  margin-top: 0.45rem;
+}
+
+.artwork-reciprocal-links__claim-more {
+  margin: 0.15rem 0 0;
+}
+
+.artwork-reciprocal-links__claim-expand {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.artwork-reciprocal-links__claim-expand::-webkit-details-marker {
+  display: none;
+}
+
+.artwork-reciprocal-links__claim-expand::before {
+  content: '+ ';
+}
+
+.artwork-reciprocal-links__claim-more[open] > .artwork-reciprocal-links__claim-expand::before {
+  content: '− ';
+}
+
+.artwork-reciprocal-links__span {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.artwork-reciprocal-links__group + .artwork-reciprocal-links__group {
+  margin-top: 1.15rem;
+  padding-top: 1rem;
   border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  .artwork-reciprocal-links__group + .artwork-reciprocal-links__group {
+    border-top-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .artwork-reciprocal-links__entry {
+    border-left-color: var(--vision-accent-color, rgba(255, 255, 255, 0.35));
+  }
 }

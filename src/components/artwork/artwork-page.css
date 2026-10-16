@@ -71,17 +71,56 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
 .artwork-image__image {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
   display: block;
-  max-width: 100%;
-  height: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
   z-index: 1;
+  transition: opacity 0.28s ease;
+}
+
+/* Series-colour field + centred title until the derivative paints. */
+.artwork-image__loading-field {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  box-sizing: border-box;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.artwork-image__loading-title {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-staatliches), sans-serif;
+  font-size: clamp(1.15rem, 3.2vw, 1.75rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  color: #f5f5f2;
+  text-shadow:
+    0 0 1px rgba(0, 0, 0, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.artwork-image__loading-error {
+  margin: 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 13px;
+  color: #f5f5f2;
 }
 
 .artwork-detail__placeholder-overlay {
@@ -541,19 +580,30 @@
   margin: 0.4rem 0 0;
 }
 
+.artwork-page__record-footer {
+  margin: 1.5rem 0 1.75rem;
+  padding: 0 14px;
+  box-sizing: border-box;
+}
+
 .artwork-page__record-meta {
   border-top: 0.5px solid var(--color-border-tertiary);
   padding-top: 0.85rem;
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  margin-top: 0.25rem;
+  margin: 0;
 }
 
 .artwork-page__record-meta-line {
   font-size: 11px;
   color: var(--color-text-tertiary);
   margin: 0;
+}
+
+.artwork-page__record-footer .artwork-page__corpus-machine-links {
+  margin: 0.75rem 0 0;
+  padding: 0;
 }
 
 .artwork-page__status-section-label {
@@ -1513,15 +1563,72 @@
   border-top: 1px solid rgba(0, 0, 0, 0.08);
 }
 
+/*
+ * Left column: strongest local break before the Art/Official dialogue.
+ * Right column: connections + vision continue under the machine links.
+ */
+.artwork-page__sessions-in-column {
+  margin-top: 2.25rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid rgba(0, 0, 0, 0.22);
+}
+
+.artwork-page__connections-in-record {
+  margin-top: 1.75rem;
+  padding: 0 14px;
+}
+
+.artwork-page__dialogue-head {
+  padding: 0 0.85rem 1rem;
+  margin: 0;
+}
+
+.artwork-page__dialogue-head--in-record {
+  /* Horizontal inset comes from .artwork-page__vision-in-column */
+  padding: 1.25rem 0 0.85rem;
+}
+
+.artwork-page__dialogue-heading {
+  font-family: var(--font-barlow), sans-serif;
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  color: var(--text-primary);
+  margin: 0 0 0.65rem;
+}
+
+.artwork-page__dialogue-frame {
+  font-family: var(--font-source-serif), var(--font-barlow), serif;
+  font-size: clamp(0.92rem, 1.5vw, 1.02rem);
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.artwork-page__vision-in-column {
+  margin-top: 0.5rem;
+  padding: 0 14px 0.5rem;
+}
+
 .artwork-page__session-block {
   margin-bottom: 2rem;
+  padding: 0 0.85rem 0;
 }
 
 .artwork-page__session-title {
   font-family: var(--font-barlow), sans-serif;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  margin: 0 0 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.artwork-page__session-canonical {
+  margin: 0.85rem 0 0;
+  font-family: var(--font-barlow), sans-serif;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
 }
 
 .artwork-page__session-mentions {
@@ -1530,9 +1637,17 @@
   padding: 0;
 }
 
-.artwork-page__vision-tail {
-  margin-top: 2rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
+.artwork-page__column--prose .session-transcript__content {
+  max-width: none;
+}
+
+.artwork-page__sessions-body {
+  padding-bottom: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .artwork-page__sessions-in-column {
+    border-top-color: rgba(255, 255, 255, 0.28);
+  }
 }
 

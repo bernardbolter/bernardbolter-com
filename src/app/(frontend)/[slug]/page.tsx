@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 
 import ArtworkPage from '@/components/artwork/ArtworkPage'
 import { JsonLdScript } from '@/components/seo/JsonLdScript'
-import { getArtworkImageFallbackUrl } from '@/helpers/artworkCatalog'
+import { getArtworkImageFallbackUrl, getArtworkImagePair } from '@/helpers/artworkCatalog'
 import { isReservedFrontendSlug } from '@/lib/routes/reservedFrontendSlugs'
 import { resolveArtworkMenuPlusColor } from '@/lib/artwork/artworkMenuPlusColor'
 import { resolveArtworkSeo } from '@/lib/artwork/seo'
@@ -68,12 +68,16 @@ export default async function Page({ params }: Props) {
   if (!artwork) notFound()
 
   const imageUrl = getArtworkImageFallbackUrl(artwork)
+  // Preload the same derivative Layer0 paints (800w), not the full original.
+  const displayImageUrl = getArtworkImagePair(artwork, 'artwork-page')?.src ?? imageUrl
   const jsonLd = buildArtworkJsonLd(artwork, artist)
 
   return (
     <>
       <JsonLdScript data={jsonLd} />
-      {imageUrl ? <link rel="image" href={imageUrl} /> : null}
+      {displayImageUrl ? (
+        <link rel="preload" as="image" href={displayImageUrl} fetchPriority="high" />
+      ) : null}
       <ArtworkPageChromeProvider menuPlusColor={resolveArtworkMenuPlusColor(artwork)}>
         <div className="artwork-page__layout">
           <ArtworkPage artwork={artwork} artist={artist} />

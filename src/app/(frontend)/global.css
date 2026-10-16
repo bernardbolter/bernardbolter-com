@@ -251,20 +251,6 @@ h6 {
   background: var(--title-text);
 }
 
-.artwork-title__container--slideshow .artwork-title__title,
-.artwork-title__container--slideshow .artwork-title__year,
-.artwork-title__container--slideshow .artwork-title__medium,
-.artwork-title__container--slideshow .artwork-title__size,
-.artwork-title__container--slideshow .artwork-title__size--converted,
-.artwork-title__container--slideshow .artwork-identity__title,
-.artwork-title__container--slideshow .artwork-identity__year,
-.artwork-title__container--slideshow .artwork-identity__medium,
-.artwork-title__container--slideshow .artwork-identity__dimensions,
-.artwork-title__container--slideshow .artwork-identity__dimensions-converted,
-.artwork-title__container--slideshow .artwork-identity__series {
-  color: var(--title-light);
-}
-
 .artwork-title__border-top {
   display: flex;
   flex-direction: row;
@@ -420,6 +406,35 @@ h6 {
   padding: 0 1.4rem 0 0;
   font-size: 12px;
   color: var(--title-text);
+}
+
+/*
+ * Slideshow info box sits on a dark face — identity rules above must not win.
+ * Off-white ladder: title brightest, meta softer, series quietest.
+ */
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__title,
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__title a,
+.artwork-title__container--slideshow .artwork-title__title {
+  color: #f5f5f2;
+}
+
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__year,
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__medium,
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__dimensions,
+.artwork-title__container--slideshow .artwork-title__year,
+.artwork-title__container--slideshow .artwork-title__medium,
+.artwork-title__container--slideshow .artwork-title__size {
+  color: #e4e4e0;
+}
+
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__dimensions-converted,
+.artwork-title__container--slideshow .artwork-title__size--converted {
+  color: #d0d0cb;
+}
+
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__series,
+.artwork-title__container--slideshow .artwork-title__inside .artwork-identity__series-name {
+  color: #c8c8c2;
 }
 
 .artwork-identity__accent--title {
@@ -608,44 +623,69 @@ h6 {
 }
 
 /*
- * Corner open affordance — same 44px corner vocabulary as timeline flip icon.
- * Light glyph + dark drop-shadow so it reads on both sky and satellite.
- * Resting opacity:0 only under (hover:hover) and (pointer:fine); touch branch
- * keeps it persistent. pointer-events:none so the image link receives the click.
+ * Full-painting open affordance: series-colour veil at 85% with centered icon.
+ * Hover/fine: veil fades in on hover. Touch/coarse: same veil on :active so the
+ * grid stays scannable; icon stays persistent and centered.
+ * pointer-events:none so the image link still receives the click.
  */
-.artwork-grid__open-icon {
+.artwork-grid__open-veil {
   position: absolute;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 5;
   display: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  background: color-mix(in srgb, var(--grid-series-color, #999) 85%, transparent);
   color: #f4f4f4;
-  filter: drop-shadow(0 0 1.25px rgba(0, 0, 0, 0.95))
-    drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
   pointer-events: none;
 }
 
+.artwork-grid__open-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border: 1.5px solid currentColor;
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.artwork-grid__open-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .artwork-grid__open-icon {
+  .artwork-grid__open-veil {
     display: flex;
     opacity: 0;
-    transition: opacity 0.18s ease;
+    transition: opacity 0.2s ease;
   }
 
-  .artwork-grid__image-frame:hover .artwork-grid__open-icon,
-  .artwork-grid__image-frame:focus-visible .artwork-grid__open-icon {
+  .artwork-grid__image-frame:hover .artwork-grid__open-veil,
+  .artwork-grid__image-frame:focus-visible .artwork-grid__open-veil {
     opacity: 1;
   }
 }
 
 @media (hover: none), (pointer: coarse) {
-  .artwork-grid__open-icon {
+  .artwork-grid__open-veil {
     display: flex;
+    background: transparent;
     opacity: 1;
+  }
+
+  .artwork-grid__image-frame:active .artwork-grid__open-veil {
+    background: color-mix(in srgb, var(--grid-series-color, #999) 85%, transparent);
+  }
+
+  .artwork-grid__open-icon {
+    color: #f4f4f4;
+    background: rgba(0, 0, 0, 0.28);
+    box-shadow:
+      0 0 0 1px rgba(0, 0, 0, 0.35),
+      0 1px 3px rgba(0, 0, 0, 0.45);
   }
 }
 
@@ -1584,6 +1624,11 @@ h6 {
 }
 
 .artwork-block--flip-3d:not(.is-flipped) .artwork-block__face--back {
+  pointer-events: none;
+}
+
+.artwork-block.is-flipped .artwork-block__face--front {
+  /* Front stays in the hit tree under rotateY; disable so verso can receive flips. */
   pointer-events: none;
 }
 

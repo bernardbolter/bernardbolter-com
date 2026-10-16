@@ -98,16 +98,18 @@ export default function ArtworkBlock({
           <button
             type="button"
             className="artwork-block__flip-surface"
-            {...(canInteractFlip ? { 'data-timeline-artwork-flip': artwork.slug } : {})}
+            {...(canInteractFlip && !flipped
+              ? { 'data-timeline-artwork-flip': artwork.slug }
+              : {})}
             aria-pressed={flipped}
             aria-label={canInteractFlip ? `Details for ${title}` : title}
             aria-disabled={!canInteractFlip || undefined}
-            tabIndex={canInteractFlip ? undefined : -1}
+            tabIndex={canInteractFlip && !flipped ? undefined : -1}
             onClick={(event) => event.preventDefault()}
             onMouseEnter={onPeelEnter}
             onMouseLeave={onPeelLeave}
             onKeyDown={(event) => {
-              if (!canInteractFlip) return
+              if (!canInteractFlip || flipped) return
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault()
                 onToggleFlip()
@@ -126,8 +128,13 @@ export default function ArtworkBlock({
         <div
           className="artwork-block__face artwork-block__face--back"
           onClick={(event) => {
-            if ((event.target as HTMLElement).closest('a[href]')) return
-            if ((event.target as HTMLElement).closest('[data-verso-page-nav]')) return
+            const target = event.target as HTMLElement
+            if (target.closest('a[href]')) return
+            if (target.closest('button')) return
+            if (target.closest('[data-verso-page-nav]')) return
+            if (target.closest('[data-verso-overlay-panel]')) return
+            if (target.closest('[data-verso-dismiss]')) return
+            if (target.closest('.artwork-verso__footer')) return
             onToggleFlip()
           }}
           role="presentation"
